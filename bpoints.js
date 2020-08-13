@@ -18,17 +18,18 @@ function breakPoints(){
 
     Java.perform(function(){
 
-        for (var index = 0; index < arrayAddr.length; index++) {
-            console.log("--------------------------------------------");
-            try{
-                const currentAddr = soAddr.add(arrayAddr[index]);
-                console.log('currentAddr:' + currentAddr);
-                funcTmp(currentAddr,soAddr,index,arrayName);
-                console.log("\t\t---->"+index,arrayAddr[index]+" is prepared ");
-            }catch(e){
-                console.warn(e)
-            }
-        }
+        arrayAddr
+            .map(function(temp){return soAddr.add(temp)})
+            .forEach(function(value,index,array){
+                console.log("-------------------------");
+                try{
+                    console.log('currentAddr:' + value);
+                    funcTmp(value,index,arrayName);
+                    console.log("\t\t---->"+index,value+" is prepared ");  
+                }catch(e){
+                    console.warn(e)
+                }
+            })
         console.log("\n")
     })
 
