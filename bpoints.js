@@ -3,7 +3,7 @@
 // frida -U -f <PackageName> -l C:\Users\lzy\utils\bpoints.js --no-pause
 
 
-const soName = "libmain.so"
+const soName = "libil2cpp.so"
 
 const arrayAddr =
     ['0x71541c', '0x715b38', '0x715be4', '0x715c61']
@@ -17,23 +17,23 @@ function breakPoints(){
     console.error('\nsoAddr:' + soAddr + "\n");
 
     Java.perform(function(){
-
         arrayAddr
             .map(function(temp){return soAddr.add(temp)})
             .forEach(function(value,index,array){
                 console.log("-------------------------");
+                console.log('currentAddr:' + value);
                 try{
-                    console.log('currentAddr:' + value);
                     funcTmp(value,index,arrayName);
-                    console.log("\t\t---->"+index,value+" is prepared ");  
                 }catch(e){
-                    console.warn(e)
+                    //Thumb指令集地址要加一
+                    funcTmp(value.add(1),soAddr,index,arrayName);
                 }
-            })
+            console.log("\t\t---->"+index,value+" is prepared ");
+        })
         console.log("\n")
     })
 
-    function funcTmp(currentAddr,soAddr,index,arrayName){
+    function funcTmp(currentAddr,index,arrayName){
         Interceptor.attach(currentAddr, {
             onEnter: function(args){
                 console.log("called : "+arrayName[index]+"  ----- addr : " + currentAddr.sub(soAddr) +"\n");
