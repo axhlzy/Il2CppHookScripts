@@ -21,13 +21,16 @@ var filter_atoi = filter_port
 function hook(){
 
     call()
+    NOP_KILL()
 
     //RealCall
     //可以拆分开多次hook，不建议一次性hook太多函数
+
     function call(){
         
-        FIND_BY_STR()
-        PTRACE()
+        // FIND_BY_STR()
+        // PTRACE()
+        FIND_THREAD_KILL()
 
     }
 
@@ -48,7 +51,7 @@ function hook(){
         find_kill()
         find_raise()
         find_pthread_create()
-        find_fork()
+        // find_fork()
     }
 
     //查找系统调用
@@ -111,7 +114,6 @@ function find_sprintf(){
             }
         }
     })
-    nop_kill()
 }
 
 function find_fgets(){
@@ -145,7 +147,6 @@ function find_fgets(){
             }catch(e){}
         }
     })
-    nop_kill()
 }
 
 function find_strstr(){
@@ -174,12 +175,11 @@ function find_strstr(){
                     console.warn("\n[*]\t\x1b[0mCalled strstr in onLeave at "+ this.context.lr+"\x1b[0m")
                     console.log("\x1b[96mint "+ret.toInt32()+
                         " = strstr('"+this.arg0.readCString().replace(/\s+/g,"")+"','"+this.arg1.readCString().replace(/\s+/g,"")+"')\x1b[0m")
-                    printBKA(this.context)
+                    printBK(this.context)
                 }
             }catch(e){}
         }
     })
-    nop_kill()
 }
 
 function find_strcmp(){
@@ -208,8 +208,6 @@ function find_strcmp(){
             }
         }
     })
-
-    nop_kill()
 }
 
 function find_strlen(){
@@ -235,12 +233,10 @@ function find_strlen(){
             if(this.isFound){
                 console.warn("\n[*]\t\x1b[0mCalled strlen in onLeave at "+ this.context.lr+"\x1b[0m")
                 console.log("\x1b[96mint "+ret.toInt32()+" = strlen('"+this.arg0.readCString()+"')\x1b[0m")
-                printBKA(this.context)
+                printBK(this.context)
             }
         }
     })
-
-    nop_kill()
 }
 
 function find_strncpy(){
@@ -270,8 +266,6 @@ function find_strncpy(){
             }
         }
     })
-
-    nop_kill()
 }
 
 function find_kill(){
@@ -308,9 +302,6 @@ function find_raise(){
         printBKA(this.context)
         return 0
     }, 'int', ['int']));
-
-    nop_kill()
-    
 }
 
 function find_pthread_create(){
@@ -329,7 +320,6 @@ function find_pthread_create(){
             printBK(this.context)
         }
     })
-    nop_kill()
 }
 
 function find_ptrace(){
@@ -352,7 +342,6 @@ function find_ptrace(){
             printBKA(this.context)
         }
     })
-    nop_kill()
 
     function convert(request){
        switch(request){
@@ -434,7 +423,6 @@ function find_fopen(){
             }
         }
     })
-    nop_kill()
 }
 
 function find_mmap(){
@@ -477,9 +465,6 @@ function find_mmap(){
             printBK(this.context)
         }
     })
-
-    nop_kill()
-
 }
 
 function find_calloc(){
@@ -500,7 +485,6 @@ function find_calloc(){
             }
         }
     })
-    nop_kill()
 }
 
 function find_atoi(){
@@ -528,7 +512,6 @@ function find_atoi(){
             }
         }
     })
-    nop_kill()
 }
 
 function find_fork(){
@@ -557,7 +540,6 @@ function find_syscall(){
             printBKA(this.context)
         }
     })
-    nop_kill()
 }
 
 function printBK(ctx){
@@ -713,8 +695,6 @@ function show_android_log_print(){
             }
         }
     })
-
-    nop_kill()
 }
 
 function hook_call_array(){
@@ -744,7 +724,6 @@ function hook_call_array(){
            
         }
     })
-    nop_kill()
 }
 
 function anti_fgets() {
@@ -761,7 +740,7 @@ function anti_fgets() {
     }, 'pointer', ['pointer', 'int', 'pointer']));
 };
 
-function nop_kill(){
+function NOP_KILL(){
 
     try{
         Interceptor.replace(new NativeFunction(Module.findExportByName(null,"kill"),'void', ['int','int']), new NativeCallback(function (pid,SIGKILL) {
