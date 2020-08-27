@@ -6,3 +6,9 @@ frida -U -f <PackageName> -l hookC.js --no-pause
 </pre>
 
 ![hookc.png](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/hookc.png)
+
+
+
+
+
+https://gtoad.github.io/2017/06/25/Android-Anti-Debug/
