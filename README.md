@@ -7,7 +7,7 @@
 
 2. bpoints.js
 
-frida使用额js脚本，用到dlopen来获得加载时机，并注入断点
+frida使用的js脚本，用到dlopen来获得加载时机，并注入断点
 </pre>
 
 ###### python脚本的使用
