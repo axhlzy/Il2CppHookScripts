@@ -76,6 +76,7 @@ function hook_dlopen() {
 
 setImmediate(hookJava(),hook_dlopen())
 
+//frida的更多使用参见：https://www.jianshu.com/p/4291ee42c412
 function hookJava(){
     //java 方法的 hook
     Java.perform(function(){
