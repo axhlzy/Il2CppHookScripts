@@ -1,5 +1,5 @@
 # Il2CppDumperTool
-该脚本用来批量断点lil2cpp.so的函数
+该脚本用来批量断点libil2cpp.so的函数
 <pre>
 1. dps.py
 
