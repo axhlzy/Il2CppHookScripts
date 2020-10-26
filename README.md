@@ -12,5 +12,8 @@ frida使用的js脚本，用到dlopen来获得加载时机，并注入断点
 
 ###### python脚本的使用
 ![1.png](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/1.png "bpoints.js")
+
+cp上述结果到 bpoints.js 中替换对应的部分，再用frida去加载这段js即可批量断点以上函数
+
 ###### 这里举例的libmain.so，其他也一样
 ![2.png](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/2.png "dps.py")
