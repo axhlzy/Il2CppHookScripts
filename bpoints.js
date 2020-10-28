@@ -28,7 +28,7 @@ function breakPoints(){
                     //Thumb指令集地址要加一
                     funcTmp(value.add(1),soAddr,index,arrayName);
                 }
-            console.log("\t\t---->"+index,value+" is prepared ");
+            console.log("\t\t---->"+index,value.add(soAddr)+" is prepared ");
         })
         console.log("\n")
     })
