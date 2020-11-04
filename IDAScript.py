@@ -55,7 +55,7 @@ def AddBpt_jni_onload():
     AddBpt(blx_ea)
     print ("\t[-]set breakpoint JNI_OnLoad addr => 0x%X") % blx_ea
 	
-
+	
 def Dump_Memory(start_addr, end_addr):  
   
     print '[*]begin to dump memory'
@@ -77,6 +77,7 @@ def Search_Memory(start_addr, end_addr, value):
         if cur_dword != None and cur_dword == value:
             print('found target = %x' % ea_offset)
     print '[*]script End'
+
 
 def main():
     # 添加init,init_arrary断点
