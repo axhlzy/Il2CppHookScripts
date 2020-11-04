@@ -74,6 +74,202 @@ function hook_dlopen() {
     }
 }
 
+//HookExports,HookSymbols,HookSymbols 这三个玩意儿谨慎使用Hook到某些函数会崩掉
+//这三个也是针对有时候想找找关键函数调用的时候用一下，不太推荐用这个
+function HookExports(name,mdname,ishook){
+    
+    //java堆栈
+    const isShowPrintStack = false
+    //native堆栈
+    const isShowPrintStackN = true
+
+    soName = mdname == undefined || mdname == "" ? soName : mdname
+    Interceptor.detachAll()
+
+    var md = NULL
+    var addr = NULL
+    try{
+        var md = Process.findModuleByName(soName)
+        addr = md.base
+    }catch(e){
+        console.error(soName + " not found!")
+        return
+    }
+    console.error(soName+" at "+addr)
+    
+    md.enumerateExports().forEach(function(item){
+        if(item.name.indexOf(name)!=-1){
+            console.log(JSON.stringify(item))
+            if(ishook!=undefined)hook_item(item)
+        }
+    })
+
+    function hook_item(item){
+        console.log("add break points at "+item.address)
+        try{
+            Interceptor.attach(item.address,{
+                onEnter:function(args){
+                    console.log("\n\x1b[96mA called "+item.address+" ===> "+item.address.sub(addr)+"\t"+item.name+"\x1b[0m")
+                    if(isShowPrintStack) PrintStackTrace()
+                    if(isShowPrintStackN) PrintStackTraceN(this.context)
+                },
+                onLeave:function(retval){
+
+                }
+            })
+        }catch(e){
+            try{
+                Interceptor.attach(item.address.add(1),{
+                    onEnter:function(args){
+                        console.log("\n\x1b[96mT Called "+item.address+" ===> "+item.address.add(1).sub(addr)+"\t"+item.name+"\x1b[0m")
+                        if(isShowPrintStack) PrintStackTrace()
+                        if(isShowPrintStackN) PrintStackTraceN(this.context)
+                    },
+                    onLeave:function(retval){
+    
+                    }
+                })
+            }catch(e){
+                console.log(e)
+            }
+        }
+    }
+}
+
+function HookImports(name,mdname,ishook){
+    //java堆栈
+    const isShowPrintStack = false
+    //native堆栈
+    const isShowPrintStackN = true
+
+    Interceptor.detachAll()
+
+    soName = mdname == undefined || mdname == "" ? soName : mdname
+    var md = NULL
+    var addr = NULL
+    try{
+        var md = Process.findModuleByName(soName)
+        addr = md.base
+    }catch(e){
+        console.error(soName + " not found!")
+        return
+    }
+    
+    md.enumerateImports().forEach(function(item){
+        if(item.name.indexOf(name)!=-1){
+            console.log(JSON.stringify(item))
+            if(ishook!=undefined)hook_item(item)
+        }
+    })
+
+    function hook_item(item){
+        console.log("add break points at "+item.address)
+        try{
+            Interceptor.attach(item.address,{
+                onEnter:function(args){
+                    console.log("\n\x1b[96mA called "+item.address+" ===> "+item.address.sub(addr)+"\t"+item.name+"\x1b[0m")
+                    if(isShowPrintStack) PrintStackTrace()
+                    if(isShowPrintStackN) PrintStackTraceN(this.context)
+                },
+                onLeave:function(retval){
+
+                }
+            })
+        }catch(e){
+            try{
+                Interceptor.attach(item.address.add(1),{
+                    onEnter:function(args){
+                        console.log("\n\x1b[96mT Called "+item.address+" ===> "+item.address.add(1).sub(addr)+"\t"+item.name+"\x1b[0m")
+                        if(isShowPrintStack) PrintStackTrace()
+                        if(isShowPrintStackN) PrintStackTraceN(this.context)
+                    },
+                    onLeave:function(retval){
+    
+                    }
+                })
+            }catch(e){
+                console.log(e)
+            }
+        }
+    }
+}
+
+function HookSymbols(name,mdname,ishook){
+    //java堆栈
+    const isShowPrintStack = false
+    //native堆栈
+    const isShowPrintStackN = true
+
+    Interceptor.detachAll()
+
+    soName = mdname == undefined || mdname == "" ? soName : mdname
+    var md = NULL
+    var addr = NULL
+    try{
+        var md = Process.findModuleByName(soName)
+        addr = md.base
+    }catch(e){
+        console.error(soName + " not found!")
+        return
+    }
+    
+    md.enumerateSymbols().forEach(function(item){
+        if(item.name.indexOf(name)!=-1){
+            console.log(JSON.stringify(item))
+            if(ishook!=undefined)hook_item(item)
+            if(ishook == 1) return item.address
+        }
+    })
+
+    function hook_item(item){
+        console.log("add break points at "+item.address)
+        try{
+            Interceptor.attach(item.address,{
+                onEnter:function(args){
+                    console.log("\n\x1b[96mA called "+item.address+" ===> "+item.address.sub(addr)+"\t"+item.name+"\x1b[0m")
+                    if(isShowPrintStack) PrintStackTrace()
+                    if(isShowPrintStackN) PrintStackTraceN(this.context)
+                },
+                onLeave:function(retval){
+
+                }
+            })
+        }catch(e){
+            try{
+                Interceptor.attach(item.address.add(1),{
+                    onEnter:function(args){
+                        console.log("\n\x1b[96mT Called "+item.address+" ===> "+item.address.add(1).sub(addr)+"\t"+item.name+"\x1b[0m")
+                        if(isShowPrintStack) PrintStackTrace()
+                        if(isShowPrintStackN) PrintStackTraceN(this.context)
+                    },
+                    onLeave:function(retval){
+    
+                    }
+                })
+            }catch(e){
+                console.log(e)
+            }
+        }
+    }
+}
+
+//java 堆栈
+function PrintStackTrace(){
+    console.log("\x1b[36m"+
+        Java.use("android.util.Log")
+            .getStackTraceString(Java.use("java.lang.Throwable")
+            .$new())+"\x1b[0m");
+}
+
+//native 堆栈 
+function PrintStackTraceN(ctx){
+    console.log("\x1b[36m Called from:\n"+
+            Thread.backtrace(ctx,Backtracer.ACCURATE)
+            // .slice(0,6)
+            // .reverse()
+            .map(DebugSymbol.fromAddress).join("\n")+"\x1b[0m");
+}
+
 setImmediate(hookJava(),hook_dlopen())
 
 //frida的更多使用参见：https://www.jianshu.com/p/4291ee42c412
