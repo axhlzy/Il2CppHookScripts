@@ -17,3 +17,7 @@ cp上述结果到 bpoints.js 中替换对应的部分，再用frida去加载这�
 
 ###### 这里举例的libmain.so，其他也一样
 ![2.png](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/2.png "dps.py")
+
+
+这三个暴力使用，容易崩，不建议使用
+HookExports,HookImports,HookSymbols
