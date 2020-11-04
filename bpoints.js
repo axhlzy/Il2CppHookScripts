@@ -82,7 +82,6 @@ function HookExports(name,mdname,ishook){
     const isShowPrintStack = false
     //native堆栈
     const isShowPrintStackN = true
-
     soName = mdname == undefined || mdname == "" ? soName : mdname
     Interceptor.detachAll()
 
@@ -141,9 +140,7 @@ function HookImports(name,mdname,ishook){
     const isShowPrintStack = false
     //native堆栈
     const isShowPrintStackN = true
-
     Interceptor.detachAll()
-
     soName = mdname == undefined || mdname == "" ? soName : mdname
     var md = NULL
     var addr = NULL
@@ -199,9 +196,7 @@ function HookSymbols(name,mdname,ishook){
     const isShowPrintStack = false
     //native堆栈
     const isShowPrintStackN = true
-
     Interceptor.detachAll()
-
     soName = mdname == undefined || mdname == "" ? soName : mdname
     var md = NULL
     var addr = NULL
@@ -292,7 +287,7 @@ function hookJava(){
 }
 
 function hookNative(){
-
+    
     var addr = Module.findBaseAddress(soName)
     //方法调用
     var func = new NativeFunction(addr.add(0x123),'void','pointer')
