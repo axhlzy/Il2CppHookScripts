@@ -3,7 +3,7 @@
 <pre>
 1. dps.py
 
-使用的python3版本，主要用来为Il2CppDumper生成的script.json提供一个关键字搜索，并转换为地址与名称对应关系，便于bpoints.js使用
+主要用来为Il2CppDumper生成的script.json提供一个关键字搜索，并转换为地址与名称对应关系，便于bpoints.js使用
 
 2. bpoints.js
 
