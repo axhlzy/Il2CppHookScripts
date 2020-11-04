@@ -78,7 +78,6 @@ def Search_Memory(start_addr, end_addr, value):
             print('found target = %x' % ea_offset)
     print '[*]script End'
 
-
 def main():
     # 添加init,init_arrary断点
     AddBpt_init()
