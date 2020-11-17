@@ -1,6 +1,8 @@
 // 结合Il2CppDumper使用，用于批量快速下断点，跟踪native函数调用
 // frida -U -f <PackageName> -l C:\Users\lzy\utils\bpoints.js --no-pause
 
+setImmediate(hook_dlopen())
+//setImmediate(hookJava(),hookNative())
 
 const soName = "libil2cpp.so"
 
@@ -264,8 +266,6 @@ function PrintStackTraceN(ctx){
             // .reverse()
             .map(DebugSymbol.fromAddress).join("\n")+"\x1b[0m");
 }
-
-setImmediate(hookJava(),hook_dlopen())
 
 //frida的更多使用参见：https://www.jianshu.com/p/4291ee42c412
 function hookJava(){
