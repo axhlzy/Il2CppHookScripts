@@ -1,3 +1,10 @@
+/* 上面这个s_Base的地址以及两个结构体的大小可以手动的去IDA查看但是这里也提出两个方法去动态获取
+    1.由导出函数il2cpp_init倒数第二行BL动态解析到跳转位置，
+        再由mscorlib.dll出现的位置倒数往上推32个指针位置即可找到BL以及BL的下一条CMP来确定跳转地址，
+        然后跳转过去继续手动指令解析即可获取
+    2.由showAddr得到一个常用的Unity函数地址，就是MethodInfo*，Il2CppClass*，通过该结构体中的parent字段逐级回溯
+ */ 
+
 const soName = "libil2cpp.so"
 const soAddr = Module.findBaseAddress("libil2cpp.so")
 const p_size = Process.pointerSize
@@ -9,17 +16,17 @@ const a_class_addr = new Array()
 const a_class_count = new Array()
 
 //赋值语句下面第二个地址 s_TypeInfoDefinitionTable 的地址
-const s_Base = soAddr.add(0x141BE1C)
+const s_Base = soAddr.add(0xCC6474)
 //if 语句上面第三个函数第二个参数
 const sizeof_Il2CppImage = 56
 //if 语句上面那个函数第二个参数
-const sizeof_Assembliy = 68
+const sizeof_Assembliy = 64
 
-const s_TypeInfoDefinitionTable = s_Base.readPointer()
-const s_ImagesCount = s_Base.add(p_size*3).readPointer().toInt32()
-const s_ImagesTable = s_Base.add(p_size*4).readPointer()
-const s_AssembliesCount  = s_Base.add(p_size*5).readPointer().toInt32()
-const s_AssembliesTable = s_Base.add(p_size*6).readPointer()
+const s_TypeInfoDefinitionTable =   s_Base.readPointer()
+const s_ImagesCount             =   s_Base.add(p_size*3).readPointer().toInt32()
+const s_ImagesTable             =   s_Base.add(p_size*4).readPointer()
+const s_AssembliesCount         =   s_Base.add(p_size*5).readPointer().toInt32()
+const s_AssembliesTable         =   s_Base.add(p_size*6).readPointer()
 
 function hook_test(){
     Interceptor.attach(Module.findExportByName(soName,"il2cpp_class_get_methods"),{
@@ -71,7 +78,7 @@ function list_Images(keywords){
                     console.log("\t\t\t\x1b[36m","Il2CppAssembly","\t--->\t",tt.add(p_size*2).readPointer(),"\x1b[0m")
                     console.log("\t\t\t\x1b[36m","Il2CppClass","\t\t--->\t",current_off,"\x1b[0m")
                     console.log("\t\t\t\x1b[36m","typeStart","\t\t--->\t",tt.add(p_size*3).readPointer(),"\t\ttypeCount =",typeCount,"\x1b[0m")
-                }else{tmp--}
+                }else{--tmp}
             }else{
                 console.log("\n\x1b[36m [*]",tt,"\t",name+"\x1b[0m")
                 console.log("\t\t\t\x1b[36m","Il2CppAssembly","\t--->\t",tt.add(p_size*2).readPointer(),"\x1b[0m")
@@ -81,7 +88,7 @@ function list_Images(keywords){
             current_off = current_off.add(typeCount*p_size)
         }
         console.warn("\n----------------------------")
-        console.error("  List ",tmp," Images")
+        console.error("  List ",keywords==undefined?tmp:--tmp," Images")
         console.warn("-------------------------------------------------------------------------------------")
     }else{
         b_init = !b_init
@@ -97,33 +104,92 @@ function list_Images(keywords){
     }
 }
 
-function list_Classes(AddrorName,typeCount){
-    if (AddrorName == undefined){
+function list_Classes(AddrOrName,from,to,typeCount){
+    if (AddrOrName == undefined){
         console.error("please input a Addr or Name")
         return
     }
     var addr = null
     try{
-        addr = ptr(AddrorName)
+        addr = ptr(AddrOrName)
     }catch(e){
-        addr = get_cls_by_name(AddrorName)
+        addr = get_cls_by_name(AddrOrName)
     }
     if (typeCount == undefined) typeCount = get_count_by_addr(addr)
-    console.warn("---------------------------------------------")
-    for (var t = 0;t<typeCount;t++){
-        try{
+    if (from !=undefined && from !="" && to != undefined && to !=""){
+        console.warn("---------------------------------------------")
+        for (var t = from;t<to;t++){
             var t_Il2CppClass = addr.add(t*p_size).readPointer()
             console.log("Il2CppClass \t--->\t"+addr.add(t*p_size))
             console.log("Il2CppImage \t--->\t"+t_Il2CppClass.add(p_size*0))
             console.log("ClassName \t--->\t"+t_Il2CppClass.add(p_size*2).readPointer().readCString())
             console.log("NameSpaze \t--->\t"+t_Il2CppClass.add(p_size*3).readPointer().readCString())
             console.warn("---------------------------------------------")
-        }catch(e){
-            console.error("These's a null pointer ......")
+        }
+        console.error("Count Classes : ",to-from,"\t|\tAll Classs : ",typeCount)
+        console.error("From index : \t",from," to ",to)
+        console.warn("---------------------------------------------"+"\n")
+    }else{
+        console.warn("---------------------------------------------")
+        for (var t = 0;t<typeCount;t++){
+            var t_Il2CppClass = addr.add(t*p_size).readPointer()
+            console.log("Il2CppClass \t--->\t"+addr.add(t*p_size))
+            console.log("Il2CppImage \t--->\t"+t_Il2CppClass.add(p_size*0))
+            console.log("ClassName \t--->\t"+t_Il2CppClass.add(p_size*2).readPointer().readCString())
+            console.log("NameSpaze \t--->\t"+t_Il2CppClass.add(p_size*3).readPointer().readCString())
             console.warn("---------------------------------------------")
         }
+        console.error("Count Classes : ",typeCount)
+        console.warn("---------------------------------------------"+"\n")
     }
-    console.error("Count Classes : ",typeCount)
+}
+
+function list_NameSpacesFromClass(AddrOrName,filterNameSp){
+    if (AddrOrName == undefined){
+        console.error("please input a Addr or a Name")
+        return
+    }
+    if (filterNameSp == undefined){
+        console.error("please input filterNameSp")
+        return
+    } 
+    var addr = null
+    try{
+        addr = ptr(AddrOrName)
+    }catch(e){
+        addr = get_cls_by_name(AddrOrName)
+    }
+    var Count = 0
+    var CountAll = get_count_by_addr(addr)
+    console.warn("---------------------------------------------")
+    new Set()
+    for (var t = 0;t<get_count_by_addr(addr);t++){
+
+
+
+
+        var t_Il2CppClass = addr.add(t*p_size).readPointer()
+        var NameSpaze = t_Il2CppClass.add(p_size*3).readPointer().readCString()
+        if (filterNameSp != ""){
+            if (filterNameSp!="" && filterNameSp.indexOf(NameSpaze)!=-1){
+                console.log("Il2CppClass \t--->\t"+addr.add(t*p_size))
+                console.log("Il2CppImage \t--->\t"+t_Il2CppClass.add(p_size*0))
+                console.log("ClassName \t--->\t"+t_Il2CppClass.add(p_size*2).readPointer().readCString())
+                console.log("NameSpaze \t--->\t"+t_Il2CppClass.add(p_size*3).readPointer().readCString())
+                console.warn("---------------------------------------------")
+            }  
+        }else{
+            if (filterNameSp == NameSpaze){
+                console.log("Il2CppClass \t--->\t"+addr.add(t*p_size))
+                console.log("Il2CppImage \t--->\t"+t_Il2CppClass.add(p_size*0))
+                console.log("ClassName \t--->\t"+t_Il2CppClass.add(p_size*2).readPointer().readCString())
+                console.log("NameSpaze \t--->\t"+t_Il2CppClass.add(p_size*3).readPointer().readCString())
+                console.warn("---------------------------------------------")
+            }
+        }
+        Count ++
+    }
+    console.error("Count Classes : ",Count," of all ",CountAll)
     console.warn("---------------------------------------------"+"\n")
 }
 
@@ -173,15 +239,10 @@ function find_class(AddrorName,className){
     }catch(e){
         addr = get_cls_by_name(AddrorName)
     }
-    // console.log(addr)
     var typeCount = typeCount == undefined ? get_count_by_addr(addr) : typeCount
     for (var t = 0;t<typeCount;t++){
-        try {
-            var t_Il2CppClass = addr.add(t*p_size).readPointer()
-            if (t_Il2CppClass.add(p_size*2).readPointer().readCString() == className) return addr.add(t*p_size)
-        } catch (error) {
-            // console.error("find_class must be some error")
-        }
+        var t_Il2CppClass = addr.add(t*p_size).readPointer()
+        if (t_Il2CppClass.add(p_size*2).readPointer().readCString() == className) return addr.add(t*p_size)
         // console.log("Il2CppClass \t--->\t"+addr.add(t*p_size))
         // console.log("Il2CppImage \t--->\t"+t_Il2CppClass.add(p_size*0))
         // console.log("NameSpaze \t--->\t"+t_Il2CppClass.add(p_size*3).readPointer().readCString())
@@ -227,12 +288,12 @@ function find_method(imgName,className,functionName,argsCount,isRealAddr){
     
 }
 
-function showAddr(namespaze,className,functionName,argsCount){
+function showAddr(nameSpaze,className,functionName,argsCount){
 
-    Il2CppImage = findAddrByName(namespaze)
+    Il2CppImage = findAddrByName(nameSpaze)
     for(var t=0;t<s_ImagesCount;t++){
         var t_name = s_ImagesTable.add(sizeof_Il2CppImage*t).add(p_size).readPointer().readCString()
-        if (t_name == namespaze) {
+        if (t_name == nameSpaze) {
             Il2CppImage = ptr(s_ImagesTable.add(sizeof_Il2CppImage*t))
             break
         }else{
@@ -244,7 +305,7 @@ function showAddr(namespaze,className,functionName,argsCount){
         return
     }
     console.warn("---------------------------------------------------------")
-    console.error(namespaze+"."+className+"."+functionName)
+    console.error(nameSpaze+"."+className+"."+functionName)
     console.warn("----------------------------")
     console.log("Il2CppImage\t---->\t "+Il2CppImage)
 
@@ -258,7 +319,7 @@ function showAddr(namespaze,className,functionName,argsCount){
         Module.findExportByName(soName,"il2cpp_class_get_method_from_name"),
         'pointer',['pointer','pointer','int'])
     
-    var namespaze_t = Memory.allocUtf8String(namespaze)
+    var namespaze_t = Memory.allocUtf8String(nameSpaze)
     var className_t = Memory.allocUtf8String(className)
     var functionName_t = Memory.allocUtf8String(functionName)
 
@@ -273,6 +334,8 @@ function showAddr(namespaze,className,functionName,argsCount){
 
 function HookUnityFunctions(){
     
+    var soAddr = Module.findBaseAddress(soName)
+
     // Random()
     // Time()
     Application()
@@ -338,17 +401,17 @@ function HookUnityFunctions(){
     function Application(){
         console.error("------------------- Application -------------------")
 
-        var Addr_cloudProjectId         = soAddr.add(0x0)
-        var Addr_dataPath               = soAddr.add(0x0)
-        var Addr_identifier             = soAddr.add(0x0)
-        var Addr_internetReachability   = soAddr.add(0x0)
-        var Addr_isMobilePlatform       = soAddr.add(0x0)
-        var Addr_isPlaying              = find_method("UnityEngine.CoreModule",'Application','get_isPlaying',0,true)
-        var Addr_persistentDataPath     = soAddr.add(0x0)
-        var Addr_dpi                    = soAddr.add(0x0)
-        var Addr_get_height             = soAddr.add(0x0)
-        var Addr_get_width              = soAddr.add(0x0)
-        var Addr_get_orientation        = soAddr.add(0x0)
+        var Addr_cloudProjectId         = soAddr.add(0x112D410)
+        var Addr_dataPath               = soAddr.add(0x112D1D0)
+        var Addr_identifier             = soAddr.add(0x112D380)
+        var Addr_internetReachability   = soAddr.add(0x112D6AC)
+        var Addr_isMobilePlatform       = soAddr.add(0x112D5E0)
+        var Addr_isPlaying              = soAddr.add(0x112D138)
+        var Addr_persistentDataPath     = soAddr.add(0x112D260)
+        var Addr_dpi                    = soAddr.add(0x10F1FA8)
+        var Addr_get_height             = soAddr.add(0x10F1F18)
+        var Addr_get_width              = soAddr.add(0x10F1F60)
+        var Addr_get_orientation        = soAddr.add(0x10F2038)
         
         //public static string cloudProjectId()
         if (Addr_cloudProjectId != soAddr)
@@ -381,7 +444,7 @@ function HookUnityFunctions(){
             (new NativeFunction(Addr_isMobilePlatform,'bool',[])()==1?"true":"false")+"\n--------------------")
 
         //public static extern bool get_isPlaying();
-        if (Addr_isPlaying !=soAddr && Addr_isPlaying != undefined)
+        if (Addr_isPlaying !=soAddr)
             console.log("[*] isPlaying \t\t\t: "+
             (new NativeFunction(Addr_isPlaying,'bool',[])()==1?"true":"false")+"\n--------------------")
 
@@ -513,6 +576,51 @@ function HookUnityFunctions(){
     
 }
 
+function ShowMethodInfo(methodInfo){
+    if (methodInfo == undefined) {
+        console.error("Input a methodInfo addr")
+        return
+    }
+    methodInfo = ptr(methodInfo)
+    console.warn("-------------------------------------------")
+    console.log("\x1b[36mFunctionName\t\t===>\t "+methodInfo.add(p_size*2).readPointer().readCString()+"\x1b[0m")
+    console.log("Il2CppMethodPointer\t===>\t",methodInfo.readPointer())
+    console.log("InvokerMethod\t\t===>\t",methodInfo.add(p_size).readPointer())
+    console.log("Il2CppClass\t\t===>\t",methodInfo.add(p_size*3).readPointer())
+    console.log("Il2CppType\t\t===>\t",methodInfo.add(p_size*4).readPointer())
+    var parameters_count = methodInfo.add(p_size*10).add(2).readU8()
+    var arr_args = new Array()
+    for(var i=0;i<parameters_count;i++){
+        var ParameterInfo = methodInfo.add(p_size*5).readPointer().add(p_size*i*4)
+        arr_args.push(ParameterInfo.readPointer().readCString())
+    }
+    console.log("ParameterInfo\t\t===>\t",methodInfo.add(p_size*5).readPointer())
+    console.log("parameters_count\t===>\t",parameters_count,"\t",JSON.stringify(arr_args))
+    console.warn("-------------------------------------------")
+}
+
+//Todo ..............
+function ShowClassInfo(il2CppClass){
+    // if (il2CppClass == undefined) {
+    //     console.error("Input a methodInfo addr")
+    //     return
+    // }
+    il2CppClass = find_class("UnityEngine.UI","Text")
+    
+    il2CppClass = ptr(il2CppClass).readPointer()
+
+    console.log(il2CppClass.add(3*p_size).readPointer().readCString(),".",il2CppClass.add(2*p_size).readPointer().readCString())
+    // console.log(hexdump(il2CppClass))
+    var method_count = il2CppClass.add(41*p_size).readU16()
+    console.log("---------------------------------")
+    console.error("List ",method_count," methods")
+    console.log("------------------")
+    for (var i=0;i<method_count;i++){
+        console.log(il2CppClass.add(19*p_size).readPointer().add(i*p_size).readPointer().add(p_size*2).readPointer().readCString())
+    }
+    console.log("---------------------------------")
+}
+
 function seeHexR(addr,length){
     const soAddr = Module.findBaseAddress(soName);
     addr = soAddr.add(addr).readPointer()
@@ -523,17 +631,3 @@ function seeHexA(addr,length){
     console.log(hexdump(ptr(addr),{length:length}))
 }
 
-
-// ------------------------------ 应用demo ------------------------------
-
-//intercepted setActive
-function itcp_setActive(){
-    Interceptor.attach(find_method("UnityEngine.CoreModule",'GameObject','SetActive',1,true),{
-        onEnter:function(args){
-            console.log("onEnter SetActive")
-        },
-        onLeave:function(ret){
-            
-        }
-    })
-}
