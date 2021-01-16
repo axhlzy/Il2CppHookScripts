@@ -65,7 +65,7 @@
    
 ![](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/u3d_8.png)
 
-9. **Info()**
+10. **Info()**
    
 ![](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/u3d_9.png)
 
