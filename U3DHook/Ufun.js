@@ -1230,7 +1230,7 @@ function HookOnPointerClick(){
 
             showGameObject(gameObj)
 
-            // showTransform(m_transform)
+            showTransform(m_transform)
 
             // showEventData(pointerEventData)
         },
