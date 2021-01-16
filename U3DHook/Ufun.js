@@ -1,3 +1,8 @@
+/**
+ * @Author https://github.com/axhlzy
+ * @Des frida hook u3d functions
+ */
+
 const soName = "libil2cpp.so"
 const soAddr = Module.findBaseAddress(soName)
 const p_size = Process.pointerSize
