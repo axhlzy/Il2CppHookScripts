@@ -2,69 +2,110 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 16/01/21 9:23
- * @Des frida hook u3d functions
+ * @Des frida hook u3d functions scrpt
  */
 
 const soName = "libil2cpp.so"
 const soAddr = Module.findBaseAddress(soName)
 const p_size = Process.pointerSize
 
+//定义一些需要用到的导出函数
+var il2cpp_get_corlib,il2cpp_domain_get,il2cpp_domain_get_assemblies,il2cpp_assembly_get_image,
+    il2cpp_image_get_class_count,il2cpp_image_get_class,
+    il2cpp_class_get_methods,il2cpp_class_from_type,il2cpp_class_get_type,il2cpp_class_from_system_type,il2cpp_class_from_name,il2cpp_class_get_method_from_name,
+    il2cpp_string_new,il2cpp_type_get_name,il2cpp_type_get_class_or_element_class
+
+//不要LOG的时候值为false，需要时候true
 var LogFlag = true
-const a_img_addr   = new Array()
-const a_img_names  = new Array()
-
-//breakPoints 参数
+//count_method_times数组用于记录 breakPoints 中方法出现的次数
 var count_method_times
-//管理出现次数，大于出现次数即不显示（免得反复跳）
+//断点的函数出现次数大于 maxCallTime 即不显示
 const maxCallTime = 20
+//存放初始化（list_Images）时候的 imgaddr 以及 imgName
+var arr_img_addr      = new Array()
+var arr_img_names     = new Array()
+//存放MethodInfo指针（供动态断点提供更详细的信息）
+var arr_MethodInfo    = new Array()
 
+//兼容之前的python脚本筛选，同时也是addBreakPoints()所添加的断点的函数也是存放在这里的
 var arrayAddr =
-["0x2e2508","0x2e4940"]
+[]
 
 var arrayName =
-["private Void ShowAds (Int32 id)","private Void ShowAds (Int32 id,String SceneName)"]
-
-
-var il2cpp_domain_get                   = new NativeFunction(Module.findExportByName(soName,"il2cpp_domain_get"),'pointer',[])
-var il2cpp_domain_get_assemblies        = new NativeFunction(Module.findExportByName(soName,"il2cpp_domain_get_assemblies"),'pointer',['pointer','pointer'])
-var il2cpp_assembly_get_image           = new NativeFunction(Module.findExportByName(soName,"il2cpp_assembly_get_image"),'pointer',['pointer'])
-
-var il2cpp_image_get_class_count        = new NativeFunction(Module.findExportByName(soName,"il2cpp_image_get_class_count"),'pointer',['pointer'])
-var il2cpp_image_get_class              = new NativeFunction(Module.findExportByName(soName,"il2cpp_image_get_class"),'pointer',['pointer','int'])
-var il2cpp_class_get_type               = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_get_type"),'pointer',["pointer"])
-
-var il2cpp_class_get_methods            = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_get_methods"),'pointer',["pointer","pointer"])
-var il2cpp_class_from_type              = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_from_type"),'pointer',["pointer"])
-
-var il2cpp_get_corlib                   = new NativeFunction(Module.findExportByName(soName,"il2cpp_get_corlib"),'pointer',[])
-var il2cpp_class_from_name              = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_from_name"),'pointer',["pointer","pointer","pointer"])
-var il2cpp_class_get_method_from_name   = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_get_method_from_name"),'pointer',["pointer","pointer","int"])
-
-var il2cpp_string_new                   = new NativeFunction(Module.findExportByName(soName,"il2cpp_string_new"),'pointer',["pointer"])
-
-setImmediate(initImages)
-function initImages(){
-    LogFlag = false 
-    list_Images()
-    LogFlag = true
-}
+[]
 
 /**
  * --------------------------------------------------------------------------------------------
- * 快捷调用
+ * 快捷方法
  * ---------------------
  * i()      list_Images()
- * c()      list_Classes(image,isShowClass)
+ * c()      list_Classes(image,isShowClass) //遍历调用
+ * C()      list_Classes(imgOrPtr)          //反射调用
  * m()      list_Methods(klass,isShowMore)
  * f()      find_method(ImageName,ClassName,functionName,ArgsCount,isRealAddr)
  * n()      nopfunction(ptr)
  * d()      Interceptor.detachAll()
  * a()      addBreakPoints(imgOrCls)
  * b()      breakPoint(ptr)
- * p()      printCtx(pointer,range,sign)
+ * p()      printCtx(pointer,range)
  * B()      breakPoints(filter)
+ * r()      reflash()
+ * --------------------------------------------------------------------------------------------
+ * 拓展方法
+ * ---------------------
+ * Info()
+ * HookSetActive()
+ * HookOnPointerClick()
+ * HookPlayerPrefs()
+ * HookDebugLog()
+ * HookLoadScene()
+ * ...... 
  * --------------------------------------------------------------------------------------------
  */
+
+setImmediate(initImages)
+function initImages(){
+    LogFlag = false 
+    initFunctions()
+    list_Images()
+    LogFlag = true
+
+    function initFunctions(){
+        //const Il2CppImage* il2cpp_get_corlib()
+        il2cpp_get_corlib                       = new NativeFunction(Module.findExportByName(soName,"il2cpp_get_corlib"),'pointer',[])
+        //Il2CppDomain* il2cpp_domain_get()
+        il2cpp_domain_get                       = new NativeFunction(Module.findExportByName(soName,"il2cpp_domain_get"),'pointer',[])
+        //const Il2CppAssembly** il2cpp_domain_get_assemblies(const Il2CppDomain* domain, size_t* size)
+        il2cpp_domain_get_assemblies            = new NativeFunction(Module.findExportByName(soName,"il2cpp_domain_get_assemblies"),'pointer',['pointer','pointer'])
+        //const Il2CppImage* il2cpp_assembly_get_image(const Il2CppAssembly *assembly)
+        il2cpp_assembly_get_image               = new NativeFunction(Module.findExportByName(soName,"il2cpp_assembly_get_image"),'pointer',['pointer'])
+
+        //size_t il2cpp_image_get_class_count(const Il2CppImage * image)
+        il2cpp_image_get_class_count            = new NativeFunction(Module.findExportByName(soName,"il2cpp_image_get_class_count"),'pointer',['pointer'])
+        //const Il2CppClass* il2cpp_image_get_class(const Il2CppImage * image, size_t index)
+        il2cpp_image_get_class                  = new NativeFunction(Module.findExportByName(soName,"il2cpp_image_get_class"),'pointer',['pointer','int'])
+
+        //const MethodInfo* il2cpp_class_get_methods(Il2CppClass *klass, void* *iter)
+        il2cpp_class_get_methods                = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_get_methods"),'pointer',["pointer","pointer"])
+        //Il2CppClass* il2cpp_class_from_type(const Il2CppType *type)
+        il2cpp_class_from_type                  = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_from_type"),'pointer',["pointer"])
+        //const Il2CppType* il2cpp_class_get_type(Il2CppClass *klass)
+        il2cpp_class_get_type                   = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_get_type"),'pointer',["pointer"])
+        //Il2CppClass* il2cpp_class_from_system_type(Il2CppReflectionType *type)
+        il2cpp_class_from_system_type           = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_from_system_type"),'pointer',["pointer"])
+        //Il2CppClass* il2cpp_class_from_name(const Il2CppImage* image, const char* namespaze, const char *name)
+        il2cpp_class_from_name                  = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_from_name"),'pointer',["pointer","pointer","pointer"])
+        //const MethodInfo* il2cpp_class_get_method_from_name(Il2CppClass *klass, const char* name, int argsCount)
+        il2cpp_class_get_method_from_name       = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_get_method_from_name"),'pointer',["pointer","pointer","int"])
+
+        //Il2CppString* il2cpp_string_new(const char* str)
+        il2cpp_string_new                       = new NativeFunction(Module.findExportByName(soName,"il2cpp_string_new"),'pointer',["pointer"])
+        //char* il2cpp_type_get_name(const Il2CppType *type)
+        il2cpp_type_get_name                    = new NativeFunction(Module.findExportByName(soName,"il2cpp_type_get_name"),'pointer',["pointer"])
+        //Il2CppClass* il2cpp_type_get_class_or_element_class(const Il2CppType *type)
+        il2cpp_type_get_class_or_element_class  = new NativeFunction(Module.findExportByName(soName,"il2cpp_type_get_class_or_element_class"),'pointer',["pointer"])
+    }
+}
 
 function i(){
     list_Images()
@@ -83,38 +124,7 @@ function m(klass){
  * @param {*} m_ptr 
  */
 function b(m_ptr){
-    var arr_method_info = NULL
-    try{
-        arr_method_info = get_Method_Des(m_ptr,true)
-    }catch(e){
-        m_ptr = Number(m_ptr) < Number(soAddr) ? soAddr.add(ptr(m_ptr)) :ptr(m_ptr)
-        Interceptor.attach(m_ptr,{
-            onEnter:function(args){
-                
-            },
-            onLeave:function(ret){
-                LOG("\n[*] Called function addr "+m_ptr+"  ret ---> "+ret,LogColor.C36)
-            } 
-        })
-        return
-    }
-    var method_addr = ptr(m_ptr).readPointer()
-    Interceptor.attach(method_addr,{
-        onEnter:function(args){
-            LOG("\n-----------------------------------------------------------",LogColor.C33)
-            var funcName = arr_method_info[0]
-            LOG("Called "+funcName,LogColor.YELLOW)
-            LOG("----------------------",LogColor.C33)
-            for(var i=0;i<arr_method_info[2];i++){
-                var typeCls = arr_method_info[3][i]
-                LOG("  arg"+i+"\t--->\t"+ args[(funcName.indexOf("Static")==-1?i+1:i)] +"\t"+ getClassName(typeCls),LogColor.C36)
-            }
-        },
-        onLeave:function(ret){
-            LOG("  ret\t--->\t"+ret +"\t"+getClassName(arr_method_info[1]),LogColor.C36)
-            LOG("-----------------------------------------------------------",LogColor.C33)
-        }
-    })
+    breakPoint(m_ptr)
 }
 
 /**
@@ -124,7 +134,7 @@ function b(m_ptr){
 function n(m_ptr){
     m_ptr = Number(m_ptr) < Number(soAddr) ? soAddr.add(ptr(m_ptr)) :ptr(m_ptr)
     //原函数的引用也可以再replace中调用
-    // var srcFunc = new NativeFunction(m_ptr,'void',['pointer','pointer','pointer','pointer'])
+    var srcFunc = new NativeFunction(m_ptr,'void',['pointer','pointer','pointer','pointer'])
     Interceptor.replace(m_ptr,new NativeCallback(function(arg0,arg1,arg2,arg3){
         LOG("\nCalled NOP function ---> "+m_ptr,LogColor.YELLOW)
         // srcFunc(arg0,arg1,arg2,arg3)
@@ -149,11 +159,66 @@ function p(m_ptr,range){
 }
 
 function a(imgOrCls){
-    addBP(imgOrCls)
+    addBreakPoints(imgOrCls)
 }
 
-function B(filter){
-    breakPoints(filter)
+function B(filter,isAnalyticParameter){
+    //默认不要详细参数，都显示可能导致卡顿而且太乱了，建议再需要的时候新开cmd再使用b去指定某个method
+    breakPoints(filter,isAnalyticParameter == undefined ? false : isAnalyticParameter)
+}
+
+/**
+ * 使用反射来查找class
+ */
+function C(ImgOrPtr){
+
+    var corlib = il2cpp_get_corlib()
+    var assemblyClass = il2cpp_class_from_name(corlib, allcStr("System.Reflection"), allcStr("Assembly"))
+    var assemblyLoad  = il2cpp_class_get_method_from_name(assemblyClass,allcStr("Load"), 1)
+    var assemblyGetTypes = il2cpp_class_get_method_from_name(assemblyClass, allcStr("GetTypes"), 0)
+
+    //public static Assembly Load(string assemblyString)
+    var func_load = new NativeFunction(assemblyLoad.readPointer(),'pointer',['pointer','pointer'])
+    // var func_load = new NativeFunction(assemblyLoad.readPointer(),'pointer',['pointer','pointer','pointer'])
+    
+    //public virtual Type[] GetTypes();
+    var func_getTypes = new NativeFunction(assemblyGetTypes.readPointer(),'pointer',['pointer','pointer'])
+
+    LOG("-------------------------------------------------------------------------------------",LogColor.C33)
+    arr_img_names
+    .filter(function(name,index){
+        if (ImgOrPtr != undefined && Number(arr_img_addr[index]) == Number(ImgOrPtr)) return name
+        if (ImgOrPtr != undefined && name.indexOf(ImgOrPtr)!=-1) return name
+        // return name
+    }).forEach(function(name,index){
+        var logstr = "------------ "+name+" ------------"
+        var logstrSub = ""
+        LOG(logstr,LogColor.C33)
+        for (var i= 0;i<logstr.length;i++) {logstrSub += "-"}
+        LOG(logstrSub,LogColor.C33)
+        var reflectionAssembly = func_load(allcStr(name,""),ptr(0x0))
+        // var reflectionAssembly = func_load(ptr(0x0)，allcStr(a_img_names[1],""),ptr(0x0))
+        var reflectionTypes = func_getTypes(reflectionAssembly,ptr(0x0))
+        
+        var items = reflectionTypes.add(p_size*4)
+        var length = reflectionTypes.add(p_size*3).readPointer().toInt32()
+        for (var i =0 ;i<length;i++){
+            var klass = il2cpp_class_from_system_type(items.add(i*p_size).readPointer())
+            // LOG("[*] "+klass+"\t"+getClassName(klass),LogColor.C36)
+            var type = il2cpp_class_get_type(klass)
+            var t_name = il2cpp_type_get_name(type)
+            var p_klass = il2cpp_type_get_class_or_element_class(type)
+            LOG("[*] "+p_klass+"\t"+t_name.readCString(),LogColor.C36)
+        }
+    })
+    LOG("-------------------------------------------------------------------------------------",LogColor.C33)
+}
+
+/**
+ * 清空缓存
+ */
+function r(){
+    reflash()
 }
 
 /**
@@ -161,8 +226,8 @@ function B(filter){
  */
 
 function list_Images(){
-    a_img_names.splice(0,a_img_names.length)
-    a_img_addr.splice(0,a_img_addr.length)
+    arr_img_names.splice(0,arr_img_names.length)
+    arr_img_addr.splice(0,arr_img_addr.length)
 
     var domain = il2cpp_domain_get()
     var size_t = Memory.alloc(p_size)
@@ -175,8 +240,8 @@ function list_Images(){
         var img_name = img_addr.add(p_size).readPointer().readCString()
         var cls_count = il2cpp_image_get_class_count(img_addr).toInt32()
         LOG("[*] "+img_addr+"\t"+cls_count+"\t"+img_name,LogColor.C36)
-        a_img_names.push(img_name)
-        a_img_addr.push(img_addr)
+        arr_img_names.push(img_name)
+        arr_img_addr.push(img_addr)
         count_assemblies++
     }    
     LOG("----------------------------",LogColor.C33)
@@ -276,12 +341,11 @@ function find_method(ImageName,ClassName,functionName,ArgsCount,isRealAddr){
     // var corlib = il2cpp_get_corlib()
     if (isRealAddr == undefined) isRealAddr = true
     var currentlib = 0
-    a_img_names.forEach(function(name,index){
+    arr_img_names.forEach(function(name,index){
         if (name == ImageName){
-            currentlib = a_img_addr[index]
+            currentlib = arr_img_addr[index]
         }
     })
-
     var klass = il2cpp_class_from_name(currentlib, Memory.allocUtf8String(ImageName), Memory.allocUtf8String(ClassName))
     if (klass == 0){
         for(var j=0;j<il2cpp_image_get_class_count(currentlib).toInt32();j++){
@@ -292,10 +356,13 @@ function find_method(ImageName,ClassName,functionName,ArgsCount,isRealAddr){
             }
         }
     }
+    
+    if (klass == 0 ) return ptr(0)
     var method = il2cpp_class_get_method_from_name(klass, Memory.allocUtf8String(functionName), ArgsCount)
     if (method == 0) return ptr(0)
     if (isRealAddr) return isRealAddr ? method.readPointer():method.readPointer().sub(soAddr)
     
+        LOG("2")
     var parameters_count = getMethodParametersCount(method)
     var arr_args = new Array()
     var arr_args_type_addr = new Array()
@@ -321,7 +388,7 @@ function find_method(ImageName,ClassName,functionName,ArgsCount,isRealAddr){
     LOG("-------------------------------------------------------------------------------------",LogColor.C33)
 }
 
-function addBP(imgOrCls){
+function addBreakPoints(imgOrCls){
     imgOrCls = ptr(imgOrCls)
     var method_count = 0
     var count = 0
@@ -333,7 +400,7 @@ function addBP(imgOrCls){
     }
     //判断是image还是class
     LOG("-------------------------------------------------------------------------------------",LogColor.C33)
-    if (String(a_img_addr).indexOf(imgOrCls)!=-1){
+    if (String(arr_img_addr).indexOf(imgOrCls)!=-1){
         for(var j=0;j<count;j++){
             var il2CppClass = il2cpp_image_get_class(imgOrCls,j)
             addFunctions(il2CppClass)
@@ -351,13 +418,14 @@ function addBP(imgOrCls){
             var method = NULL
             try{
                 while (method = il2cpp_class_get_methods(cls, iter)) {
-                    var methodName = get_Method_Des(method)
+                    var methodName = get_method_des(method)
                     var methodAddr = method.readPointer()
                     if (methodAddr == 0) continue
                     LOG("[*] "+methodAddr+" ---> "+methodAddr.sub(soAddr)+"\t"+methodName,LogColor.C36)
                     if (arrayName.indexOf(methodName)!=-1) continue
                     arrayName.push(methodName)
                     arrayAddr.push(methodAddr.sub(soAddr))
+                    arr_MethodInfo.push(method)
                     method_count ++ 
                 }
             }catch(e){
@@ -366,7 +434,12 @@ function addBP(imgOrCls){
     }
 }
 
-function get_Method_Des(method,isArray){
+/**
+ * 解析函数的参数信息
+ * @param {MethodInfo指针} method 
+ * @param {内部函数调用 b()} isArray 
+ */
+function get_method_des(method,isArray){
     method = ptr(method)
 
     var methodName = getMethodName(method)
@@ -401,10 +474,102 @@ function get_Method_Des(method,isArray){
     return ret_str
 }
 
+function breakPoint(m_ptr,index,name){
+    var arr_method_info = NULL
+    try{
+        arr_method_info = get_method_des(m_ptr,true)
+    }catch(e){
+        m_ptr = Number(m_ptr) < Number(soAddr) ? soAddr.add(ptr(m_ptr)) :ptr(m_ptr)
+        Interceptor.attach(m_ptr,{
+            onEnter:function(args){
+                
+            },
+            onLeave:function(ret){
+                if(index!=undefined && ++count_method_times[index] > maxCallTime) return
+                LOG("\n[*] called : "+m_ptr.sub(soAddr)+" ("+arr_MethodInfo[index]+")"+"\t--->\t"+name +"  ret ---> "+ret,LogColor.C36)
+            } 
+        })
+        return
+    }
+    var method_addr = ptr(m_ptr).readPointer()
+    Interceptor.attach(method_addr,{
+        onEnter:function(args){
+            if(index!=undefined && ++count_method_times[index] > maxCallTime) return
+            LOG("\n-----------------------------------------------------------",LogColor.C33)
+            var funcName = arr_method_info[0]
+            LOG("Called "+funcName,LogColor.C96)
+            LOG("----------------------",LogColor.C33)
+            for(var i=0;i<arr_method_info[2];i++){
+                var typeCls = arr_method_info[3][i]
+                var strType = getClassName(typeCls)
+                //静态方法没有上下文，反之有则arg+1
+                var ClsArg = args[(funcName.indexOf("static")==-1?i+1:i)]
+                var result = FuckKnownType(strType,ClsArg)
+                LOG("  arg"+i+"\t--->\t"+ ClsArg +"\t"+ 
+                    ((String(ClsArg).length)<4?"\t":"")+
+                    strType+" ("+typeCls+")"+"\t"+result,LogColor.C36)
+            }
+        },
+        onLeave:function(ret){
+            if(index!=undefined && count_method_times[index] > maxCallTime) return
+            var strType = getClassName(arr_method_info[1])
+            var result = FuckKnownType(strType,ret)
+            var methodStr = arr_method_info.length == 0 ? "" : " ("+arr_method_info[1]+")"
+            LOG("  ret\t--->\t"+ret +
+                (String(ret).length<4?"\t":"")+"\t"+ 
+                strType  + methodStr + "\t" +
+                result,LogColor.C36)
+            LOG("-----------------------------------------------------------",LogColor.C33)
+        }
+    })
+
+    //这个地方可以继续去拓展解析一些常用的类，用b断某个方法的时候就可以很方便的打印出参数
+    function FuckKnownType(strType,mPtr){
+        try{
+            switch(strType){
+                case "Void"         : return ""
+                case "Object[]"     : 
+                case "String"       : return readU16(mPtr)
+                case "Boolean"      : return (mPtr.toInt32() == 1) ? "True" : "False"
+                case "Int32"        : return mPtr.toInt32()
+                case "Single"       : return mPtr.readFloat()
+                case "Object"       : 
+                case "GameObject"   : return SeeTypeToString(mPtr,false)
+                case "Texture"      : 
+                    var w = new NativeFunction(find_method("UnityEngine.CoreModule","Texture","GetDataWidth",0),'int',['pointer'])(mPtr)
+                    var h = new NativeFunction(find_method("UnityEngine.CoreModule","Texture","GetDataHeight",0),'int',['pointer'])(mPtr)
+                    var r = new NativeFunction(find_method("UnityEngine.CoreModule","Texture","get_isReadable",0),'int',['pointer'])(mPtr)
+                    var m = new NativeFunction(find_method("UnityEngine.CoreModule","Texture","get_wrapMode",0),'int',['pointer'])(mPtr)
+                    r = r == 0 ? "False":"True"
+                    m = m == 0 ? "Repeat" : (m == 1 ? "Clamp" : (m == 2 ? "Mirror":"MirrorOnce"))
+                    return "( "+m+" , "+w+"×"+h+" , "+r+" )"
+                case "Vector2"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Vector2","ToString",0),'pointer',['pointer'])(mPtr))
+                case "Vector3"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Vector3","ToString",0),'pointer',['pointer'])(mPtr))
+                case "Vector4"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Vector4","ToString",0),'pointer',['pointer'])(mPtr))
+                case "Color"        : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Color","ToString",0),'pointer',['pointer'])(mPtr))
+                case "Color32"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Color32","ToString",0),'pointer',['pointer'])(mPtr))
+                case "Event"        : return readU16(new NativeFunction(find_method("UnityEngine.IMGUIModule","Event","ToString",0),'pointer',['pointer'])(mPtr))
+                case "Bounds"       : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Bounds","ToString",0),'pointer',['pointer'])(mPtr))
+                case "TextAsset"    : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","TextAsset","ToString",0),'pointer',['pointer'])(mPtr))
+                case "Rect"         : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Rect","ToString",0),'pointer',['pointer'])(mPtr))
+                case "Ray"          : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Ray","ToString",0),'pointer',['pointer'])(mPtr))
+                case "Quaternion"   : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Quaternion","ToString",0),'pointer',['pointer'])(mPtr))
+                case "Pose"         : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Pose","ToString",0),'pointer',['pointer'])(mPtr))
+                case "Plane"        : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Plane","ToString",0),'pointer',['pointer'])(mPtr))
+                default : return "UnKnown"
+            }
+        }catch(e){
+            // LOG(e)
+            return "Error"
+        }
+    }
+}
+
 /**
  * @param {查询筛选} filter
+ * @param {是否解析参数} isAnalyticParameter
  */
-function breakPoints(filter){
+function breakPoints(filter,isAnalyticParameter){
     d()
     var t_arrayName = new Array()
     var t_arrayAddr = new Array()
@@ -425,32 +590,32 @@ function breakPoints(filter){
         count_method_times[t] = Number(1)
     }
 
-    Java.perform(function(){
-        t_arrayAddr
-            .map(function(temp){return soAddr.add(temp)})
-            .forEach(function(value,index,array){
-                LOG("-------------------------",LogColor.C90)
-                LOG('currentAddr:' + value + "\t"+t_arrayName[index],LogColor.C32)
-                try{
-                    funcTmp(value,index,t_arrayName)
-                }catch(e){
-                    funcTmp(value.add(1),soAddr,index,t_arrayName)
-                }
-                LOG("\t\t---->"+index+"\t"+value.sub(soAddr)+" is prepared ",LogColor.C33)
-            })
-        LOG("------------------------------------------",LogColor.C33)
-        LOG("  Added "+t_arrayAddr.length+" BreakPoints    |    All "+arrayAddr.length,LogColor.RED)
-        LOG("-------------------------------------------------------------------------------------",LogColor.C33)
-    })
+    t_arrayAddr
+        .map(function(temp){return soAddr.add(temp)})
+        .forEach(function(value,index,array){
+            LOG("-------------------------",LogColor.C90)
+            LOG('currentAddr:' + value + "\t"+t_arrayName[index],LogColor.C32)
+            // var a1 = isAnalyticParameter ? arrayMethod[index] : value
+            // var a2 = isAnalyticParameter ? undefined : index
+            try{
+                funcTmp(value,index,t_arrayName)
+                // breakPoint(a1,a2,t_arrayName[index])
+            }catch(e){
+                funcTmp(value.add(1),index,t_arrayName)
+                // breakPoint(a1.add(1),a2,t_arrayName[index])
+            }            
+            LOG("\t\t---->"+index+"\t"+value.sub(soAddr)+" is prepared ",LogColor.C33)
+        })
+    LOG("------------------------------------------",LogColor.C33)
+    LOG("  Added "+t_arrayAddr.length+" BreakPoints    |    All "+arrayAddr.length,LogColor.RED)
+    LOG("-------------------------------------------------------------------------------------",LogColor.C33)
 
     function funcTmp(currentAddr,index,arrayName){
         try{
             Interceptor.attach(currentAddr, {
                 onEnter: function(args){
-                    // PrintStackTraceN(this.context)
                     if(++count_method_times[index] < maxCallTime){
-                        LOG("called : "+currentAddr.sub(soAddr)+"\t--->\t"+arrayName[index] +"\n",LogColor.C36)
-                        this.temp = currentAddr.sub(soAddr);
+                        LOG("called : "+currentAddr.sub(soAddr)+" ("+arr_MethodInfo[index]+")"+"\t--->\t"+arrayName[index] +"\n",LogColor.C36)
                     }
                 },
                 onLeave: function(retval){
@@ -496,7 +661,7 @@ function print_deserted_methods(){
     if (count_method_times == null || count_method_times.length == 0) return
     LOG("------------------deserted methods------------------\n",LogColor.C92)
     count_method_times.forEach(function(value,index){
-        if (Number(value)>maxCallTime) LOG("[*] "+arrayAddr[index].add(soAddr)+"\t"+arrayAddr[index]+"\t("+index+")"+"\t--->\t"+arrayName[index]+"\n",LogColor.C32)
+        if (Number(value)>maxCallTime) LOG("[*] "+arrayAddr[index].add(soAddr)+"\t"+arrayAddr[index]+"\t"+arr_MethodInfo[index]+"\t("+index+")"+"\t--->\t"+arrayName[index]+"\n",LogColor.C32)
     })
 }
 
@@ -504,10 +669,20 @@ function print_deserted_methods(){
  *  用来区分transform和gameObj
  * @param {} obj 
  */
-function SeeTypeToString(obj){
-    var f_Object_ToSting   = new NativeFunction(find_method("UnityEngine.CoreModule","Object","ToString",0,true),'pointer',['pointer'])
-    var s_type = f_Object_ToSting(ptr(obj))
-    LOG(s_type.add(p_size*3).readUtf16String())
+function SeeTypeToString(obj,b){
+    var s_type   = new NativeFunction(find_method("UnityEngine.CoreModule","Object","ToString",0,true),'pointer',['pointer'])(ptr(obj))
+    if (b == undefined) {
+        LOG(readU16(s_type))
+    }else{
+        return readU16(s_type)
+    }
+
+}
+
+function reflash(){
+    arr_MethodInfo.splice(0,arr_MethodInfo.length)
+    arr_img_addr.splice(0,arr_img_addr.length)
+    arr_img_names.splice(0,arr_img_names.length)
 }
 
 function get_method_modifier(method_ptr){
@@ -609,6 +784,7 @@ var LogColor = {
 }
 
 function showGameObject(gameObj){
+    
     var f_getName        = new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1,true),'pointer',['pointer'])
     var f_getLayer       = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_layer",0,true),'int',['pointer'])
     var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0,true),'pointer',['pointer'])
@@ -617,6 +793,7 @@ function showGameObject(gameObj){
     
     LOG("--------- GameObject ---------",LogColor.C33)
     LOG("gameObj\t\t--->\t"+gameObj,LogColor.C36)
+    if (gameObj == 0) return
     LOG("getName\t\t--->\t"+f_getName(gameObj).add(Process.pointerSize*3).readUtf16String(),LogColor.C36)
     LOG("getLayer\t--->\t"+f_getLayer(gameObj),LogColor.C36)           
     var m_transform = f_getTransform(gameObj)
@@ -785,6 +962,23 @@ function getParameterName(ParameterInfo){
 function getParameterType(Il2CppType){
     //const Il2CppType* parameter_type;
     return ptr(Il2CppType).add(p_size*2+4).readPointer()
+}
+
+/**
+ * 读取c#字符串
+ * @param {c#字符串指针}} mPtr 
+ */
+function readU16(mPtr){
+    return ptr(mPtr).add(p_size*3).readUtf16String()
+}
+
+/**
+ * 生成cstring or c#string
+ * @param {字符串} str 
+ * @param {随意填写} type 
+ */
+function allcStr(str,type){
+    return type == undefined ? Memory.allocUtf8String(str) : il2cpp_string_new(Memory.allocUtf8String(str))
 }
 
 /**
@@ -1199,6 +1393,19 @@ function Info(){
     }
 }
 
+function CallStatic(mPtr,arg0,arg1,arg2,arg3){
+    arg0 = arg0 == undefined?ptr(0):arg0
+    arg1 = arg1 == undefined?ptr(0):arg1
+    arg2 = arg2 == undefined?ptr(0):arg2
+    arg3 = arg3 == undefined?ptr(0):arg3
+    new NativeFunction(mPtr,'pointer',['pointer','pointer','pointer','pointer'])(arg0,arg1,arg2,arg3)
+}
+
+function GotoScene(str){
+    CallStatic(find_method("UnityEngine.CoreModule","SceneManager","LoadScene",2)
+        ,il2cpp_string_new(Memory.allocUtf8String(str)))
+} 
+
 function setActive(gameObj,visible){
     new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","SetActive",1,true),'pointer',['pointer','int'])(ptr(gameObj),visible)
 }
@@ -1218,7 +1425,7 @@ function HookSetActive(){
         }
     })
 }
- 
+
 function HookOnPointerClick(){
 
     var pointerEventData = null
@@ -1228,6 +1435,7 @@ function HookOnPointerClick(){
             LOG("\n--------------------------------------",LogColor.YELLOW)
             LOG("public void OnPointerClick( "+(args[1])+" );",LogColor.C36)
             pointerEventData = args[1]
+            if (pointerEventData == 0) return 
             
             var f_get_pointerEnter = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
             var gameObj = f_get_pointerEnter(pointerEventData)
@@ -1237,7 +1445,7 @@ function HookOnPointerClick(){
 
             showGameObject(gameObj)
 
-            showTransform(m_transform)
+            // showTransform(m_transform)
 
             // showEventData(pointerEventData)
         },
@@ -1245,6 +1453,133 @@ function HookOnPointerClick(){
 
         } 
     })
+}
+
+function HookProcessMoveDrag(){
+
+    HookHandlePointerExitAndEnter()
+    
+    function move(){
+        Interceptor.attach(find_method("UnityEngine.UI","PointerInputModule","ProcessMove",1),{
+            onEnter:function(args){
+    
+                LOG("\n--------------------------------------",LogColor.YELLOW)
+                LOG("protected virtual Void ProcessMove( "+(args[1])+" );",LogColor.C36)
+                var pointerEventData = args[1]
+                
+                var f_get_pointerEnter = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
+                var gameObj = f_get_pointerEnter(pointerEventData)
+                
+                // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
+                // var m_transform = f_getTransform(gameObj)
+    
+                showGameObject(gameObj)
+    
+                // showTransform(m_transform)
+    
+                // showEventData(pointerEventData)
+            },
+            onLeave:function(retval){
+    
+            } 
+        })
+    }
+
+    function drag(){
+        Interceptor.attach(find_method("UnityEngine.UI","PointerInputModule","ProcessDrag",1),{
+            onEnter:function(args){
+    
+                LOG("\n--------------------------------------",LogColor.YELLOW)
+                LOG("protected virtual Void ProcessDrag( "+(args[1])+" );",LogColor.C36)
+                var pointerEventData = args[1]
+                
+                var f_get_pointerEnter = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_pointerDrag",0),'pointer',['pointer'])
+                var gameObj = f_get_pointerEnter(pointerEventData)
+                
+                // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
+                // var m_transform = f_getTransform(gameObj)
+    
+                showGameObject(gameObj)
+    
+                // showTransform(m_transform)
+    
+                // showEventData(pointerEventData)
+            },
+            onLeave:function(retval){
+    
+            } 
+        })
+    }
+
+    function HookHandlePointerExitAndEnter(){
+        Interceptor.attach(find_method("UnityEngine.UI","BaseInputModule","HandlePointerExitAndEnter",2),{
+            onEnter:function(args){
+    
+                LOG("\n--------------------------------------",LogColor.YELLOW)
+                LOG("protected virtual Void HandlePointerExitAndEnter( "+(args[1])+" , "+(args[2])+")",LogColor.C36)
+                var pointerEventData = args[1]
+                
+                var f_get_pointerEnter = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
+                var gameObj = f_get_pointerEnter(pointerEventData)
+                
+                // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
+                // var m_transform = f_getTransform(gameObj)
+    
+                showGameObject(args[2])
+    
+                // showTransform(m_transform)
+    
+                showEventData(pointerEventData)
+            },
+            onLeave:function(retval){
+    
+            } 
+        })
+    }
+
+    function set_pointerPress(){
+        Interceptor.attach(find_method("UnityEngine.UI","PointerEventData","set_pointerPress",1),{
+            onEnter:function(args){
+    
+                LOG("\n--------------------------------------",LogColor.YELLOW)
+                LOG("protected virtual Void set_pointerPress( "+(args[1])+" );",LogColor.C36)
+                
+                // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
+                // var m_transform = f_getTransform(gameObj)
+    
+                showGameObject(args[1])
+    
+                // showTransform(m_transform)
+    
+                // showEventData(pointerEventData)
+            },
+            onLeave:function(retval){
+    
+            } 
+        })
+    }
+
+    function GetPointerData(){
+        Interceptor.attach(find_method("UnityEngine.UI","PointerInputModule","GetPointerData",3),{
+            onEnter:function(args){
+    
+                LOG("\n--------------------------------------",LogColor.YELLOW)
+                LOG("protected virtual Void set_pointerPress( "+(args[2])+" );",LogColor.C36)
+                
+                // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
+                // var m_transform = f_getTransform(gameObj)
+    
+                showGameObject(args[1])
+    
+                // showTransform(m_transform)
+    
+                showEventData(args[2])
+            },
+            onLeave:function(retval){
+    
+            } 
+        })
+    }
 }
 
 function HookPlayerPrefs(){
@@ -1278,7 +1613,7 @@ function HookPlayerPrefs(){
                 }
             })
         }
-
+ 
         //public static extern int GetInt(string key, int defaultValue)
         if (Addr_GetInt !=0){
             Interceptor.attach(Addr_GetInt,{
@@ -1287,8 +1622,11 @@ function HookPlayerPrefs(){
                     this.arg1 = args[1]
                 },
                 onLeave:function(ret){
-                    LOG("\n[*] '"+ret.toInt32() +"' = GetInt('"+this.arg0.add(p_size*3).readUtf16String()+"','"+this.arg1+"')",LogColor.C36)
+                    var s_arg0 = this.arg0.add(p_size*3).readUtf16String()
+                    var i_arg1 = this.arg1
+                    LOG("\n[*] '"+ret.toInt32() +"' = GetInt('"+s_arg0+"','"+i_arg1+"')",LogColor.C36)
                     if (isShowPrintStack) PrintStackTraceN(this.context)
+                    if (s_arg0.indexOf("SaleBoughted")!=-1) ret.replace(ptr(0x1))
                 }
             })
         }
@@ -1380,10 +1718,21 @@ function HookDebugLog(){
 }
 
 function HookLoadScene(){
-    var GetActiveScene = new NativeFunction(find_method("UnityEngine.CoreModule","SceneManager","GetActiveScene",0),'pointer',[])
-    var scene = GetActiveScene()
+    var GetActiveScene = find_method("UnityEngine.CoreModule","SceneManager","GetActiveScene",0)
+    if (current_scene != 0){
+        var current_scene = new NativeFunction(GetActiveScene,'pointer',[])()
+        var get_name = new NativeFunction(find_method("UnityEngine.CoreModule","Scene","GetNameInternal",1),'pointer',['int'])
+        LOG("\nCurrentScene   --->   "+readU16(get_name(current_scene.toInt32()))+"\n",LogColor.C36)
+    }
 
-    var get_name = new NativeFunction(find_method("UnityEngine.CoreModule","Scene","get_name",0),'pointer',['pointer'])
-    
-    LOG(hexdump(get_name(scene)))
+    Interceptor.attach(find_method("UnityEngine.CoreModule","SceneManager","LoadScene",2),{
+        onEnter:function(args){
+            LOG("\nCalled public static Scene LoadScene (String sceneName,LoadSceneParameters parameters)",LogColor.C36)
+            LOG(" arg0  --->\t"+args[0]+"\t"+readU16(args[0]),LogColor.C36)
+        }, 
+        onLeave:function(ret){
+            LOG(" ret  --->\t"+ret,LogColor.C36)
+        }
+    })
 }
+
