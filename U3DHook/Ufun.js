@@ -1,7 +1,8 @@
 /**
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
- * @CreatedTime 16/01/21 9:23
+ * @CreatedTime 2021/01/16 9:23
+ * @UpdateTime 2021/01/20 18:07
  * @Des frida hook u3d functions scrpt
  */
 
@@ -47,9 +48,10 @@ var arrayName =
  * d()      Interceptor.detachAll()
  * a()      addBreakPoints(imgOrCls)
  * b()      breakPoint(ptr)
- * p()      printCtx(pointer,range)
+ * P()      printCtx(pointer,range)
  * B()      breakPoints(filter)
  * r()      reflash()
+ * p()      print_list_result(filter)
  * --------------------------------------------------------------------------------------------
  * 拓展方法
  * ---------------------
@@ -153,7 +155,7 @@ function f(ImageName,ClassName,functionName,ArgsCount){
  * 用来查看地址 确定不是单独的一条B，以便于InlineHook的后续处理
  * @param {pointer} m_ptr 绝对地址相对地址都可以
  */
-function p(m_ptr,range){
+function P(m_ptr,range){
     m_ptr = Number(m_ptr) < Number(soAddr) ? soAddr.add(ptr(m_ptr)) :ptr(m_ptr)
     printCtx(m_ptr,(range==undefined?20:range),"")
 }
@@ -219,6 +221,10 @@ function C(ImgOrPtr){
  */
 function r(){
     reflash()
+}
+
+function p(filter){
+    print_list_result(filter)
 }
 
 /**
@@ -615,7 +621,8 @@ function breakPoints(filter,isAnalyticParameter){
             Interceptor.attach(currentAddr, {
                 onEnter: function(args){
                     if(++count_method_times[index] < maxCallTime){
-                        LOG("called : "+currentAddr.sub(soAddr)+" ("+arr_MethodInfo[index]+")"+"\t--->\t"+arrayName[index] +"\n",LogColor.C36)
+                        var strMethodP = arr_MethodInfo.length == 0 ? "" : " ("+arr_MethodInfo[index]+")"
+                        LOG("called : "+currentAddr.sub(soAddr)+strMethodP+"\t--->\t"+arrayName[index] +"\n",LogColor.C36)
                     }
                 },
                 onLeave: function(retval){
@@ -1735,4 +1742,3 @@ function HookLoadScene(){
         }
     })
 }
-
