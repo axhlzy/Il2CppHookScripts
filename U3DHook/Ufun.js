@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 9:23
- * @UpdateTime 2021/01/20 18:07
+ * @UpdateTime 2021/01/22 17:33
  * @Des frida hook u3d functions scrpt
  */
 
@@ -26,7 +26,7 @@ const maxCallTime = 20
 var arr_img_addr      = new Array()
 var arr_img_names     = new Array()
 //存放MethodInfo指针（供动态断点提供更详细的信息）
-var arr_MethodInfo    = new Array()
+var arrMethodInfo    = new Array()
 
 //兼容之前的python脚本筛选，同时也是addBreakPoints()所添加的断点的函数也是存放在这里的
 var arrayAddr =
@@ -61,6 +61,8 @@ var arrayName =
  * HookPlayerPrefs()
  * HookDebugLog()
  * HookLoadScene()
+ * HookGetSetText()
+ * PrintHierarchy()
  * ...... 
  * --------------------------------------------------------------------------------------------
  */
@@ -123,7 +125,7 @@ function m(klass){
 
 /**
  * 参数可以传递 绝对地址 相对地址 methodinfo指针（解析参数）
- * @param {*} m_ptr 
+ * @param {Number} m_ptr 
  */
 function b(m_ptr){
     breakPoint(m_ptr)
@@ -131,7 +133,7 @@ function b(m_ptr){
 
 /**
  * nop 指定函数 (相对地址/绝对地址都可以填)
- * @param {*} m_ptr 
+ * @param {Number} m_ptr 
  */
 function n(m_ptr){
     m_ptr = Number(m_ptr) < Number(soAddr) ? soAddr.add(ptr(m_ptr)) :ptr(m_ptr)
@@ -147,13 +149,21 @@ function d(){
     Interceptor.detachAll()
 }
 
+/**
+ * 查找 Method 地址
+ * @param {String} ImageName 
+ * @param {String} ClassName 
+ * @param {String} functionName 
+ * @param {Number} ArgsCount 
+ */
 function f(ImageName,ClassName,functionName,ArgsCount){
     find_method(ImageName,ClassName,functionName,ArgsCount,false)
 }
 
 /**
  * 用来查看地址 确定不是单独的一条B，以便于InlineHook的后续处理
- * @param {pointer} m_ptr 绝对地址相对地址都可以
+ * @param {Number} m_ptr 绝对地址相对地址都可以
+ * @param {Number} 打印指令条数
  */
 function P(m_ptr,range){
     m_ptr = Number(m_ptr) < Number(soAddr) ? soAddr.add(ptr(m_ptr)) :ptr(m_ptr)
@@ -337,10 +347,15 @@ function list_Methods(klass,isShowMore){
     LOG("-------------------------------------------------------------------------------------",LogColor.C33)
 }
 
-/*
+/**
  *  根据 ImageName , ClassName , functionName , argsCount 找到对应 function 的地址
  *  最后一个参数 isRealAddr 用作显示静态分析地址还是当前内存地址（带这个参数则只返回地址，不带则列表信息）
  *  find_method("UnityEngine.UI","Text","get_text",0)
+ * @param {String} ImageName 
+ * @param {String} ClassName 
+ * @param {String} functionName 
+ * @param {Number} ArgsCount 
+ * @param {Boolean} isRealAddr 
  */
 function find_method(ImageName,ClassName,functionName,ArgsCount,isRealAddr){
 
@@ -431,7 +446,7 @@ function addBreakPoints(imgOrCls){
                     if (arrayName.indexOf(methodName)!=-1) continue
                     arrayName.push(methodName)
                     arrayAddr.push(methodAddr.sub(soAddr))
-                    arr_MethodInfo.push(method)
+                    arrMethodInfo.push(method)
                     method_count ++ 
                 }
             }catch(e){
@@ -442,8 +457,8 @@ function addBreakPoints(imgOrCls){
 
 /**
  * 解析函数的参数信息
- * @param {MethodInfo指针} method 
- * @param {内部函数调用 b()} isArray 
+ * @param {Number} method MethodInfo指针
+ * @param {*} isArray 内部函数调用 b()
  */
 function get_method_des(method,isArray){
     method = ptr(method)
@@ -457,12 +472,24 @@ function get_method_des(method,isArray){
     //解析参数
     var arr_args = new Array()
     var arr_args_t = new Array()
+    var arr_args_n = new Array()
     for(var i=0;i<parameters_count;i++){
         var ParameterInfo = method.add(p_size*5).readPointer().add(p_size*i*4)
         var typeClass = il2cpp_class_from_type(getParameterType(ParameterInfo))
         var TypeName = getClassName(typeClass)
-        arr_args.push(TypeName+" "+getParameterName(ParameterInfo))
+        var paraName = getParameterName(ParameterInfo)
+        arr_args.push(TypeName+" "+paraName)
         arr_args_t.push(typeClass)
+        arr_args_n.push(paraName)
+    }
+
+    //补空格对齐
+    var maxlength = 0
+    for(var i=0;i<arr_args_n.length;i++){
+        maxlength = maxlength > arr_args_n[i].length ? maxlength : arr_args_n[i].length
+    }
+    for(var i=0;i<arr_args_n.length;i++){
+        arr_args_n[i] += getSpace(maxlength - arr_args_n[i].length)
     }
 
     var ret_str = permission+retName+" "+methodName+ " ("+arr_args+")"
@@ -473,13 +500,29 @@ function get_method_des(method,isArray){
         a_ret.push(retClass)            //返回值类型
         a_ret.push(parameters_count)    //参数个数
         a_ret.push(arr_args_t)          //参数class列表
+        a_ret.push(arr_args_n)          //参数名称
+        a_ret.push(getSpace(maxlength))           //参数最大长度（补齐）
         // LOG(JSON.stringify(a_ret))
         return a_ret
     }
 
     return ret_str
+
+    function getSpace(length){
+        var retStr = ""
+        for (var i = 0;i<length;i++){
+            retStr += " "
+        }
+        return retStr
+    }
 }
 
+/**
+ * 断点单个函数
+ * @param {Number} m_ptr 可以是绝对地址 相对地址 MethodInfo地址
+ * @param {Number} index 
+ * @param {String} name 
+ */
 function breakPoint(m_ptr,index,name){
     var arr_method_info = NULL
     try{
@@ -491,16 +534,17 @@ function breakPoint(m_ptr,index,name){
                 
             },
             onLeave:function(ret){
-                if(index!=undefined && ++count_method_times[index] > maxCallTime) return
-                LOG("\n[*] called : "+m_ptr.sub(soAddr)+" ("+arr_MethodInfo[index]+")"+"\t--->\t"+name +"  ret ---> "+ret,LogColor.C36)
+                // if(index!=undefined && ++count_method_times[index] > maxCallTime) return
+                LOG("\n[*] called : "+m_ptr.sub(soAddr)+" ("+arrMethodInfo[index]+")"+"\t--->\t"+name +"  ret ---> "+ret,LogColor.C36)
             } 
         })
         return
     }
     var method_addr = ptr(m_ptr).readPointer()
+    // LOG(method_addr.sub(soAddr))
     Interceptor.attach(method_addr,{
         onEnter:function(args){
-            if(index!=undefined && ++count_method_times[index] > maxCallTime) return
+            // if(index!=undefined && ++count_method_times[index] > maxCallTime) return
             LOG("\n-----------------------------------------------------------",LogColor.C33)
             var funcName = arr_method_info[0]
             LOG("Called "+funcName,LogColor.C96)
@@ -511,17 +555,17 @@ function breakPoint(m_ptr,index,name){
                 //静态方法没有上下文，反之有则arg+1
                 var ClsArg = args[(funcName.indexOf("static")==-1?i+1:i)]
                 var result = FuckKnownType(strType,ClsArg)
-                LOG("  arg"+i+"\t--->\t"+ ClsArg +"\t"+ 
+                LOG("  arg"+i+" | "+arr_method_info[4][i]+"\t--->\t"+ ClsArg +"\t"+ 
                     ((String(ClsArg).length)<4?"\t":"")+
                     strType+" ("+typeCls+")"+"\t"+result,LogColor.C36)
             }
         },
         onLeave:function(ret){
-            if(index!=undefined && count_method_times[index] > maxCallTime) return
+            // if(index!=undefined && count_method_times[index] > maxCallTime) return
             var strType = getClassName(arr_method_info[1])
             var result = FuckKnownType(strType,ret)
             var methodStr = arr_method_info.length == 0 ? "" : " ("+arr_method_info[1]+")"
-            LOG("  ret\t--->\t"+ret +
+            LOG("  ret  |"+arr_method_info[5]+"\t--->\t"+ret +
                 (String(ret).length<4?"\t":"")+"\t"+ 
                 strType  + methodStr + "\t" +
                 result,LogColor.C36)
@@ -535,7 +579,7 @@ function breakPoint(m_ptr,index,name){
             switch(strType){
                 case "Void"         : return ""
                 case "Object[]"     : 
-                case "String"       : return readU16(mPtr)
+                case "String"       : return mPtr == 0 ? "" : readU16(mPtr)
                 case "Boolean"      : return (mPtr.toInt32() == 1) ? "True" : "False"
                 case "Int32"        : return mPtr.toInt32()
                 case "Single"       : return mPtr.readFloat()
@@ -549,6 +593,13 @@ function breakPoint(m_ptr,index,name){
                     r = r == 0 ? "False":"True"
                     m = m == 0 ? "Repeat" : (m == 1 ? "Clamp" : (m == 2 ? "Mirror":"MirrorOnce"))
                     return "( "+m+" , "+w+"×"+h+" , "+r+" )"
+                case "RectTransform":
+                    // var pivot = new NativeFunction(find_method("UnityEngine.CoreModule","RectTransform","get_pivot",0),'pointer',['pointer'])(mPtr)
+                    // var rect = new NativeFunction(find_method("UnityEngine.CoreModule","RectTransform","get_sizeDelta",0),'pointer',['pointer'])(mPtr)
+                    // var str1 = FuckKnownType("Vector2",pivot)
+                    // var str2 = FuckKnownType("Rect",rect)
+                    return ""
+                case "Text"         : return readU16(new NativeFunction(find_method("UnityEngine.UI","Text","get_text",0),'pointer',['pointer'])(mPtr))
                 case "Vector2"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Vector2","ToString",0),'pointer',['pointer'])(mPtr))
                 case "Vector3"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Vector3","ToString",0),'pointer',['pointer'])(mPtr))
                 case "Vector4"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Vector4","ToString",0),'pointer',['pointer'])(mPtr))
@@ -572,21 +623,25 @@ function breakPoint(m_ptr,index,name){
 }
 
 /**
- * @param {查询筛选} filter
- * @param {是否解析参数} isAnalyticParameter
+ * 使用arrayName 和 arrayAddr 断点多个函数 （动态添加的时候使用到arrMethodInfo）
+ * @param {String} filter 查询筛选
+ * @param {Boolean} isAnalyticParameter 是否解析参数
  */
 function breakPoints(filter,isAnalyticParameter){
     d()
     var t_arrayName = new Array()
     var t_arrayAddr = new Array()
+    var t_arrayMethod = new Array()
     if (filter == undefined || filter == ""){
         t_arrayName = arrayName
         t_arrayAddr = arrayAddr
+        t_arrayMethod = arrMethodInfo
     }else{
         arrayName.forEach(function(value,index){
             if (value.indexOf(filter)!=-1){
                 t_arrayName.push(value)
                 t_arrayAddr.push(arrayAddr[index])
+                t_arrayMethod.push(arrMethodInfo[index])
             }
         })
     }
@@ -621,7 +676,7 @@ function breakPoints(filter,isAnalyticParameter){
             Interceptor.attach(currentAddr, {
                 onEnter: function(args){
                     if(++count_method_times[index] < maxCallTime){
-                        var strMethodP = arr_MethodInfo.length == 0 ? "" : " ("+arr_MethodInfo[index]+")"
+                        var strMethodP = t_arrayMethod.length == 0 ? "" : " ("+t_arrayMethod[index]+")"
                         LOG("called : "+currentAddr.sub(soAddr)+strMethodP+"\t--->\t"+arrayName[index] +"\n",LogColor.C36)
                     }
                 },
@@ -668,13 +723,13 @@ function print_deserted_methods(){
     if (count_method_times == null || count_method_times.length == 0) return
     LOG("------------------deserted methods------------------\n",LogColor.C92)
     count_method_times.forEach(function(value,index){
-        if (Number(value)>maxCallTime) LOG("[*] "+arrayAddr[index].add(soAddr)+"\t"+arrayAddr[index]+"\t"+arr_MethodInfo[index]+"\t("+index+")"+"\t--->\t"+arrayName[index]+"\n",LogColor.C32)
+        if (Number(value)>maxCallTime) LOG("[*] "+arrayAddr[index].add(soAddr)+"\t"+arrayAddr[index]+"\t"+arrMethodInfo[index]+"\t("+index+")"+"\t--->\t"+arrayName[index]+"\n",LogColor.C32)
     })
 }
 
 /**
  *  用来区分transform和gameObj
- * @param {} obj 
+ * @param {Object} obj 
  */
 function SeeTypeToString(obj,b){
     var s_type   = new NativeFunction(find_method("UnityEngine.CoreModule","Object","ToString",0,true),'pointer',['pointer'])(ptr(obj))
@@ -687,9 +742,9 @@ function SeeTypeToString(obj,b){
 }
 
 function reflash(){
-    arr_MethodInfo.splice(0,arr_MethodInfo.length)
-    arr_img_addr.splice(0,arr_img_addr.length)
-    arr_img_names.splice(0,arr_img_names.length)
+    arrMethodInfo.splice(0,arrMethodInfo.length)
+    arrayAddr.splice(0,arrayAddr.length)
+    arrayName.splice(0,arrayName.length)
 }
 
 function get_method_modifier(method_ptr){
@@ -789,158 +844,6 @@ var LogColor = {
     C90:90,C91:91,C92:92,C93:93,C94:94,C95:95,C96:96,C97:97,
     C100:100,C101:101,C102:102,C103:103,C104:104,C105:105,C106:106,C107:107
 }
-
-function showGameObject(gameObj){
-    
-    var f_getName        = new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1,true),'pointer',['pointer'])
-    var f_getLayer       = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_layer",0,true),'int',['pointer'])
-    var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0,true),'pointer',['pointer'])
-    var f_getParent      = new NativeFunction(find_method("UnityEngine.CoreModule","Transform","GetParent",0,true),'pointer',['pointer'])
-    // var f_getTag         = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_tag",0,true),'pointer',['pointer'])
-    
-    LOG("--------- GameObject ---------",LogColor.C33)
-    LOG("gameObj\t\t--->\t"+gameObj,LogColor.C36)
-    if (gameObj == 0) return
-    LOG("getName\t\t--->\t"+f_getName(gameObj).add(Process.pointerSize*3).readUtf16String(),LogColor.C36)
-    LOG("getLayer\t--->\t"+f_getLayer(gameObj),LogColor.C36)           
-    var m_transform = f_getTransform(gameObj)
-    LOG("getTransform\t--->\t"+m_transform,LogColor.C36)
-    // LOG("getTag\t\t--->\t"+f_getTag(gameObj).add(p_size*3).readUtf16String(),LogColor.C36)
-    var layerNames = ""
-    for (var i=0;i<10;i++){
-        var getName = f_getName(m_transform)
-        var spl =  layerNames == "" ? "" : " <--- "
-        layerNames = layerNames + spl + getName.add(Process.pointerSize*3).readUtf16String()
-        m_transform = f_getParent(m_transform)
-        if (m_transform == 0) break
-    }
-    LOG("hierarchy\t--->\t"+layerNames,LogColor.C36)
-}
-
-function showTransform(transform){
-    LOG("--------- Transform ---------",LogColor.C33)
-
-    transform = ptr(transform)
-    var addr_get_childCount = find_method("UnityEngine.CoreModule","Transform","get_childCount",0,true)
-    var addr_GetChild       = find_method("UnityEngine.CoreModule","Transform","GetChild",1,true)
-    var f_getName           = new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1,true),'pointer',['pointer'])
-    
-    if (addr_get_childCount != 0){
-        var f_get_childCount = new NativeFunction(addr_get_childCount,'int',['pointer'])
-        var f_GetChild = new NativeFunction(addr_GetChild,'pointer',['pointer','int'])
-        var childCount = f_get_childCount(transform)
-        LOG("childCount\t--->\t"+childCount+"\t("+f_getName(transform).add(Process.pointerSize*3).readUtf16String()+")",LogColor.C36)
-        for (var i = 0;i<childCount;i++){
-            var c_transform = f_GetChild(transform,i)
-            LOG("\t\t\t"+c_transform+" : "+f_getName(c_transform).add(Process.pointerSize*3).readUtf16String(),LogColor.C36)
-        }
-    }
-
-    var addr_get_eulerAngles = find_method("UnityEngine.CoreModule","Transform","get_eulerAngles",0,true)
-    if (addr_get_eulerAngles != 0){
-        var f_get_eulerAngles = new NativeFunction(addr_get_eulerAngles,'pointer',['pointer','pointer'])
-        var eulerAngles_vector3 = Memory.alloc(p_size*3)
-        f_get_eulerAngles(eulerAngles_vector3,transform)
-        LOG("eulerAngles\t--->\t"+eulerAngles_vector3.readFloat()+"\t"+eulerAngles_vector3.add(p_size).readFloat()+"\t"+eulerAngles_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
-
-    var addr_get_forward = find_method("UnityEngine.CoreModule","Transform","get_forward",0,true)
-    if (addr_get_forward != 0){
-        var f_get_forward = new NativeFunction(addr_get_forward,'pointer',['pointer','pointer'])
-        var forward_vector3 = Memory.alloc(p_size*3)
-        f_get_forward(forward_vector3,transform)
-        LOG("forward\t\t--->\t"+forward_vector3.readFloat()+"\t"+forward_vector3.add(p_size).readFloat()+"\t"+forward_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
-
-    var addr_get_position = find_method("UnityEngine.CoreModule","Transform","get_position",0,true)
-    if (addr_get_position != 0){
-        var f_get_position = new NativeFunction(addr_get_position,'pointer',['pointer','pointer'])
-        var Position_vector3 = Memory.alloc(p_size*3)
-        f_get_position(Position_vector3,transform)
-
-        LOG("position\t--->\t"+Position_vector3.readFloat()+"\t"+Position_vector3.add(p_size).readFloat()+"\t"+Position_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
-
-    var addr_get_localPosition = find_method("UnityEngine.CoreModule","Transform","get_localPosition",0,true)
-    if (addr_get_localPosition != 0){
-        var f_get_localPosition = new NativeFunction(addr_get_localPosition,'pointer',['pointer','pointer'])
-        var localPosition_vector3 = Memory.alloc(p_size*3)
-        f_get_localPosition(localPosition_vector3,transform)
-        LOG("localPosition\t--->\t"+localPosition_vector3.readFloat()+"\t"+localPosition_vector3.add(p_size).readFloat()+"\t"+localPosition_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
-    
-    var addr_get_localRotation = find_method("UnityEngine.CoreModule","Transform","get_localRotation",0,true)
-    if (addr_get_localRotation != 0){
-        var f_get_localRotation = new NativeFunction(addr_get_localRotation,'pointer',['pointer','pointer'])
-        var localRotation_Quaternion = Memory.alloc(p_size*4)
-        f_get_localRotation(localRotation_Quaternion,transform)
-        LOG("localRotation\t--->\t"+localRotation_Quaternion.readFloat()+"\t"+localRotation_Quaternion.add(p_size).readFloat()+"\t"+localRotation_Quaternion.add(p_size*2).readFloat()+"\t"+localRotation_Quaternion.add(p_size*3).readFloat(),LogColor.C36)
-    }
-
-    var addr_get_localScale = find_method("UnityEngine.CoreModule","Transform","get_localScale",0,true)
-    if (addr_get_localScale != 0){
-        var f_get_localScale = new NativeFunction(addr_get_localScale,'pointer',['pointer','pointer'])
-        var localScale_vector3 = Memory.alloc(p_size*3)
-        f_get_localScale(localScale_vector3,transform)
-        LOG("localScale\t--->\t"+localScale_vector3.readFloat()+"\t"+localScale_vector3.add(p_size).readFloat()+"\t"+localScale_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
-
-    var addr_get_lossyScale = find_method("UnityEngine.CoreModule","Transform","get_lossyScale",0,true)
-    if (addr_get_lossyScale != 0){
-        var f_get_lossyScale = new NativeFunction(addr_get_lossyScale,'pointer',['pointer','pointer'])
-        var lossyScale_vector3 = Memory.alloc(p_size*3)
-        f_get_lossyScale(lossyScale_vector3,transform)
-        LOG("lossyScale\t--->\t"+lossyScale_vector3.readFloat()+"\t"+lossyScale_vector3.add(p_size).readFloat()+"\t"+lossyScale_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
-
-    var addr_get_right = find_method("UnityEngine.CoreModule","Transform","get_right",0,true)
-    if (addr_get_right != 0){
-        var f_get_right = new NativeFunction(addr_get_right,'pointer',['pointer','pointer'])
-        var right_vector3 = Memory.alloc(p_size*3)
-        f_get_right(right_vector3,transform)
-        LOG("right\t\t--->\t"+right_vector3.readFloat()+"\t"+right_vector3.add(p_size).readFloat()+"\t"+right_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
-
-    var addr_get_up = find_method("UnityEngine.CoreModule","Transform","get_up",0,true)
-    if (addr_get_up != 0){
-        var f_get_up = new NativeFunction(addr_get_up,'pointer',['pointer','pointer'])
-        var up_vector3 = Memory.alloc(p_size*3)
-        f_get_up(up_vector3,transform)
-        LOG("up\t\t--->\t"+up_vector3.readFloat()+"\t"+up_vector3.add(p_size).readFloat()+"\t"+up_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
-    
-    var addr_get_rotation = find_method("UnityEngine.CoreModule","Transform","get_rotation",0,true)
-    if (addr_get_rotation != 0){
-        var f_get_rotation = new NativeFunction(addr_get_rotation,'pointer',['pointer','pointer'])
-        var rotation_Quaternion = Memory.alloc(p_size*4)
-        f_get_rotation(rotation_Quaternion,transform)
-        LOG("rotation\t--->\t"+rotation_Quaternion.readFloat()+"\t"+rotation_Quaternion.add(p_size).readFloat()+"\t"+rotation_Quaternion.add(p_size*2).readFloat()+"\t"+rotation_Quaternion.add(p_size*3).readFloat(),LogColor.C36)
-    }
-}
-
-function showEventData(eventData){
-    LOG("--------- EventData ---------",LogColor.C33)
-    var f_get_position = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_position",0,true),'pointer',['pointer','pointer'])
-    var click_vector2 = Memory.alloc(p_size*2)
-    f_get_position(click_vector2,eventData)
-    LOG("ClickPositon\t--->\t"+click_vector2.readFloat()+"\t"+click_vector2.add(p_size).readFloat(),LogColor.C36)
-    
-    var f_get_clickTime = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_clickTime",0,true),'float',['pointer'])
-    LOG("clickTime\t--->\t"+f_get_clickTime(eventData),LogColor.C36)
-
-    var f_get_clickCount = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_clickCount",0,true),'int',['pointer'])
-    LOG("clickCount\t--->\t"+f_get_clickCount(eventData),LogColor.C36)
-    
-    var f_get_delta = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_delta",0,true),'pointer',['pointer','pointer'])
-    var delta_vector2 = Memory.alloc(p_size*2)
-    f_get_delta(delta_vector2,eventData)
-    LOG("delta\t\t--->\t"+delta_vector2.readFloat()+"\t"+delta_vector2.add(p_size).readFloat(),LogColor.C36)
-    
-    // 原UnityEngine.UI.PointerEventData.ToString
-    // var f_toSting = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","ToString",0,true),'pointer',['pointer'])
-    // var s = f_toSting(PointerEventData)
-    // LOG(s.add(p_size*3).readUtf16String())
-}
  
 function getClassName(klass){
     return ptr(klass).add(p_size*2).readPointer().readCString()
@@ -973,7 +876,7 @@ function getParameterType(Il2CppType){
 
 /**
  * 读取c#字符串
- * @param {c#字符串指针}} mPtr 
+ * @param {Number} mPtr c#字符串指针}
  */
 function readU16(mPtr){
     return ptr(mPtr).add(p_size*3).readUtf16String()
@@ -981,11 +884,34 @@ function readU16(mPtr){
 
 /**
  * 生成cstring or c#string
- * @param {字符串} str 
- * @param {随意填写} type 
+ * @param {String} str 字符串
+ * @param {*} type 随意填写 填写了就是C#String 不填写就是CString
  */
 function allcStr(str,type){
     return type == undefined ? Memory.allocUtf8String(str) : il2cpp_string_new(Memory.allocUtf8String(str))
+}
+
+/**
+ * 创建一个vector2/vector3/vector4
+ * @param {Number} x 
+ * @param {Number} y 
+ * @param {Number} z 
+ * @param {Number} w 
+ */
+function allcVector(x,y,z,w){
+    var defaultV = 0
+    var args = 2
+    if (z != undefined){
+        args = 3
+        if (w !=undefined) 
+            args = 4
+    }
+    var temp_vector = Memory.alloc(p_size*args)
+    temp_vector.writeFloat(x==undefined?defaultV:x)
+    temp_vector.add(p_size).writeFloat(y==undefined?defaultV:y)
+    if (args >= 3)temp_vector.add(p_size*2).writeFloat(z)
+    if (args == 4)temp_vector.add(p_size*3).writeFloat(w)
+    return temp_vector
 }
 
 /**
@@ -1091,6 +1017,212 @@ function PrintStackTraceN(ctx){
             .slice(0,6)
             // .reverse()
             .map(DebugSymbol.fromAddress).join("\n")+"\x1b[0m");
+}
+
+function SetInt(key,value){
+    // var temp_size = 100
+    // var header_size = Process.pointerSize*3
+    // var str_header = new NativeFunction(cloudProjectIdAddr,'pointer',[])()
+    // var temp_k = Memory.alloc(temp_size)
+    // var tk = Memory.allocUtf16String(key)
+    // Memory.copy(temp_k,str_header,header_size)
+    // Memory.copy(temp_k.add(header_size),tk,temp_size - header_size)
+    // new NativeFunction(Addr_SetInt,'void',['pointer','int'])(temp_k,value)
+
+    new NativeFunction(find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2,true),'void',['pointer','int'])(allcStr(key,""),value)
+}
+
+function SetFloat(key,value){
+    new NativeFunction(find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2,true),'void',['pointer','float'])(allcStr(key,""),value)
+}
+
+function SetString(key,value){
+    new NativeFunction(find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2,true),'void',['pointer','pointer'])(allcStr(key,""),allcStr(value,""))
+}
+
+function GetInt(key){
+    var ret = new NativeFunction(find_method("UnityEngine.CoreModule","PlayerPrefs","GetInt",2,true),'pointer',['pointer','int'])(allcStr(key,""),0)
+    LOG("\n[*] GetInt('"+key+"')\t--->\t"+ret.toInt32()+"\n",LogColor.C95)
+}
+
+function GetFloat(key){
+    var ret = new NativeFunction(find_method("UnityEngine.CoreModule","PlayerPrefs","GetFloat",2,true),'pointer',['pointer','float'])(allcStr(key,""),0)
+    LOG("\n[*] GetFloat('"+key+"')\t--->\t"+ret.toInt32()+"\n",LogColor.C95)
+}
+
+function GetString(key){
+    var ret = new NativeFunction(find_method("UnityEngine.CoreModule","PlayerPrefs","GetString",1,true),'pointer',['pointer'])(allcStr(key,""))
+    LOG("\n[*] GetString('"+key+"')\t--->\t"+readU16(ret)+"\n",LogColor.C95)
+}
+
+function SetLocalScale(mTransform,x,y,z){
+    var set_localScale_Injected = find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1,true)
+    if (set_localScale_Injected ==0 ) return
+    new NativeFunction(set_localScale_Injected,'pointer',['pointer','pointer'])(ptr(mTransform),allcVector(x,y,z))
+}
+
+function SetLocalPosition(mTransform,x,y,z){
+    var set_localPosition_Injected = find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1,true)
+    if (set_localPosition_Injected ==0 ) return
+    new NativeFunction(set_localPosition_Injected,'pointer',['pointer','pointer'])(ptr(mTransform),allcVector(x,y,z))
+}
+
+function SetPosition(mTransform,x,y,z){
+    var set_Position_Injected = find_method("UnityEngine.CoreModule","Transform","set_Position_Injected",1,true)
+    if (set_Position_Injected ==0 ) return
+    new NativeFunction(set_Position_Injected,'pointer',['pointer','pointer'])(ptr(mTransform),allcVector(x,y,z))
+}
+
+function SetLocalRotation(mTransform,x,y,z,w){
+    // var set_Rotation_Injected = find_method("UnityEngine.CoreModule","Transform","set_Rotation_Injected",1,true)
+    var set_localRotation_Injected = find_method("UnityEngine.CoreModule","Transform","set_localRotation_Injected",1,true)
+    if (set_localRotation_Injected ==0 ) return
+    new NativeFunction(set_localRotation_Injected,'pointer',['pointer','pointer'])(ptr(mTransform),allcVector(x,y,z,w))
+}
+
+function showGameObject(gameObj){
+    
+    var f_getName        = new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1,true),'pointer',['pointer'])
+    var f_getLayer       = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_layer",0,true),'int',['pointer'])
+    var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0,true),'pointer',['pointer'])
+    var f_getParent      = new NativeFunction(find_method("UnityEngine.CoreModule","Transform","GetParent",0,true),'pointer',['pointer'])
+    // var f_getTag         = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_tag",0,true),'pointer',['pointer'])
+    
+    LOG("--------- GameObject ---------",LogColor.C33)
+    LOG("gameObj\t\t--->\t"+gameObj,LogColor.C36)
+    if (gameObj == 0) return
+    LOG("getName\t\t--->\t"+f_getName(gameObj).add(Process.pointerSize*3).readUtf16String(),LogColor.C36)
+    LOG("getLayer\t--->\t"+f_getLayer(gameObj),LogColor.C36)           
+    var m_transform = f_getTransform(gameObj)
+    LOG("getTransform\t--->\t"+m_transform,LogColor.C36)
+    // LOG("getTag\t\t--->\t"+f_getTag(gameObj).add(p_size*3).readUtf16String(),LogColor.C36)
+    var debug = true
+    var layerNames = ""
+    for (var i=0;i<10;i++){
+        var spl =  layerNames == "" ? "" : " <--- "
+        layerNames = layerNames + spl + readU16(f_getName(m_transform)) + (debug?"("+m_transform+")":"")
+        m_transform = f_getParent(m_transform)
+        if (m_transform == 0) break
+    }
+    LOG("hierarchy\t--->\t"+layerNames,LogColor.C36)
+}
+
+function showTransform(transform){
+    LOG("--------- Transform ---------",LogColor.C33)
+
+    transform = ptr(transform)
+    var addr_get_childCount = find_method("UnityEngine.CoreModule","Transform","get_childCount",0,true)
+    
+    if (addr_get_childCount != 0){
+        var f_getName = new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1,true),'pointer',['pointer'])
+        var childCount = new NativeFunction(addr_get_childCount,'int',['pointer'])(transform)
+        LOG("childCount\t--->\t"+childCount+"\t("+readU16(f_getName(transform))+")",LogColor.C36)
+        PrintHierarchy(transform,2,true)
+    }
+
+    var addr_get_eulerAngles = find_method("UnityEngine.CoreModule","Transform","get_eulerAngles",0,true)
+    if (addr_get_eulerAngles != 0){
+        var f_get_eulerAngles = new NativeFunction(addr_get_eulerAngles,'pointer',['pointer','pointer'])
+        var eulerAngles_vector3 = allcVector(0,0,0)
+        f_get_eulerAngles(eulerAngles_vector3,transform)
+        LOG("eulerAngles\t("+eulerAngles_vector3+")\t--->\t"+eulerAngles_vector3.readFloat()+"\t"+eulerAngles_vector3.add(p_size).readFloat()+"\t"+eulerAngles_vector3.add(p_size*2).readFloat(),LogColor.C36)
+    }
+
+    var addr_get_forward = find_method("UnityEngine.CoreModule","Transform","get_forward",0,true)
+    if (addr_get_forward != 0){
+        var f_get_forward = new NativeFunction(addr_get_forward,'pointer',['pointer','pointer'])
+        var forward_vector3 = allcVector(0,0,0)
+        f_get_forward(forward_vector3,transform)
+        LOG("forward\t\t("+forward_vector3+")\t--->\t"+forward_vector3.readFloat()+"\t"+forward_vector3.add(p_size).readFloat()+"\t"+forward_vector3.add(p_size*2).readFloat(),LogColor.C36)
+    }
+
+    var addr_get_position = find_method("UnityEngine.CoreModule","Transform","get_position",0,true)
+    if (addr_get_position != 0){
+        var f_get_position = new NativeFunction(addr_get_position,'pointer',['pointer','pointer'])
+        var Position_vector3 = allcVector(0,0,0)
+        f_get_position(Position_vector3,transform)
+        LOG("position\t("+Position_vector3+")\t--->\t"+Position_vector3.readFloat()+"\t"+Position_vector3.add(p_size).readFloat()+"\t"+Position_vector3.add(p_size*2).readFloat(),LogColor.C36)
+    }
+
+    var addr_get_localPosition = find_method("UnityEngine.CoreModule","Transform","get_localPosition",0,true)
+    if (addr_get_localPosition != 0){
+        var f_get_localPosition = new NativeFunction(addr_get_localPosition,'pointer',['pointer','pointer'])
+        var localPosition_vector3 = allcVector(0,0,0)
+        f_get_localPosition(localPosition_vector3,transform)
+        LOG("localPosition\t("+localPosition_vector3+")\t--->\t"+localPosition_vector3.readFloat()+"\t"+localPosition_vector3.add(p_size).readFloat()+"\t"+localPosition_vector3.add(p_size*2).readFloat(),LogColor.C36)
+    }
+    
+    var addr_get_localRotation = find_method("UnityEngine.CoreModule","Transform","get_localRotation",0,true)
+    if (addr_get_localRotation != 0){
+        var f_get_localRotation = new NativeFunction(addr_get_localRotation,'pointer',['pointer','pointer'])
+        var localRotation_Quaternion = allcVector(0,0,0,0)
+        f_get_localRotation(localRotation_Quaternion,transform)
+        LOG("localRotation\t("+localRotation_Quaternion+")\t--->\t"+localRotation_Quaternion.readFloat()+"\t"+localRotation_Quaternion.add(p_size).readFloat()+"\t"+localRotation_Quaternion.add(p_size*2).readFloat()+"\t"+localRotation_Quaternion.add(p_size*3).readFloat(),LogColor.C36)
+    }
+
+    var addr_get_localScale = find_method("UnityEngine.CoreModule","Transform","get_localScale",0,true)
+    if (addr_get_localScale != 0){
+        var f_get_localScale = new NativeFunction(addr_get_localScale,'pointer',['pointer','pointer'])
+        var localScale_vector3 = allcVector(0,0,0)
+        f_get_localScale(localScale_vector3,transform)
+        LOG("localScale\t("+localScale_vector3+")\t--->\t"+localScale_vector3.readFloat()+"\t"+localScale_vector3.add(p_size).readFloat()+"\t"+localScale_vector3.add(p_size*2).readFloat(),LogColor.C36)
+    }
+
+    var addr_get_lossyScale = find_method("UnityEngine.CoreModule","Transform","get_lossyScale",0,true)
+    if (addr_get_lossyScale != 0){
+        var f_get_lossyScale = new NativeFunction(addr_get_lossyScale,'pointer',['pointer','pointer'])
+        var lossyScale_vector3 = allcVector(0,0,0)
+        f_get_lossyScale(lossyScale_vector3,transform)
+        LOG("lossyScale\t("+lossyScale_vector3+")\t--->\t"+lossyScale_vector3.readFloat()+"\t"+lossyScale_vector3.add(p_size).readFloat()+"\t"+lossyScale_vector3.add(p_size*2).readFloat(),LogColor.C36)
+    }
+
+    var addr_get_right = find_method("UnityEngine.CoreModule","Transform","get_right",0,true)
+    if (addr_get_right != 0){
+        var f_get_right = new NativeFunction(addr_get_right,'pointer',['pointer','pointer'])
+        var right_vector3 = allcVector(0,0,0)
+        f_get_right(right_vector3,transform)
+        LOG("right\t\t("+right_vector3+")\t--->\t"+right_vector3.readFloat()+"\t"+right_vector3.add(p_size).readFloat()+"\t"+right_vector3.add(p_size*2).readFloat(),LogColor.C36)
+    }
+
+    var addr_get_up = find_method("UnityEngine.CoreModule","Transform","get_up",0,true)
+    if (addr_get_up != 0){
+        var f_get_up = new NativeFunction(addr_get_up,'pointer',['pointer','pointer'])
+        var up_vector3 = allcVector(0,0,0)
+        f_get_up(up_vector3,transform)
+        LOG("up\t\t("+up_vector3+")\t--->\t"+up_vector3.readFloat()+"\t"+up_vector3.add(p_size).readFloat()+"\t"+up_vector3.add(p_size*2).readFloat(),LogColor.C36)
+    }
+    
+    var addr_get_rotation = find_method("UnityEngine.CoreModule","Transform","get_rotation",0,true)
+    if (addr_get_rotation != 0){
+        var f_get_rotation = new NativeFunction(addr_get_rotation,'pointer',['pointer','pointer'])
+        var rotation_Quaternion = allcVector(0,0,0,0)
+        f_get_rotation(rotation_Quaternion,transform)
+        LOG("rotation\t("+rotation_Quaternion+")\t--->\t"+rotation_Quaternion.readFloat()+"\t"+rotation_Quaternion.add(p_size).readFloat()+"\t"+rotation_Quaternion.add(p_size*2).readFloat()+"\t"+rotation_Quaternion.add(p_size*3).readFloat(),LogColor.C36)
+    }
+}
+
+function showEventData(eventData){
+    LOG("--------- EventData ---------",LogColor.C33)
+    var f_get_position = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_position",0,true),'pointer',['pointer','pointer'])
+    var click_vector2 = allcVector()
+    f_get_position(click_vector2,eventData)
+    LOG("ClickPositon\t--->\t"+click_vector2.readFloat()+"\t"+click_vector2.add(p_size).readFloat(),LogColor.C36)
+    
+    var f_get_clickTime = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_clickTime",0,true),'float',['pointer'])
+    LOG("clickTime\t--->\t"+f_get_clickTime(eventData),LogColor.C36)
+
+    var f_get_clickCount = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_clickCount",0,true),'int',['pointer'])
+    LOG("clickCount\t--->\t"+f_get_clickCount(eventData),LogColor.C36)
+    
+    var f_get_delta = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_delta",0,true),'pointer',['pointer','pointer'])
+    var delta_vector2 = allcVector()
+    f_get_delta(delta_vector2,eventData)
+    LOG("delta\t\t--->\t"+delta_vector2.readFloat()+"\t"+delta_vector2.add(p_size).readFloat(),LogColor.C36)
+    
+    // 原UnityEngine.UI.PointerEventData.ToString
+    // var f_toSting = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","ToString",0,true),'pointer',['pointer'])
+    // var s = f_toSting(PointerEventData)
+    // LOG(s.add(p_size*3).readUtf16String())
 }
 
 /**
@@ -1593,14 +1725,6 @@ function HookPlayerPrefs(){
 
     var isShowPrintStack = false
 
-    var Addr_GetFloat       = find_method("UnityEngine.CoreModule","PlayerPrefs","GetFloat",2,true)
-    var Addr_GetInt         = find_method("UnityEngine.CoreModule","PlayerPrefs","GetInt",2,true)
-    var Addr_GetString      = find_method("UnityEngine.CoreModule","PlayerPrefs","GetString",1,true)
-
-    var Addr_SetFloat       = find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2,true)
-    var Addr_SetInt         = find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2,true)
-    var Addr_SetString      = find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2,true)
-
     InterceptorGetFunctions()
 
     InterceptorSetFunctions()
@@ -1608,6 +1732,7 @@ function HookPlayerPrefs(){
     function InterceptorGetFunctions(){
 
         //public static extern float GetFloat(string key, float defaultValue)
+        var Addr_GetFloat       = find_method("UnityEngine.CoreModule","PlayerPrefs","GetFloat",2,true)
         if (Addr_GetFloat !=0){
             Interceptor.attach(Addr_GetFloat,{
                 onEnter:function(args){
@@ -1615,13 +1740,14 @@ function HookPlayerPrefs(){
                     this.arg1 = args[1]
                 },
                 onLeave:function(ret){
-                    LOG("\n[*] '"+ret +"' = GetFloat('"+this.arg0.add(p_size*3).readUtf16String()+"','"+this.arg1+"')",LogColor.C36)
+                    LOG("\n[*] '"+ret +"' = GetFloat('"+this.arg0.add(p_size*3).readUtf16String()+"',"+this.arg1+")",LogColor.C36)
                     if (isShowPrintStack) PrintStackTraceN(this.context)
                 }
             })
         }
  
         //public static extern int GetInt(string key, int defaultValue)
+        var Addr_GetInt         = find_method("UnityEngine.CoreModule","PlayerPrefs","GetInt",2,true)
         if (Addr_GetInt !=0){
             Interceptor.attach(Addr_GetInt,{
                 onEnter:function(args){
@@ -1631,7 +1757,7 @@ function HookPlayerPrefs(){
                 onLeave:function(ret){
                     var s_arg0 = this.arg0.add(p_size*3).readUtf16String()
                     var i_arg1 = this.arg1
-                    LOG("\n[*] '"+ret.toInt32() +"' = GetInt('"+s_arg0+"','"+i_arg1+"')",LogColor.C36)
+                    LOG("\n[*] '"+ret.toInt32() +"' = GetInt('"+s_arg0+"',"+i_arg1+")",LogColor.C36)
                     if (isShowPrintStack) PrintStackTraceN(this.context)
                     if (s_arg0.indexOf("SaleBoughted")!=-1) ret.replace(ptr(0x1))
                 }
@@ -1639,6 +1765,7 @@ function HookPlayerPrefs(){
         }
         
         //public static string GetString(string key)
+        var Addr_GetString      = find_method("UnityEngine.CoreModule","PlayerPrefs","GetString",1,true)
         if (Addr_GetString !=0){
             Interceptor.attach(Addr_GetString,{
                 onEnter:function(args){
@@ -1655,6 +1782,7 @@ function HookPlayerPrefs(){
     function InterceptorSetFunctions(){
 
         //public static extern float GetFloat(string key, float defaultValue)
+        var Addr_SetFloat       = find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2,true)
         if (Addr_SetFloat != 0){
             Interceptor.attach(Addr_SetFloat,{
                 onEnter:function(args){
@@ -1662,13 +1790,14 @@ function HookPlayerPrefs(){
                     this.arg1 = args[1].readFloat()
                 },
                 onLeave:function(ret){
-                    LOG("\n[*] SetFloat('"+this.arg0+"','"+this.arg1+"')",LogColor.C36)
+                    LOG("\n[*] SetFloat('"+this.arg0+"',"+this.arg1+")",LogColor.C36)
                     if (isShowPrintStack) PrintStackTraceN(this.context)
                 }
             })
         }
         
         //public static extern int GetInt(string key, int defaultValue)
+        var Addr_SetInt         = find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2,true)
         if (Addr_SetInt!=0){
             Interceptor.attach(Addr_SetInt,{
                 onEnter:function(args){
@@ -1676,13 +1805,14 @@ function HookPlayerPrefs(){
                     this.arg1 = args[1]
                 },
                 onLeave:function(ret){
-                    LOG("\n[*] SetInt('"+this.arg0+"','"+this.arg1+"')",LogColor.C36)
+                    LOG("\n[*] SetInt('"+this.arg0+"',"+this.arg1+")",LogColor.C36)
                     if (isShowPrintStack) PrintStackTraceN(this.context)
                 }
             })
         }
         
         //public static string GetString(string key)
+        var Addr_SetString      = find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2,true)
         if (Addr_SetString!=0){
             Interceptor.attach(Addr_SetString,{
                 onEnter:function(args){
@@ -1741,4 +1871,126 @@ function HookLoadScene(){
             LOG(" ret  --->\t"+ret,LogColor.C36)
         }
     })
+}
+
+function HookGetSetText(){
+
+    hookGet()
+    hookSet()
+
+    //动态替换文字
+    var arr_src_str = ['音效','8082','免费获得','+400','暂停']
+    var arr_rep_str = ['FuckMusic','-99','','-200²','pause']
+    
+    function hookSet(){
+        var addr_set = find_method("UnityEngine.UI",'Text','set_text',1)
+        if (addr_set != 0){
+            Interceptor.attach(addr_set,{
+                onEnter:function(args){
+                    LOG("\n"+"called set_text("+args[1]+")\n["+ReadLength(args[1])+"]\t"+readU16(args[1]),LogColor.C33)
+                    var newP = strReplace(args[1])
+                    if (newP != 0) args[1] = newP
+                },
+                onLeave:function(ret){}
+            })
+        }
+    }
+
+    function hookGet(){
+        var addr_get = find_method("UnityEngine.UI",'Text','get_text',0)
+        if (addr_get != 0){
+            Interceptor.attach(addr_get,{
+                onEnter:function(args){},
+                onLeave:function(ret){
+                    LOG("\n"+"called "+ret+" = get_text()\n["+ReadLength(ret)+"]\t"+readU16(ret),LogColor.C32)
+                    var newP = strReplace(ret)
+                    if (newP != 0) ret.replace(newP)
+                }
+            })
+        }
+    }
+
+    var memcmp = Module.findExportByName("libc.so","memcmp")
+    if (memcmp!=0) memcmp = new NativeFunction(memcmp,'pointer',['pointer','pointer','int'])
+    function strReplace(mPtr){
+        if (mPtr==0 || memcmp==0 ||arr_src_str.length == 0 || arr_rep_str.length != arr_src_str.length ) return ptr(0)
+        for (var i=0;i<arr_src_str.length;i++){
+            if (memcmp(mPtr.add(p_size*3),allcStr(arr_src_str[i],"").add(p_size*3),ReadLength(mPtr)*2)==0) return allcStr(arr_rep_str[i],"")
+        }
+        return ptr(0)
+    }
+
+    function ReadLength(mPtr){
+        return ptr(mPtr).add(Process.pointerSize*2).readPointer().toInt32()
+    }
+
+    //called : 0x792adc (0xaaf1d4d0)  --->    public Boolean get_hasBorder ()
+
+    //called : 0x787e10 (0xb61477b0)  --->    public Int32 get_fontSize ()
+
+    //called : 0x787e80 (0xb6147a18)  --->    public Boolean get_richText ()
+
+    //called : 0x787eb0 (0xb6147b20)  --->    public Single get_lineSpacing ()
+
+    //called : 0x787e20 (0xb6147808)  --->    public FontStyle get_fontStyle ()
+}
+
+/**
+ * 打印transform往下的层级
+ * ps:不建议打印底层的层级，展现一大篇出来毫无重点
+ * @param {Number} mPtr Transform Pointer
+ * @param {Number} level 最大显示层级
+ * @param {Boolean} inCall 内部调用，去掉一些LOG
+ */
+function PrintHierarchy(mPtr,level,inCall){
+    if (mPtr == 0 || mPtr == undefined) return
+    if (level ==undefined) level = 10
+    var transform = ptr(mPtr)
+    
+    var f_getName           = new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1),'pointer',['pointer'])
+    var f_getParent         = new NativeFunction(find_method("UnityEngine.CoreModule","Transform","GetParent",0),'pointer',['pointer'])
+    var f_getChildCount     = new NativeFunction(find_method("UnityEngine.CoreModule","Transform","get_childCount",0),'int',['pointer'])
+    var f_getChild          = new NativeFunction(find_method("UnityEngine.CoreModule","Transform","GetChild",1),'pointer',['pointer','int'])
+
+    if (level==10)LOG("-------------------------------------------------------------------------\n",LogColor.C33)
+
+    //当前level作为第一级
+    var baseLevel = getLevel(transform)
+    LOG((inCall!=undefined?"\t":"")+getSpace(0)+transform+" : "+ readU16(f_getName(transform)),LogColor.C36)
+    getChild(transform)
+
+    if (level==10)LOG("\n-------------------------------------------------------------------------",LogColor.C33)
+    
+    //递归调用下层信息
+    function getChild(p1){
+        var childCount = f_getChildCount(p1)
+        for (var i = 0;i<childCount;i++){
+            var c_transform = f_getChild(p1,i)
+            var levelC = getLevel(c_transform)-baseLevel
+            if (levelC <= level) LOG((inCall!=undefined?"\t":"")+getSpace(levelC)+c_transform+" : "+ readU16(f_getName(c_transform)),LogColor.C36)
+            getChild(c_transform)
+        }
+    }
+
+    //判断当前transform的层级
+    function getLevel(transform){
+        for (var i=0;i<10;i++){
+            try{
+                transform = f_getParent(transform)
+                if (transform ==0) return i
+            }catch(e){
+                return 0
+            }
+        }
+        return 0 
+    }
+
+    //根据层级进行首行缩进
+    function getSpace(length){
+        var retStr = ''
+        for (var i = 0;i<length;i++){
+            retStr += '\t'
+        }
+        return retStr
+    }
 }
