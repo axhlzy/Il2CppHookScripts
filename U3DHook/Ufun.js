@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 9:23
- * @UpdateTime 2021/01/22 17:33
+ * @UpdateTime 2021/01/20 18:33
  * @Des frida hook u3d functions scrpt
  */
 
@@ -23,10 +23,10 @@ var count_method_times
 //断点的函数出现次数大于 maxCallTime 即不显示
 const maxCallTime = 20
 //存放初始化（list_Images）时候的 imgaddr 以及 imgName
-var arr_img_addr      = new Array()
-var arr_img_names     = new Array()
+var arr_img_addr    = new Array()
+var arr_img_names   = new Array()
 //存放MethodInfo指针（供动态断点提供更详细的信息）
-var arrMethodInfo    = new Array()
+var arrMethodInfo   = new Array()
 
 //兼容之前的python脚本筛选，同时也是addBreakPoints()所添加的断点的函数也是存放在这里的
 var arrayAddr =
@@ -63,7 +63,29 @@ var arrayName =
  * HookLoadScene()
  * HookGetSetText()
  * PrintHierarchy()
- * ...... 
+ * ......  
+ * --------------------------------------------------------------------------------------------
+ * 其他方法
+ * ---------------------
+ * GotoScene(str)
+ * setActive(gameObj,visible)
+ * CallStatic(mPtr,arg0,arg1,arg2,arg3)
+ * SeeTypeToString(obj)
+ * FuckKnownType(strType,mPtr)
+ * 
+ * showEventData(eventData)
+ * showTransform(transform)
+ * showEventData(eventData)
+ * 
+ * SetLocalScale(mTransform,x,y,z)
+ * SetLocalPosition(mTransform,x,y,z)
+ * SetLocalRotation(mTransform,x,y,z,w)
+ * ----------------------------------------------------------------------
+ * SharedPrefs                                                          |
+ * ---------------------------------------------------------------------|
+ * SetInt(key,value)    | SetFloat(key,value)   | SetString(key,value)  |
+ * GetInt(key)          | GetFloat(key)         | GetString(key)        |
+ * ----------------------------------------------------------------------
  * --------------------------------------------------------------------------------------------
  */
 
@@ -382,8 +404,7 @@ function find_method(ImageName,ClassName,functionName,ArgsCount,isRealAddr){
     var method = il2cpp_class_get_method_from_name(klass, Memory.allocUtf8String(functionName), ArgsCount)
     if (method == 0) return ptr(0)
     if (isRealAddr) return isRealAddr ? method.readPointer():method.readPointer().sub(soAddr)
-    
-        LOG("2")
+
     var parameters_count = getMethodParametersCount(method)
     var arr_args = new Array()
     var arr_args_type_addr = new Array()
@@ -572,54 +593,6 @@ function breakPoint(m_ptr,index,name){
             LOG("-----------------------------------------------------------",LogColor.C33)
         }
     })
-
-    //这个地方可以继续去拓展解析一些常用的类，用b断某个方法的时候就可以很方便的打印出参数
-    function FuckKnownType(strType,mPtr){
-        try{
-            switch(strType){
-                case "Void"         : return ""
-                case "Object[]"     : 
-                case "String"       : return mPtr == 0 ? "" : readU16(mPtr)
-                case "Boolean"      : return (mPtr.toInt32() == 1) ? "True" : "False"
-                case "Int32"        : return mPtr.toInt32()
-                case "Single"       : return mPtr.readFloat()
-                case "Object"       : 
-                case "GameObject"   : return SeeTypeToString(mPtr,false)
-                case "Texture"      : 
-                    var w = new NativeFunction(find_method("UnityEngine.CoreModule","Texture","GetDataWidth",0),'int',['pointer'])(mPtr)
-                    var h = new NativeFunction(find_method("UnityEngine.CoreModule","Texture","GetDataHeight",0),'int',['pointer'])(mPtr)
-                    var r = new NativeFunction(find_method("UnityEngine.CoreModule","Texture","get_isReadable",0),'int',['pointer'])(mPtr)
-                    var m = new NativeFunction(find_method("UnityEngine.CoreModule","Texture","get_wrapMode",0),'int',['pointer'])(mPtr)
-                    r = r == 0 ? "False":"True"
-                    m = m == 0 ? "Repeat" : (m == 1 ? "Clamp" : (m == 2 ? "Mirror":"MirrorOnce"))
-                    return "( "+m+" , "+w+"×"+h+" , "+r+" )"
-                case "RectTransform":
-                    // var pivot = new NativeFunction(find_method("UnityEngine.CoreModule","RectTransform","get_pivot",0),'pointer',['pointer'])(mPtr)
-                    // var rect = new NativeFunction(find_method("UnityEngine.CoreModule","RectTransform","get_sizeDelta",0),'pointer',['pointer'])(mPtr)
-                    // var str1 = FuckKnownType("Vector2",pivot)
-                    // var str2 = FuckKnownType("Rect",rect)
-                    return ""
-                case "Text"         : return readU16(new NativeFunction(find_method("UnityEngine.UI","Text","get_text",0),'pointer',['pointer'])(mPtr))
-                case "Vector2"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Vector2","ToString",0),'pointer',['pointer'])(mPtr))
-                case "Vector3"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Vector3","ToString",0),'pointer',['pointer'])(mPtr))
-                case "Vector4"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Vector4","ToString",0),'pointer',['pointer'])(mPtr))
-                case "Color"        : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Color","ToString",0),'pointer',['pointer'])(mPtr))
-                case "Color32"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Color32","ToString",0),'pointer',['pointer'])(mPtr))
-                case "Event"        : return readU16(new NativeFunction(find_method("UnityEngine.IMGUIModule","Event","ToString",0),'pointer',['pointer'])(mPtr))
-                case "Bounds"       : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Bounds","ToString",0),'pointer',['pointer'])(mPtr))
-                case "TextAsset"    : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","TextAsset","ToString",0),'pointer',['pointer'])(mPtr))
-                case "Rect"         : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Rect","ToString",0),'pointer',['pointer'])(mPtr))
-                case "Ray"          : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Ray","ToString",0),'pointer',['pointer'])(mPtr))
-                case "Quaternion"   : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Quaternion","ToString",0),'pointer',['pointer'])(mPtr))
-                case "Pose"         : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Pose","ToString",0),'pointer',['pointer'])(mPtr))
-                case "Plane"        : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Plane","ToString",0),'pointer',['pointer'])(mPtr))
-                default : return "UnKnown"
-            }
-        }catch(e){
-            // LOG(e)
-            return "Error"
-        }
-    }
 }
 
 /**
@@ -741,12 +714,70 @@ function SeeTypeToString(obj,b){
 
 }
 
+/**
+ * 将mPtr指向的位置以 strType 类型解析并返回 String 
+ * 拓展解析一些常用的类，用b断某个方法的时候就可以很方便的打印出参数
+ * @param {String} strType 
+ * @param {Number} mPtr 
+ * @returns {String}
+ */
+function FuckKnownType(strType,mPtr){
+    try{
+        switch(strType){
+            case "Void"         : 
+            case "Object[]"     : return ""
+            case "String"       : return mPtr == 0 ? "" : readU16(mPtr)
+            case "Boolean"      : return (mPtr.toInt32() == 1) ? "True" : "False"
+            case "Int32"        : return mPtr.toInt32()
+            case "Single"       : return mPtr.readFloat()
+            case "Object"       : 
+            case "GameObject"   : return SeeTypeToString(mPtr,false)
+            case "Texture"      : 
+                var w = new NativeFunction(find_method("UnityEngine.CoreModule","Texture","GetDataWidth",0),'int',['pointer'])(mPtr)
+                var h = new NativeFunction(find_method("UnityEngine.CoreModule","Texture","GetDataHeight",0),'int',['pointer'])(mPtr)
+                var r = new NativeFunction(find_method("UnityEngine.CoreModule","Texture","get_isReadable",0),'int',['pointer'])(mPtr)
+                var m = new NativeFunction(find_method("UnityEngine.CoreModule","Texture","get_wrapMode",0),'int',['pointer'])(mPtr)
+                r = r == 0 ? "False":"True"
+                m = m == 0 ? "Repeat" : (m == 1 ? "Clamp" : (m == 2 ? "Mirror":"MirrorOnce"))
+                return JSON.stringify([m,w,h,r])
+            case "RectTransform":
+                // var pivot = new NativeFunction(find_method("UnityEngine.CoreModule","RectTransform","get_pivot",0),'pointer',['pointer'])(mPtr)
+                // var rect = new NativeFunction(find_method("UnityEngine.CoreModule","RectTransform","get_sizeDelta",0),'pointer',['pointer'])(mPtr)
+                // var str1 = FuckKnownType("Vector2",pivot)
+                // var str2 = FuckKnownType("Rect",rect)
+                return ""
+            case "Text"         : return readU16(new NativeFunction(find_method("UnityEngine.UI","Text","get_text",0),'pointer',['pointer'])(mPtr))
+            case "Vector2"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Vector2","ToString",0),'pointer',['pointer'])(mPtr))
+            case "Vector3"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Vector3","ToString",0),'pointer',['pointer'])(mPtr))
+            case "Vector4"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Vector4","ToString",0),'pointer',['pointer'])(mPtr))
+            case "Color"        : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Color","ToString",0),'pointer',['pointer'])(mPtr))
+            case "Color32"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Color32","ToString",0),'pointer',['pointer'])(mPtr))
+            case "Event"        : return readU16(new NativeFunction(find_method("UnityEngine.IMGUIModule","Event","ToString",0),'pointer',['pointer'])(mPtr))
+            case "Bounds"       : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Bounds","ToString",0),'pointer',['pointer'])(mPtr))
+            case "TextAsset"    : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","TextAsset","ToString",0),'pointer',['pointer'])(mPtr))
+            case "Rect"         : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Rect","ToString",0),'pointer',['pointer'])(mPtr))
+            case "Ray"          : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Ray","ToString",0),'pointer',['pointer'])(mPtr))
+            case "Quaternion"   : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Quaternion","ToString",0),'pointer',['pointer'])(mPtr))
+            case "Pose"         : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Pose","ToString",0),'pointer',['pointer'])(mPtr))
+            case "Plane"        : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Plane","ToString",0),'pointer',['pointer'])(mPtr))
+            default : return "UnKnown"
+        }
+    }catch(e){
+        // LOG(e)
+        return "Error"
+    }
+}
+
 function reflash(){
     arrMethodInfo.splice(0,arrMethodInfo.length)
     arrayAddr.splice(0,arrayAddr.length)
     arrayName.splice(0,arrayName.length)
 }
 
+/**
+ * 解析 Method 的权限符
+ * @param {Number} method_ptr 
+ */
 function get_method_modifier(method_ptr){
     
     var flags = ptr(method_ptr).add(p_size*9).readU16()
@@ -870,9 +901,12 @@ function getParameterName(ParameterInfo){
 }
 
 function getParameterType(Il2CppType){
-    //const Il2CppType* parameter_type;
     return ptr(Il2CppType).add(p_size*2+4).readPointer()
 }
+
+/**
+ * -------------------------------------------工具方法-------------------------------------------------
+ */
 
 /**
  * 读取c#字符串
@@ -913,10 +947,6 @@ function allcVector(x,y,z,w){
     if (args == 4)temp_vector.add(p_size*3).writeFloat(w)
     return temp_vector
 }
-
-/**
- * -------------------------------------------工具方法-------------------------------------------------
- */
 
 function seeHexR(addr,length){
     LOG(hexdump(ptr(soAddr.add(addr).readPointer()),{length:length}))
@@ -959,6 +989,11 @@ function LOG(str,type){
     }
 }
 
+// setImmediate(Hook_dlopen)
+
+/**
+ * 获得lib2cpp.so的加载时机(todo())，最早的时候做一些事情
+ */
 function Hook_dlopen() {
     const dlopen_old = Module.findExportByName(null, "dlopen")
     const dlopen_new = Module.findExportByName(null, "android_dlopen_ext")
@@ -1000,7 +1035,7 @@ function Hook_dlopen() {
     }
 
     function todo(){
-        FindArgs()
+        B()
     }
 }
 
@@ -1203,6 +1238,7 @@ function showTransform(transform){
 
 function showEventData(eventData){
     LOG("--------- EventData ---------",LogColor.C33)
+    eventData = ptr(eventData)
     var f_get_position = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_position",0,true),'pointer',['pointer','pointer'])
     var click_vector2 = allcVector()
     f_get_position(click_vector2,eventData)
@@ -1223,6 +1259,14 @@ function showEventData(eventData){
     // var f_toSting = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","ToString",0,true),'pointer',['pointer'])
     // var s = f_toSting(PointerEventData)
     // LOG(s.add(p_size*3).readUtf16String())
+}
+
+function CallStatic(mPtr,arg0,arg1,arg2,arg3){
+    arg0 = arg0 == undefined?ptr(0):arg0
+    arg1 = arg1 == undefined?ptr(0):arg1
+    arg2 = arg2 == undefined?ptr(0):arg2
+    arg3 = arg3 == undefined?ptr(0):arg3
+    new NativeFunction(mPtr,'pointer',['pointer','pointer','pointer','pointer'])(arg0,arg1,arg2,arg3)
 }
 
 /**
@@ -1532,14 +1576,6 @@ function Info(){
     }
 }
 
-function CallStatic(mPtr,arg0,arg1,arg2,arg3){
-    arg0 = arg0 == undefined?ptr(0):arg0
-    arg1 = arg1 == undefined?ptr(0):arg1
-    arg2 = arg2 == undefined?ptr(0):arg2
-    arg3 = arg3 == undefined?ptr(0):arg3
-    new NativeFunction(mPtr,'pointer',['pointer','pointer','pointer','pointer'])(arg0,arg1,arg2,arg3)
-}
-
 function GotoScene(str){
     CallStatic(find_method("UnityEngine.CoreModule","SceneManager","LoadScene",2)
         ,il2cpp_string_new(Memory.allocUtf8String(str)))
@@ -1592,132 +1628,135 @@ function HookOnPointerClick(){
 
         } 
     })
-}
+    
+    //HookProcessMoveDrag()
 
-function HookProcessMoveDrag(){
+    //其他几个时机点
+    function HookProcessMoveDrag(){
 
-    HookHandlePointerExitAndEnter()
+        HookHandlePointerExitAndEnter()
+        
+        function move(){
+            Interceptor.attach(find_method("UnityEngine.UI","PointerInputModule","ProcessMove",1),{
+                onEnter:function(args){
+        
+                    LOG("\n--------------------------------------",LogColor.YELLOW)
+                    LOG("protected virtual Void ProcessMove( "+(args[1])+" );",LogColor.C36)
+                    var pointerEventData = args[1]
+                    
+                    var f_get_pointerEnter = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
+                    var gameObj = f_get_pointerEnter(pointerEventData)
+                    
+                    // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
+                    // var m_transform = f_getTransform(gameObj)
+        
+                    showGameObject(gameObj)
+        
+                    // showTransform(m_transform)
+        
+                    // showEventData(pointerEventData)
+                },
+                onLeave:function(retval){
+        
+                } 
+            })
+        }
     
-    function move(){
-        Interceptor.attach(find_method("UnityEngine.UI","PointerInputModule","ProcessMove",1),{
-            onEnter:function(args){
+        function drag(){
+            Interceptor.attach(find_method("UnityEngine.UI","PointerInputModule","ProcessDrag",1),{
+                onEnter:function(args){
+        
+                    LOG("\n--------------------------------------",LogColor.YELLOW)
+                    LOG("protected virtual Void ProcessDrag( "+(args[1])+" );",LogColor.C36)
+                    var pointerEventData = args[1]
+                    
+                    var f_get_pointerEnter = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_pointerDrag",0),'pointer',['pointer'])
+                    var gameObj = f_get_pointerEnter(pointerEventData)
+                    
+                    // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
+                    // var m_transform = f_getTransform(gameObj)
+        
+                    showGameObject(gameObj)
+        
+                    // showTransform(m_transform)
+        
+                    // showEventData(pointerEventData)
+                },
+                onLeave:function(retval){
+        
+                } 
+            })
+        }
     
-                LOG("\n--------------------------------------",LogColor.YELLOW)
-                LOG("protected virtual Void ProcessMove( "+(args[1])+" );",LogColor.C36)
-                var pointerEventData = args[1]
-                
-                var f_get_pointerEnter = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
-                var gameObj = f_get_pointerEnter(pointerEventData)
-                
-                // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
-                // var m_transform = f_getTransform(gameObj)
+        function HookHandlePointerExitAndEnter(){
+            Interceptor.attach(find_method("UnityEngine.UI","BaseInputModule","HandlePointerExitAndEnter",2),{
+                onEnter:function(args){
+        
+                    LOG("\n--------------------------------------",LogColor.YELLOW)
+                    LOG("protected virtual Void HandlePointerExitAndEnter( "+(args[1])+" , "+(args[2])+")",LogColor.C36)
+                    var pointerEventData = args[1]
+                    
+                    var f_get_pointerEnter = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
+                    var gameObj = f_get_pointerEnter(pointerEventData)
+                    
+                    // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
+                    // var m_transform = f_getTransform(gameObj)
+        
+                    showGameObject(args[2])
+        
+                    // showTransform(m_transform)
+        
+                    showEventData(pointerEventData)
+                },
+                onLeave:function(retval){
+        
+                } 
+            })
+        }
     
-                showGameObject(gameObj)
+        function set_pointerPress(){
+            Interceptor.attach(find_method("UnityEngine.UI","PointerEventData","set_pointerPress",1),{
+                onEnter:function(args){
+        
+                    LOG("\n--------------------------------------",LogColor.YELLOW)
+                    LOG("protected virtual Void set_pointerPress( "+(args[1])+" );",LogColor.C36)
+                    
+                    // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
+                    // var m_transform = f_getTransform(gameObj)
+        
+                    showGameObject(args[1])
+        
+                    // showTransform(m_transform)
+        
+                    // showEventData(pointerEventData)
+                },
+                onLeave:function(retval){
+        
+                } 
+            })
+        }
     
-                // showTransform(m_transform)
-    
-                // showEventData(pointerEventData)
-            },
-            onLeave:function(retval){
-    
-            } 
-        })
-    }
-
-    function drag(){
-        Interceptor.attach(find_method("UnityEngine.UI","PointerInputModule","ProcessDrag",1),{
-            onEnter:function(args){
-    
-                LOG("\n--------------------------------------",LogColor.YELLOW)
-                LOG("protected virtual Void ProcessDrag( "+(args[1])+" );",LogColor.C36)
-                var pointerEventData = args[1]
-                
-                var f_get_pointerEnter = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_pointerDrag",0),'pointer',['pointer'])
-                var gameObj = f_get_pointerEnter(pointerEventData)
-                
-                // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
-                // var m_transform = f_getTransform(gameObj)
-    
-                showGameObject(gameObj)
-    
-                // showTransform(m_transform)
-    
-                // showEventData(pointerEventData)
-            },
-            onLeave:function(retval){
-    
-            } 
-        })
-    }
-
-    function HookHandlePointerExitAndEnter(){
-        Interceptor.attach(find_method("UnityEngine.UI","BaseInputModule","HandlePointerExitAndEnter",2),{
-            onEnter:function(args){
-    
-                LOG("\n--------------------------------------",LogColor.YELLOW)
-                LOG("protected virtual Void HandlePointerExitAndEnter( "+(args[1])+" , "+(args[2])+")",LogColor.C36)
-                var pointerEventData = args[1]
-                
-                var f_get_pointerEnter = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
-                var gameObj = f_get_pointerEnter(pointerEventData)
-                
-                // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
-                // var m_transform = f_getTransform(gameObj)
-    
-                showGameObject(args[2])
-    
-                // showTransform(m_transform)
-    
-                showEventData(pointerEventData)
-            },
-            onLeave:function(retval){
-    
-            } 
-        })
-    }
-
-    function set_pointerPress(){
-        Interceptor.attach(find_method("UnityEngine.UI","PointerEventData","set_pointerPress",1),{
-            onEnter:function(args){
-    
-                LOG("\n--------------------------------------",LogColor.YELLOW)
-                LOG("protected virtual Void set_pointerPress( "+(args[1])+" );",LogColor.C36)
-                
-                // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
-                // var m_transform = f_getTransform(gameObj)
-    
-                showGameObject(args[1])
-    
-                // showTransform(m_transform)
-    
-                // showEventData(pointerEventData)
-            },
-            onLeave:function(retval){
-    
-            } 
-        })
-    }
-
-    function GetPointerData(){
-        Interceptor.attach(find_method("UnityEngine.UI","PointerInputModule","GetPointerData",3),{
-            onEnter:function(args){
-    
-                LOG("\n--------------------------------------",LogColor.YELLOW)
-                LOG("protected virtual Void set_pointerPress( "+(args[2])+" );",LogColor.C36)
-                
-                // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
-                // var m_transform = f_getTransform(gameObj)
-    
-                showGameObject(args[1])
-    
-                // showTransform(m_transform)
-    
-                showEventData(args[2])
-            },
-            onLeave:function(retval){
-    
-            } 
-        })
+        function GetPointerData(){
+            Interceptor.attach(find_method("UnityEngine.UI","PointerInputModule","GetPointerData",3),{
+                onEnter:function(args){
+        
+                    LOG("\n--------------------------------------",LogColor.YELLOW)
+                    LOG("protected virtual Void set_pointerPress( "+(args[2])+" );",LogColor.C36)
+                    
+                    // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
+                    // var m_transform = f_getTransform(gameObj)
+        
+                    showGameObject(args[1])
+        
+                    // showTransform(m_transform)
+        
+                    showEventData(args[2])
+                },
+                onLeave:function(retval){
+        
+                } 
+            })
+        }
     }
 }
 
@@ -1925,13 +1964,9 @@ function HookGetSetText(){
     }
 
     //called : 0x792adc (0xaaf1d4d0)  --->    public Boolean get_hasBorder ()
-
     //called : 0x787e10 (0xb61477b0)  --->    public Int32 get_fontSize ()
-
     //called : 0x787e80 (0xb6147a18)  --->    public Boolean get_richText ()
-
     //called : 0x787eb0 (0xb6147b20)  --->    public Single get_lineSpacing ()
-
     //called : 0x787e20 (0xb6147808)  --->    public FontStyle get_fontStyle ()
 }
 
