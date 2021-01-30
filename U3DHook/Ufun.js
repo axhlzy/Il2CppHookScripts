@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 9:23
- * @UpdateTime 2021/01/27 11:14
+ * @UpdateTime 2021/01/30 9:30
  * @Des frida hook u3d functions scrpt
  */
 
@@ -341,12 +341,14 @@ function list_Methods(klass,isShowMore){
             var arr_args = new Array()
             var arr_args_type_addr = new Array()
             for(var i=0;i<parameters_count;i++){
-                var ParameterInfo = method.add(p_size*5).readPointer()
-                var Il2CppType = ParameterInfo.add(p_size*i*4)
-                var typeClass = il2cpp_class_from_type(getParameterType(Il2CppType))
-                var TypeName = getClassName(typeClass)
-                arr_args.push(TypeName+" "+getParameterName(ParameterInfo))
-                arr_args_type_addr.push(TypeName+" "+typeClass)
+                try{
+                    var ParameterInfo = method.add(p_size*5).readPointer()
+                    var Il2CppType = ParameterInfo.add(p_size*i*4)
+                    var typeClass = il2cpp_class_from_type(getParameterType(Il2CppType))
+                    var TypeName = getClassName(typeClass)
+                    arr_args.push(TypeName+" "+getParameterName(ParameterInfo))
+                    arr_args_type_addr.push(TypeName+" "+typeClass)
+                }catch(e){}
             }
 
             LOG((count_methods==0?"":"\n")+"[*] "+method+" ---> "
@@ -402,7 +404,7 @@ function find_method(ImageName,ClassName,functionName,ArgsCount,isRealAddr){
     }
     
     if (klass == 0 ) return ptr(0)
-    var method = il2cpp_class_get_method_from_name(klass, Memory.allocUtf8String(functionName), ArgsCount)
+    var method = il2cpp_class_get_method_from_name(klass, allcStr(functionName), ArgsCount)
     if (method == 0) return ptr(0)
     if (isRealAddr) return isRealAddr ? method.readPointer():method.readPointer().sub(soAddr)
 
@@ -781,7 +783,7 @@ function reflash(){
  */
 function get_method_modifier(method_ptr){
     
-    var flags = ptr(method_ptr).add(p_size*9).readU16()
+    var flags = ptr(method_ptr).add(p_size*8+4).readU16()
     var access = flags & il2cppTabledefs.METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK
     var ret_str = ""
     switch(access){
@@ -886,7 +888,7 @@ function getMethodName(method){
 }
 
 function getMethodParametersCount(method){
-    return ptr(method).add(p_size*10+2).readU8()
+    return ptr(method).add(p_size*8+4+2+2+2).readU8()
 }
 
 function getMethodParameters(method){
@@ -902,7 +904,7 @@ function getParameterName(ParameterInfo){
 }
 
 function getParameterType(Il2CppType){
-    return ptr(Il2CppType).add(p_size*2+4).readPointer()
+    return ptr(Il2CppType).add(4*2+p_size).readPointer()
 }
 
 /**
@@ -1589,7 +1591,7 @@ function Info(){
 
 function GotoScene(str){
     CallStatic(find_method("UnityEngine.CoreModule","SceneManager","LoadScene",2)
-        ,il2cpp_string_new(Memory.allocUtf8String(str)))
+        ,il2cpp_string_new(allcStr(str)))
 } 
 
 function setActive(gameObj,visible){
