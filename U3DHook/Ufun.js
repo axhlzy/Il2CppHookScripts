@@ -1,8 +1,8 @@
 /**
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
- * @CreatedTime 2021/01/16 9:23
- * @UpdateTime 2021/01/30 9:30
+ * @CreatedTime 2021/01/16 09:23
+ * @UpdateTime 2021/02/01 16:42
  * @Des frida hook u3d functions scrpt
  */
 
@@ -68,15 +68,24 @@ var arrayName =
  * 其他方法
  * ---------------------
  * GotoScene(str)
- * setActive(gameObj,visible)
  * CallStatic(mPtr,arg0,arg1,arg2,arg3)
  * SeeTypeToString(obj)
  * FuckKnownType(strType,mPtr)
  * 
+ * --- 用作动态Hook去掉指定gameObj
+ * setClick()
+ * HideClickedObj()
+ * HookMotionEvent
+ * 
+ * --- 查看一些对象
  * showEventData(eventData)
  * showTransform(transform)
  * showEventData(eventData)
  * 
+ * --- 修改属性
+ * destroyObj(gameObj)
+ * setActive(gameObj,visible)
+ * SetPosition(mTransform,x,y,z)
  * SetLocalScale(mTransform,x,y,z)
  * SetLocalPosition(mTransform,x,y,z)
  * SetLocalRotation(mTransform,x,y,z,w)
@@ -86,7 +95,7 @@ var arrayName =
  * SetInt(key,value)    | SetFloat(key,value)   | SetString(key,value)  |
  * GetInt(key)          | GetFloat(key)         | GetString(key)        |
  * ----------------------------------------------------------------------
- * PS:分清楚何时传的MethodInfo,Transform,GameObject指针 ... 瞎传掉方法必崩
+ * PS:分清楚何时传的MethodInfo,Transform,GameObject指针 ... 瞎传参数掉用方法必崩
  * --------------------------------------------------------------------------------------------
  */
 
@@ -1000,6 +1009,89 @@ function getLine(length){
     return retStr
 }
 
+function getLibPath(name){
+    var retStr = ""
+    Java.perform(function(){
+        var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
+        var libPath = context.getApplicationInfo().nativeLibraryDir.value
+        retStr =  libPath +"/"+ (name == undefined ? "" : name)
+    })
+    return retStr
+}
+
+/**
+ * 配合HookOnPointerClick()，SetLocalScale()使用以达到动态隐藏gameobj
+ * @param {Int} x 模拟点击的x位置
+ * @param {Int} y 模拟点击的y位置
+ */
+function setClick(x,y){
+    if (x == undefined || y == undefined) return
+    Java.perform(function(){
+        var Instrumentation = Java.use("android.app.Instrumentation")
+        var SystemClock = Java.use("android.os.SystemClock")
+        var MotionEvent = Java.use("android.view.MotionEvent")
+        var inst = Instrumentation.$new()
+        var downTime = SystemClock.uptimeMillis()
+        var downEvent = MotionEvent.obtain(downTime,downTime,0,x,y,0)
+        var upTime = SystemClock.uptimeMillis()
+        var upEvent = MotionEvent.obtain(upTime,upTime,1,x,y,0)
+        inst.sendPointerSync(downEvent)
+        inst.sendPointerSync(upEvent)
+    })
+}
+
+/**
+ * 用来确定点击view的位置，配合上面这个函数使用 setClick() 以及 HookOnPointerClick() 使用
+ * 启动游戏的时候进行模拟点击，配合HookOnPointerClick()即可确定gameobj，通过修改transform即可实现动态的隐藏一些按钮
+ * 这里是针对一些bundle资源的u3d游戏，我们不能方便的去静态修改gameobj可见性,或者是一些其他原因我们不能修改，即可用这个动态修改的思路
+ */
+function HookMotionEvent(){
+    Java.perform(function(){
+        Java.use("android.view.View").onTouchEvent.implementation = function(event){
+            var ret = this.onTouchEvent(event)
+            LOG("\n"+getLine(25)+" onTouchEvent "+getLine(25),LogColor.YELLOW)
+            LOG(ret+"\t"+event,LogColor.C36)
+            return ret
+        }
+
+        Java.use("android.app.Activity").dispatchTouchEvent.implementation = function(event){
+            var ret = this.dispatchTouchEvent(event)
+            LOG("\n"+getLine(25)+" dispatchTouchEvent "+getLine(25),LogColor.YELLOW)
+            LOG(ret+"\t"+event,LogColor.C36)
+            return ret
+        }
+    })
+}
+
+/**
+ * 隐藏模拟点击位置的gameobj
+ * 这里find_method()在移植的时候写具体的地址就是，不用移植整个js代码
+ * @param {*} x 
+ * @param {*} y 
+ */
+function HideClickedObj(x,y){
+    var m_ptr = find_method("UnityEngine.UI","Button","OnPointerClick",1)
+    var srcFunc = new NativeFunction(m_ptr,'void',['pointer','pointer','pointer','pointer'])
+    Interceptor.revert(m_ptr)
+    Interceptor.replace(m_ptr,new NativeCallback(function(arg0,pointerEventData,arg2,arg3){
+        srcFunc(arg0,pointerEventData,arg2,arg3)
+        if (pointerEventData == 0) return 
+        var f_get_pointerEnter = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
+        var gameObj = f_get_pointerEnter(pointerEventData)
+        //判断名字后使用这三种方式都可以去掉该对象
+        if (getObjName(gameObj) == "Settings Button") {
+            // setActive(gameObj,0)
+            // var m_transform = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])(gameObj)
+            // SetLocalScale(m_transform,0,0,0)
+            destroyObj(gameObj)
+        }
+    },'void',['pointer','pointer','pointer','pointer']))
+
+    setClick(x,y)
+    //B 去断点找到点击事件的处理函数并nop掉
+    //循环调用，出现时destory掉这个gameObj
+}
+
 // setImmediate(Hook_dlopen)
 
 /**
@@ -1126,6 +1218,14 @@ function SetLocalRotation(mTransform,x,y,z,w){
     new NativeFunction(set_localRotation_Injected,'pointer',['pointer','pointer'])(ptr(mTransform),allcVector(x,y,z,w))
 }
 
+/**
+ * GameObject/Transform
+ * @param {Pointer}  
+ */
+function getObjName(gameObj){
+    return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1,true),'pointer',['pointer'])(gameObj))
+}
+
 function showGameObject(gameObj){
     
     var f_getName        = new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1,true),'pointer',['pointer'])
@@ -1137,7 +1237,7 @@ function showGameObject(gameObj){
     LOG("--------- GameObject ---------",LogColor.C33)
     LOG("gameObj\t\t--->\t"+gameObj,LogColor.C36)
     if (gameObj == 0) return
-    LOG("getName\t\t--->\t"+readU16(f_getName(gameObj)),LogColor.C36)
+    LOG("getName\t\t--->\t"+getObjName(gameObj),LogColor.C36)
     LOG("getLayer\t--->\t"+f_getLayer(gameObj),LogColor.C36)           
     var m_transform = f_getTransform(gameObj)
     LOG("getTransform\t--->\t"+m_transform,LogColor.C36)
@@ -1160,9 +1260,8 @@ function showTransform(transform){
     var addr_get_childCount = find_method("UnityEngine.CoreModule","Transform","get_childCount",0,true)
     
     if (addr_get_childCount != 0){
-        var f_getName = new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1,true),'pointer',['pointer'])
         var childCount = new NativeFunction(addr_get_childCount,'int',['pointer'])(transform)
-        LOG("childCount\t--->\t"+childCount+"\t("+readU16(f_getName(transform))+")",LogColor.C36)
+        LOG("childCount\t--->\t"+childCount+"\t("+getObjName(transform)+")",LogColor.C36)
         PrintHierarchy(transform,2,true)
     }
 
@@ -1598,6 +1697,10 @@ function setActive(gameObj,visible){
     new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","SetActive",1,true),'pointer',['pointer','int'])(ptr(gameObj),visible)
 }
 
+function destroyObj(gameObj){
+    new NativeFunction(find_method("UnityEngine.CoreModule","Object","Destroy",1,true),'pointer',['pointer'])(ptr(gameObj))
+}
+
 function HookSetActive(){
     Interceptor.attach(find_method("UnityEngine.CoreModule","GameObject","SetActive",1,true),{
         onEnter:function(args){
@@ -2013,7 +2116,7 @@ function PrintHierarchy(mPtr,level,inCall){
 
     //当前level作为第一级
     var baseLevel = getLevel(transform)
-    LOG((inCall!=undefined?"\t":"")+getSpace(0)+transform+" : "+ readU16(f_getName(transform)),LogColor.C36)
+    LOG((inCall!=undefined?"\t":"")+getSpace(0)+transform+" : "+ getObjName(transform),LogColor.C36)
     getChild(transform)
 
     if (level==10)LOG("\n"+getLine(73),LogColor.C33)
