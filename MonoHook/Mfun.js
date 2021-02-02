@@ -78,8 +78,8 @@ function Hook_dlopen() {
     }
 
     function todo(){
-        HookMono()
         InitFunctions()
+        HookMono()
     }
        
 }
