@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime 2021/02/01 16:42
+ * @UpdateTime 2021/02/05 10:55
  * @Des frida hook u3d functions scrpt
  */
 
@@ -71,6 +71,8 @@ var arrayName =
  * CallStatic(mPtr,arg0,arg1,arg2,arg3)
  * SeeTypeToString(obj)
  * FuckKnownType(strType,mPtr)
+ * Toast(msg)
+ * getLibPath()
  * 
  * --- 用作动态Hook去掉指定gameObj
  * setClick()
@@ -385,27 +387,27 @@ function list_Methods(klass,isShowMore){
  *  根据 ImageName , ClassName , functionName , argsCount 找到对应 function 的地址
  *  最后一个参数 isRealAddr 用作显示静态分析地址还是当前内存地址（带这个参数则只返回地址，不带则列表信息）
  *  find_method("UnityEngine.UI","Text","get_text",0)
- * @param {String} ImageName 
- * @param {String} ClassName 
+ * @param {String} imageName 
+ * @param {String} className 
  * @param {String} functionName 
- * @param {Number} ArgsCount 
+ * @param {Number} argsCount 
  * @param {Boolean} isRealAddr 
  */
-function find_method(ImageName,ClassName,functionName,ArgsCount,isRealAddr){
+function find_method(imageName,className,functionName,argsCount,isRealAddr){
 
     // var corlib = il2cpp_get_corlib()
     if (isRealAddr == undefined) isRealAddr = true
     var currentlib = 0
     arr_img_names.forEach(function(name,index){
-        if (name == ImageName){
+        if (name == imageName){
             currentlib = arr_img_addr[index]
         }
     })
-    var klass = il2cpp_class_from_name(currentlib, Memory.allocUtf8String(ImageName), Memory.allocUtf8String(ClassName))
+    var klass = il2cpp_class_from_name(currentlib, Memory.allocUtf8String(imageName), Memory.allocUtf8String(className))
     if (klass == 0){
         for(var j=0;j<il2cpp_image_get_class_count(currentlib).toInt32();j++){
             var il2CppClass = il2cpp_image_get_class(currentlib,j)
-            if (getClassName(il2CppClass) == ClassName) {
+            if (getClassName(il2CppClass) == className) {
                 klass = il2CppClass
                 break
             }
@@ -413,7 +415,7 @@ function find_method(ImageName,ClassName,functionName,ArgsCount,isRealAddr){
     }
     
     if (klass == 0 ) return ptr(0)
-    var method = il2cpp_class_get_method_from_name(klass, allcStr(functionName), ArgsCount)
+    var method = il2cpp_class_get_method_from_name(klass, allcStr(functionName), argsCount)
     if (method == 0) return ptr(0)
     if (isRealAddr) return isRealAddr ? method.readPointer():method.readPointer().sub(soAddr)
 
@@ -432,7 +434,7 @@ function find_method(ImageName,ClassName,functionName,ArgsCount,isRealAddr){
                 + getMethodName(method) + " "
                 + "(" + arr_args+")"+"\t"
     LOG(getLine(85),LogColor.C33)
-    LOG(ImageName+"."+ClassName+"\t"+disStr,LogColor.RED)
+    LOG(imageName+"."+className+"\t"+disStr,LogColor.RED)
     LOG("----------------------------",LogColor.C33)
     var ShowMore = false
     LOG("Il2CppImage\t---->\t"+currentlib +(ShowMore?" ("+ currentlib.add(p_size).readPointer().readCString()+")":""))
@@ -613,7 +615,7 @@ function breakPoint(m_ptr,index,name){
  * @param {Boolean} isAnalyticParameter 是否解析参数
  */
 function breakPoints(filter,isAnalyticParameter){
-    d()
+    Interceptor.detachAll()
     var t_arrayName = new Array()
     var t_arrayAddr = new Array()
     var t_arrayMethod = new Array()
@@ -638,7 +640,7 @@ function breakPoints(filter,isAnalyticParameter){
 
     t_arrayAddr
         .map(function(temp){return soAddr.add(temp)})
-        .forEach(function(value,index,array){
+        .forEach(function(value,index){
             LOG("-------------------------",LogColor.C90)
             LOG('currentAddr:' + value + "\t"+t_arrayName[index],LogColor.C32)
             // var a1 = isAnalyticParameter ? arrayMethod[index] : value
@@ -858,26 +860,25 @@ function printLogColors(){
 }
 
 var il2cppTabledefs = {
-    METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK:0x0007,
-    METHOD_ATTRIBUTE_COMPILER_CONTROLLED:0x0000,
-    METHOD_ATTRIBUTE_PRIVATE:0x0001,
-    METHOD_ATTRIBUTE_FAM_AND_ASSEM:0x0002,
-    METHOD_ATTRIBUTE_ASSEM:0x0003,
-    METHOD_ATTRIBUTE_FAMILY:0x0004,
-    METHOD_ATTRIBUTE_FAM_OR_ASSEM:0x0005,
-    METHOD_ATTRIBUTE_PUBLIC:0x0006,
+    METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK         : 0x0007,
+    METHOD_ATTRIBUTE_COMPILER_CONTROLLED        : 0x0000,
+    METHOD_ATTRIBUTE_PRIVATE                    : 0x0001,
+    METHOD_ATTRIBUTE_FAM_AND_ASSEM              : 0x0002,
+    METHOD_ATTRIBUTE_ASSEM                      : 0x0003,
+    METHOD_ATTRIBUTE_FAMILY                     : 0x0004,
+    METHOD_ATTRIBUTE_FAM_OR_ASSEM               : 0x0005,
+    METHOD_ATTRIBUTE_PUBLIC                     : 0x0006,
 
-    METHOD_ATTRIBUTE_STATIC                   : 0x0010,
-    METHOD_ATTRIBUTE_FINAL                    : 0x0020,
-    METHOD_ATTRIBUTE_VIRTUAL                  : 0x0040,
-    METHOD_ATTRIBUTE_ABSTRACT                 : 0x0400,
-    METHOD_ATTRIBUTE_PINVOKE_IMPL             : 0x2000,
-    METHOD_ATTRIBUTE_VTABLE_LAYOUT_MASK       : 0x0100,
+    METHOD_ATTRIBUTE_STATIC                     : 0x0010,
+    METHOD_ATTRIBUTE_FINAL                      : 0x0020,
+    METHOD_ATTRIBUTE_VIRTUAL                    : 0x0040,
+    METHOD_ATTRIBUTE_ABSTRACT                   : 0x0400,
+    METHOD_ATTRIBUTE_PINVOKE_IMPL               : 0x2000,
+    METHOD_ATTRIBUTE_VTABLE_LAYOUT_MASK         : 0x0100,
 
-    METHOD_ATTRIBUTE_REUSE_SLOT               : 0x0000,
-    METHOD_ATTRIBUTE_NEW_SLOT                 : 0x0100,
-    METHOD_ATTRIBUTE_PINVOKE_IMPL             : 0x2000,
-
+    METHOD_ATTRIBUTE_REUSE_SLOT                 : 0x0000,
+    METHOD_ATTRIBUTE_NEW_SLOT                   : 0x0100,
+    METHOD_ATTRIBUTE_PINVOKE_IMPL               : 0x2000,
 }
 
 var LogColor = {
@@ -1007,6 +1008,13 @@ function getLine(length){
         retStr += "-"
     }
     return retStr
+}
+
+function Toast(msg){
+    Java.scheduleOnMainThread(function(){
+        var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
+        Java.use("android.widget.Toast").makeText(context,Java.use("java.lang.String").$new(msg),1).show()
+    })
 }
 
 function getLibPath(name){
@@ -1711,9 +1719,7 @@ function HookSetActive(){
                 showGameObject(args[0])
             }
         },
-        onLeave:function(retval){
-
-        }
+        onLeave:function(retval){}
     })
 }
 
@@ -1886,7 +1892,6 @@ function HookPlayerPrefs(){
     var isShowPrintStack = false
 
     InterceptorGetFunctions()
-
     InterceptorSetFunctions()
 
     function InterceptorGetFunctions(){
@@ -2031,10 +2036,6 @@ function HookLoadScene(){
             LOG(" ret  --->\t"+ret,LogColor.C36)
         }
     })
-
-    // var get_sceneCount = find_method("UnityEngine.CoreModule","SceneManager","get_sceneCount",0)
-    // var count = new NativeFunction(get_sceneCount,'pointer',[])()
-    // LOG(count)
 }
 
 function HookGetSetText(){
