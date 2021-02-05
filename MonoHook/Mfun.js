@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/31 15:30
- * @UpdateTime 2021/02/03 17:16
+ * @UpdateTime 2021/02/05 11:01
  * @Des frida hook mono functions scrpt
  */
 
@@ -19,10 +19,10 @@ mono_type_get_name,mono_assembly_foreach,mono_assembly_get_image,mono_image_get_
 mono_image_get_table_rows,mono_class_get
 //声明libc.so需要的函数
 var fopen,fwrite,fclose,system
-
+//记录image信息
 var arr_imgs_name = new Array()
 var arr_imgs_addr = new Array()
-
+//记录需要断点的函数信息
 var arrayAddr = new Array()
 var arrayName = new Array()
 
@@ -50,15 +50,13 @@ function InitFunctions(){
     //void mono_assembly_foreach    (MonoFunc func, void* user_data);
     mono_assembly_foreach           = new NativeFunction(Module.findExportByName(soName,"mono_assembly_foreach"),'void',['pointer','pointer'])
     //MonoImage    *mono_assembly_get_image  (MonoAssembly *assembly);
-    mono_assembly_get_image         =  new NativeFunction(Module.findExportByName(soName,"mono_assembly_get_image"),'pointer',['pointer'])
-    mono_image_get_name             =  new NativeFunction(Module.findExportByName(soName,"mono_image_get_name"),'pointer',['pointer'])
+    mono_assembly_get_image         = new NativeFunction(Module.findExportByName(soName,"mono_assembly_get_image"),'pointer',['pointer'])
+    mono_image_get_name             = new NativeFunction(Module.findExportByName(soName,"mono_image_get_name"),'pointer',['pointer'])
     //unsigned mono_unity_get_all_classes_with_name_case (MonoImage *image, const char *name, MonoClass **classes_ref, unsigned *length_ref)
     mono_unity_get_all_classes_with_name_case =  new NativeFunction(Module.findExportByName(soName,"mono_unity_get_all_classes_with_name_case"),'pointer',['pointer','pointer','pointer','pointer'])
-    mono_image_get_table_rows       =  new NativeFunction(Module.findExportByName(soName,"mono_image_get_table_rows"),'int',['pointer','int'])
+    mono_image_get_table_rows       = new NativeFunction(Module.findExportByName(soName,"mono_image_get_table_rows"),'int',['pointer','int'])
     //MonoClass *mono_class_get             (MonoImage *image, uint32_t type_token);
-    mono_class_get                  =  new NativeFunction(Module.findExportByName(soName,"mono_class_get"),'pointer',['pointer','int'])
-
-
+    mono_class_get                  = new NativeFunction(Module.findExportByName(soName,"mono_class_get"),'pointer',['pointer','int'])
 
     fopen   = new NativeFunction(Module.findExportByName("libc.so", "fopen"), "pointer", ["pointer", "pointer"])
     fwrite  = new NativeFunction(Module.findExportByName("libc.so", "fwrite"), "int", ["pointer",'int','int', "pointer"])
@@ -270,21 +268,21 @@ function d(){
  * find_method("UnityEngine","UnityEngine","Application","get_identifier",0)
  * find_method("UnityEngine",'UnityEngine','Debug',"LogError",1,true)
  * @param {String}  imageName 
- * @param {String}  NameSpace 
+ * @param {String}  nameSpace 
  * @param {String}  className 
- * @param {String}  FunctName 
+ * @param {String}  functName 
  * @param {Int}     argsCount 
  * @param {Boolean} showDetail 
  */
-function find_method(imageName,NameSpace,className,FunctName,argsCount,showDetail){
-    if (imageName==undefined ||NameSpace==undefined||className==undefined||FunctName==undefined) return ptr(0)
+function find_method(imageName,nameSpace,className,functName,argsCount,showDetail){
+    if (imageName==undefined ||nameSpace==undefined||className==undefined||functName==undefined) return ptr(0)
     if (argsCount == undefined) argsCount = -1
     if (showDetail == undefined) showDetail = false
     
     // mono_thread_attach(mono_get_root_domain())
     var p_image = getImageByName(imageName) == 0 ? mono_image_loaded(allcStr(imageName)) : getImageByName(imageName)
-    var p_class = mono_class_from_name(ptr(p_image),allcStr(NameSpace),allcStr(className))
-    var p_method = mono_class_get_method_from_name(p_class,allcStr(FunctName),argsCount)
+    var p_class = mono_class_from_name(ptr(p_image),allcStr(nameSpace),allcStr(className))
+    var p_method = mono_class_get_method_from_name(p_class,allcStr(functName),argsCount)
 
     if (!showDetail) return mono_compile_method(p_method)
 
@@ -378,7 +376,7 @@ function breakPoints(filter){
 }
 
 /**
- * 
+ * 针对静态无参数方法只需要传一个method指针就好
  * @param {*} monoMethod    method to invoke
  * @param {*} obj           object instance （obj is the this pointer, it should be NULL for static methods, a MonoObject* for object instances and a pointer to the value type for value type）
  * @param {*} params        arguments to the method
@@ -392,18 +390,27 @@ function invoke(monoMethod, obj, params,monoObject){
 }
 
 function TestAttach(){
+
     HookMonoMethod("UnityEngine",'UnityEngine','Debug',"LogError",1,{
         onEnter:function(args){
             LOG(readU16(args[0]))
+            Toast(readU16(args[0]))
         },
         onLeave:function(ret){
-
+            
         }
     })
 }
 
+function Toast(msg){
+    Java.scheduleOnMainThread(function(){
+        var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
+        Java.use("android.widget.Toast").makeText(context,Java.use("java.lang.String").$new(msg),1).show()
+    })
+}
+
 function HookMonoMethod(imageName,NameSpace,className,FunctName,argsCount,callbacks) {
-    var mPtr = mono_compile_method(find_method(imageName,NameSpace,className,FunctName,argsCount))
+    var mPtr = find_method(imageName,NameSpace,className,FunctName,argsCount)
     Interceptor.attach(ptr(mPtr),callbacks)
 }
 
@@ -519,6 +526,18 @@ function getLibPath(name){
     return retStr
 }
 
+function allcStr(str,type){
+    return type == undefined ? Memory.allocUtf8String(str) : mono_string_new(mono_get_root_domain(),Memory.allocUtf8String(str))
+}
+
+function seeHexR(addr,length){
+    LOG(hexdump(ptr(soAddr.add(addr).readPointer()),{length:length}))
+}
+
+function seeHexA(addr,length){
+    LOG(hexdump(ptr(addr),{length:length}))
+}
+
 function LOG(str,type){
     if(!LogFlag) return
     if (type == undefined) {
@@ -539,16 +558,4 @@ var LogColor = {
     C41:41,C42:42,C43:43,C44:44,C45:45,C46:46,
     C90:90,C91:91,C92:92,C93:93,C94:94,C95:95,C96:96,C97:97,
     C100:100,C101:101,C102:102,C103:103,C104:104,C105:105,C106:106,C107:107
-}
-
-function allcStr(str,type){
-    return type == undefined ? Memory.allocUtf8String(str) : mono_string_new(mono_get_root_domain(),Memory.allocUtf8String(str))
-}
-
-function seeHexR(addr,length){
-    LOG(hexdump(ptr(soAddr.add(addr).readPointer()),{length:length}))
-}
-
-function seeHexA(addr,length){
-    LOG(hexdump(ptr(addr),{length:length}))
 }
