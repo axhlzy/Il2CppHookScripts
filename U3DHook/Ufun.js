@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime 2021/02/05 10:55
+ * @UpdateTime 2021/02/22 18:48
  * @Des frida hook u3d functions scrpt
  */
 
@@ -1712,7 +1712,16 @@ function destroyObj(gameObj){
 function HookSetActive(){
     Interceptor.attach(find_method("UnityEngine.CoreModule","GameObject","SetActive",1,true),{
         onEnter:function(args){
-            if (args[1].toInt32() == 1 || args[1].toInt32() == 0) {
+            //显示SetActive为true的项
+            if (args[1].toInt32() == 1) {
+                LOG("\n"+getLine(38),LogColor.YELLOW)
+                LOG("public extern void SetActive( "+(args[1].toInt32()==0?"false":"true")+" );",LogColor.C36)
+                LOG(getLine(20),LogColor.C33)
+                showGameObject(args[0])
+            }
+            return 
+            //显示SetActive为false的项
+            if (args[1].toInt32() == 0) {
                 LOG("\n"+getLine(38),LogColor.YELLOW)
                 LOG("public extern void SetActive( "+(args[1].toInt32()==0?"false":"true")+" );",LogColor.C36)
                 LOG(getLine(20),LogColor.C33)
@@ -2080,7 +2089,7 @@ function HookGetSetText(){
     function strReplace(mPtr){
         if (mPtr==0 || memcmp==0 ||arr_src_str.length == 0 || arr_rep_str.length != arr_src_str.length ) return ptr(0)
         for (var i=0;i<arr_src_str.length;i++){
-            if (memcmp(mPtr.add(p_size*3),allcStr(arr_src_str[i],"").add(p_size*3),ReadLength(mPtr)*2)==0) return allcStr(arr_rep_str[i],"")
+            if (memcmp(mPtr.add(p_size*2+4),allcStr(arr_src_str[i],"").add(p_size*2+4),ReadLength(mPtr)*2)==0) return allcStr(arr_rep_str[i],"")
         }
         return ptr(0)
     }
@@ -2154,4 +2163,75 @@ function PrintHierarchy(mPtr,level,inCall){
         }
         return retStr
     }
+}
+
+/**
+ * 根据子Transform的名称来找父Transform的子Transform
+ * 配合SetLocalScale()和HookSetActive()使用来动态的去掉页面上的view
+ * 
+ * Interceptor.attach(addrSetActive,{
+        onEnter:function(args){
+            if (args[1].toInt32() == 1) {
+                LOG(getObjName(args[0])+"\tpublic extern void SetActive( "+(args[1].toInt32()==0?"false":"true")+" );")
+                if (getObjName(args[0]) == "MainMenuScreen(Clone)"){
+                    var trasform_par = f_getTransform(args[0])
+                    var trasform_aim = ptr(findTransform(trasform_par,1,"Image"))
+                    SetLocalScale(trasform_aim,0,0,0)
+                }
+                if (getObjName(args[0]) == "SettingsScreen(Clone)"){
+                    var trasform_par = f_getTransform(args[0])
+                    
+                    var trasform_Language = ptr(findTransform(trasform_par,2,"Language"))
+                    if (trasform_Language != null) SetLocalScale(trasform_Language,0,0,0)
+                    
+                    var trasform_Dropdown = ptr(findTransform(trasform_par,2,"Dropdown"))
+                    if (trasform_Dropdown != null) SetLocalScale(trasform_Dropdown,0,0,0)
+                }
+            }
+        },
+        onLeave:function(retval){}
+ */
+function findTransform(mPtr,level,filter){
+    if (mPtr == 0 || mPtr == undefined) return
+    if (level ==undefined) level = 10
+    var transform = ptr(mPtr)
+    var retStr = ""
+    
+    var f_getName           = new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1),'pointer',['pointer'])
+    var f_getParent         = new NativeFunction(find_method("UnityEngine.CoreModule","Transform","GetParent",0),'pointer',['pointer'])
+    var f_getChildCount     = new NativeFunction(find_method("UnityEngine.CoreModule","Transform","get_childCount",0),'int',['pointer'])
+    var f_getChild          = new NativeFunction(find_method("UnityEngine.CoreModule","Transform","GetChild",1),'pointer',['pointer','int'])
+
+    var baseLevel = getLevel(transform)
+    
+    getChild(transform)
+
+    function getChild(p1){
+        var childCount = f_getChildCount(p1)
+        for (var i = 0;i<childCount;i++){
+            var c_transform = f_getChild(p1,i)
+            var levelC = getLevel(c_transform)-baseLevel
+            if (levelC <= level) {
+                var name = readU16(f_getName(c_transform))
+                // LOG(c_transform+" ---> "+name)
+                if (filter == name){
+                    retStr = c_transform
+                }
+            }
+            getChild(c_transform)
+        }
+    }
+
+    function getLevel(transform){
+        for (var i=0;i<10;i++){
+            try{
+                transform = f_getParent(transform)
+                if (transform ==0) return i
+            }catch(e){
+                return 0
+            }
+        }
+        return 0 
+    }
+    return retStr
 }
