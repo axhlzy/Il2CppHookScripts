@@ -2,13 +2,13 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime 2021/02/22 18:48
+ * @UpdateTime 2021/02/25 16:58
  * @Des frida hook u3d functions scrpt
  */
 
 const soName = "libil2cpp.so"
-const soAddr = Module.findBaseAddress(soName)
 const p_size = Process.pointerSize
+var soAddr = 0
 
 //声明一些需要用到的导出函数
 var il2cpp_get_corlib,il2cpp_domain_get,il2cpp_domain_get_assemblies,il2cpp_assembly_get_image,
@@ -97,11 +97,65 @@ var arrayName =
  * SetInt(key,value)    | SetFloat(key,value)   | SetString(key,value)  |
  * GetInt(key)          | GetFloat(key)         | GetString(key)        |
  * ----------------------------------------------------------------------
- * PS:分清楚何时传的MethodInfo,Transform,GameObject指针 ... 瞎传参数掉用方法必崩
+ * PS:  分清楚何时传的MethodInfo,Transform,GameObject指针 ... 瞎传参数掉用方法必崩
+ *      如果使用了gadgat,使用attach方式附加（别使用spawn）
  * --------------------------------------------------------------------------------------------
  */
 
-setImmediate(initImages)
+ //启动的时机，去Hook_dlopen_init中的todo做一些比较早期的处理
+setImmediate(Hook_dlopen_init)
+function Hook_dlopen_init() {
+
+    soAddr = Module.findBaseAddress(soName)
+    if (soAddr != null) return initImages()
+
+    const dlopen_old = Module.findExportByName(null, "dlopen")
+    const dlopen_new = Module.findExportByName(null, "android_dlopen_ext")
+    // dlopen_new = null
+    if (dlopen_old != null) {
+        Interceptor.attach(dlopen_old, {
+            onEnter: function (args) {
+                var l_soName = args[0].readCString()
+                if (l_soName.indexOf(soName) != -1) {
+                    this.hook = true
+                }
+            },
+            onLeave: function (retval) {
+                if (this.hook) {
+                    todo()
+                }
+            }
+        })
+    }
+
+    if (dlopen_new != null) {
+        Interceptor.attach(dlopen_new, {
+            onEnter: function (args) {
+                var l_soName = args[0].readCString()
+                if (l_soName.indexOf(soName) != -1) {
+                    this.hook = true
+                }
+            },
+            onLeave: function (retval) {
+                if (this.hook) {
+                    todo()
+                }
+            }
+        })
+    }
+    
+    //在初始化之后在做其他事情[initImages()之后]
+    function todo(){
+        //初始化参数
+        initImages()
+        //detach掉对dlopen的hook
+        d()
+
+        //启动的时候断点方法
+        //B()
+    }
+}
+
 function initImages(){
     LogFlag = false 
     initFunctions()
@@ -471,7 +525,7 @@ function addBreakPoints(imgOrCls){
 
     function addFunctions(cls){
         var iter = Memory.alloc(p_size)
-            var method = NULL
+        var method = NULL
             try{
                 while (method = il2cpp_class_get_methods(cls, iter)) {
                     var methodName = get_method_des(method)
@@ -1098,56 +1152,6 @@ function HideClickedObj(x,y){
     setClick(x,y)
     //B 去断点找到点击事件的处理函数并nop掉
     //循环调用，出现时destory掉这个gameObj
-}
-
-// setImmediate(Hook_dlopen)
-
-/**
- * 获得lib2cpp.so的加载时机(todo())，最早的时候做一些事情
- */
-function Hook_dlopen() {
-    const dlopen_old = Module.findExportByName(null, "dlopen")
-    const dlopen_new = Module.findExportByName(null, "android_dlopen_ext")
-    // dlopen_new = null
-    if (dlopen_old != null) {
-        Interceptor.attach(dlopen_old, {
-            onEnter: function (args) {
-                var l_soName = args[0].readCString()
-                console.log(l_soName)
-                if (l_soName.indexOf(soName) != -1) {
-                    this.hook = true
-                }
-            },
-            onLeave: function (retval) {
-                if (this.hook) {
-                    console.warn("\nLoaded "+soName)
-                    todo()
-                }
-            }
-        })
-    }
-
-    if (dlopen_new != null) {
-        Interceptor.attach(dlopen_new, {
-            onEnter: function (args) {
-                var l_soName = args[0].readCString()
-                console.log(l_soName)
-                if (l_soName.indexOf(soName) != -1) {
-                    this.hook = true
-                }
-            },
-            onLeave: function (retval) {
-                if (this.hook) {
-                    console.warn("\nLoaded "+soName)
-                    todo()
-                }
-            }
-        })
-    }
-
-    function todo(){
-        B()
-    }
 }
 
 function PrintStackTrace(){
