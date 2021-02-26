@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime 2021/02/25 16:58
+ * @UpdateTime 2021/02/26 17:19
  * @Des frida hook u3d functions scrpt
  */
 
@@ -153,6 +153,9 @@ function Hook_dlopen_init() {
 
         //启动的时候断点方法
         //B()
+
+        // setTimeout(HookPlayerPrefs(),2000)
+        
     }
 }
 
@@ -1079,6 +1082,41 @@ function getLibPath(name){
         retStr =  libPath +"/"+ (name == undefined ? "" : name)
     })
     return retStr
+}
+
+function getApkInfo(){
+    Java.perform(function(){
+
+        LOG(getLine(100),LogColor.C33)
+        var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
+        var applicationInfo = context.getApplicationInfo()
+        var labelRes = applicationInfo.labelRes.value
+        var strName = context.getResources().getString(labelRes)
+        LOG("[*]AppName\t\t"+strName + " (UID:"+applicationInfo.uid.value + ")\t ID:"+labelRes,LogColor.C36)
+
+        var str_pkgName = context.getPackageName()
+        LOG("\n[*]PkgName\t\t"+str_pkgName,LogColor.C36)
+
+        var pkgInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0)
+
+        var verName = pkgInfo.versionName.value
+        LOG("\n[*]Verison\t\t"+verName,LogColor.C36)
+
+        var firstInstallTime = pkgInfo.firstInstallTime.value
+        LOG("\n[*]FirstInstallTime\t"+firstInstallTime,LogColor.C36)
+
+        var lastUpdateTime = pkgInfo.lastUpdateTime.value
+        LOG("\n[*]LastUpdateTime\t"+lastUpdateTime,LogColor.C36)
+
+        var appSize = Java.use("java.io.File").$new(applicationInfo.sourceDir.value).length()
+        LOG("\n[*]AppSize\t\t"+appSize,LogColor.C36)
+
+        var ApkLocation = applicationInfo.sourceDir.value
+        LOG("\n[*]ApkLocation\t\t"+ApkLocation,LogColor.C36)
+
+        
+        LOG(getLine(100),LogColor.C33)
+    })
 }
 
 /**
