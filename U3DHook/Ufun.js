@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime 2021/02/26 17:19
+ * @UpdateTime 2021/03/01 18:41
  * @Des frida hook u3d functions scrpt
  */
 
@@ -55,7 +55,6 @@ var arrayName =
  * --------------------------------------------------------------------------------------------
  * 拓展方法
  * ---------------------
- * Info()
  * HookSetActive()
  * HookOnPointerClick()
  * HookPlayerPrefs()
@@ -67,6 +66,8 @@ var arrayName =
  * --------------------------------------------------------------------------------------------
  * 其他方法
  * ---------------------
+ * getUnityInfo()
+ * getApkInfo()
  * GotoScene(str)
  * CallStatic(mPtr,arg0,arg1,arg2,arg3)
  * SeeTypeToString(obj)
@@ -227,11 +228,12 @@ function b(m_ptr){
  * @param {Number} m_ptr 
  */
 function n(m_ptr){
+    var src_ptr = m_ptr
     m_ptr = Number(m_ptr) < Number(soAddr) ? soAddr.add(ptr(m_ptr)) :ptr(m_ptr)
     //原函数的引用也可以再replace中调用
-    var srcFunc = new NativeFunction(m_ptr,'void',['pointer','pointer','pointer','pointer'])
+    // var srcFunc = new NativeFunction(m_ptr,'void',['pointer','pointer','pointer','pointer'])
     Interceptor.replace(m_ptr,new NativeCallback(function(arg0,arg1,arg2,arg3){
-        LOG("\nCalled NOP function ---> "+m_ptr,LogColor.YELLOW)
+        LOG("\nCalled NOP function ---> "+m_ptr+" ("+src_ptr+")",LogColor.YELLOW)
         // srcFunc(arg0,arg1,arg2,arg3)
     },'void',['pointer','pointer','pointer','pointer']))
 }
@@ -975,8 +977,397 @@ function getParameterType(Il2CppType){
 }
 
 /**
- * -------------------------------------------工具方法-------------------------------------------------
+ * -------------------------------------------其他方法-------------------------------------------------
  */
+
+function getUnityInfo(){
+
+    var line20 = getLine(20)
+
+    Application()
+    SystemInfo()
+    Time()
+
+    function Time(){
+
+        console.error("------------------- TIME -------------------")
+    
+        //public static extern float get_time()
+        var addr_get_time = find_method("UnityEngine.CoreModule","Time","get_time",0,true)
+        if (addr_get_time != 0)
+            LOG("[*] get_time \t\t\t: "+new NativeFunction(addr_get_time,'float',[])()+"\n"+line20,LogColor.C36)
+    
+        //public static extern float deltaTime()
+        var addr_deltaTime = find_method("UnityEngine.CoreModule","Time","deltaTime",0,true)
+        if (addr_deltaTime != 0)
+            LOG("[*] deltaTime \t\t\t: "+new NativeFunction(addr_deltaTime,'float',[])()+"\n"+line20,LogColor.C36)
+    
+        //public static extern float get_fixedDeltaTime()
+        var addr_get_fixedDeltaTime = find_method("UnityEngine.CoreModule","Time","get_fixedDeltaTime",0,true)
+        if (addr_get_fixedDeltaTime != 0)
+            LOG("[*] fixedDeltaTime \t\t: "+new NativeFunction(addr_get_fixedDeltaTime,'float',[])()+"\n"+line20,LogColor.C36)
+    
+        //public static extern float get_fixedTime()
+        var addr_get_fixedTime = find_method("UnityEngine.CoreModule","Time","get_fixedTime",0,true)
+        if (addr_get_fixedTime != 0)
+            LOG("[*] fixedTime \t\t\t: "+new NativeFunction(addr_get_fixedTime,'float',[])()+"\n"+line20,LogColor.C36)
+    
+        //public static extern int get_frameCount()
+        var addr_get_frameCount = find_method("UnityEngine.CoreModule","Time","get_frameCount",0,true)
+        if (addr_get_frameCount != 0)
+            LOG("[*] frameCount \t\t\t: "+new NativeFunction(addr_get_frameCount,'int',[])()+"\n"+line20,LogColor.C36)
+        
+        //public static extern float get_inFixedTimeStep()
+        var addr_get_inFixedTimeStep = find_method("UnityEngine.CoreModule","Time","get_inFixedTimeStep",0,true)
+        if (addr_get_inFixedTimeStep != 0)
+            LOG("[*] inFixedTimeStep \t\t: "+(new NativeFunction(addr_get_inFixedTimeStep,'float',[])()==0?"false":"true")+"\n"+line20,LogColor.C36)
+    
+        //public static extern float realtimeSinceStartup()
+        var addr_realtimeSinceStartup = find_method("UnityEngine.CoreModule","Time","realtimeSinceStartup",0,true)
+        if (addr_realtimeSinceStartup != 0)
+            LOG("[*] realtimeSinceStartup \t\t: "+new NativeFunction(addr_realtimeSinceStartup,'float',[])()+"\n"+line20,LogColor.C36)
+    
+        //public static extern float get_renderedFrameCount()
+        var addr_get_renderedFrameCount = find_method("UnityEngine.CoreModule","Time","get_renderedFrameCount",0,true)
+        if (addr_get_renderedFrameCount != 0)
+            LOG("[*] renderedFrameCount \t\t: "+new NativeFunction(addr_get_renderedFrameCount,'float',[])()+"\n"+line20,LogColor.C36)
+    
+        //public static float smoothDeltaTime()
+        var addr_smoothDeltaTime = find_method("UnityEngine.CoreModule","Time","smoothDeltaTime",0,true)
+        if (addr_smoothDeltaTime != 0)
+            LOG("[*] smoothDeltaTime \t\t: "+new NativeFunction(addr_smoothDeltaTime,'float',[])()+"\n"+line20,LogColor.C36)
+    }
+    
+    function Application(){
+        LOG("------------------- Application -------------------",LogColor.RED)
+        
+        var Addr_cloudProjectId         = find_method("UnityEngine.CoreModule","Application","get_cloudProjectId",0,true)
+        var Addr_dataPath               = find_method("UnityEngine.CoreModule","Application","get_dataPath",0,true)
+        var Addr_identifier             = find_method("UnityEngine.CoreModule","Application","get_identifier",0,true)
+        var Addr_internetReachability   = find_method("UnityEngine.CoreModule","Application","get_internetReachability",0,true)
+        var Addr_isMobilePlatform       = find_method("UnityEngine.CoreModule","Application","get_isMobilePlatform",0,true)
+        var Addr_isConsolePlatform      = find_method("UnityEngine.CoreModule","Application","get_isConsolePlatform",0,true)
+        var Addr_isEditor               = find_method("UnityEngine.CoreModule","Application","get_isEditor",0,true)
+        var Addr_productName            = find_method("UnityEngine.CoreModule","Application","get_productName",0,true)
+        var Addr_streamingAssetsPath    = find_method("UnityEngine.CoreModule","Application","get_streamingAssetsPath",0,true)
+        var Addr_version                = find_method("UnityEngine.CoreModule","Application","get_version",0,true)
+        var Addr_unityVersion           = find_method("UnityEngine.CoreModule","Application","get_unityVersion",0,true)
+        var Addr_systemLanguage         = find_method("UnityEngine.CoreModule","Application","get_systemLanguage",0,true)
+        var Addr_isPlaying              = find_method("UnityEngine.CoreModule","Application","get_isPlaying",0,true)
+        var Addr_persistentDataPath     = find_method("UnityEngine.CoreModule","Application","get_persistentDataPath",0,true)
+        var Addr_dpi                    = find_method("UnityEngine.CoreModule","Application","get_dpi",0,true)
+        var Addr_get_height             = find_method("UnityEngine.CoreModule","Application","get_height",0,true)
+        var Addr_get_width              = find_method("UnityEngine.CoreModule","Application","get_width",0,true)
+        var Addr_get_orientation        = find_method("UnityEngine.CoreModule","Application","get_orientation",0,true)
+    
+        //public static string cloudProjectId()
+        if (Addr_cloudProjectId != 0)
+            LOG("[*] cloudProjectId \t\t: "+ 
+            new NativeFunction(Addr_cloudProjectId,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+    
+        //public static string get_productName()
+        if (Addr_productName != 0)
+            LOG("[*] productName \t\t: "+
+            new NativeFunction(Addr_productName,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+    
+        //public static extern string get_identifier()
+        if (Addr_identifier != 0)
+            LOG("[*] identifier \t\t\t: "+
+            new NativeFunction(Addr_identifier,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+    
+        //public static string version()
+        if (Addr_version != 0)
+            LOG("[*] version \t\t\t: "+ 
+            new NativeFunction(Addr_version,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+    
+        //public static string unityVersion()
+        if (Addr_unityVersion != 0)
+            LOG("[*] unityVersion \t\t: "+ 
+            new NativeFunction(Addr_unityVersion,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+    
+        //public static string dataPath()
+        if (Addr_dataPath != 0)
+            LOG("[*] dataPath \t\t\t: "+
+            new NativeFunction(Addr_dataPath,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+    
+        //public static string streamingAssetsPath()
+        if (Addr_streamingAssetsPath != 0)
+            LOG("[*] streamingAssetsPath \t: "+
+            new NativeFunction(Addr_streamingAssetsPath,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+    
+        //public static string persistentDataPath
+        if (Addr_persistentDataPath !=0)
+            LOG("[*] persistentDataPath \t\t: "+
+            new NativeFunction(Addr_persistentDataPath,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+    
+        //public static NetworkReachability internetReachability()
+        if (Addr_internetReachability!=0){
+            var value = new NativeFunction(Addr_internetReachability,'int',[])()
+            LOG("[*] internetReachability \t: "+
+                (value==0?"NotReachable":(value==1?"ReachableViaCarrierDataNetwork":"ReachableViaLocalAreaNetwork"))+"\n"+line20,LogColor.C36)
+        }
+    
+        //public static bool get_isMobilePlatform()
+        if (Addr_isMobilePlatform!=0)
+            LOG("[*] isMobilePlatform \t\t: "+
+            (new NativeFunction(Addr_isMobilePlatform,'bool',[])()==1?"true":"false")+"\n"+line20,LogColor.C36)
+    
+        //public static bool get_isConsolePlatform()
+        if (Addr_isConsolePlatform!=0)
+            LOG("[*] isConsolePlatform \t\t: "+
+            (new NativeFunction(Addr_isConsolePlatform,'bool',[])()==1?"true":"false")+"\n"+line20,LogColor.C36)
+    
+        //public static bool get_isEditor()
+        if (Addr_isEditor!=0)
+            LOG("[*] isEditor \t\t\t: "+
+            (new NativeFunction(Addr_isEditor,'bool',[])()==1?"true":"false")+"\n"+line20,LogColor.C36)
+    
+    
+        //public static extern bool get_isPlaying();
+        if (Addr_isPlaying !=0)
+            LOG("[*] isPlaying \t\t\t: "+
+            (new NativeFunction(Addr_isPlaying,'bool',[])()==1?"true":"false")+"\n"+line20,LogColor.C36)
+        
+        //public static float dpi() 
+        if (Addr_dpi !=0)
+            LOG("[*] dpi \t\t\t: "+
+            new NativeFunction(Addr_dpi,'float',[])()+"\n"+line20,LogColor.C36)
+    
+        //public static extern int get_height()
+        //public static extern int get_width()
+        if (Addr_get_height != 0 && Addr_get_width != 0)
+            LOG("[*] height*width \t\t: "+
+            new NativeFunction(Addr_get_height,'int',[])()+"×"+
+            new NativeFunction(Addr_get_width,'int',[])()+"\n"+line20,LogColor.C36)
+    
+        //public static ScreenOrientation get_orientation()
+        if (Addr_get_orientation != 0){
+            var value = new NativeFunction(Addr_get_orientation,'int',[])()
+            switch (value){
+                case 0:value = "Unknow" ; break
+                case 1:value = "Portrait" ; break
+                case 2:value = "PortraitUpsideDown" ; break
+                case 3:value = "Landscape" ; break
+                case 4:value = "LandscapeRight" ; break
+                case 5:value = "AutoRotation" ; break
+            }
+            LOG("[*] ScreenOrientation \t\t: "+value,LogColor.C36)
+        }
+    
+        //public static extern SystemLanguage get_systemLanguage()
+        if (Addr_systemLanguage != 0){
+            var value = new NativeFunction(Addr_systemLanguage,'int',[])()
+            switch (value){
+                case 6  : value = "Chinese" ; break
+                case 40 : value = "ChineseSimplified" ; break
+                case 41 : value = "ChineseTraditional" ; break
+                case 10 : value = "English" ; break
+                case 16 : value = "Japanese" ; break
+                case 42 : value = "Unknown" ; break
+                default : value = value;
+            }
+            LOG("[*] systemLanguage \t\t: "+value,LogColor.C36)
+        }
+    }
+    
+    function SystemInfo(){
+        
+        LOG("------------------- SystemInfo -------------------",LogColor.RED)
+    
+        var addr_get_deviceModel = find_method("UnityEngine.CoreModule","SystemInfo","get_deviceModel",0,true)
+        var addr_get_deviceName = find_method("UnityEngine.CoreModule","SystemInfo","get_deviceName",0,true)
+        var addr_get_deviceType = find_method("UnityEngine.CoreModule","SystemInfo","get_deviceType",0,true)
+        var addr_get_deviceUniqueIdentifier = find_method("UnityEngine.CoreModule","SystemInfo","get_deviceUniqueIdentifier",0,true)
+        var addr_get_graphicsDeviceID  = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsDeviceID",0,true)
+        var addr_get_graphicsDeviceName = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsDeviceName",0,true)
+        var addr_get_graphicsDeviceVersion = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsDeviceVersion",0,true)
+        var addr_get_graphicsMemorySize = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsMemorySize",0,true)
+        var addr_get_graphicsShaderLevel = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsShaderLevel",0,true)
+        var addr_get_maxTextureSize = find_method("UnityEngine.CoreModule","SystemInfo","get_maxTextureSize",0,true)
+        var addr_get_operatingSystem = find_method("UnityEngine.CoreModule","SystemInfo","get_operatingSystem",0,true)
+        var addr_get_processorType = find_method("UnityEngine.CoreModule","SystemInfo","get_processorType",0,true)
+        var addr_get_systemMemorySize = find_method("UnityEngine.CoreModule","SystemInfo","get_systemMemorySize",0,true)
+        var addr_get_processorCount = find_method("UnityEngine.CoreModule","SystemInfo","get_processorCount",0,true)
+        var addr_get_operatingSystemFamily = find_method("UnityEngine.CoreModule","SystemInfo","get_operatingSystemFamily",0,true)
+    
+        if (addr_get_deviceModel != 0)
+            LOG("[*] deviceModel \t\t: "+ 
+            new NativeFunction(addr_get_deviceModel,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+    
+        if (addr_get_deviceName != 0)
+            LOG("[*] deviceName \t\t\t: "+ 
+            new NativeFunction(addr_get_deviceName,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+        
+        if (addr_get_deviceType != 0)
+            LOG("[*] deviceType \t\t\t: "+ 
+            DeviceType(new NativeFunction(addr_get_deviceType,'int',[])())+"\n"+line20,LogColor.C36)
+        
+        if (addr_get_deviceUniqueIdentifier != 0)
+            LOG("[*] deviceUniqueIdentifier \t: "+ 
+            new NativeFunction(addr_get_deviceUniqueIdentifier,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+        
+        if (addr_get_graphicsDeviceID != 0)
+            LOG("[*] graphicsDeviceID \t\t: "+ 
+            new NativeFunction(addr_get_graphicsDeviceID,'int',[])()+"\n"+line20,LogColor.C36)
+        
+        if (addr_get_graphicsDeviceName != 0)
+            LOG("[*] graphicsDeviceName \t\t: "+ 
+            new NativeFunction(addr_get_graphicsDeviceName,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            
+        if (addr_get_graphicsDeviceVersion != 0)
+            LOG("[*] graphicsDeviceVersion \t: "+ 
+            new NativeFunction(addr_get_graphicsDeviceVersion,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+        
+        if (addr_get_graphicsShaderLevel != 0)
+            LOG("[*] graphicsShaderLevel \t: "+ 
+            new NativeFunction(addr_get_graphicsShaderLevel,'int',[])()+"\n"+line20,LogColor.C36)
+            
+        if (addr_get_graphicsMemorySize != 0)
+            LOG("[*] graphicsMemorySize \t\t: "+ 
+            new NativeFunction(addr_get_graphicsMemorySize,'int',[])()+"\n"+line20,LogColor.C36)
+        
+        if (addr_get_maxTextureSize != 0)
+            LOG("[*] maxTextureSize \t\t: "+ 
+            new NativeFunction(addr_get_maxTextureSize,'int',[])()+"\n"+line20,LogColor.C36)
+        
+        if (addr_get_operatingSystem != 0)
+            LOG("[*] operatingSystem \t\t: "+ 
+            new NativeFunction(addr_get_operatingSystem,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+    
+        if (addr_get_processorType != 0)
+            LOG("[*] processorType \t\t: "+ 
+            new NativeFunction(addr_get_processorType,'pointer',[])()
+            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            
+        if (addr_get_systemMemorySize != 0)
+            LOG("[*] systemMemorySize \t\t: "+ 
+            new NativeFunction(addr_get_systemMemorySize,'int',[])()+"\n"+line20,LogColor.C36)
+        
+        if (addr_get_processorCount != 0)
+            LOG("[*] processorCount \t\t: "+ 
+            new NativeFunction(addr_get_processorCount,'int',[])()+"\n"+line20,LogColor.C36)
+    
+        if (addr_get_operatingSystemFamily != 0)
+            LOG("[*] operatingSystemFamily \t: "+ 
+            operatingSystemFamily(new NativeFunction(addr_get_operatingSystemFamily,'int',[])())+"\n"+line20,LogColor.C36)
+        
+        function operatingSystemFamily(int_arg){
+            switch(int_arg){
+                case 0 : return "Other"
+                case 1 : return "MaxOsX"
+                case 2 : return "Windows"
+                case 3 : return "Linux"
+            }
+        }
+        
+        function DeviceType(int_arg){
+            switch(int_arg){
+                case 0 : return "Unknown"
+                case 1 : return "Handeld"
+                case 2 : return "Desktop"
+                case 3 : return "Console"
+            }
+        }
+    }
+}
+
+function getApkInfo(){
+    Java.perform(function(){
+
+        LOG(getLine(100),LogColor.C33)
+
+        var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
+        var pkgInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0)
+        // var appInfo = context.getApplicationInfo()
+        var appInfo = pkgInfo.applicationInfo.value
+
+        var labelRes = appInfo.labelRes.value
+        var strName = context.getResources().getString(labelRes)
+        LOG("[*]AppName\t\t"+strName + " (UID:"+appInfo.uid.value + ")\t ID:"+appInfo.labelRes.value,LogColor.C36)
+
+        var str_pkgName = context.getPackageName()
+        LOG("\n[*]PkgName\t\t"+str_pkgName,LogColor.C36)
+
+        var verName = pkgInfo.versionName.value
+        var targetSdkVersion = pkgInfo.applicationInfo.value.targetSdkVersion.value
+        LOG("\n[*]Verison\t\t"+verName + " (targetSdkVersion:"+targetSdkVersion+")",LogColor.C36)
+
+        var firstInstallTime = pkgInfo.firstInstallTime.value
+        LOG("\n[*]FirstInstallTime\t"+firstInstallTime + "\t" + new Date(firstInstallTime).toLocaleString(),LogColor.C36)
+
+        var lastUpdateTime = pkgInfo.lastUpdateTime.value
+        LOG("\n[*]LastUpdateTime\t"+lastUpdateTime + "\t" + new Date(lastUpdateTime).toLocaleString(),LogColor.C36)
+
+        var appSize = Java.use("java.io.File").$new(appInfo.sourceDir.value).length()
+        LOG("\n[*]AppSize\t\t"+appSize +"\t("+(appSize/1024/1024).toFixed(2)+" MB)",LogColor.C36)
+
+        var ApkLocation = appInfo.sourceDir.value
+        LOG("\n[*]ApkLocation\t\t"+ApkLocation,LogColor.C36)
+
+        //PackageManager.GET_SIGNATURES == 0x00000040
+        var pis = context.getPackageManager().getPackageInfo(str_pkgName, 0x00000040)
+        var hexDigist = (pis.signatures.value)[0].toByteArray()
+        LOG("\n[*]Signatures\t\tMD5\t "+hexdigest(hexDigist,'MD5')
+            +"\n\t\t\tSHA-1\t "+hexdigest(hexDigist,'SHA-1')
+            +"\n\t\t\tSHA-256\t "+hexdigest(hexDigist,'SHA-256'),LogColor.C36)
+        
+        LOG(getLine(100),LogColor.C33)
+
+        //LOG(getMetaData('unity.build-id'))
+        function getMetaData(key){
+            //public static final int GET_META_DATA = 0x00000080;
+            var appInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), 0x00000080)
+            var metaData = appInfo.metaData.value
+            if(null != metaData) {
+                // var metaDataB = Java.cast(metaData,Java.use("android.os.BaseBundle"))
+                // LOG(metaDataB.mMap.value)
+                return metaData.getString(key)
+            }
+            return null
+        }
+
+        /**
+         * 计算byte字节并转换为String返回
+         * @param {*} paramArrayOfByte byte 字节
+         * @param {*} algorithm 算法 MD5 / SHA-1 / SHA-256
+         */
+        function hexdigest(paramArrayOfByte,algorithm){
+            var hexDigits = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 97, 98, 99, 100, 101, 102]
+            var localMessageDigest = Java.use("java.security.MessageDigest").getInstance(algorithm)
+            localMessageDigest.update(paramArrayOfByte)
+            var arrayOfByte = localMessageDigest.digest()
+            var arrayOfChar = []
+            for (var i=0,j=0;;i++,j++){
+                var strLenth = algorithm == "MD5" ? 16 : ( algorithm == "SHA-1" ? 20 : 32)
+                if (i>=strLenth) return Java.use("java.lang.String").$new(arrayOfChar)
+                var k = arrayOfByte[i]
+                arrayOfChar[j] = hexDigits[(0xF & k >>> 4)]
+                arrayOfChar[++j] = hexDigits[(k & 0xF)]
+            }
+        }
+    })
+}
+
+function launchApp(pkgName){
+    Java.perform(function(){
+        var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
+        context.startActivity(Java.use("android.content.Intent").$new(context.getPackageManager().getLaunchIntentForPackage(pkgName)));
+    })
+}
 
 /**
  * 读取c#字符串
@@ -1082,41 +1473,6 @@ function getLibPath(name){
         retStr =  libPath +"/"+ (name == undefined ? "" : name)
     })
     return retStr
-}
-
-function getApkInfo(){
-    Java.perform(function(){
-
-        LOG(getLine(100),LogColor.C33)
-        var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
-        var applicationInfo = context.getApplicationInfo()
-        var labelRes = applicationInfo.labelRes.value
-        var strName = context.getResources().getString(labelRes)
-        LOG("[*]AppName\t\t"+strName + " (UID:"+applicationInfo.uid.value + ")\t ID:"+labelRes,LogColor.C36)
-
-        var str_pkgName = context.getPackageName()
-        LOG("\n[*]PkgName\t\t"+str_pkgName,LogColor.C36)
-
-        var pkgInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0)
-
-        var verName = pkgInfo.versionName.value
-        LOG("\n[*]Verison\t\t"+verName,LogColor.C36)
-
-        var firstInstallTime = pkgInfo.firstInstallTime.value
-        LOG("\n[*]FirstInstallTime\t"+firstInstallTime,LogColor.C36)
-
-        var lastUpdateTime = pkgInfo.lastUpdateTime.value
-        LOG("\n[*]LastUpdateTime\t"+lastUpdateTime,LogColor.C36)
-
-        var appSize = Java.use("java.io.File").$new(applicationInfo.sourceDir.value).length()
-        LOG("\n[*]AppSize\t\t"+appSize,LogColor.C36)
-
-        var ApkLocation = applicationInfo.sourceDir.value
-        LOG("\n[*]ApkLocation\t\t"+ApkLocation,LogColor.C36)
-
-        
-        LOG(getLine(100),LogColor.C33)
-    })
 }
 
 /**
@@ -1432,311 +1788,6 @@ function CallStatic(mPtr,arg0,arg1,arg2,arg3){
 /**
  * -------------------------------------------拓展方法-------------------------------------------------
  */
-
-function Info(){
-
-    var line20 = getLine(20)
-
-    Application()
-    SystemInfo()
-    Time()
-
-    function Time(){
-
-        console.error("------------------- TIME -------------------")
-    
-        //public static extern float get_time()
-        var addr_get_time = find_method("UnityEngine.CoreModule","Time","get_time",0,true)
-        if (addr_get_time != 0)
-            LOG("[*] get_time \t\t\t: "+new NativeFunction(addr_get_time,'float',[])()+"\n"+line20,LogColor.C36)
-    
-        //public static extern float deltaTime()
-        var addr_deltaTime = find_method("UnityEngine.CoreModule","Time","deltaTime",0,true)
-        if (addr_deltaTime != 0)
-            LOG("[*] deltaTime \t\t\t: "+new NativeFunction(addr_deltaTime,'float',[])()+"\n"+line20,LogColor.C36)
-    
-        //public static extern float get_fixedDeltaTime()
-        var addr_get_fixedDeltaTime = find_method("UnityEngine.CoreModule","Time","get_fixedDeltaTime",0,true)
-        if (addr_get_fixedDeltaTime != 0)
-            LOG("[*] fixedDeltaTime \t\t: "+new NativeFunction(addr_get_fixedDeltaTime,'float',[])()+"\n"+line20,LogColor.C36)
-    
-        //public static extern float get_fixedTime()
-        var addr_get_fixedTime = find_method("UnityEngine.CoreModule","Time","get_fixedTime",0,true)
-        if (addr_get_fixedTime != 0)
-            LOG("[*] fixedTime \t\t\t: "+new NativeFunction(addr_get_fixedTime,'float',[])()+"\n"+line20,LogColor.C36)
-    
-        //public static extern int get_frameCount()
-        var addr_get_frameCount = find_method("UnityEngine.CoreModule","Time","get_frameCount",0,true)
-        if (addr_get_frameCount != 0)
-            LOG("[*] frameCount \t\t\t: "+new NativeFunction(addr_get_frameCount,'int',[])()+"\n"+line20,LogColor.C36)
-        
-        //public static extern float get_inFixedTimeStep()
-        var addr_get_inFixedTimeStep = find_method("UnityEngine.CoreModule","Time","get_inFixedTimeStep",0,true)
-        if (addr_get_inFixedTimeStep != 0)
-            LOG("[*] inFixedTimeStep \t\t: "+(new NativeFunction(addr_get_inFixedTimeStep,'float',[])()==0?"false":"true")+"\n"+line20,LogColor.C36)
-    
-        //public static extern float realtimeSinceStartup()
-        var addr_realtimeSinceStartup = find_method("UnityEngine.CoreModule","Time","realtimeSinceStartup",0,true)
-        if (addr_realtimeSinceStartup != 0)
-            LOG("[*] realtimeSinceStartup \t\t: "+new NativeFunction(addr_realtimeSinceStartup,'float',[])()+"\n"+line20,LogColor.C36)
-    
-        //public static extern float get_renderedFrameCount()
-        var addr_get_renderedFrameCount = find_method("UnityEngine.CoreModule","Time","get_renderedFrameCount",0,true)
-        if (addr_get_renderedFrameCount != 0)
-            LOG("[*] renderedFrameCount \t\t: "+new NativeFunction(addr_get_renderedFrameCount,'float',[])()+"\n"+line20,LogColor.C36)
-    
-        //public static float smoothDeltaTime()
-        var addr_smoothDeltaTime = find_method("UnityEngine.CoreModule","Time","smoothDeltaTime",0,true)
-        if (addr_smoothDeltaTime != 0)
-            LOG("[*] smoothDeltaTime \t\t: "+new NativeFunction(addr_smoothDeltaTime,'float',[])()+"\n"+line20,LogColor.C36)
-    }
-    
-    function Application(){
-        LOG("------------------- Application -------------------",LogColor.RED)
-        
-        var Addr_cloudProjectId         = find_method("UnityEngine.CoreModule","Application","get_cloudProjectId",0,true)
-        var Addr_dataPath               = find_method("UnityEngine.CoreModule","Application","get_dataPath",0,true)
-        var Addr_identifier             = find_method("UnityEngine.CoreModule","Application","get_identifier",0,true)
-        var Addr_internetReachability   = find_method("UnityEngine.CoreModule","Application","get_internetReachability",0,true)
-        var Addr_isMobilePlatform       = find_method("UnityEngine.CoreModule","Application","get_isMobilePlatform",0,true)
-        var Addr_isConsolePlatform      = find_method("UnityEngine.CoreModule","Application","get_isConsolePlatform",0,true)
-        var Addr_isEditor               = find_method("UnityEngine.CoreModule","Application","get_isEditor",0,true)
-        var Addr_productName            = find_method("UnityEngine.CoreModule","Application","get_productName",0,true)
-        var Addr_streamingAssetsPath    = find_method("UnityEngine.CoreModule","Application","get_streamingAssetsPath",0,true)
-        var Addr_version                = find_method("UnityEngine.CoreModule","Application","get_version",0,true)
-        var Addr_unityVersion           = find_method("UnityEngine.CoreModule","Application","get_unityVersion",0,true)
-        var Addr_systemLanguage         = find_method("UnityEngine.CoreModule","Application","get_systemLanguage",0,true)
-        var Addr_isPlaying              = find_method("UnityEngine.CoreModule","Application","get_isPlaying",0,true)
-        var Addr_persistentDataPath     = find_method("UnityEngine.CoreModule","Application","get_persistentDataPath",0,true)
-        var Addr_dpi                    = find_method("UnityEngine.CoreModule","Application","get_dpi",0,true)
-        var Addr_get_height             = find_method("UnityEngine.CoreModule","Application","get_height",0,true)
-        var Addr_get_width              = find_method("UnityEngine.CoreModule","Application","get_width",0,true)
-        var Addr_get_orientation        = find_method("UnityEngine.CoreModule","Application","get_orientation",0,true)
-    
-        //public static string cloudProjectId()
-        if (Addr_cloudProjectId != 0)
-            LOG("[*] cloudProjectId \t\t: "+ 
-            new NativeFunction(Addr_cloudProjectId,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-    
-        //public static string get_productName()
-        if (Addr_productName != 0)
-            LOG("[*] productName \t\t: "+
-            new NativeFunction(Addr_productName,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-    
-        //public static extern string get_identifier()
-        if (Addr_identifier != 0)
-            LOG("[*] identifier \t\t\t: "+
-            new NativeFunction(Addr_identifier,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-    
-        //public static string version()
-        if (Addr_version != 0)
-            LOG("[*] version \t\t\t: "+ 
-            new NativeFunction(Addr_version,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-    
-        //public static string unityVersion()
-        if (Addr_unityVersion != 0)
-            LOG("[*] unityVersion \t\t: "+ 
-            new NativeFunction(Addr_unityVersion,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-    
-        //public static string dataPath()
-        if (Addr_dataPath != 0)
-            LOG("[*] dataPath \t\t\t: "+
-            new NativeFunction(Addr_dataPath,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-    
-        //public static string streamingAssetsPath()
-        if (Addr_streamingAssetsPath != 0)
-            LOG("[*] streamingAssetsPath \t: "+
-            new NativeFunction(Addr_streamingAssetsPath,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-    
-        //public static string persistentDataPath
-        if (Addr_persistentDataPath !=0)
-            LOG("[*] persistentDataPath \t\t: "+
-            new NativeFunction(Addr_persistentDataPath,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-    
-        //public static NetworkReachability internetReachability()
-        if (Addr_internetReachability!=0){
-            var value = new NativeFunction(Addr_internetReachability,'int',[])()
-            LOG("[*] internetReachability \t: "+
-                (value==0?"NotReachable":(value==1?"ReachableViaCarrierDataNetwork":"ReachableViaLocalAreaNetwork"))+"\n"+line20,LogColor.C36)
-        }
-    
-        //public static bool get_isMobilePlatform()
-        if (Addr_isMobilePlatform!=0)
-            LOG("[*] isMobilePlatform \t\t: "+
-            (new NativeFunction(Addr_isMobilePlatform,'bool',[])()==1?"true":"false")+"\n"+line20,LogColor.C36)
-    
-        //public static bool get_isConsolePlatform()
-        if (Addr_isConsolePlatform!=0)
-            LOG("[*] isConsolePlatform \t\t: "+
-            (new NativeFunction(Addr_isConsolePlatform,'bool',[])()==1?"true":"false")+"\n"+line20,LogColor.C36)
-    
-        //public static bool get_isEditor()
-        if (Addr_isEditor!=0)
-            LOG("[*] isEditor \t\t\t: "+
-            (new NativeFunction(Addr_isEditor,'bool',[])()==1?"true":"false")+"\n"+line20,LogColor.C36)
-    
-    
-        //public static extern bool get_isPlaying();
-        if (Addr_isPlaying !=0)
-            LOG("[*] isPlaying \t\t\t: "+
-            (new NativeFunction(Addr_isPlaying,'bool',[])()==1?"true":"false")+"\n"+line20,LogColor.C36)
-        
-        //public static float dpi() 
-        if (Addr_dpi !=0)
-            LOG("[*] dpi \t\t\t: "+
-            new NativeFunction(Addr_dpi,'float',[])()+"\n"+line20,LogColor.C36)
-    
-        //public static extern int get_height()
-        //public static extern int get_width()
-        if (Addr_get_height != 0 && Addr_get_width != 0)
-            LOG("[*] height*width \t\t: "+
-            new NativeFunction(Addr_get_height,'int',[])()+"×"+
-            new NativeFunction(Addr_get_width,'int',[])()+"\n"+line20,LogColor.C36)
-    
-        //public static ScreenOrientation get_orientation()
-        if (Addr_get_orientation != 0){
-            var value = new NativeFunction(Addr_get_orientation,'int',[])()
-            switch (value){
-                case 0:value = "Unknow" ; break
-                case 1:value = "Portrait" ; break
-                case 2:value = "PortraitUpsideDown" ; break
-                case 3:value = "Landscape" ; break
-                case 4:value = "LandscapeRight" ; break
-                case 5:value = "AutoRotation" ; break
-            }
-            LOG("[*] ScreenOrientation \t\t: "+value,LogColor.C36)
-        }
-    
-        //public static extern SystemLanguage get_systemLanguage()
-        if (Addr_systemLanguage != 0){
-            var value = new NativeFunction(Addr_systemLanguage,'int',[])()
-            switch (value){
-                case 6  : value = "Chinese" ; break
-                case 40 : value = "ChineseSimplified" ; break
-                case 41 : value = "ChineseTraditional" ; break
-                case 10 : value = "English" ; break
-                case 16 : value = "Japanese" ; break
-                case 42 : value = "Unknown" ; break
-                default : value = value;
-            }
-            LOG("[*] systemLanguage \t\t: "+value,LogColor.C36)
-        }
-    }
-    
-    function SystemInfo(){
-        
-        LOG("------------------- SystemInfo -------------------",LogColor.RED)
-    
-        var addr_get_deviceModel = find_method("UnityEngine.CoreModule","SystemInfo","get_deviceModel",0,true)
-        var addr_get_deviceName = find_method("UnityEngine.CoreModule","SystemInfo","get_deviceName",0,true)
-        var addr_get_deviceType = find_method("UnityEngine.CoreModule","SystemInfo","get_deviceType",0,true)
-        var addr_get_deviceUniqueIdentifier = find_method("UnityEngine.CoreModule","SystemInfo","get_deviceUniqueIdentifier",0,true)
-        var addr_get_graphicsDeviceID  = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsDeviceID",0,true)
-        var addr_get_graphicsDeviceName = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsDeviceName",0,true)
-        var addr_get_graphicsDeviceVersion = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsDeviceVersion",0,true)
-        var addr_get_graphicsMemorySize = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsMemorySize",0,true)
-        var addr_get_graphicsShaderLevel = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsShaderLevel",0,true)
-        var addr_get_maxTextureSize = find_method("UnityEngine.CoreModule","SystemInfo","get_maxTextureSize",0,true)
-        var addr_get_operatingSystem = find_method("UnityEngine.CoreModule","SystemInfo","get_operatingSystem",0,true)
-        var addr_get_processorType = find_method("UnityEngine.CoreModule","SystemInfo","get_processorType",0,true)
-        var addr_get_systemMemorySize = find_method("UnityEngine.CoreModule","SystemInfo","get_systemMemorySize",0,true)
-        var addr_get_processorCount = find_method("UnityEngine.CoreModule","SystemInfo","get_processorCount",0,true)
-        var addr_get_operatingSystemFamily = find_method("UnityEngine.CoreModule","SystemInfo","get_operatingSystemFamily",0,true)
-    
-        if (addr_get_deviceModel != 0)
-            LOG("[*] deviceModel \t\t: "+ 
-            new NativeFunction(addr_get_deviceModel,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-    
-        if (addr_get_deviceName != 0)
-            LOG("[*] deviceName \t\t\t: "+ 
-            new NativeFunction(addr_get_deviceName,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_deviceType != 0)
-            LOG("[*] deviceType \t\t\t: "+ 
-            DeviceType(new NativeFunction(addr_get_deviceType,'int',[])())+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_deviceUniqueIdentifier != 0)
-            LOG("[*] deviceUniqueIdentifier \t: "+ 
-            new NativeFunction(addr_get_deviceUniqueIdentifier,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_graphicsDeviceID != 0)
-            LOG("[*] graphicsDeviceID \t\t: "+ 
-            new NativeFunction(addr_get_graphicsDeviceID,'int',[])()+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_graphicsDeviceName != 0)
-            LOG("[*] graphicsDeviceName \t\t: "+ 
-            new NativeFunction(addr_get_graphicsDeviceName,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-            
-        if (addr_get_graphicsDeviceVersion != 0)
-            LOG("[*] graphicsDeviceVersion \t: "+ 
-            new NativeFunction(addr_get_graphicsDeviceVersion,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_graphicsShaderLevel != 0)
-            LOG("[*] graphicsShaderLevel \t: "+ 
-            new NativeFunction(addr_get_graphicsShaderLevel,'int',[])()+"\n"+line20,LogColor.C36)
-            
-        if (addr_get_graphicsMemorySize != 0)
-            LOG("[*] graphicsMemorySize \t\t: "+ 
-            new NativeFunction(addr_get_graphicsMemorySize,'int',[])()+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_maxTextureSize != 0)
-            LOG("[*] maxTextureSize \t\t: "+ 
-            new NativeFunction(addr_get_maxTextureSize,'int',[])()+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_operatingSystem != 0)
-            LOG("[*] operatingSystem \t\t: "+ 
-            new NativeFunction(addr_get_operatingSystem,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-    
-        if (addr_get_processorType != 0)
-            LOG("[*] processorType \t\t: "+ 
-            new NativeFunction(addr_get_processorType,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
-            
-        if (addr_get_systemMemorySize != 0)
-            LOG("[*] systemMemorySize \t\t: "+ 
-            new NativeFunction(addr_get_systemMemorySize,'int',[])()+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_processorCount != 0)
-            LOG("[*] processorCount \t\t: "+ 
-            new NativeFunction(addr_get_processorCount,'int',[])()+"\n"+line20,LogColor.C36)
-    
-        if (addr_get_operatingSystemFamily != 0)
-            LOG("[*] operatingSystemFamily \t: "+ 
-            operatingSystemFamily(new NativeFunction(addr_get_operatingSystemFamily,'int',[])())+"\n"+line20,LogColor.C36)
-        
-        function operatingSystemFamily(int_arg){
-            switch(int_arg){
-                case 0 : return "Other"
-                case 1 : return "MaxOsX"
-                case 2 : return "Windows"
-                case 3 : return "Linux"
-            }
-        }
-        
-        function DeviceType(int_arg){
-            switch(int_arg){
-                case 0 : return "Unknown"
-                case 1 : return "Handeld"
-                case 2 : return "Desktop"
-                case 3 : return "Console"
-            }
-        }
-    }
-}
 
 function GotoScene(str){
     CallStatic(find_method("UnityEngine.CoreModule","SceneManager","LoadScene",2)
