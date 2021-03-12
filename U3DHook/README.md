@@ -5,7 +5,7 @@
 
 ### 使用
 1. 在U3d游戏启动之后进行attach
-2. 使用frida -FU -l D:\Project\Frida\JS\Il2CppDumperTool\U3DHook\Ufun.js
+2. 使用frida -FU -l ...\Il2CppDumperTool\U3DHook\Ufun.js
 3. 使用的两个数组是兼容之前使用python脚本查找function的方法
 4. 可以多次使用AddBP(img/cls)添加多个类或者img的方法到这个两个数组
 5. 方法添加完成后建议使用print_list_result()列出当前方法，然后手动替换掉开始部分的arrayAddr和arrayName(以免手机ADB断掉又得重新添加方法 ps:wifiADB真香)
