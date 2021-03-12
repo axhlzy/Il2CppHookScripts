@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime 2021/03/01 18:41
+ * @UpdateTime 2021/03/12 11:23
  * @Des frida hook u3d functions scrpt
  */
 
@@ -533,6 +533,7 @@ function addBreakPoints(imgOrCls){
         var method = NULL
             try{
                 while (method = il2cpp_class_get_methods(cls, iter)) {
+                    if (Number(method) == 0) break
                     var methodName = get_method_des(method)
                     var methodAddr = method.readPointer()
                     if (methodAddr == 0) continue
@@ -556,7 +557,6 @@ function addBreakPoints(imgOrCls){
  */
 function get_method_des(method,isArray){
     method = ptr(method)
-
     var methodName = getMethodName(method)
     var retClass = il2cpp_class_from_type(getMethodReturnType(method))
     var retName = getClassName(retClass)
@@ -674,7 +674,7 @@ function breakPoint(m_ptr,index,name){
  * @param {Boolean} isAnalyticParameter 是否解析参数
  */
 function breakPoints(filter,isAnalyticParameter){
-    Interceptor.detachAll()
+    // Interceptor.detachAll()
     var t_arrayName = new Array()
     var t_arrayAddr = new Array()
     var t_arrayMethod = new Array()
@@ -1306,17 +1306,15 @@ function getApkInfo(){
         var targetSdkVersion = pkgInfo.applicationInfo.value.targetSdkVersion.value
         LOG("\n[*]Verison\t\t"+verName + " (targetSdkVersion:"+targetSdkVersion+")",LogColor.C36)
 
-        var firstInstallTime = pkgInfo.firstInstallTime.value
-        LOG("\n[*]FirstInstallTime\t"+firstInstallTime + "\t" + new Date(firstInstallTime).toLocaleString(),LogColor.C36)
-
-        var lastUpdateTime = pkgInfo.lastUpdateTime.value
-        LOG("\n[*]LastUpdateTime\t"+lastUpdateTime + "\t" + new Date(lastUpdateTime).toLocaleString(),LogColor.C36)
-
         var appSize = Java.use("java.io.File").$new(appInfo.sourceDir.value).length()
         LOG("\n[*]AppSize\t\t"+appSize +"\t("+(appSize/1024/1024).toFixed(2)+" MB)",LogColor.C36)
 
+        LOG("\n[*]Time\t\t\tInstallTime\t" + new Date(pkgInfo.firstInstallTime.value).toLocaleString(),LogColor.C36)
+        LOG("\t\t\tUpdateTime\t" + new Date(pkgInfo.lastUpdateTime.value).toLocaleString(),LogColor.C36)
+
         var ApkLocation = appInfo.sourceDir.value
-        LOG("\n[*]ApkLocation\t\t"+ApkLocation,LogColor.C36)
+        var TempFile = appInfo.dataDir.value
+        LOG("\n[*]Location\t\t"+ApkLocation+"\n\t\t\t"+TempFile,LogColor.C36)
 
         //PackageManager.GET_SIGNATURES == 0x00000040
         var pis = context.getPackageManager().getPackageInfo(str_pkgName, 0x00000040)
@@ -1803,7 +1801,7 @@ function destroyObj(gameObj){
 }
 
 function HookSetActive(){
-    Interceptor.attach(find_method("UnityEngine.CoreModule","GameObject","SetActive",1,true),{
+    Interceptor.attach(find_method("UnityEngine","GameObject","SetActive",1,true),{
         onEnter:function(args){
             //显示SetActive为true的项
             if (args[1].toInt32() == 1) {
@@ -1991,7 +1989,7 @@ function HookOnPointerClick(){
 
 function HookPlayerPrefs(){
 
-    var isShowPrintStack = false
+    var isShowPrintStack = true
 
     InterceptorGetFunctions()
     InterceptorSetFunctions()
