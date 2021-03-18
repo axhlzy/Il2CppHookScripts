@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime 2021/03/12 11:23
+ * @UpdateTime 2021/03/18 11:29
  * @Des frida hook u3d functions scrpt
  */
 
@@ -263,11 +263,21 @@ function P(m_ptr,range){
     printCtx(m_ptr,(range==undefined?20:range),"")
 }
 
+//默认就用Assembly-CSharp，用的最多
 function a(imgOrCls){
+    if (imgOrCls == undefined) {
+        for (var i = 0 ;i< arr_img_names.length;i++){
+            if ( arr_img_names[i] == 'Assembly-CSharp'){
+                imgOrCls = arr_img_addr[i]
+                break
+            }
+        }
+    }
     addBreakPoints(imgOrCls)
 }
 
 function B(filter,isAnalyticParameter){
+    if (arrayAddr.length == 0) a()
     //默认不要详细参数，都显示可能导致卡顿而且太乱了，建议再需要的时候新开cmd再使用b去指定某个method
     breakPoints(filter,isAnalyticParameter == undefined ? false : isAnalyticParameter)
 }
@@ -979,6 +989,23 @@ function getParameterType(Il2CppType){
 /**
  * -------------------------------------------其他方法-------------------------------------------------
  */
+
+/**
+ * 修改函数返回值为true
+ * @param {Int} mPtr 函数地址
+ * @param {Boolean} boolean 返回值修改为True/False
+ */
+function ChangeRet(mPtr,boolean){
+    Interceptor.attach(soAddr.add(mPtr),{
+        onEnter:function(args){
+
+        },
+        onLeave:function(ret){
+            ret.replace(ptr(boolean == true ? 0x1:0x0))
+            LOG("\nCalled mPtr = "+mPtr +"\tret = "+ret,LogColor.C36)
+        }
+    })
+}
 
 function getUnityInfo(){
 
@@ -1989,7 +2016,7 @@ function HookOnPointerClick(){
 
 function HookPlayerPrefs(){
 
-    var isShowPrintStack = true
+    var isShowPrintStack = false
 
     InterceptorGetFunctions()
     InterceptorSetFunctions()
@@ -2144,7 +2171,7 @@ function HookGetSetText(){
     hookSet()
 
     //动态替换文字
-    var arr_src_str = ['音效','8082','免费获得','+400','暂停']
+    var arr_src_str = ['Hold To Run','8082','免费获得','+400','暂停']
     var arr_rep_str = ['FuckMusic','-99','','-200²','pause']
     
     function hookSet(){
