@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/31 15:30
- * @UpdateTime 2021/02/05 11:01
+ * @UpdateTime 2021/03/19 17:34
  * @Des frida hook mono functions scrpt
  */
 
@@ -238,6 +238,10 @@ function a(imgOrCls){
         var ret_arr = list_classes(img,"")
         ret_arr.forEach(function(value,index){
             var ret = m(value,"")
+            if (ret == undefined || ret == 0x0) {
+                LOG('Error At function a(imgOrCls) + 11 lines',LogColor.RED)
+                return
+            }
             arrayName = arrayName.concat(ret[0])
             arrayAddr = arrayAddr.concat(ret[1])
             method_count += ret[0].length
@@ -245,6 +249,10 @@ function a(imgOrCls){
     }else{
         var cls = imgOrCls
         var ret = m(cls,"")
+        if (ret == undefined || ret == 0x0) {
+            LOG('Error At function a(imgOrCls) + 22 lines',LogColor.RED)
+            return
+        }
         arrayName = arrayName.concat(ret[0])
         arrayAddr = arrayAddr.concat(ret[1])
         method_count += ret[0].length
@@ -322,7 +330,11 @@ function list_classes(image,sign,filterName){
 }
 
 function breakPoints(filter){
-    Interceptor.detachAll()
+    // Interceptor.detachAll()
+    if (arrayName.length != arrayAddr.length){
+        LOG("（arrayName.lenth = "+ arrayName.lenth +"） ≠ （arrayAddr.length = "+arrayAddr.length+")")
+        return
+    }
     var t_arrayName = new Array()
     var t_arrayAddr = new Array()
     if (filter == undefined || filter == ""){
@@ -501,17 +513,27 @@ function getImageByName(name){
     return ptr(0)
 }
 
+/**
+ * path1 sdcard 需要读写权限
+ */
 function DumpDll(){
     if (arr_imgs_addr.length == 0) return 
-    var TitleTip = "\nStart dump dll and save files to /sdcard/DLL/"+getPackageName()+"/\n"
+
+    var path1 = "/sdcard/DLL/"+getPackageName()
+    var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
+    var pkgInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0)
+    var appInfo = pkgInfo.applicationInfo.value
+    var path2 = appInfo.dataDir.value
+
+    var TitleTip = "\nStart dump dll and save files to "+path2+"/\n"
     LOG(getLine(TitleTip.length)+TitleTip+getLine(20),LogColor.C33)
-    var path = "/sdcard/DLL/"+getPackageName()
+    
     arr_imgs_addr.forEach(function(value,index){
         var name = arr_imgs_name[index]
         var mPtr = ptr(value).add(p_size*2).readPointer()
         var length = ptr(value).add(p_size*3).readPointer().toInt32()
         LOG(mPtr+"\t"+length+"\t"+name,LogColor.C36)
-        writeFile(path,name,mPtr,length)
+        writeFile(path2,name,mPtr,length)
     })
     LOG(getLine(TitleTip.length),LogColor.C33)
 }
