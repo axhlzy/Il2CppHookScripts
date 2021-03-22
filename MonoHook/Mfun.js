@@ -10,7 +10,8 @@ const soName = "libmono.so"
 const p_size = Process.pointerSize
 var LogFlag = true
 var count_method_times
-const maxCallTime = 20
+const maxCallTime = 5
+var breakPointsCount = 0
 
 //声明libmono.so需要的函数
 var mono_thread_attach,mono_get_root_domain,mono_class_from_name,mono_image_loaded,mono_class_get_method_from_name,mono_signature_get_params,
@@ -25,6 +26,20 @@ var arr_imgs_addr = new Array()
 //记录需要断点的函数信息
 var arrayAddr = new Array()
 var arrayName = new Array()
+
+
+/*
+使用：
+spwan启动游戏
+frida -U -l Mfun.js -f 包名 --no-pause
+
+
+i()           枚举所有的dll
+a(img)        添加断点，参数是dll的偏移
+B(filter)     下断点,参数是指定方法包含的字符串，如  B("Pay") ,就会只hook包含"Pay"的方法，如果不给参数，则hook所有的方法
+DumpDll()     dumpdll文件到/sdcard/DLL/包名/目录下
+
+*/
 
 setImmediate(function(){Module.findBaseAddress(soName) == null ? Hook_dlopen() : InitFunctions()})
 
@@ -236,8 +251,13 @@ function a(imgOrCls){
     if (String(arr_imgs_addr).indexOf(String(imgOrCls))!=-1){
         var img = imgOrCls
         var ret_arr = list_classes(img,"")
+		
         ret_arr.forEach(function(value,index){
             var ret = m(value,"")
+			if(ret==undefined)
+			{
+				return ;
+			}
             arrayName = arrayName.concat(ret[0])
             arrayAddr = arrayAddr.concat(ret[1])
             method_count += ret[0].length
@@ -346,6 +366,10 @@ function breakPoints(filter){
         .forEach(function(value,index){
             LOG("-------------------------",LogColor.C90)
             LOG('currentAddr:' + value + "\t"+t_arrayName[index],LogColor.C32)
+			if(value==0x0)
+			{
+				return;
+			}
             try{
                 funcTmp(value,index,t_arrayName)
             }catch(e){
@@ -362,7 +386,8 @@ function breakPoints(filter){
             Interceptor.attach(currentAddr, {
                 onEnter: function(args){
                     if(++count_method_times[index] < maxCallTime){
-                        LOG("called : "+arrayAddr[index]+"\t--->\t"+arrayName[index] +"\n",LogColor.C36)
+						breakPointsCount++
+                        LOG(breakPointsCount+" called : "+arrayAddr[index]+"\t--->\t"+arrayName[index] +"\n",LogColor.C36)
                     }
                 },
                 onLeave: function(retval){
