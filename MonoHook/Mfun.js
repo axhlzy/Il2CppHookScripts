@@ -6,7 +6,7 @@
  * @Des frida hook mono functions scrpt
  */
 
-const soName = "libmono.so"
+const soName = "libmonobdwgc-2.0.so"
 const p_size = Process.pointerSize
 var LogFlag = true
 var count_method_times
