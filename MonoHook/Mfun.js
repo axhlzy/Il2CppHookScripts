@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/31 15:30
- * @UpdateTime 2021/03/19 17:34
+ * @UpdateTime 2021/03/23 18:23
  * @Des frida hook mono functions scrpt
  */
 
@@ -580,4 +580,143 @@ var LogColor = {
     C41:41,C42:42,C43:43,C44:44,C45:45,C46:46,
     C90:90,C91:91,C92:92,C93:93,C94:94,C95:95,C96:96,C97:97,
     C100:100,C101:101,C102:102,C103:103,C104:104,C105:105,C106:106,C107:107
+}
+
+function getApkInfo(){
+    Java.perform(function(){
+
+        LOG(getLine(100),LogColor.C33)
+
+        var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
+        var pkgInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0)
+        // var appInfo = context.getApplicationInfo()
+        var appInfo = pkgInfo.applicationInfo.value
+
+        var labelRes = appInfo.labelRes.value
+        var strName = context.getResources().getString(labelRes)
+        LOG("[*]AppName\t\t"+strName + " (UID:"+appInfo.uid.value + ")\t ID:"+appInfo.labelRes.value,LogColor.C36)
+
+        var str_pkgName = context.getPackageName()
+        LOG("\n[*]PkgName\t\t"+str_pkgName,LogColor.C36)
+
+        var verName = pkgInfo.versionName.value
+        var targetSdkVersion = pkgInfo.applicationInfo.value.targetSdkVersion.value
+        LOG("\n[*]Verison\t\t"+verName + " (targetSdkVersion:"+targetSdkVersion+")",LogColor.C36)
+
+        var appSize = Java.use("java.io.File").$new(appInfo.sourceDir.value).length()
+        LOG("\n[*]AppSize\t\t"+appSize +"\t("+(appSize/1024/1024).toFixed(2)+" MB)",LogColor.C36)
+
+        LOG("\n[*]Time\t\t\tInstallTime\t" + new Date(pkgInfo.firstInstallTime.value).toLocaleString(),LogColor.C36)
+        LOG("\t\t\tUpdateTime\t" + new Date(pkgInfo.lastUpdateTime.value).toLocaleString(),LogColor.C36)
+
+        var ApkLocation = appInfo.sourceDir.value
+        var TempFile = appInfo.dataDir.value
+        LOG("\n[*]Location\t\t"+ApkLocation+"\n\t\t\t"+TempFile,LogColor.C36)
+
+        //PackageManager.GET_SIGNATURES == 0x00000040
+        var pis = context.getPackageManager().getPackageInfo(str_pkgName, 0x00000040)
+        var hexDigist = (pis.signatures.value)[0].toByteArray()
+        LOG("\n[*]Signatures\t\tMD5\t "+hexdigest(hexDigist,'MD5')
+            +"\n\t\t\tSHA-1\t "+hexdigest(hexDigist,'SHA-1')
+            +"\n\t\t\tSHA-256\t "+hexdigest(hexDigist,'SHA-256'),LogColor.C36)
+        
+        LOG(getLine(100),LogColor.C33)
+
+        //LOG(getMetaData('unity.build-id'))
+        function getMetaData(key){
+            //public static final int GET_META_DATA = 0x00000080;
+            var appInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), 0x00000080)
+            var metaData = appInfo.metaData.value
+            if(null != metaData) {
+                // var metaDataB = Java.cast(metaData,Java.use("android.os.BaseBundle"))
+                // LOG(metaDataB.mMap.value)
+                return metaData.getString(key)
+            }
+            return null
+        }
+
+        /**
+         * 计算byte字节并转换为String返回
+         * @param {*} paramArrayOfByte byte 字节
+         * @param {*} algorithm 算法 MD5 / SHA-1 / SHA-256
+         */
+        function hexdigest(paramArrayOfByte,algorithm){
+            var hexDigits = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 97, 98, 99, 100, 101, 102]
+            var localMessageDigest = Java.use("java.security.MessageDigest").getInstance(algorithm)
+            localMessageDigest.update(paramArrayOfByte)
+            var arrayOfByte = localMessageDigest.digest()
+            var arrayOfChar = []
+            for (var i=0,j=0;;i++,j++){
+                var strLenth = algorithm == "MD5" ? 16 : ( algorithm == "SHA-1" ? 20 : 32)
+                if (i>=strLenth) return Java.use("java.lang.String").$new(arrayOfChar)
+                var k = arrayOfByte[i]
+                arrayOfChar[j] = hexDigits[(0xF & k >>> 4)]
+                arrayOfChar[++j] = hexDigits[(k & 0xF)]
+            }
+        }
+    })
+}
+
+function HookOnPointerClick(){
+
+    var pointerEventData = null
+    Interceptor.attach(find_method("UnityEngine.UI","UnityEngine.UI","Button","OnPointerClick",1),{
+        onEnter:function(args){
+
+            LOG("\n"+getLine(38),LogColor.YELLOW)
+            LOG("public void OnPointerClick( "+(args[1])+" );",LogColor.C36)
+            pointerEventData = args[1]
+            if (pointerEventData == 0) return 
+            
+            var f_get_pointerEnter = new NativeFunction(find_method("UnityEngine.UI","UnityEngine.EventSystems","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
+            var gameObj = f_get_pointerEnter(pointerEventData)
+            
+            // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","UnityEngine","GameObject","get_transform",0),'pointer',['pointer'])
+            // var m_transform = f_getTransform(gameObj)
+
+            showGameObject(gameObj)
+
+            // showTransform(m_transform)
+
+            // showEventData(pointerEventData)
+        },
+        onLeave:function(retval){
+
+        } 
+    })
+
+    function showGameObject(gameObj){
+    
+        var f_getName        = new NativeFunction(find_method("UnityEngine.CoreModule","UnityEngine","Object","GetName",1,false),'pointer',['pointer'])
+        var f_getLayer       = new NativeFunction(find_method("UnityEngine.CoreModule","UnityEngine","GameObject","get_layer",0,false),'int',['pointer'])
+        var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","UnityEngine","GameObject","get_transform",0,false),'pointer',['pointer'])
+        var f_getParent      = new NativeFunction(find_method("UnityEngine.CoreModule","UnityEngine","Transform","GetParent",0,false),'pointer',['pointer'])
+        // var f_getTag         = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_tag",0,true),'pointer',['pointer'])
+        
+        LOG("--------- GameObject ---------",LogColor.C33)
+        LOG("gameObj\t\t--->\t"+gameObj,LogColor.C36)
+        if (gameObj == 0) return
+        LOG("getName\t\t--->\t"+getObjName(gameObj),LogColor.C36)
+        LOG("getLayer\t--->\t"+f_getLayer(gameObj),LogColor.C36)           
+        var m_transform = f_getTransform(gameObj)
+        LOG("getTransform\t--->\t"+m_transform,LogColor.C36)
+        // LOG("getTag\t\t--->\t"+f_getTag(gameObj).add(p_size*3).readUtf16String(),LogColor.C36)
+        var debug = true
+        var layerNames = ""
+        for (var i=0;i<10;i++){
+            var spl =  layerNames == "" ? "" : " <--- "
+            layerNames = layerNames + spl + readU16(f_getName(m_transform)) + (debug?"("+m_transform+")":"")
+            m_transform = f_getParent(m_transform)
+            if (m_transform == 0) break
+        }
+        LOG("hierarchy\t--->\t"+layerNames,LogColor.C36)
+    }
+}
+
+function getObjName(gameObj){
+    return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","UnityEngine","Object","GetName",1,false),'pointer',['pointer'])(gameObj))
+}
+
+function readU16(mPtr){
+    return ptr(mPtr).add(p_size*2+4).readUtf16String()
 }
