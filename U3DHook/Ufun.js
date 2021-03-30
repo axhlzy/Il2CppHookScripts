@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime 2021/03/18 11:29
+ * @UpdateTime 2021/03/30 17:47
  * @Des frida hook u3d functions scrpt
  */
 
@@ -18,17 +18,20 @@ var il2cpp_get_corlib,il2cpp_domain_get,il2cpp_domain_get_assemblies,il2cpp_asse
 
 //不要LOG的时候值为false，需要时候true
 var LogFlag = true
-//count_method_times数组用于记录 breakPoints 中方法出现的次数
+//count_method_times 数组用于记录 breakPoints 中方法出现的次数,index是基于临时变量 t_arrayAddr，而不是 arrayAddr
 var count_method_times
 //断点的函数出现次数大于 maxCallTime 即不显示
 const maxCallTime = 20
 //存放初始化（list_Images）时候的 imgaddr 以及 imgName
 var arr_img_addr    = new Array()
 var arr_img_names   = new Array()
-//存放MethodInfo指针（供动态断点提供更详细的信息）
+//存放MethodInfo指针（供动态断点 a() 提供更详细的信息）
 var arrMethodInfo   = new Array()
 
-//兼容之前的python脚本筛选，同时也是addBreakPoints()所添加的断点的函数也是存放在这里的
+//只存在于B时候的临时变量，用来记录需要断点的方法地址并方便 b 移除，避免重复显示
+var t_arrayAddr
+
+//兼容之前的python脚本筛选，同时也是 addBreakPoints() 或者是 a() 所添加的断点的函数也是存放在这里的
 var arrayAddr =
 []
 
@@ -98,8 +101,8 @@ var arrayName =
  * SetInt(key,value)    | SetFloat(key,value)   | SetString(key,value)  |
  * GetInt(key)          | GetFloat(key)         | GetString(key)        |
  * ----------------------------------------------------------------------
- * PS:  分清楚何时传的MethodInfo,Transform,GameObject指针 ... 瞎传参数掉用方法必崩
- *      如果使用了gadgat,使用attach方式附加（别使用spawn）
+ * PS:  分清楚何时传的MethodInfo,Transform,GameObject指针 ... 调用函数的时候瞎传参数掉用方法多半会崩
+ *      如果使用了gadgat,使用attach方式附加（别使用spawn），整个脚本对spawn方式启动的兼容性都不是很好
  * --------------------------------------------------------------------------------------------
  */
 
@@ -283,7 +286,7 @@ function B(filter,isAnalyticParameter){
 }
 
 /**
- * 使用反射来查找class
+ * 使用反射来查找class（暂时没怎么用到，在低版本的unity中可能就需要用这种方式来获取image了，后续再改吧。。。）
  */
 function C(ImgOrPtr){
 
@@ -600,12 +603,12 @@ function get_method_des(method,isArray){
 
     if (isArray==undefined?false:true){
         var a_ret = new Array()
-        a_ret.push(ret_str)             //字符串简述
-        a_ret.push(retClass)            //返回值类型
-        a_ret.push(parameters_count)    //参数个数
-        a_ret.push(arr_args_t)          //参数class列表
-        a_ret.push(arr_args_n)          //参数名称
-        a_ret.push(getSpace(maxlength))           //参数最大长度（补齐）
+        a_ret.push(ret_str)                 //字符串简述
+        a_ret.push(retClass)                //返回值类型
+        a_ret.push(parameters_count)        //参数个数
+        a_ret.push(arr_args_t)              //参数class列表
+        a_ret.push(arr_args_n)              //参数名称
+        a_ret.push(getSpace(maxlength))     //参数最大长度（补齐）
         // LOG(JSON.stringify(a_ret))
         return a_ret
     }
@@ -644,7 +647,15 @@ function breakPoint(m_ptr,index,name){
         })
         return
     }
+
     var method_addr = ptr(m_ptr).readPointer()
+
+    //移除在 B 中添加的条目避免重复显示
+    var t_method_addr = method_addr.sub(soAddr)
+    t_arrayAddr.forEach(function(value,index){ 
+        if (Number(value) == Number(t_method_addr)) count_method_times[index] = maxCallTime
+    })
+
     // LOG(method_addr.sub(soAddr))
     Interceptor.attach(method_addr,{
         onEnter:function(args){
@@ -660,7 +671,7 @@ function breakPoint(m_ptr,index,name){
                 var ClsArg = args[(funcName.indexOf("static")==-1?i+1:i)]
                 var result = FuckKnownType(strType,ClsArg)
                 LOG("  arg"+i+" | "+arr_method_info[4][i]+"\t--->\t"+ ClsArg +"\t"+ 
-                    ((String(ClsArg).length)<4?"\t":"")+
+                    ((String(ClsArg).length)<9?"\t":"")+
                     strType+" ("+typeCls+")"+"\t"+result,LogColor.C36)
             }
         },
@@ -670,7 +681,8 @@ function breakPoint(m_ptr,index,name){
             var result = FuckKnownType(strType,ret)
             var methodStr = arr_method_info.length == 0 ? "" : " ("+arr_method_info[1]+")"
             LOG("  ret  |"+arr_method_info[5]+"\t--->\t"+ret +
-                (String(ret).length<4?"\t":"")+"\t"+ 
+                //这里的长度在32位的时候是十个长度 0xc976bb40 故小于9就多给他添加一个\t补齐显示
+                (String(ret).length<9?"\t":"")+"\t"+ 
                 strType  + methodStr + "\t" +
                 result,LogColor.C36)
             LOG("-----------------------------------------------------------",LogColor.C33)
@@ -686,7 +698,7 @@ function breakPoint(m_ptr,index,name){
 function breakPoints(filter,isAnalyticParameter){
     // Interceptor.detachAll()
     var t_arrayName = new Array()
-    var t_arrayAddr = new Array()
+    t_arrayAddr = new Array()
     var t_arrayMethod = new Array()
     if (filter == undefined || filter == ""){
         t_arrayName = arrayName
@@ -798,10 +810,11 @@ function SeeTypeToString(obj,b){
 }
 
 /**
+ * 自定义参数解析模板
  * 将mPtr指向的位置以 strType 类型解析并返回 String 
  * 拓展解析一些常用的类，用b断某个方法的时候就可以很方便的打印出参数
- * @param {String} strType 
- * @param {Number} mPtr 
+ * @param {String} strType  它是啥类型的
+ * @param {Number} mPtr     它的内存指针
  * @returns {String}
  */
 function FuckKnownType(strType,mPtr){
@@ -811,8 +824,9 @@ function FuckKnownType(strType,mPtr){
             case "Object[]"     : return ""
             case "String"       : return mPtr == 0 ? "" : readU16(mPtr)
             case "Boolean"      : return (mPtr.toInt32() == 1) ? "True" : "False"
-            case "Int32"        : return mPtr.toInt32()
-            case "Single"       : return mPtr.readFloat()
+            case "Int32"        : 
+            case "Int64"        : 
+            case "Single"       : return mPtr.toInt32()
             case "Object"       : 
             case "GameObject"   : return SeeTypeToString(mPtr,false)
             case "Texture"      : 
@@ -852,6 +866,7 @@ function FuckKnownType(strType,mPtr){
 }
 
 function reflash(){
+    d()
     arrMethodInfo.splice(0,arrMethodInfo.length)
     arrayAddr.splice(0,arrayAddr.length)
     arrayName.splice(0,arrayName.length)
@@ -907,6 +922,9 @@ function get_method_modifier(method_ptr){
     return ret_str
 }
 
+/**
+ * 可用的字体颜色demo
+ */
 function printLogColors(){
     var str = "123456789"
     console.log("----------------  listLogColors  ----------------")
@@ -992,7 +1010,7 @@ function getParameterType(Il2CppType){
 
 /**
  * 修改函数返回值为true
- * @param {Int} mPtr 函数地址
+ * @param {Pointer} mPtr 函数地址
  * @param {Boolean} boolean 返回值修改为True/False
  */
 function ChangeRet(mPtr,boolean){
@@ -1007,6 +1025,9 @@ function ChangeRet(mPtr,boolean){
     })
 }
 
+/**
+ * 获取Unity的一些基本信息
+ */
 function getUnityInfo(){
 
     var line20 = getLine(20)
@@ -1312,6 +1333,9 @@ function getUnityInfo(){
     }
 }
 
+/**
+ * 获取APK的一些基本信息
+ */
 function getApkInfo(){
     Java.perform(function(){
 
@@ -1387,6 +1411,10 @@ function getApkInfo(){
     })
 }
 
+/**
+ * 用包名启动 APK
+ * @param {String}} pkgName 
+ */
 function launchApp(pkgName){
     Java.perform(function(){
         var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
