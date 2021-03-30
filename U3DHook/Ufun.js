@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime 2021/03/30 17:47
+ * @UpdateTime 2021/03/30 18:06
  * @Des frida hook u3d functions scrpt
  */
 
@@ -651,18 +651,20 @@ function breakPoint(m_ptr,index,name){
     var method_addr = ptr(m_ptr).readPointer()
 
     //移除在 B 中添加的条目避免重复显示
-    var t_method_addr = method_addr.sub(soAddr)
-    t_arrayAddr.forEach(function(value,index){ 
-        if (Number(value) == Number(t_method_addr)) count_method_times[index] = maxCallTime
-    })
-
+    if (t_arrayAddr != undefined ){
+        var t_method_addr = method_addr.sub(soAddr)
+        t_arrayAddr.forEach(function(value,index){ 
+            if (Number(value) == Number(t_method_addr)) count_method_times[index] = maxCallTime
+        })
+    }
+    
     // LOG(method_addr.sub(soAddr))
     Interceptor.attach(method_addr,{
         onEnter:function(args){
             // if(index!=undefined && ++count_method_times[index] > maxCallTime) return
             LOG("\n-----------------------------------------------------------",LogColor.C33)
             var funcName = arr_method_info[0]
-            LOG("Called "+funcName,LogColor.C96)
+            LOG("Called "+funcName + "\t at "+method_addr +"("+method_addr.sub(soAddr)+") | MethodInfo "+ptr(m_ptr),LogColor.C96)
             LOG("----------------------",LogColor.C33)
             for(var i=0;i<arr_method_info[2];i++){
                 var typeCls = arr_method_info[3][i]
