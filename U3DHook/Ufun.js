@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime 2021/03/30 18:06
+ * @UpdateTime 2021/04/02 14:58
  * @Des frida hook u3d functions scrpt
  */
 
@@ -21,7 +21,7 @@ var LogFlag = true
 //count_method_times 数组用于记录 breakPoints 中方法出现的次数,index是基于临时变量 t_arrayAddr，而不是 arrayAddr
 var count_method_times
 //断点的函数出现次数大于 maxCallTime 即不显示
-const maxCallTime = 20
+const maxCallTime = 10
 //存放初始化（list_Images）时候的 imgaddr 以及 imgName
 var arr_img_addr    = new Array()
 var arr_img_names   = new Array()
@@ -263,7 +263,7 @@ function f(ImageName,ClassName,functionName,ArgsCount){
  */
 function P(m_ptr,range){
     m_ptr = Number(m_ptr) < Number(soAddr) ? soAddr.add(ptr(m_ptr)) :ptr(m_ptr)
-    printCtx(m_ptr,(range==undefined?20:range),"")
+    printCtx(m_ptr,(range==undefined?20:range),2)
 }
 
 //默认就用Assembly-CSharp，用的最多
@@ -1472,6 +1472,12 @@ function seeHexA(addr,length){
     LOG(hexdump(ptr(addr),{length:length}))
 }
 
+/**
+ * 展示代码上下文
+ * @param {Pointer} pointer 指针位置
+ * @param {Int} range 展示的范围
+ * @param {Int} sign 1:正向 2:反向(小端存储，同IDA)   不填写着以当前pointer为中心位置打印信息
+ */
 function printCtx(pointer,range,sign){
     if (sign != undefined){
         for (var i = 0;i<range;i++){
@@ -1487,7 +1493,15 @@ function printCtx(pointer,range,sign){
 
     function printLOG(pointer){
         var cur_p = ptr(pointer).add(p_size*i)
-        LOG(cur_p+"\t"+cur_p.readPointer()+"\t"+Instruction.parse(cur_p),i==0?LogColor.RED:LogColor.WHITE)
+        var cur_value = cur_p.readPointer().toString()
+        var cur_tmp = Array.from(cur_value.toUpperCase())
+        var cur_str = (cur_tmp.length == 10 ) ? cur_value : ""
+        if (sign == 1){
+            cur_str = cur_tmp[2]+cur_tmp[3] +' '+cur_tmp[4]+cur_tmp[5] +' '+cur_tmp[6]+cur_tmp[7] +' '+cur_tmp[8]+cur_tmp[9]
+        }else{
+            cur_str = cur_tmp[8]+cur_tmp[9] +' '+cur_tmp[6]+cur_tmp[7] +' '+cur_tmp[4]+cur_tmp[5] +' '+cur_tmp[2]+cur_tmp[3]
+        }
+        LOG(cur_p+"\t"+cur_str+"\t"+Instruction.parse(cur_p),i==0?LogColor.RED:LogColor.WHITE)
     }
 }
 
@@ -1843,6 +1857,40 @@ function CallStatic(mPtr,arg0,arg1,arg2,arg3){
 /**
  * -------------------------------------------拓展方法-------------------------------------------------
  */
+
+/**
+ * 很多导出函数的地址第一条都是一个跳转指令，这里的计算以便后面使用InlineHook用到
+ * 列举一些我们常用的就是了，其他的也可以自行计算
+ */
+function getRealAddr(){
+    
+    getLogByExport('il2cpp_string_new')
+    getLogByExport('il2cpp_get_corlib')
+    getLogByExport('il2cpp_domain_get')
+    getLogByExport('il2cpp_assembly_get_image')
+    getLogByExport('il2cpp_image_get_class_count')
+    getLogByExport('il2cpp_image_get_class')
+    getLogByExport('il2cpp_class_get_methods')
+    getLogByExport('il2cpp_class_get_type')
+    getLogByExport('il2cpp_class_from_system_type')
+    getLogByExport('il2cpp_class_from_name')
+    getLogByExport('il2cpp_class_get_method_from_name')
+
+    function getLogByExport(exp){
+
+        var realAddr = 0
+        var aimAddr = ptr(Module.findExportByName(soName,exp))
+    
+        //使用手动计算偏移加源地址得到目的地址
+        // realAddr = aimAddr.add((aimAddr.readPointer() << 8 >> 8)*4 + 8)
+        //使用frida的api Instruction
+        realAddr = ptr(Instruction.parse(aimAddr).opStr.split('#')[1])
+    
+        LOG(getLine(20)+'\n'+exp+' \n\t' 
+            + aimAddr +' ('+aimAddr.sub(soAddr)+')\t--->\t' 
+            + realAddr +' ('+realAddr.sub(soAddr)+')',LogColor.C96)
+    }
+}
 
 function GotoScene(str){
     CallStatic(find_method("UnityEngine.CoreModule","SceneManager","LoadScene",2)
@@ -2201,8 +2249,8 @@ function HookGetSetText(){
     hookSet()
 
     //动态替换文字
-    var arr_src_str = ['Hold To Run','8082','免费获得','+400','暂停']
-    var arr_rep_str = ['FuckMusic','-99','','-200²','pause']
+    var arr_src_str = ['Hold To Run','8082','免费获得','+400','暂停','HEADSHOT']
+    var arr_rep_str = ['FuckMusic','-99','','-200²','pause','击中头部']
     
     function hookSet(){
         var addr_set = find_method("UnityEngine.UI",'Text','set_text',1)
