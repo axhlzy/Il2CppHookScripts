@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime 2021/04/02 14:58
+ * @UpdateTime 2021/04/12 18:57
  * @Des frida hook u3d functions scrpt
  */
 
@@ -150,16 +150,17 @@ function Hook_dlopen_init() {
     
     //在初始化之后在做其他事情[initImages()之后]
     function todo(){
-        //初始化参数
-        initImages()
-        //detach掉对dlopen的hook
-        d()
+        setTimeout(() => {
+            //初始化参数
+            initImages()
+            //detach掉对dlopen的hook
+            d()
 
-        //启动的时候断点方法
-        //B()
+            //启动的时候断点方法
+            B()
 
-        // setTimeout(HookPlayerPrefs(),2000)
-        
+            // setTimeout(HookPlayerPrefs(),2000)
+        }, 1000)
     }
 }
 
@@ -666,11 +667,13 @@ function breakPoint(m_ptr,index,name){
             var funcName = arr_method_info[0]
             LOG("Called "+funcName + "\t at "+method_addr +"("+method_addr.sub(soAddr)+") | MethodInfo "+ptr(m_ptr),LogColor.C96)
             LOG("----------------------",LogColor.C33)
+            var isStatic = funcName.indexOf("static")==-1
+            if (isStatic)LOG("  inst | \t\t"+args[0],LogColor.C36)
             for(var i=0;i<arr_method_info[2];i++){
                 var typeCls = arr_method_info[3][i]
                 var strType = getClassName(typeCls)
                 //静态方法没有上下文，反之有则arg+1
-                var ClsArg = args[(funcName.indexOf("static")==-1?i+1:i)]
+                var ClsArg = args[(isStatic?i+1:i)]
                 var result = FuckKnownType(strType,ClsArg)
                 LOG("  arg"+i+" | "+arr_method_info[4][i]+"\t--->\t"+ ClsArg +"\t"+ 
                     ((String(ClsArg).length)<9?"\t":"")+
@@ -2309,7 +2312,9 @@ function HookGetSetText(){
  * @param {Boolean} inCall 内部调用，去掉一些LOG
  */
 function PrintHierarchy(mPtr,level,inCall){
+    LogFlag = true
     if (mPtr == 0 || mPtr == undefined) return
+
     if (level ==undefined) level = 10
     var transform = ptr(mPtr)
     
@@ -2319,7 +2324,6 @@ function PrintHierarchy(mPtr,level,inCall){
     var f_getChild          = new NativeFunction(find_method("UnityEngine.CoreModule","Transform","GetChild",1),'pointer',['pointer','int'])
 
     if (level==10)LOG(getLine(73)+"\n",LogColor.C33)
-
     //当前level作为第一级
     var baseLevel = getLevel(transform)
     LOG((inCall!=undefined?"\t":"")+getSpace(0)+transform+" : "+ getObjName(transform),LogColor.C36)
