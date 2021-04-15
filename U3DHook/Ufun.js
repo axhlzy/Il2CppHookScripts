@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime 2021/04/12 18:57
+ * @UpdateTime 2021/04/15 18:17
  * @Des frida hook u3d functions scrpt
  */
 
@@ -81,7 +81,7 @@ var arrayName =
  * --- 用作动态Hook去掉指定gameObj
  * setClick()
  * HideClickedObj()
- * HookMotionEvent
+ * HookMotionEvent()
  * 
  * --- 查看一些对象
  * showEventData(eventData)
@@ -240,6 +240,12 @@ function n(m_ptr){
         LOG("\nCalled NOP function ---> "+m_ptr+" ("+src_ptr+")",LogColor.YELLOW)
         // srcFunc(arg0,arg1,arg2,arg3)
     },'void',['pointer','pointer','pointer','pointer']))
+}
+
+function nn(m_ptr){
+    var src_ptr = m_ptr
+    m_ptr = Number(m_ptr) < Number(soAddr) ? soAddr.add(ptr(m_ptr)) :ptr(m_ptr)
+    Interceptor.revert(m_ptr)
 }
 
 function d(){
@@ -1014,18 +1020,42 @@ function getParameterType(Il2CppType){
  */
 
 /**
- * 修改函数返回值为true
- * @param {Pointer} mPtr 函数地址
+ * 修改函数参数或者返回值
+ * @param {Pointer} mPtr    函数地址
  * @param {Boolean} boolean 返回值修改为True/False
+ * @param {Number}  index   null == ret / {1,2....} 等于修改第几个参数
  */
-function ChangeRet(mPtr,boolean){
-    Interceptor.attach(soAddr.add(mPtr),{
-        onEnter:function(args){
+function setFunctionBoolean(mPtr,boolean,index){
+    setFunctionValue(mPtr,boolean == true ? 0x1:0x0,index)
+}
 
+function setFunctionValue(mPtr,value,index){
+    mPtr = Number(mPtr) < Number(soAddr) ? soAddr.add(ptr(mPtr)) :ptr(mPtr)
+    Interceptor.attach(mPtr,{
+        onEnter:function(args){
+            if (index != undefined){
+                args[index] = ptr(value)
+            }
         },
         onLeave:function(ret){
-            ret.replace(ptr(boolean == true ? 0x1:0x0))
-            LOG("\nCalled mPtr = "+mPtr +"\tret = "+ret,LogColor.C36)
+            if (index == undefined) ret.replace(ptr(value))
+            LOG("\nCalled function at "+mPtr +" Changed",LogColor.C93)
+        }
+    })
+}
+
+function InlineBp(mPtr){
+    mPtr = Number(mPtr) < Number(soAddr) ? soAddr.add(ptr(mPtr)) :ptr(mPtr)
+    Interceptor.attach(mPtr,{
+        onEnter:function(args){
+            var r0 = this.context.r0
+            var r1 = this.context.r1
+            var r2 = this.context.r2
+            var r3 = this.context.r3
+            LOG("\nCalled function at "+mPtr+"\n"+r0+"\t"+r1+"\t"+r2+"\t"+r3,LogColor.C36)
+        },
+        onLeave:function(ret){
+           
         }
     })
 }
@@ -1701,7 +1731,7 @@ function SetLocalRotation(mTransform,x,y,z,w){
  * @param {Pointer}  
  */
 function getObjName(gameObj){
-    return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1,true),'pointer',['pointer'])(gameObj))
+    return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1,true),'pointer',['pointer'])(ptr(gameObj)))
 }
 
 function showGameObject(gameObj){
@@ -1712,6 +1742,7 @@ function showGameObject(gameObj){
     var f_getParent      = new NativeFunction(find_method("UnityEngine.CoreModule","Transform","GetParent",0,true),'pointer',['pointer'])
     // var f_getTag         = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_tag",0,true),'pointer',['pointer'])
     
+    gameObj = ptr(gameObj)
     LOG("--------- GameObject ---------",LogColor.C33)
     LOG("gameObj\t\t--->\t"+gameObj,LogColor.C36)
     if (gameObj == 0) return
@@ -1901,7 +1932,7 @@ function GotoScene(str){
 } 
 
 function setActive(gameObj,visible){
-    new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","SetActive",1,true),'pointer',['pointer','int'])(ptr(gameObj),visible)
+    new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","SetActive",1,true),'pointer',['pointer','int'])(ptr(gameObj),visible?0x1:0x0)
 }
 
 function destroyObj(gameObj){
@@ -1912,7 +1943,7 @@ function HookSetActive(){
     Interceptor.attach(find_method("UnityEngine","GameObject","SetActive",1,true),{
         onEnter:function(args){
             //显示SetActive为true的项
-            if (args[1].toInt32() == 1) {
+            if (args[1].toInt32() == 0) {
                 LOG("\n"+getLine(38),LogColor.YELLOW)
                 LOG("public extern void SetActive( "+(args[1].toInt32()==0?"false":"true")+" );",LogColor.C36)
                 LOG(getLine(20),LogColor.C33)
