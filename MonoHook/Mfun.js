@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/31 15:30
- * @UpdateTime 2021/03/23 18:23
+ * @UpdateTime 2021/04/19 19:03
  * @Des frida hook mono functions scrpt
  */
 
@@ -10,13 +10,16 @@ const soName = "libmono.so"
 const p_size = Process.pointerSize
 var LogFlag = true
 var count_method_times
-const maxCallTime = 20
+const maxCallTime = 10
 
 //声明libmono.so需要的函数
 var mono_thread_attach,mono_get_root_domain,mono_class_from_name,mono_image_loaded,mono_class_get_method_from_name,mono_signature_get_params,
 mono_runtime_invoke,mono_compile_method,mono_class_num_methods,mono_class_get_methods,mono_class_get_name,mono_method_signature,
 mono_type_get_name,mono_assembly_foreach,mono_assembly_get_image,mono_image_get_name,mono_unity_get_all_classes_with_name_case,
 mono_image_get_table_rows,mono_class_get
+//声明常用的u3d函数
+var getName,getPointerEnter,getParent,getTransform,getLayer
+
 //声明libc.so需要的函数
 var fopen,fwrite,fclose,system
 //记录image信息
@@ -68,6 +71,17 @@ function InitFunctions(){
     LogFlag = true
 
     setTimeout(function(){mono_thread_attach(mono_get_root_domain())},2000)
+    setTimeout(() => {
+        initU3DFunc()
+    }, 3000);
+}
+
+function initU3DFunc(){
+    getName         = new NativeFunction(find_method('UnityEngine','UnityEngine','Object','get_name',0),'pointer',['pointer'])
+    getPointerEnter = new NativeFunction(find_method('UnityEngine.UI','UnityEngine.EventSystems','PointerEventData','get_pointerEnter',0),'pointer',['pointer'])
+    getParent       = new NativeFunction(find_method('UnityEngine','UnityEngine','Transform','get_parent',0),'pointer',['pointer'])
+    getTransform    = new NativeFunction(find_method('UnityEngine','UnityEngine','GameObject','get_transform',0),'pointer',['pointer'])
+    getLayer        = new NativeFunction(find_method("UnityEngine","UnityEngine","GameObject","get_layer",0),'int',['pointer'])
 }
 
 function Hook_dlopen() {
@@ -238,10 +252,6 @@ function a(imgOrCls){
         var ret_arr = list_classes(img,"")
         ret_arr.forEach(function(value,index){
             var ret = m(value,"")
-            if (ret == undefined || ret == 0x0) {
-                LOG('Error At function a(imgOrCls) + 11 lines',LogColor.RED)
-                return
-            }
             arrayName = arrayName.concat(ret[0])
             arrayAddr = arrayAddr.concat(ret[1])
             method_count += ret[0].length
@@ -249,10 +259,6 @@ function a(imgOrCls){
     }else{
         var cls = imgOrCls
         var ret = m(cls,"")
-        if (ret == undefined || ret == 0x0) {
-            LOG('Error At function a(imgOrCls) + 22 lines',LogColor.RED)
-            return
-        }
         arrayName = arrayName.concat(ret[0])
         arrayAddr = arrayAddr.concat(ret[1])
         method_count += ret[0].length
@@ -330,11 +336,7 @@ function list_classes(image,sign,filterName){
 }
 
 function breakPoints(filter){
-    // Interceptor.detachAll()
-    if (arrayName.length != arrayAddr.length){
-        LOG("（arrayName.lenth = "+ arrayName.lenth +"） ≠ （arrayAddr.length = "+arrayAddr.length+")")
-        return
-    }
+    Interceptor.detachAll()
     var t_arrayName = new Array()
     var t_arrayAddr = new Array()
     if (filter == undefined || filter == ""){
@@ -403,6 +405,16 @@ function invoke(monoMethod, obj, params,monoObject){
 
 function TestAttach(){
 
+    var get_name = find_method('UnityEngine','UnityEngine','Object','get_name',0)
+    var getName = new NativeFunction(ptr(get_name),'pointer',['pointer'])
+    var get_pointerEnter = find_method('UnityEngine.UI','UnityEngine.EventSystems','PointerEventData','get_pointerEnter',0)
+    var getPointerEnter = new NativeFunction(ptr(get_pointerEnter),'pointer',['pointer'])
+    var get_parent = find_method('UnityEngine','UnityEngine','Transform','get_parent',0)
+    var getParent = new NativeFunction(ptr(get_parent),'pointer',['pointer'])
+    var get_transform = find_method('UnityEngine','UnityEngine','GameObject','get_transform',0)
+    var getTransform = new NativeFunction(ptr(get_transform),'pointer',['pointer'])
+    
+
     HookMonoMethod("UnityEngine",'UnityEngine','Debug',"LogError",1,{
         onEnter:function(args){
             LOG(readU16(args[0]))
@@ -412,6 +424,46 @@ function TestAttach(){
             
         }
     })
+
+    //find_method('UnityEngine','UnityEngine','GameObject','SetActive',1)
+    // HookMonoMethod('UnityEngine','UnityEngine','GameObject','SetActive',1,{
+    //     onEnter:function(args){
+    //         LOG(readU16(getName(args[0])))
+    //     },
+    //     onLeave:function(ret){
+            
+    //     }
+    // })
+
+    //find_method('UnityEngine.UI','UnityEngine.UI','Button','OnPointerClick',1)
+    HookMonoMethod('UnityEngine.UI','UnityEngine.UI','Button','OnPointerClick',1,{
+        onEnter:function(args){
+            var transfrom = getTransform(getPointerEnter(args[1]))
+            // LOG(transfrom+" ==== "+readU16(getName(transfrom)))
+           
+            LOG('' + getPStr(transfrom,5))
+        },
+        onLeave:function(ret){
+            
+        }
+    })
+
+    function getPStr(transform,level){
+        var Pname = ""
+        for (var i=0;i<level;i++){
+            Pname = Pname + getPName(transform,i) + ((level-i==1)?"":" <--- ")
+        }
+        return Pname
+    }
+
+    function getPName(transfrom,level){
+        for(var i=0;i<level;i++){
+            transfrom = getParent(transfrom)
+        }
+        if (transfrom == 0x0) return ""
+        return readU16(getName(transfrom))
+    }
+    
 }
 
 function Toast(msg){
@@ -480,13 +532,82 @@ function getLine(length){
     return retStr
 }
 
-function getPackageName(){
-    var pkgname = NULL
+/**
+ * 获取APK的一些基本信息
+ */
+function getApkInfo(){
     Java.perform(function(){
+
+        LOG(getLine(100),LogColor.C33)
+
         var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
-        pkgname = context.getPackageName()
+        var pkgInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0)
+        // var appInfo = context.getApplicationInfo()
+        var appInfo = pkgInfo.applicationInfo.value
+
+        var labelRes = appInfo.labelRes.value
+        var strName = context.getResources().getString(labelRes)
+        LOG("[*]AppName\t\t"+strName + " (UID:"+appInfo.uid.value + ")\t ID:"+appInfo.labelRes.value,LogColor.C36)
+
+        var str_pkgName = context.getPackageName()
+        LOG("\n[*]PkgName\t\t"+str_pkgName,LogColor.C36)
+
+        var verName = pkgInfo.versionName.value
+        var targetSdkVersion = pkgInfo.applicationInfo.value.targetSdkVersion.value
+        LOG("\n[*]Verison\t\t"+verName + " (targetSdkVersion:"+targetSdkVersion+")",LogColor.C36)
+
+        var appSize = Java.use("java.io.File").$new(appInfo.sourceDir.value).length()
+        LOG("\n[*]AppSize\t\t"+appSize +"\t("+(appSize/1024/1024).toFixed(2)+" MB)",LogColor.C36)
+
+        LOG("\n[*]Time\t\t\tInstallTime\t" + new Date(pkgInfo.firstInstallTime.value).toLocaleString(),LogColor.C36)
+        LOG("\t\t\tUpdateTime\t" + new Date(pkgInfo.lastUpdateTime.value).toLocaleString(),LogColor.C36)
+
+        var ApkLocation = appInfo.sourceDir.value
+        var TempFile = appInfo.dataDir.value
+        LOG("\n[*]Location\t\t"+ApkLocation+"\n\t\t\t"+TempFile,LogColor.C36)
+
+        //PackageManager.GET_SIGNATURES == 0x00000040
+        var pis = context.getPackageManager().getPackageInfo(str_pkgName, 0x00000040)
+        var hexDigist = (pis.signatures.value)[0].toByteArray()
+        LOG("\n[*]Signatures\t\tMD5\t "+hexdigest(hexDigist,'MD5')
+            +"\n\t\t\tSHA-1\t "+hexdigest(hexDigist,'SHA-1')
+            +"\n\t\t\tSHA-256\t "+hexdigest(hexDigist,'SHA-256'),LogColor.C36)
+        
+        LOG(getLine(100),LogColor.C33)
+
+        //LOG(getMetaData('unity.build-id'))
+        function getMetaData(key){
+            //public static final int GET_META_DATA = 0x00000080;
+            var appInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), 0x00000080)
+            var metaData = appInfo.metaData.value
+            if(null != metaData) {
+                // var metaDataB = Java.cast(metaData,Java.use("android.os.BaseBundle"))
+                // LOG(metaDataB.mMap.value)
+                return metaData.getString(key)
+            }
+            return null
+        }
+
+        /**
+         * 计算byte字节并转换为String返回
+         * @param {*} paramArrayOfByte byte 字节
+         * @param {*} algorithm 算法 MD5 / SHA-1 / SHA-256
+         */
+        function hexdigest(paramArrayOfByte,algorithm){
+            var hexDigits = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 97, 98, 99, 100, 101, 102]
+            var localMessageDigest = Java.use("java.security.MessageDigest").getInstance(algorithm)
+            localMessageDigest.update(paramArrayOfByte)
+            var arrayOfByte = localMessageDigest.digest()
+            var arrayOfChar = []
+            for (var i=0,j=0;;i++,j++){
+                var strLenth = algorithm == "MD5" ? 16 : ( algorithm == "SHA-1" ? 20 : 32)
+                if (i>=strLenth) return Java.use("java.lang.String").$new(arrayOfChar)
+                var k = arrayOfByte[i]
+                arrayOfChar[j] = hexDigits[(0xF & k >>> 4)]
+                arrayOfChar[++j] = hexDigits[(k & 0xF)]
+            }
+        }
     })
-    return pkgname
 }
 
 /**
@@ -582,141 +703,151 @@ var LogColor = {
     C100:100,C101:101,C102:102,C103:103,C104:104,C105:105,C106:106,C107:107
 }
 
-function getApkInfo(){
-    Java.perform(function(){
-
-        LOG(getLine(100),LogColor.C33)
-
-        var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
-        var pkgInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0)
-        // var appInfo = context.getApplicationInfo()
-        var appInfo = pkgInfo.applicationInfo.value
-
-        var labelRes = appInfo.labelRes.value
-        var strName = context.getResources().getString(labelRes)
-        LOG("[*]AppName\t\t"+strName + " (UID:"+appInfo.uid.value + ")\t ID:"+appInfo.labelRes.value,LogColor.C36)
-
-        var str_pkgName = context.getPackageName()
-        LOG("\n[*]PkgName\t\t"+str_pkgName,LogColor.C36)
-
-        var verName = pkgInfo.versionName.value
-        var targetSdkVersion = pkgInfo.applicationInfo.value.targetSdkVersion.value
-        LOG("\n[*]Verison\t\t"+verName + " (targetSdkVersion:"+targetSdkVersion+")",LogColor.C36)
-
-        var appSize = Java.use("java.io.File").$new(appInfo.sourceDir.value).length()
-        LOG("\n[*]AppSize\t\t"+appSize +"\t("+(appSize/1024/1024).toFixed(2)+" MB)",LogColor.C36)
-
-        LOG("\n[*]Time\t\t\tInstallTime\t" + new Date(pkgInfo.firstInstallTime.value).toLocaleString(),LogColor.C36)
-        LOG("\t\t\tUpdateTime\t" + new Date(pkgInfo.lastUpdateTime.value).toLocaleString(),LogColor.C36)
-
-        var ApkLocation = appInfo.sourceDir.value
-        var TempFile = appInfo.dataDir.value
-        LOG("\n[*]Location\t\t"+ApkLocation+"\n\t\t\t"+TempFile,LogColor.C36)
-
-        //PackageManager.GET_SIGNATURES == 0x00000040
-        var pis = context.getPackageManager().getPackageInfo(str_pkgName, 0x00000040)
-        var hexDigist = (pis.signatures.value)[0].toByteArray()
-        LOG("\n[*]Signatures\t\tMD5\t "+hexdigest(hexDigist,'MD5')
-            +"\n\t\t\tSHA-1\t "+hexdigest(hexDigist,'SHA-1')
-            +"\n\t\t\tSHA-256\t "+hexdigest(hexDigist,'SHA-256'),LogColor.C36)
-        
-        LOG(getLine(100),LogColor.C33)
-
-        //LOG(getMetaData('unity.build-id'))
-        function getMetaData(key){
-            //public static final int GET_META_DATA = 0x00000080;
-            var appInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), 0x00000080)
-            var metaData = appInfo.metaData.value
-            if(null != metaData) {
-                // var metaDataB = Java.cast(metaData,Java.use("android.os.BaseBundle"))
-                // LOG(metaDataB.mMap.value)
-                return metaData.getString(key)
-            }
-            return null
-        }
-
-        /**
-         * 计算byte字节并转换为String返回
-         * @param {*} paramArrayOfByte byte 字节
-         * @param {*} algorithm 算法 MD5 / SHA-1 / SHA-256
-         */
-        function hexdigest(paramArrayOfByte,algorithm){
-            var hexDigits = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 97, 98, 99, 100, 101, 102]
-            var localMessageDigest = Java.use("java.security.MessageDigest").getInstance(algorithm)
-            localMessageDigest.update(paramArrayOfByte)
-            var arrayOfByte = localMessageDigest.digest()
-            var arrayOfChar = []
-            for (var i=0,j=0;;i++,j++){
-                var strLenth = algorithm == "MD5" ? 16 : ( algorithm == "SHA-1" ? 20 : 32)
-                if (i>=strLenth) return Java.use("java.lang.String").$new(arrayOfChar)
-                var k = arrayOfByte[i]
-                arrayOfChar[j] = hexDigits[(0xF & k >>> 4)]
-                arrayOfChar[++j] = hexDigits[(k & 0xF)]
-            }
-        }
-    })
-}
-
 function HookOnPointerClick(){
 
     var pointerEventData = null
-    Interceptor.attach(find_method("UnityEngine.UI","UnityEngine.UI","Button","OnPointerClick",1),{
+    HookMonoMethod('UnityEngine.UI','UnityEngine.UI','Button','OnPointerClick',1,{
         onEnter:function(args){
-
+            var transform = getTransform(getPointerEnter(args[1]))
+            var str = getPStrDes(transform,5)
+            LOG(str)
             LOG("\n"+getLine(38),LogColor.YELLOW)
             LOG("public void OnPointerClick( "+(args[1])+" );",LogColor.C36)
             pointerEventData = args[1]
             if (pointerEventData == 0) return 
-            
-            var f_get_pointerEnter = new NativeFunction(find_method("UnityEngine.UI","UnityEngine.EventSystems","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
-            var gameObj = f_get_pointerEnter(pointerEventData)
-            
-            // var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","UnityEngine","GameObject","get_transform",0),'pointer',['pointer'])
-            // var m_transform = f_getTransform(gameObj)
-
+            var gameObj = getPointerEnter(pointerEventData)
+            // var m_transform = getTransform(gameObj)
             showGameObject(gameObj)
-
-            // showTransform(m_transform)
-
-            // showEventData(pointerEventData)
         },
-        onLeave:function(retval){
-
-        } 
-    })
-
-    function showGameObject(gameObj){
-    
-        var f_getName        = new NativeFunction(find_method("UnityEngine.CoreModule","UnityEngine","Object","GetName",1,false),'pointer',['pointer'])
-        var f_getLayer       = new NativeFunction(find_method("UnityEngine.CoreModule","UnityEngine","GameObject","get_layer",0,false),'int',['pointer'])
-        var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","UnityEngine","GameObject","get_transform",0,false),'pointer',['pointer'])
-        var f_getParent      = new NativeFunction(find_method("UnityEngine.CoreModule","UnityEngine","Transform","GetParent",0,false),'pointer',['pointer'])
-        // var f_getTag         = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_tag",0,true),'pointer',['pointer'])
-        
-        LOG("--------- GameObject ---------",LogColor.C33)
-        LOG("gameObj\t\t--->\t"+gameObj,LogColor.C36)
-        if (gameObj == 0) return
-        LOG("getName\t\t--->\t"+getObjName(gameObj),LogColor.C36)
-        LOG("getLayer\t--->\t"+f_getLayer(gameObj),LogColor.C36)           
-        var m_transform = f_getTransform(gameObj)
-        LOG("getTransform\t--->\t"+m_transform,LogColor.C36)
-        // LOG("getTag\t\t--->\t"+f_getTag(gameObj).add(p_size*3).readUtf16String(),LogColor.C36)
-        var debug = true
-        var layerNames = ""
-        for (var i=0;i<10;i++){
-            var spl =  layerNames == "" ? "" : " <--- "
-            layerNames = layerNames + spl + readU16(f_getName(m_transform)) + (debug?"("+m_transform+")":"")
-            m_transform = f_getParent(m_transform)
-            if (m_transform == 0) break
+        onLeave:function(ret){
+            
         }
-        LOG("hierarchy\t--->\t"+layerNames,LogColor.C36)
+    })
+}
+
+function showGameObject(gameObj){
+    
+    gameObj = ptr(gameObj)
+    LOG("--------- GameObject ---------",LogColor.C33)
+    LOG("gameObj\t\t--->\t"+gameObj,LogColor.C36)
+    if (gameObj == 0) return
+    LOG("getName\t\t--->\t"+getName(gameObj),LogColor.C36)
+    LOG("getLayer\t--->\t"+getLayer(gameObj),LogColor.C36)           
+    var m_transform = getTransform(gameObj)
+    LOG("getTransform\t--->\t"+m_transform,LogColor.C36)
+    // LOG("getTag\t\t--->\t"+f_getTag(gameObj).add(p_size*3).readUtf16String(),LogColor.C36)
+    var debug = true
+    var layerNames = ""
+    for (var i=0;i<10;i++){
+        var spl =  layerNames == "" ? "" : " <--- "
+        layerNames = layerNames + spl + readU16(getName(m_transform)) + (debug?"("+m_transform+")":"")
+        m_transform = getParent(m_transform)
+        if (m_transform == 0) break
     }
+    LOG("hierarchy\t--->\t"+layerNames,LogColor.C36)
 }
 
-function getObjName(gameObj){
-    return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","UnityEngine","Object","GetName",1,false),'pointer',['pointer'])(gameObj))
-}
+function HookPlayerPrefs(){
 
-function readU16(mPtr){
-    return ptr(mPtr).add(p_size*2+4).readUtf16String()
+    var isShowPrintStack = false
+
+    InterceptorGetFunctions()
+    InterceptorSetFunctions()
+
+    function InterceptorGetFunctions(){
+
+        //public static extern float GetFloat(string key, float defaultValue)
+        var Addr_GetFloat       = find_method("UnityEngine","UnityEngine","PlayerPrefs","GetFloat",2)
+        if (Addr_GetFloat !=0){
+            Interceptor.attach(Addr_GetFloat,{
+                onEnter:function(args){
+                    this.arg0 = args[0]
+                    this.arg1 = args[1]
+                },
+                onLeave:function(ret){
+                    LOG("\n[*] '"+ret +"' = GetFloat('"+this.arg0.add(p_size*3).readUtf16String()+"',"+this.arg1+")",LogColor.C36)
+                    if (isShowPrintStack) PrintStackTraceN(this.context)
+                }
+            })
+        }
+ 
+        //public static extern int GetInt(string key, int defaultValue)
+        var Addr_GetInt         = find_method("UnityEngine","UnityEngine","PlayerPrefs","GetInt",2)
+        if (Addr_GetInt !=0){
+            Interceptor.attach(Addr_GetInt,{
+                onEnter:function(args){
+                    this.arg0 = args[0]
+                    this.arg1 = args[1]
+                },
+                onLeave:function(ret){
+                    var s_arg0 = this.arg0.add(p_size*3).readUtf16String()
+                    var i_arg1 = this.arg1
+                    LOG("\n[*] '"+ret.toInt32() +"' = GetInt('"+s_arg0+"',"+i_arg1+")",LogColor.C36)
+                    if (isShowPrintStack) PrintStackTraceN(this.context)
+                    if (s_arg0.indexOf("SaleBoughted")!=-1) ret.replace(ptr(0x1))
+                }
+            })
+        }
+        
+        //public static string GetString(string key)
+        var Addr_GetString      = find_method("UnityEngine","UnityEngine","PlayerPrefs","GetString",1)
+        if (Addr_GetString !=0){
+            Interceptor.attach(Addr_GetString,{
+                onEnter:function(args){
+                    this.arg0 = args[0]
+                },
+                onLeave:function(ret){
+                    LOG("\n[*] '"+ret.add(p_size*3).readUtf16String()+"' = GetString('"+this.arg0.add(p_size*3).readUtf16String()+"')",LogColor.C36)
+                    if (isShowPrintStack) PrintStackTraceN(this.context)
+                }
+            })
+        }
+    }
+
+    function InterceptorSetFunctions(){
+
+        var Addr_SetFloat       = find_method("UnityEngine","UnityEngine","PlayerPrefs","SetFloat",2)
+        if (Addr_SetFloat != 0){
+            Interceptor.attach(Addr_SetFloat,{
+                onEnter:function(args){
+                    this.arg0 = args[0].add(p_size*3).readUtf16String()
+                    this.arg1 = ( args[1] == 0 ? 0 : args[1].readFloat())
+                },
+                onLeave:function(ret){
+                    LOG("\n[*] SetFloat('"+this.arg0+"',"+this.arg1+")",LogColor.C36)
+                    if (isShowPrintStack) PrintStackTraceN(this.context)
+                }
+            })
+        }
+        
+        //public static extern int GetInt(string key, int defaultValue)
+        var Addr_SetInt         = find_method("UnityEngine","UnityEngine","PlayerPrefs","SetInt",2)
+        if (Addr_SetInt!=0){
+            Interceptor.attach(Addr_SetInt,{
+                onEnter:function(args){
+                    this.arg0 = args[0].add(p_size*3).readUtf16String()
+                    this.arg1 = args[1]
+                },
+                onLeave:function(ret){
+                    LOG("\n[*] SetInt('"+this.arg0+"',"+this.arg1+")",LogColor.C36)
+                    if (isShowPrintStack) PrintStackTraceN(this.context)
+                }
+            })
+        }
+        
+        //public static string GetString(string key)
+        var Addr_SetString      = find_method("UnityEngine","UnityEngine","PlayerPrefs","SetString",2)
+        if (Addr_SetString!=0){
+            Interceptor.attach(Addr_SetString,{
+                onEnter:function(args){
+                    this.arg0 = args[0].add(p_size*3).readUtf16String()
+                    this.arg1 = args[1].add(p_size*3).readUtf16String()
+                },
+                onLeave:function(ret){
+                    LOG("\n[*] SetString('"+this.arg0+"','"+this.arg1+"')",LogColor.C36)
+                    if (isShowPrintStack) PrintStackTraceN(this.context)
+                }
+            })
+        }
+    }
 }
