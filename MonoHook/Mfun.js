@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/31 15:30
- * @UpdateTime 2021/04/20 11:45
+ * @UpdateTime 2021/04/20 12:32
  * @Des frida hook mono functions scrpt
  */
 
@@ -223,8 +223,8 @@ function TestDemo(){
         if (transfrom == 0x0) return ""
         return readU16(getName(transfrom))
     }
-    
-    // 2.class 的 批量断点
+
+    // 2.class 的 批量断点 == HookMonoClass()
     /**
      * [Pixel XL::com.xxx.xxx]-> i()
         --------------------------------------------------
@@ -513,7 +513,7 @@ function find_method(imageName,nameSpace,className,functName,argsCount,showDetai
 /**
  * 并不直接调用，直接调用就使用 c() 就行
  * @param {Ptr} image 
- * @param {标识内部调用} sign 
+ * @param {标识内部调用} sign 1
  * @param {过滤名称} filterName 
  */
 function list_classes(image,sign,filterName){
@@ -532,8 +532,9 @@ function list_classes(image,sign,filterName){
         if (name.indexOf(filterName)!=-1) {
             LOG("[*] " + klass +"\t"+name,LogColor.C36)
             filterCount ++ 
+            if (sign = "1") arr_temp_addr.push(klass)
         }
-        arr_temp_addr.push(klass)
+        if (sign != "1") arr_temp_addr.push(klass)
     }
     LogFlag = true
     if (sign!=undefined) return arr_temp_addr
@@ -622,6 +623,19 @@ function Toast(msg){
 function HookMonoMethod(imageName,NameSpace,className,FunctName,argsCount,callbacks) {
     var mPtr = find_method(imageName,NameSpace,className,FunctName,argsCount)
     Interceptor.attach(ptr(mPtr),callbacks)
+}
+
+function HookMonoClass(ImageName,className){
+    LogFlag = false
+    i()
+    var ret = list_classes(getImageByName(ImageName),"1",className)
+    LogFlag = true
+    if (ret.length == 1){
+        a(ptr(ret[0]))
+        B()
+    }else{
+        LOG(ret)
+    }
 }
 
 function printCtx(pointer,range,sign){
