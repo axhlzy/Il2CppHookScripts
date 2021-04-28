@@ -223,31 +223,30 @@ function m(klass){
 
 /**
  * 参数可以传递 绝对地址 相对地址 methodinfo指针（解析参数）
- * @param {Number} m_ptr 
+ * @param {Number} mPtr 
  */
-function b(m_ptr){
-    breakPoint(m_ptr)
+function b(mPtr){
+    breakPoint(mPtr)
 }
 
 /**
  * nop 指定函数 (相对地址/绝对地址都可以填)
- * @param {Number} m_ptr 
+ * @param {Number} mPtr 
  */
-function n(m_ptr){
-    var src_ptr = m_ptr
-    m_ptr = Number(m_ptr) < Number(soAddr) ? soAddr.add(ptr(m_ptr)) :ptr(m_ptr)
+function n(mPtr){
+    var src_ptr = mPtr
+    mPtr = checkPointer(mPtr)
     //原函数的引用也可以再replace中调用
-    // var srcFunc = new NativeFunction(m_ptr,'void',['pointer','pointer','pointer','pointer'])
-    Interceptor.replace(m_ptr,new NativeCallback(function(arg0,arg1,arg2,arg3){
-        LOG("\nCalled NOP function ---> "+m_ptr+" ("+src_ptr+")",LogColor.YELLOW)
+    // var srcFunc = new NativeFunction(mPtr,'void',['pointer','pointer','pointer','pointer'])
+    Interceptor.replace(mPtr,new NativeCallback(function(arg0,arg1,arg2,arg3){
+        LOG("\nCalled NOP function ---> "+mPtr+" ("+src_ptr+")",LogColor.YELLOW)
         // srcFunc(arg0,arg1,arg2,arg3)
     },'void',['pointer','pointer','pointer','pointer']))
 }
 
-function nn(m_ptr){
-    var src_ptr = m_ptr
-    m_ptr = Number(m_ptr) < Number(soAddr) ? soAddr.add(ptr(m_ptr)) :ptr(m_ptr)
-    Interceptor.revert(m_ptr)
+function nn(mPtr){
+    mPtr = checkPointer(mPtr)
+    Interceptor.revert(mPtr)
 }
 
 function d(){
@@ -267,12 +266,12 @@ function f(ImageName,ClassName,functionName,ArgsCount){
 
 /**
  * 用来查看地址 确定不是单独的一条B，以便于InlineHook的后续处理
- * @param {Number} m_ptr 绝对地址相对地址都可以
+ * @param {Number} mPtr 绝对地址相对地址都可以
  * @param {Number} 打印指令条数
  */
-function P(m_ptr,range){
-    m_ptr = Number(m_ptr) < Number(soAddr) ? soAddr.add(ptr(m_ptr)) :ptr(m_ptr)
-    printCtx(m_ptr,(range==undefined?20:range),2)
+function P(mPtr,range){
+    mPtr = checkPointer(mPtr)
+    printCtx(mPtr,(range==undefined?20:range),2)
 }
 
 //默认就用Assembly-CSharp，用的最多
@@ -644,29 +643,29 @@ function get_method_des(method,isArray){
 
 /**
  * 断点单个函数
- * @param {Number} m_ptr 可以是绝对地址 相对地址 MethodInfo地址
+ * @param {Number} mPtr 可以是绝对地址 相对地址 MethodInfo地址
  * @param {Number} index 
  * @param {String} name 
  */
-function breakPoint(m_ptr,index,name){
+function breakPoint(mPtr,index,name){
     var arr_method_info = NULL
     try{
-        arr_method_info = get_method_des(m_ptr,true)
+        arr_method_info = get_method_des(mPtr,true)
     }catch(e){
-        m_ptr = Number(m_ptr) < Number(soAddr) ? soAddr.add(ptr(m_ptr)) :ptr(m_ptr)
-        Interceptor.attach(m_ptr,{
+        mPtr = checkPointer(mPtr)
+        Interceptor.attach(mPtr,{
             onEnter:function(args){
                 
             },
             onLeave:function(ret){
                 // if(index!=undefined && ++count_method_times[index] > maxCallTime) return
-                LOG("\n[*] called : "+m_ptr.sub(soAddr)+" ("+arrMethodInfo[index]+")"+"\t--->\t"+name +"  ret ---> "+ret,LogColor.C36)
+                LOG("\n[*] called : "+mPtr.sub(soAddr)+" ("+arrMethodInfo[index]+")"+"\t--->\t"+name +"  ret ---> "+ret,LogColor.C36)
             } 
         })
         return
     }
 
-    var method_addr = ptr(m_ptr).readPointer()
+    var method_addr = ptr(mPtr).readPointer()
 
     //移除在 B 中添加的条目避免重复显示
     if (t_arrayAddr != undefined ){
@@ -682,7 +681,7 @@ function breakPoint(m_ptr,index,name){
             // if(index!=undefined && ++count_method_times[index] > maxCallTime) return
             LOG("\n-----------------------------------------------------------",LogColor.C33)
             var funcName = arr_method_info[0]
-            LOG("Called "+funcName + "\t at "+method_addr +"("+method_addr.sub(soAddr)+") | MethodInfo "+ptr(m_ptr),LogColor.C96)
+            LOG("Called "+funcName + "\t at "+method_addr +"("+method_addr.sub(soAddr)+") | MethodInfo "+ptr(mPtr),LogColor.C96)
             LOG("----------------------",LogColor.C33)
             var isStatic = funcName.indexOf("static")==-1
             if (isStatic)LOG("  inst | \t\t"+args[0],LogColor.C36)
@@ -1049,7 +1048,7 @@ function setFunctionBoolean(mPtr,boolean,index){
 }
 
 function setFunctionValue(mPtr,value,index){
-    mPtr = Number(mPtr) < Number(soAddr) ? soAddr.add(ptr(mPtr)) :ptr(mPtr)
+    mPtr = checkPointer(mPtr)
     Interceptor.attach(mPtr,{
         onEnter:function(args){
             if (index != undefined){
@@ -1063,8 +1062,64 @@ function setFunctionValue(mPtr,value,index){
     })
 }
 
+ /**
+ * 方便对 m(cls) 列出的 mathod 进行调用
+ * @param {Pointer} mPtr 
+ * @returns 
+ */
+  function callFunction(mPtr){
+    if (mPtr == undefined || mPtr == null) return 
+    for(var i = 1;i <= (arguments.length < 5 ? 5 : arguments.length) - 1 ; i++) 
+        arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))
+    return new NativeFunction(checkPointer(mPtr),'pointer',['pointer','pointer','pointer','pointer'])
+        (arguments[1],arguments[2],arguments[3],arguments[4])
+}
+
+/**
+ * 快速的打印出我们使用inlinehook操作ui需要hook的函数定义,暂时先这么用着
+ * (TODO:后续看搞一个inlinehook版本的find_method(),让inlinehook对unity的hook更方便友好)
+ */
+ function printInfo(){
+
+    LOG("\n")
+
+    LOG('\t// find_method("UnityEngine.UI","Button","OnPointerClick",1,false)',LogColor.C36)
+    LOG("\tunsigned long p_OnPointerClick      = base + "+find_method("UnityEngine.UI","Button","OnPointerClick",1).sub(soAddr)+";",LogColor.C36)
+    LOG('\t// find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0,false)',LogColor.C36)
+    LOG("\tunsigned long p_get_pointerEnter    = base + "+find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0).sub(soAddr)+";",LogColor.C36)
+    LOG('\t// find_method("UnityEngine.CoreModule","GameObject","SetActive",1,false)',LogColor.C36)
+    LOG("\tunsigned long p_SetActive           = base + "+find_method("UnityEngine.CoreModule","GameObject","SetActive",1).sub(soAddr)+";",LogColor.C36)
+    LOG('\t// find_method("UnityEngine.CoreModule","GameObject","get_transform",0,false)',LogColor.C36)
+    LOG("\tunsigned long p_getTransform        = base + "+find_method("UnityEngine.CoreModule","GameObject","get_transform",0).sub(soAddr)+";",LogColor.C36)
+    LOG('\t// find_method("UnityEngine.CoreModule","Object","GetName",1,false)',LogColor.C36)
+    LOG("\tunsigned long p_getName             = base + "+find_method("UnityEngine.CoreModule","Object","GetName",1).sub(soAddr)+";",LogColor.C36)
+    LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetParent",0,false)',LogColor.C36)
+    LOG("\tunsigned long p_getParent           = base + "+find_method("UnityEngine.CoreModule","Transform","GetParent",0).sub(soAddr)+";",LogColor.C36)
+    LOG('\t// find_method("UnityEngine.CoreModule","Transform","get_childCount",0,false)',LogColor.C36)
+    LOG("\tunsigned long p_getChildCount       = base + "+find_method("UnityEngine.CoreModule","Transform","get_childCount",0).sub(soAddr)+";",LogColor.C36)
+    LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetChild",1,false)',LogColor.C36)
+    LOG("\tunsigned long p_getChild            = base + "+find_method("UnityEngine.CoreModule","Transform","GetChild",1).sub(soAddr)+";",LogColor.C36)
+    LOG('\t// find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1,false)',LogColor.C36)
+    LOG("\tunsigned long p_setlocalScale       = base + "+find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1).sub(soAddr)+";",LogColor.C36)
+
+    LOG('\n\t// find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1,false)',LogColor.C96)
+    LOG("\tSetLocalPosition = reinterpret_cast<void *(*)(void *, void *)>(base + "+find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1).sub(soAddr)+");",LogColor.C96)
+
+    LOG("\n")
+    return
+
+    LOG('\n\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2,false)')
+    LOG("\tunsigned long p_SetInt       = base + "+find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2).sub(soAddr)+";")
+    LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2,false)')
+    LOG("\tunsigned long p_SetFloat     = base + "+find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2).sub(soAddr)+";")
+    LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2,false)')
+    LOG("\tunsigned long p_SetString    = base + "+find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2).sub(soAddr)+";")
+
+    LOG("\n")
+}
+
 function InlineBp(mPtr){
-    mPtr = Number(mPtr) < Number(soAddr) ? soAddr.add(ptr(mPtr)) :ptr(mPtr)
+    mPtr = checkPointer(mPtr)
     Interceptor.attach(mPtr,{
         onEnter:function(args){
             if (Process.arch == "arm64"){
@@ -1081,12 +1136,34 @@ function InlineBp(mPtr){
                 LOG("\nCalled function at "+mPtr+"\n"+r0+"\t"+r1+"\t"+r2+"\t"+r3,LogColor.C36)
             }
         },
-        onLeave:function(ret){
-           
-        }
+        onLeave:function(ret){}
     })
 }
 
+function listClsFromMethodInfo(methodInfo) {
+    if (methodInfo == null || methodInfo == undefined) return
+    var Pcls = ptr(methodInfo).add(p_size*3).readPointer()
+    if (Pcls != null) m(Pcls)
+    showMethodInfo(methodInfo)
+
+    
+}
+function showMethodInfo(methodInfo) {
+    var methodName = ptr(methodInfo).add(p_size*2).readPointer().readCString()
+    var methodPointer = ptr(methodInfo).add(p_size*0).readPointer()
+    var methodPointerR = methodPointer.sub(soAddr)
+    var Il2CppClass = ptr(methodInfo).add(p_size*3).readPointer()
+    var Il2CppImage = Il2CppClass.readPointer()
+    var clsName = ptr(Il2CppClass).add(p_size*2).readPointer().readCString()
+    var clsNamespaze = ptr(Il2CppClass).add(p_size*3).readPointer().readCString()
+    var imgName = ptr(Il2CppImage).add(p_size*1).readPointer().readCString()
+    var Il2CppImage = ptr(Il2CppImage)
+    var Il2CppAssembly = ptr(Il2CppImage).add(p_size*2)
+
+    LOG("\nCurrent Function "+ methodName+"\t0x"+Number(methodInfo).toString(16) + " ---> " +methodPointer + " ---> " +methodPointerR+"\n",LogColor.C96)
+    LOG(methodName+" ---> "+clsName+"("+Il2CppClass+") ---> "+clsNamespaze+" ---> "+imgName+" ---> Il2CppImage/Il2CppAssembly("+Il2CppImage+"/"+Il2CppAssembly+")\n",LogColor.C96)
+
+}
 /**
  * 获取Unity的一些基本信息
  */
@@ -1530,6 +1607,21 @@ function seeHexR(addr,length){
 
 function seeHexA(addr,length){
     LOG(hexdump(ptr(addr),{length:length}))
+}
+
+function seeString(addr){
+    LOG(readU16(addr))
+}
+
+/**
+ * 输入真实地址或者ida地址，输出真实地址
+ * @param {Pointer} mPtr 
+ * @returns 
+ */
+function checkPointer(mPtr) {
+    if (typeof(mPtr) != "number" || soAddr == null || soAddr == 0) return ptr(0)
+    if (mPtr == undefined || mPtr ==null) return ptr(0)
+    return Number(mPtr) < Number(soAddr) ? soAddr.add(ptr(mPtr)) :ptr(mPtr)
 }
 
 /**
@@ -2510,46 +2602,4 @@ function findTransform(mPtr,level,filter){
         return 0 
     }
     return retStr
-}
-
-/**
- * 快速的打印出我们使用inlinehook操作ui需要hook的函数定义
- */
-function PInfo(){
-
-    LOG("\n")
-
-    LOG('\t// find_method("UnityEngine.UI","Button","OnPointerClick",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_OnPointerClick      = base + "+find_method("UnityEngine.UI","Button","OnPointerClick",1).sub(soAddr)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0,false)',LogColor.C36)
-    LOG("\tunsigned long p_get_pointerEnter    = base + "+find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0).sub(soAddr)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","GameObject","SetActive",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_SetActive           = base + "+find_method("UnityEngine.CoreModule","GameObject","SetActive",1).sub(soAddr)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","GameObject","get_transform",0,false)',LogColor.C36)
-    LOG("\tunsigned long p_getTransform        = base + "+find_method("UnityEngine.CoreModule","GameObject","get_transform",0).sub(soAddr)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","Object","GetName",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_getName             = base + "+find_method("UnityEngine.CoreModule","Object","GetName",1).sub(soAddr)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetParent",0,false)',LogColor.C36)
-    LOG("\tunsigned long p_getParent           = base + "+find_method("UnityEngine.CoreModule","Transform","GetParent",0).sub(soAddr)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","Transform","get_childCount",0,false)',LogColor.C36)
-    LOG("\tunsigned long p_getChildCount       = base + "+find_method("UnityEngine.CoreModule","Transform","get_childCount",0).sub(soAddr)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetChild",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_getChild            = base + "+find_method("UnityEngine.CoreModule","Transform","GetChild",1).sub(soAddr)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_setlocalScale       = base + "+find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1).sub(soAddr)+";",LogColor.C36)
-
-    LOG('\n\t// find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1,false)',LogColor.C96)
-    LOG("\tSetLocalPosition = reinterpret_cast<void *(*)(void *, void *)>(base + "+find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1).sub(soAddr)+");",LogColor.C96)
-
-    LOG("\n")
-    return
-
-    LOG('\n\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2,false)')
-    LOG("\tunsigned long p_SetInt       = base + "+find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2).sub(soAddr)+";")
-    LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2,false)')
-    LOG("\tunsigned long p_SetFloat     = base + "+find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2).sub(soAddr)+";")
-    LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2,false)')
-    LOG("\tunsigned long p_SetString    = base + "+find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2).sub(soAddr)+";")
-
-    LOG("\n")
 }
