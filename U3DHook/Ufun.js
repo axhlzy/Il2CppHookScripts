@@ -2,7 +2,7 @@
  * @Author lzy <axhlzy@live.cn>
  * @HomePage https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime 2021/04/28 08:48
+ * @UpdateTime 2021/04/28 13:58
  * @Des frida hook u3d functions scrpt
  */
 
@@ -1849,7 +1849,7 @@ function SetLocalRotation(mTransform,x,y,z,w){
  * GameObject/Transform
  * @param {Pointer}  
  */
-function getObjName(gameObj){
+ function getObjName(gameObj){
     return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1,true),'pointer',['pointer'])(ptr(gameObj)))
 }
 
@@ -1869,6 +1869,26 @@ function getObjName(gameObj){
     var p_type = new NativeFunction(find_method('mscorlib','Object','GetType',0),'pointer',['pointer'])(ptr(mPtr))
     var p_name = readU16(new NativeFunction(find_method("mscorlib","Type","ToString",0),'pointer',['pointer'])(ptr(p_type)))
     LOG("\nType === > "+p_type+"\n"+"Name === > "+p_name+"\n",LogColor.C36)    
+}
+
+/**
+ * TODO 考虑使用 frida 去去获取 GetComponents 等等操作，便于定位obj上面的脚本名称，后续继续完善
+ * @param {Pointer} obj this指针
+ * @param {Pointer} type 
+ */
+function GetComponent(obj,type){
+    var f_GetComponent = new NativeFunction(find_method('UnityEngine.CoreModule','Component','GetComponent',1),'pointer',['pointer','pointer'])
+    return f_GetComponent(ptr(obj),ptr(type))
+}
+
+function GetComponentG(obj,type){
+    var f_GetComponent = new NativeFunction(find_method('UnityEngine.CoreModule','GameObject','GetComponent',1),'pointer',['pointer','pointer'])
+    return f_GetComponent(ptr(obj),ptr(type))
+}
+
+function GetTypeFromHandle(obj){
+    var f_GetTypeFromHandle = new NativeFunction(find_method('mscorlib','Type','GetTypeFromHandle',1),'pointer',['pointer','int'])
+    return f_GetTypeFromHandle(ptr(obj),0)
 }
 
 function showGameObject(gameObj){
