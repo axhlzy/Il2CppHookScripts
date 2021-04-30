@@ -1,9 +1,9 @@
 /**
- * @Author lzy <axhlzy@live.cn>
- * @HomePage https://github.com/axhlzy
+ * @Author      lzy <axhlzy@live.cn>
+ * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime 2021/04/28 13:58
- * @Des frida hook u3d functions scrpt
+ * @UpdateTime  2021/04/30 19:00
+ * @Des         frida hook u3d functions script
  */
 
 const soName = "libil2cpp.so"
@@ -16,6 +16,14 @@ var il2cpp_get_corlib,il2cpp_domain_get,il2cpp_domain_get_assemblies,il2cpp_asse
     il2cpp_class_get_methods,il2cpp_class_from_type,il2cpp_class_get_type,il2cpp_class_from_system_type,il2cpp_class_from_name,il2cpp_class_get_method_from_name,
     il2cpp_string_new,il2cpp_type_get_name,il2cpp_type_get_class_or_element_class
 
+/**
+ * 这里统一使用 f_xxx 声明函数,使用 p_xxx 声明函数地址
+ */
+var f_getName,f_getLayer,f_getTransform,f_getParent,f_getChildCount,f_getChild,f_get_pointerEnter
+var p_getName,p_getLayer,p_getTransform,p_getParent,p_getChildCount,p_getChild,p_get_pointerEnter
+
+//格式化展示使用到
+var lastTime = 0
 //不要LOG的时候值为false，需要时候true
 var LogFlag = true
 //count_method_times 数组用于记录 breakPoints 中方法出现的次数,index是基于临时变量 t_arrayAddr，而不是 arrayAddr
@@ -167,12 +175,12 @@ function Hook_dlopen_init() {
 
 function initImages(){
     LogFlag = false 
-    initFunctions()
+    initExportFunctions()
     list_Images()
+    initU3DFunctions()
     LogFlag = true
     
-
-    function initFunctions(){
+    function initExportFunctions(){
         //const Il2CppImage* il2cpp_get_corlib()
         il2cpp_get_corlib                       = new NativeFunction(Module.findExportByName(soName,"il2cpp_get_corlib"),'pointer',[])
         //Il2CppDomain* il2cpp_domain_get()
@@ -206,6 +214,18 @@ function initImages(){
         il2cpp_type_get_name                    = new NativeFunction(Module.findExportByName(soName,"il2cpp_type_get_name"),'pointer',["pointer"])
         //Il2CppClass* il2cpp_type_get_class_or_element_class(const Il2CppType *type)
         il2cpp_type_get_class_or_element_class  = new NativeFunction(Module.findExportByName(soName,"il2cpp_type_get_class_or_element_class"),'pointer',["pointer"])
+    }
+    
+    //提前初始化一些常用的就是
+    function initU3DFunctions(){
+        f_getName           = new NativeFunction(p_getName          = find_method("UnityEngine.CoreModule","Object","GetName",1),'pointer',['pointer'])
+        f_getLayer          = new NativeFunction(f_getLayer         = find_method("UnityEngine.CoreModule","GameObject","get_layer",0),'int',['pointer'])
+        f_getTransform      = new NativeFunction(f_getTransform     = find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
+        f_getParent         = new NativeFunction(f_getParent        = find_method("UnityEngine.CoreModule","Transform","GetParent",0),'pointer',['pointer'])
+        f_getChildCount     = new NativeFunction(f_getChildCount    = find_method("UnityEngine.CoreModule","Transform","get_childCount",0),'int',['pointer'])
+        f_getChild          = new NativeFunction(f_getChild         = find_method("UnityEngine.CoreModule","Transform","GetChild",1),'pointer',['pointer','int'])
+        f_get_pointerEnter  = new NativeFunction(f_get_pointerEnter = find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
+        // var f_getTag         = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_tag",0,true),'pointer',['pointer'])
     }
 }
 
@@ -316,7 +336,7 @@ function C(ImgOrPtr){
         if (ImgOrPtr != undefined && Number(arr_img_addr[index]) == Number(ImgOrPtr)) return name
         if (ImgOrPtr != undefined && name.indexOf(ImgOrPtr)!=-1) return name
         // return name
-    }).forEach(function(name,index){
+    }).forEach(function(name){
         var logstr = "------------ "+name+" ------------"
         var logstrSub = ""
         LOG(logstr,LogColor.C33)
@@ -506,6 +526,7 @@ function find_method(imageName,className,functionName,argsCount,isRealAddr){
     if (klass == 0 ) return ptr(0)
     var method = il2cpp_class_get_method_from_name(klass, allcStr(functionName), argsCount)
     if (method == 0) return ptr(0)
+    if (arguments[5] !=undefined) return method
     if (isRealAddr) return isRealAddr ? method.readPointer():method.readPointer().sub(soAddr)
 
     var parameters_count = getMethodParametersCount(method)
@@ -834,8 +855,8 @@ function SeeTypeToString(obj,b){
  * 自定义参数解析模板
  * 将mPtr指向的位置以 strType 类型解析并返回 String 
  * 拓展解析一些常用的类，用b断某个方法的时候就可以很方便的打印出参数
- * @param {String} strType  它是啥类型的
- * @param {Number} mPtr     它的内存指针
+ * @param {String}  strType  类型
+ * @param {Pointer} mPtr     内存指针
  * @returns {String}
  */
 function FuckKnownType(strType,mPtr){
@@ -1013,6 +1034,10 @@ function getMethodName(method){
     return ptr(method).add(p_size*2).readPointer().readCString()
 }
 
+function getImgName(img){
+    return ptr(img).add(p_size*1).readPointer().readCString()
+}
+
 function getMethodParametersCount(method){
     return ptr(method).add(p_size*8+4+2+2+2).readU8()
 }
@@ -1057,22 +1082,63 @@ function setFunctionValue(mPtr,value,index){
         },
         onLeave:function(ret){
             if (index == undefined) ret.replace(ptr(value))
-            LOG("\nCalled function at "+mPtr +" Changed",LogColor.C93)
+            LOG("\nCalled function at "+mPtr +" ---> "+mPtr.sub(soAddr)+" Changed RET",LogColor.C93)
         }
     })
 }
 
- /**
+/**
  * 方便对 m(cls) 列出的 mathod 进行调用
  * @param {Pointer} mPtr 
  * @returns 
  */
-  function callFunction(mPtr){
+ function callFunction(mPtr){
     if (mPtr == undefined || mPtr == null) return 
     for(var i = 1;i <= (arguments.length < 5 ? 5 : arguments.length) - 1 ; i++) 
         arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))
     return new NativeFunction(checkPointer(mPtr),'pointer',['pointer','pointer','pointer','pointer'])
         (arguments[1],arguments[2],arguments[3],arguments[4])
+}
+
+function breakWithArgs(mPtr,argCount){
+    mPtr = checkPointer(mPtr)
+    if (argCount ==undefined ) argCount = 1
+    Interceptor.attach(mPtr,{
+        onEnter:function(args){
+            LOG("\nCalled from 0x"+String(mPtr).toString(16)+" ---> 0x"+String(mPtr.sub(soAddr)).toString(16),LogColor.C36)
+            switch(argCount){
+                case 1: LOG(args[0]); break
+                case 2: LOG(args[0]+"\t"+args[1],LogColor.C36); break
+                case 3: LOG(args[0]+"\t"+args[1]+"\t"+args[2],LogColor.C36); break
+                case 4: LOG(args[0]+"\t"+args[1]+"\t"+args[2]+"\t"+args[3],LogColor.C36); break
+            }
+        },
+        onLeave:function(ret){
+            LOG("End Function return " + ret,LogColor.C36)
+        }
+    })
+}
+
+function breakInline(mPtr){
+    mPtr = checkPointer(mPtr)
+    Interceptor.attach(mPtr,{
+        onEnter:function(args){
+            if (Process.arch == "arm64"){
+                var x0 = this.context.x0
+                var x1 = this.context.x1
+                var x2 = this.context.x2
+                var x3 = this.context.x3
+                LOG("\nCalled function at "+mPtr+"\n"+x0+"\t"+x1+"\t"+x2+"\t"+x3,LogColor.C36)
+            } else if (Process.arch == "arm"){
+                var r0 = this.context.r0
+                var r1 = this.context.r1
+                var r2 = this.context.r2
+                var r3 = this.context.r3
+                LOG("\nCalled function at "+mPtr+"\n"+r0+"\t"+r1+"\t"+r2+"\t"+r3,LogColor.C36)
+            }
+        },
+        onLeave:function(ret){}
+    })
 }
 
 /**
@@ -1118,51 +1184,32 @@ function setFunctionValue(mPtr,value,index){
     LOG("\n")
 }
 
-function InlineBp(mPtr){
-    mPtr = checkPointer(mPtr)
-    Interceptor.attach(mPtr,{
-        onEnter:function(args){
-            if (Process.arch == "arm64"){
-                var x0 = this.context.x0
-                var x1 = this.context.x1
-                var x2 = this.context.x2
-                var x3 = this.context.x3
-                LOG("\nCalled function at "+mPtr+"\n"+x0+"\t"+x1+"\t"+x2+"\t"+x3,LogColor.C36)
-            } else if (Process.arch == "arm"){
-                var r0 = this.context.r0
-                var r1 = this.context.r1
-                var r2 = this.context.r2
-                var r3 = this.context.r3
-                LOG("\nCalled function at "+mPtr+"\n"+r0+"\t"+r1+"\t"+r2+"\t"+r3,LogColor.C36)
-            }
-        },
-        onLeave:function(ret){}
-    })
-}
-
+/**
+ * 通过 methodinfo 找到当前方法的 class 中的所有方法
+ * @param {Pointer} methodInfo 
+ * @returns 
+ */
 function listClsFromMethodInfo(methodInfo) {
     if (methodInfo == null || methodInfo == undefined) return
     var Pcls = ptr(methodInfo).add(p_size*3).readPointer()
     if (Pcls != null) m(Pcls)
     showMethodInfo(methodInfo)
-
-    
 }
+
 function showMethodInfo(methodInfo) {
-    var methodName = ptr(methodInfo).add(p_size*2).readPointer().readCString()
+
+    var methodName = getMethodName(methodInfo)
     var methodPointer = ptr(methodInfo).add(p_size*0).readPointer()
     var methodPointerR = methodPointer.sub(soAddr)
     var Il2CppClass = ptr(methodInfo).add(p_size*3).readPointer()
-    var Il2CppImage = Il2CppClass.readPointer()
-    var clsName = ptr(Il2CppClass).add(p_size*2).readPointer().readCString()
+    var clsName = getClassName(Il2CppClass)
     var clsNamespaze = ptr(Il2CppClass).add(p_size*3).readPointer().readCString()
-    var imgName = ptr(Il2CppImage).add(p_size*1).readPointer().readCString()
-    var Il2CppImage = ptr(Il2CppImage)
+    var Il2CppImage = Il2CppClass.readPointer()
+    var imgName = getImgName(Il2CppImage)
     var Il2CppAssembly = ptr(Il2CppImage).add(p_size*2)
 
     LOG("\nCurrent Function "+ methodName+"\t0x"+Number(methodInfo).toString(16) + " ---> " +methodPointer + " ---> " +methodPointerR+"\n",LogColor.C96)
-    LOG(methodName+" ---> "+clsName+"("+Il2CppClass+") ---> "+clsNamespaze+" ---> "+imgName+" ---> Il2CppImage/Il2CppAssembly("+Il2CppImage+"/"+Il2CppAssembly+")\n",LogColor.C96)
-
+    LOG(methodName+" ---> "+clsName+"("+Il2CppClass+") ---> "+(String(clsNamespaze).length==0?" - ":clsNamespaze)+" ---> "+imgName+"("+Il2CppImage+") ---> Il2CppAssembly("+Il2CppAssembly+")\n",LogColor.C96)
 }
 /**
  * 获取Unity的一些基本信息
@@ -1173,7 +1220,7 @@ function getUnityInfo(){
 
     Application()
     SystemInfo()
-    Time()
+    // Time()
 
     function Time(){
 
@@ -1487,7 +1534,7 @@ function getApkInfo(){
 
         var labelRes = appInfo.labelRes.value
         var strName = context.getResources().getString(labelRes)
-        LOG("[*]AppName\t\t"+strName + " (UID:"+appInfo.uid.value + ")\t ID:"+appInfo.labelRes.value,LogColor.C36)
+        LOG("[*]AppName\t\t"+strName + " (UID:"+appInfo.uid.value + ")\t ID:0x"+(appInfo.labelRes.value).toString(16),LogColor.C36)
 
         var str_pkgName = context.getPackageName()
         LOG("\n[*]PkgName\t\t"+str_pkgName,LogColor.C36)
@@ -1850,7 +1897,7 @@ function SetLocalRotation(mTransform,x,y,z,w){
  * @param {Pointer}  
  */
  function getObjName(gameObj){
-    return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1,true),'pointer',['pointer'])(ptr(gameObj)))
+    return readU16(f_getName(ptr(gameObj)))
 }
 
 /**
@@ -1891,14 +1938,87 @@ function GetTypeFromHandle(obj){
     return f_GetTypeFromHandle(ptr(obj),0)
 }
 
+function HookComponent(){
+
+    HookAddComponent()
+
+    function HookAddComponent(){
+        Interceptor.attach(find_method('UnityEngine.CoreModule','GameObject','AddComponent',1),{
+            onEnter:function(args){
+                this.arg0 = args[0]
+                this.arg1 = args[1]
+            },
+            onLeave:function(ret){
+                newLine()
+                LOG(" [*] AddComponent ---> G:"+this.arg0 + " T:"+f_getTransform(ptr(this.arg0)) +"("+getObjName(this.arg0)+")"+
+                    "\t\t\t("+this.arg1+")"+FuckKnownType('Type',this.arg1),LogColor.C36)
+            }
+        })
+    }
+
+    function HookGetComponent(){
+        Interceptor.attach(find_method('UnityEngine.CoreModule','GameObject','GetComponent',1),{
+            onEnter:function(args){
+                this.arg0 = args[0]
+                this.arg1 = args[1]
+            },
+            onLeave:function(ret){
+                newLine()
+                LOG(" [*] AddComponent ---> G:"+this.arg0 + " T:"+getTransform(ptr(this.arg0)) +"("+getObjName(this.arg0)+")"+
+                    "\t\t\t("+this.arg1+")"+FuckKnownType('Type',this.arg1),LogColor.C36)
+            }
+        })
+    }
+}
+
+//间隔时间大于一秒,就用新的一行展示
+function newLine(){
+    var current = 0
+    Java.perform(()=>{current = Java.use('java.lang.System').currentTimeMillis()})
+    if (current - lastTime > 1000){
+        console.log("\n")
+        lastTime = current
+    }
+}
+
+/**
+ * U3D中的update会被循环一直调用,这里的目的是让函数跑在ui线程里面
+ * B("Update") 拿到函数 update 的 pointer 填入第一个参数
+ * @param {Pointer} UpDatePtr 
+ * @param {Function} Callback 
+ */
+function runOnMain(UpDatePtr,Callback){
+    if (UpDatePtr == undefined || Callback ==undefined) return 
+    Interceptor.attach(checkPointer(UpDatePtr),{
+        onEnter:function(args){
+            if (Callback != undefined && Callback != null){
+                Callback()
+                Callback = null
+            }
+        },
+        onLeave:function(ret){
+        }
+    })
+}
+
+/**
+ * Unity 事件相关的hook,后续在慢慢更新
+ */
+function hookEvents(){
+
+    // 事件构造
+    Interceptor.attach(find_method('UnityEngine.CoreModule','UnityAction','.ctor',2),{
+        onEnter:function(args){
+            LOG(" [*] .ctor ---> "+ptr(args[2])+"\t--->"+ptr(args[2]).sub(soAddr))
+        },
+        onLeave:function(ret){
+        }
+    })
+}
+
 function showGameObject(gameObj){
     
-    var f_getName        = new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1,true),'pointer',['pointer'])
-    var f_getLayer       = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_layer",0,true),'int',['pointer'])
-    var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0,true),'pointer',['pointer'])
-    var f_getParent      = new NativeFunction(find_method("UnityEngine.CoreModule","Transform","GetParent",0,true),'pointer',['pointer'])
-    // var f_getTag         = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_tag",0,true),'pointer',['pointer'])
-    
+    if (gameObj == undefined) return
     gameObj = ptr(gameObj)
     LOG("--------- GameObject ---------",LogColor.C33)
     LOG("gameObj\t\t--->\t"+gameObj,LogColor.C36)
@@ -2037,14 +2157,6 @@ function showEventData(eventData){
     // LOG(s.add(p_size*3).readUtf16String())
 }
 
-function CallStatic(mPtr,arg0,arg1,arg2,arg3){
-    arg0 = arg0 == undefined?ptr(0):arg0
-    arg1 = arg1 == undefined?ptr(0):arg1
-    arg2 = arg2 == undefined?ptr(0):arg2
-    arg3 = arg3 == undefined?ptr(0):arg3
-    new NativeFunction(mPtr,'pointer',['pointer','pointer','pointer','pointer'])(arg0,arg1,arg2,arg3)
-}
-
 /**
  * -------------------------------------------拓展方法-------------------------------------------------
  */
@@ -2084,8 +2196,7 @@ function getRealAddr(){
 }
 
 function GotoScene(str){
-    CallStatic(find_method("UnityEngine.CoreModule","SceneManager","LoadScene",2)
-        ,il2cpp_string_new(allcStr(str)))
+    callFunction(find_method("UnityEngine.CoreModule","SceneManager","LoadScene",2),il2cpp_string_new(allcStr(str)))
 } 
 
 function setActive(gameObj,visible){
@@ -2124,16 +2235,11 @@ function HookOnPointerClick(){
     var pointerEventData = null
     Interceptor.attach(find_method("UnityEngine.UI","Button","OnPointerClick",1),{
         onEnter:function(args){
-
             LOG("\n"+getLine(38),LogColor.YELLOW)
             LOG("public void OnPointerClick( "+(args[1])+" );",LogColor.C36)
             pointerEventData = args[1]
             if (pointerEventData == 0) return 
-            
-            var f_get_pointerEnter = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
             var gameObj = f_get_pointerEnter(pointerEventData)
-            
-            var f_getTransform   = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
             var m_transform = f_getTransform(gameObj)
 
             showGameObject(gameObj)
@@ -2506,11 +2612,6 @@ function PrintHierarchy(mPtr,level,inCall){
     if (level ==undefined) level = 10
     var transform = ptr(mPtr)
     
-    var f_getName           = new NativeFunction(find_method("UnityEngine.CoreModule","Object","GetName",1),'pointer',['pointer'])
-    var f_getParent         = new NativeFunction(find_method("UnityEngine.CoreModule","Transform","GetParent",0),'pointer',['pointer'])
-    var f_getChildCount     = new NativeFunction(find_method("UnityEngine.CoreModule","Transform","get_childCount",0),'int',['pointer'])
-    var f_getChild          = new NativeFunction(find_method("UnityEngine.CoreModule","Transform","GetChild",1),'pointer',['pointer','int'])
-
     if (level==10)LOG(getLine(73)+"\n",LogColor.C33)
     //当前level作为第一级
     var baseLevel = getLevel(transform)
