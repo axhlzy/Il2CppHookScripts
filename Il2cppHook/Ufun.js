@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/04/30 19:00
+ * @UpdateTime  2021/05/08 19:04
  * @Des         frida hook u3d functions script
  */
 
@@ -259,7 +259,7 @@ function n(mPtr){
     //原函数的引用也可以再replace中调用
     // var srcFunc = new NativeFunction(mPtr,'void',['pointer','pointer','pointer','pointer'])
     Interceptor.replace(mPtr,new NativeCallback(function(arg0,arg1,arg2,arg3){
-        LOG("\nCalled NOP function ---> "+mPtr+" ("+src_ptr+")",LogColor.YELLOW)
+        LOG("\nCalled NOP function ---> "+mPtr+" (0x"+String(src_ptr).toString(16)+")",LogColor.YELLOW)
         // srcFunc(arg0,arg1,arg2,arg3)
     },'void',['pointer','pointer','pointer','pointer']))
 }
@@ -1147,9 +1147,7 @@ function breakInline(mPtr){
  */
  function printInfo(){
 
-    LOG("\n")
-
-    LOG('\t// find_method("UnityEngine.UI","Button","OnPointerClick",1,false)',LogColor.C36)
+    LOG('\n\t// find_method("UnityEngine.UI","Button","OnPointerClick",1,false)',LogColor.C36)
     LOG("\tunsigned long p_OnPointerClick      = base + "+find_method("UnityEngine.UI","Button","OnPointerClick",1).sub(soAddr)+";",LogColor.C36)
     LOG('\t// find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0,false)',LogColor.C36)
     LOG("\tunsigned long p_get_pointerEnter    = base + "+find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0).sub(soAddr)+";",LogColor.C36)
@@ -1167,19 +1165,30 @@ function breakInline(mPtr){
     LOG("\tunsigned long p_getChild            = base + "+find_method("UnityEngine.CoreModule","Transform","GetChild",1).sub(soAddr)+";",LogColor.C36)
     LOG('\t// find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1,false)',LogColor.C36)
     LOG("\tunsigned long p_setlocalScale       = base + "+find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1).sub(soAddr)+";",LogColor.C36)
+    LOG('\t// find_method("UnityEngine.CoreModule","Component","get_gameObject",0,false)',LogColor.C36)
+    LOG("\tunsigned long p_get_gameObject      = base + "+find_method("UnityEngine.CoreModule","Component","get_gameObject",0).sub(soAddr)+";",LogColor.C36)
 
     LOG('\n\t// find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1,false)',LogColor.C96)
-    LOG("\tSetLocalPosition = reinterpret_cast<void *(*)(void *, void *)>(base + "+find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1).sub(soAddr)+");",LogColor.C96)
+    LOG("\tSetLocalPosition \t= reinterpret_cast<void *(*)(void *, void *)>\t\t(base + "+find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1).sub(soAddr)+");",LogColor.C96)
+    LOG('\t// find_method("UnityEngine.UI","Text","set_text",1,false)',LogColor.C96)
+    LOG("\tf_set_text \t\t= reinterpret_cast<void *(*)(void *, MonoString *)>\t(base + "+find_method("UnityEngine.UI",'Text','set_text',1).sub(soAddr)+");",LogColor.C96)
+    LOG('\t// find_method("UnityEngine.UI","Text","get_text",0,false)',LogColor.C96)
+    LOG("\tf_get_text \t\t= reinterpret_cast<MonoString *(*)(void *)>\t\t(base + "+find_method("UnityEngine.UI",'Text','get_text',0).sub(soAddr)+");\n",LogColor.C96)
 
-    LOG("\n")
-    return
+    // return
 
     LOG('\n\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2,false)')
-    LOG("\tunsigned long p_SetInt       = base + "+find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2).sub(soAddr)+";")
+    var SetInt = find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2)
+    LOG("\tunsigned long p_SetInt       = base + "+ (SetInt ==0 ? "0x0" : SetInt.sub(soAddr)) +";")
+    LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","GetInt",2,false)')
+    var GetInt = find_method("UnityEngine.CoreModule","PlayerPrefs","GetInt",2)
+    LOG("\tunsigned long p_GetInt       = base + "+ (GetInt ==0 ? "0x0" : GetInt.sub(soAddr)) +";")
     LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2,false)')
-    LOG("\tunsigned long p_SetFloat     = base + "+find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2).sub(soAddr)+";")
+    var SetFloat = find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2)
+    LOG("\tunsigned long p_SetFloat     = base + "+ (SetFloat ==0 ? "0x0" : SetFloat.sub(soAddr)) +";")
     LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2,false)')
-    LOG("\tunsigned long p_SetString    = base + "+find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2).sub(soAddr)+";")
+    var SetString = find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2)
+    LOG("\tunsigned long p_SetString    = base + "+ (SetString ==0 ? "0x0" : SetString.sub(soAddr)) +";")
 
     LOG("\n")
 }
@@ -1208,7 +1217,7 @@ function showMethodInfo(methodInfo) {
     var imgName = getImgName(Il2CppImage)
     var Il2CppAssembly = ptr(Il2CppImage).add(p_size*2)
 
-    LOG("\nCurrent Function "+ methodName+"\t0x"+Number(methodInfo).toString(16) + " ---> " +methodPointer + " ---> " +methodPointerR+"\n",LogColor.C96)
+    LOG("\nCurrent Function "+ methodName+"\t"+getMethodParametersCount(methodInfo)+"\t0x"+Number(methodInfo).toString(16) + " ---> " +methodPointer + " ---> " +methodPointerR+"\n",LogColor.C96)
     LOG(methodName+" ---> "+clsName+"("+Il2CppClass+") ---> "+(String(clsNamespaze).length==0?" - ":clsNamespaze)+" ---> "+imgName+"("+Il2CppImage+") ---> Il2CppAssembly("+Il2CppAssembly+")\n",LogColor.C96)
 }
 /**
@@ -1981,6 +1990,101 @@ function newLine(){
     }
 }
 
+function Pay(){
+    find_method("Assembly-CSharp","Purchaser","BuyProductID",1,false)
+}
+
+function Text(){
+    
+    HookTrackText()
+    // HookGetSetText()
+
+    function HookTrackText(){
+        /**
+         * 或者使用 find_method('UnityEngine.UI','FontUpdateTracker','TrackText',1,false) 找到 MethodInfo
+         * 再使用 b(...) 自动解析参数
+         */
+
+        var f_set_text = new NativeFunction(find_method("UnityEngine.UI",'Text','set_text',1),'void',['pointer','pointer'])
+        var f_get_text = new NativeFunction(find_method("UnityEngine.UI",'Text','get_text',0),'pointer',['pointer'])
+        var TrackText = find_method('UnityEngine.UI','FontUpdateTracker','TrackText',1)
+        // var UntrackText = find_method('UnityEngine.UI','FontUpdateTracker','UntrackText',1)
+        if (TrackText != 0){
+            Interceptor.attach(TrackText,{
+                onEnter:function(args){
+                    LOG("TrackText : " + args[0] + "\t" +f_get_text(args[0]) +"\t"+ readU16(f_get_text(args[0])))
+                },
+                onLeave:function(ret){}
+            })
+        }
+    }
+
+    function HookGetSetText(){
+
+        hookGet()
+        hookSet()
+    
+        //动态替换文字
+        var arr_src_str = ['Hold To Run','8082','免费获得','+400','暂停','HEADSHOT']
+        var arr_rep_str = ['FuckMusic','-99','','-200²','pause','击中头部']
+        
+        function hookSet(){
+            var addr_set = find_method("UnityEngine.UI",'Text','set_text',1)
+            if (addr_set != 0){
+                Interceptor.attach(addr_set,{
+                    onEnter:function(args){
+                        LOG("\n"+"called set_text("+args[1]+")\n["+ReadLength(args[1])+"]\t"+readU16(args[1]),LogColor.C33)
+                        var newP = strReplace(args[1])
+                        if (newP != 0) args[1] = newP
+                    },
+                    onLeave:function(ret){}
+                })
+            }
+        }
+    
+        function hookGet(){
+            var addr_get = find_method("UnityEngine.UI",'Text','get_text',0)
+            if (addr_get != 0){
+                Interceptor.attach(addr_get,{
+                    onEnter:function(args){},
+                    onLeave:function(ret){
+                        LOG("\n"+"called "+ret+" = get_text()\n["+ReadLength(ret)+"]\t"+readU16(ret),LogColor.C32)
+                        var newP = strReplace(ret)
+                        if (newP != 0) ret.replace(newP)
+                    }
+                })
+            }
+        }
+    
+        var memcmp = Module.findExportByName("libc.so","memcmp")
+        if (memcmp!=0) memcmp = new NativeFunction(memcmp,'pointer',['pointer','pointer','int'])
+        function strReplace(mPtr){
+            if (mPtr==0 || memcmp==0 ||arr_src_str.length == 0 || arr_rep_str.length != arr_src_str.length ) return ptr(0)
+            for (var i=0;i<arr_src_str.length;i++){
+                if (memcmp(mPtr.add(p_size*2+4),allcStr(arr_src_str[i],"").add(p_size*2+4),ReadLength(mPtr)*2)==0) return allcStr(arr_rep_str[i],"")
+            }
+            return ptr(0)
+        }
+    
+        function ReadLength(mPtr){
+            return ptr(mPtr).add(Process.pointerSize*2).readPointer().toInt32()
+        }
+    
+        //called : 0x792adc (0xaaf1d4d0)  --->    public Boolean get_hasBorder ()
+        //called : 0x787e10 (0xb61477b0)  --->    public Int32 get_fontSize ()
+        //called : 0x787e80 (0xb6147a18)  --->    public Boolean get_richText ()
+        //called : 0x787eb0 (0xb6147b20)  --->    public Single get_lineSpacing ()
+        //called : 0x787e20 (0xb6147808)  --->    public FontStyle get_fontStyle ()
+    }
+
+}
+
+
+
+function Update(){
+    find_method("UnityEngine.UI","CanvasScaler","Update",0,false)
+}
+
 /**
  * U3D中的update会被循环一直调用,这里的目的是让函数跑在ui线程里面
  * B("Update") 拿到函数 update 的 pointer 填入第一个参数
@@ -1988,7 +2092,7 @@ function newLine(){
  * @param {Function} Callback 
  */
 function runOnMain(UpDatePtr,Callback){
-    if (UpDatePtr == undefined || Callback ==undefined) return 
+    if (Callback ==undefined || UpDatePtr == undefined) return
     Interceptor.attach(checkPointer(UpDatePtr),{
         onEnter:function(args){
             if (Callback != undefined && Callback != null){
@@ -2540,64 +2644,6 @@ function HookLoadScene(){
     })
 }
 
-function HookGetSetText(){
-
-    hookGet()
-    hookSet()
-
-    //动态替换文字
-    var arr_src_str = ['Hold To Run','8082','免费获得','+400','暂停','HEADSHOT']
-    var arr_rep_str = ['FuckMusic','-99','','-200²','pause','击中头部']
-    
-    function hookSet(){
-        var addr_set = find_method("UnityEngine.UI",'Text','set_text',1)
-        if (addr_set != 0){
-            Interceptor.attach(addr_set,{
-                onEnter:function(args){
-                    LOG("\n"+"called set_text("+args[1]+")\n["+ReadLength(args[1])+"]\t"+readU16(args[1]),LogColor.C33)
-                    var newP = strReplace(args[1])
-                    if (newP != 0) args[1] = newP
-                },
-                onLeave:function(ret){}
-            })
-        }
-    }
-
-    function hookGet(){
-        var addr_get = find_method("UnityEngine.UI",'Text','get_text',0)
-        if (addr_get != 0){
-            Interceptor.attach(addr_get,{
-                onEnter:function(args){},
-                onLeave:function(ret){
-                    LOG("\n"+"called "+ret+" = get_text()\n["+ReadLength(ret)+"]\t"+readU16(ret),LogColor.C32)
-                    var newP = strReplace(ret)
-                    if (newP != 0) ret.replace(newP)
-                }
-            })
-        }
-    }
-
-    var memcmp = Module.findExportByName("libc.so","memcmp")
-    if (memcmp!=0) memcmp = new NativeFunction(memcmp,'pointer',['pointer','pointer','int'])
-    function strReplace(mPtr){
-        if (mPtr==0 || memcmp==0 ||arr_src_str.length == 0 || arr_rep_str.length != arr_src_str.length ) return ptr(0)
-        for (var i=0;i<arr_src_str.length;i++){
-            if (memcmp(mPtr.add(p_size*2+4),allcStr(arr_src_str[i],"").add(p_size*2+4),ReadLength(mPtr)*2)==0) return allcStr(arr_rep_str[i],"")
-        }
-        return ptr(0)
-    }
-
-    function ReadLength(mPtr){
-        return ptr(mPtr).add(Process.pointerSize*2).readPointer().toInt32()
-    }
-
-    //called : 0x792adc (0xaaf1d4d0)  --->    public Boolean get_hasBorder ()
-    //called : 0x787e10 (0xb61477b0)  --->    public Int32 get_fontSize ()
-    //called : 0x787e80 (0xb6147a18)  --->    public Boolean get_richText ()
-    //called : 0x787eb0 (0xb6147b20)  --->    public Single get_lineSpacing ()
-    //called : 0x787e20 (0xb6147808)  --->    public FontStyle get_fontStyle ()
-}
-
 /**
  * 打印transform往下的层级
  * ps:不建议打印底层的层级，展现一大篇出来毫无重点
@@ -2724,3 +2770,5 @@ function findTransform(mPtr,level,filter){
     }
     return retStr
 }
+
+//todo 对汇编解析,查看当前位置往下多少条是跳转指令,用来判断是否可用inlinehook(懒得每次都打开ida来查看)
