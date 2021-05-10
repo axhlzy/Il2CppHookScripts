@@ -2,9 +2,10 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/05/08 19:04
+ * @UpdateTime  2021/05/10 19:12
  * @Des         frida hook u3d functions script
  */
+
 
 const soName = "libil2cpp.so"
 const p_size = Process.pointerSize
@@ -1169,7 +1170,7 @@ function breakInline(mPtr){
     LOG("\tunsigned long p_get_gameObject      = base + "+find_method("UnityEngine.CoreModule","Component","get_gameObject",0).sub(soAddr)+";",LogColor.C36)
 
     LOG('\n\t// find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1,false)',LogColor.C96)
-    LOG("\tSetLocalPosition \t= reinterpret_cast<void *(*)(void *, void *)>\t\t(base + "+find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1).sub(soAddr)+");",LogColor.C96)
+    LOG("\tf_setLocalPosition \t= reinterpret_cast<void *(*)(void *, void *)>\t\t(base + "+find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1).sub(soAddr)+");",LogColor.C96)
     LOG('\t// find_method("UnityEngine.UI","Text","set_text",1,false)',LogColor.C96)
     LOG("\tf_set_text \t\t= reinterpret_cast<void *(*)(void *, MonoString *)>\t(base + "+find_method("UnityEngine.UI",'Text','set_text',1).sub(soAddr)+");",LogColor.C96)
     LOG('\t// find_method("UnityEngine.UI","Text","get_text",0,false)',LogColor.C96)
@@ -1687,6 +1688,7 @@ function checkPointer(mPtr) {
  * @param {Int} sign 1:正向 2:反向(小端存储，同IDA)   不填写着以当前pointer为中心位置打印信息
  */
 function printCtx(pointer,range,sign){
+    if (Process.arch != "arm") return
     if (sign != undefined){
         for (var i = 0;i<range;i++){
             printLOG(pointer)
@@ -1706,7 +1708,7 @@ function printCtx(pointer,range,sign){
         var cur_str = (cur_tmp.length == 10 ) ? cur_value : ""
         if (sign == 1){
             cur_str = cur_tmp[2]+cur_tmp[3] +' '+cur_tmp[4]+cur_tmp[5] +' '+cur_tmp[6]+cur_tmp[7] +' '+cur_tmp[8]+cur_tmp[9]
-        }else{
+        }else if (sign == 2){
             cur_str = cur_tmp[8]+cur_tmp[9] +' '+cur_tmp[6]+cur_tmp[7] +' '+cur_tmp[4]+cur_tmp[5] +' '+cur_tmp[2]+cur_tmp[3]
         }
         LOG(cur_p+"\t"+cur_str+"\t"+Instruction.parse(cur_p),i==0?LogColor.RED:LogColor.WHITE)
@@ -2096,7 +2098,11 @@ function runOnMain(UpDatePtr,Callback){
     Interceptor.attach(checkPointer(UpDatePtr),{
         onEnter:function(args){
             if (Callback != undefined && Callback != null){
-                Callback()
+                try{
+                    Callback()
+                }catch(e){
+                    LOG(e,LogColor.RED)
+                }
                 Callback = null
             }
         },
@@ -2771,4 +2777,27 @@ function findTransform(mPtr,level,filter){
     return retStr
 }
 
-//todo 对汇编解析,查看当前位置往下多少条是跳转指令,用来判断是否可用inlinehook(懒得每次都打开ida来查看)
+function canUseInlineHook(mPtr){
+    return getNextB(mPtr) > 3
+}
+
+function getNextB(mPtr){
+    mPtr = ptr(mPtr)
+    var count = 0
+    do {
+        var str = Instruction.parse(mPtr).mnemonic
+        mPtr = mPtr.add(p_size)
+        count++
+    } while (str != "b" && str != "bl" && str != "blx" && str != "ret")
+    return count
+}
+
+function recommandInlineHook(mPtr){
+    mPtr = ptr(mPtr)
+    var index = getNextB(mPtr)
+    if (index > 3){
+        return mPtr
+    }else{
+        return ptr(Instruction.parse(mPtr.add(p_size*(index-1))).opStr.split("#")[1]).sub(soAddr)
+    }
+}
