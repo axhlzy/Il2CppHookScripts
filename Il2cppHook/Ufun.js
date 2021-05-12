@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/05/10 19:12
+ * @UpdateTime  2021/05/12 17:47
  * @Des         frida hook u3d functions script
  */
 
@@ -115,8 +115,19 @@ var arrayName =
  * --------------------------------------------------------------------------------------------
  */
 
- //启动的时机，去Hook_dlopen_init中的todo做一些比较早期的处理
-setImmediate(Hook_dlopen_init)
+// 有些机型对dlopen的hook可能导致游戏崩溃
+var taskId = setInterval(() => {
+    // return
+    console.log("\nWaitting load libil2cpp ...... ")
+    if (Module.findBaseAddress(soName) != null){
+        LOG("Found il2cpp at "+Module.findBaseAddress(soName)+" And Enter initImages")
+        initImages()
+        clearInterval(taskId)
+    }
+}, 1000)
+
+//启动的时机，去Hook_dlopen_init中的todo做一些比较早期的处理
+// setImmediate(Hook_dlopen_init)
 function Hook_dlopen_init() {
 
     soAddr = Module.findBaseAddress(soName)
@@ -1106,7 +1117,7 @@ function breakWithArgs(mPtr,argCount){
     if (argCount ==undefined ) argCount = 1
     Interceptor.attach(mPtr,{
         onEnter:function(args){
-            LOG("\nCalled from 0x"+String(mPtr).toString(16)+" ---> 0x"+String(mPtr.sub(soAddr)).toString(16),LogColor.C36)
+            LOG("\nCalled from "+String(mPtr).toString(16)+" ---> 0x"+String(mPtr.sub(soAddr)).toString(16),LogColor.C36)
             switch(argCount){
                 case 1: LOG(args[0]); break
                 case 2: LOG(args[0]+"\t"+args[1],LogColor.C36); break
@@ -2729,6 +2740,7 @@ function PrintHierarchy(mPtr,level,inCall){
                     if (trasform_Dropdown != null) SetLocalScale(trasform_Dropdown,0,0,0)
                 }
             }
+            
         },
         onLeave:function(retval){}
  */
@@ -2777,27 +2789,72 @@ function findTransform(mPtr,level,filter){
     return retStr
 }
 
-function canUseInlineHook(mPtr){
-    return getNextB(mPtr) > 3
-}
+/**
+ * 
+ * @param {Pointer} mPtr 
+ * @param {int} Type 0 true/false | 1 int | 2 Pointer 
+ * @returns 
+ */
+function canUseInlineHook(mPtr,Type){
+    
+    if (Type == undefined) Type = 0
 
-function getNextB(mPtr){
-    mPtr = ptr(mPtr)
-    var count = 0
-    do {
-        var str = Instruction.parse(mPtr).mnemonic
-        mPtr = mPtr.add(p_size)
-        count++
-    } while (str != "b" && str != "bl" && str != "blx" && str != "ret")
-    return count
-}
+    if (Type == 0) return getNextB(mPtr) > 3
+    if (Type == 1) return getNextB(mPtr)
+    if (Type == 2) return recommandInlineHook(mPtr)
 
-function recommandInlineHook(mPtr){
-    mPtr = ptr(mPtr)
-    var index = getNextB(mPtr)
-    if (index > 3){
-        return mPtr
-    }else{
-        return ptr(Instruction.parse(mPtr.add(p_size*(index-1))).opStr.split("#")[1]).sub(soAddr)
+    function getNextB(mPtr){
+        mPtr = ptr(mPtr)
+        var count = 0
+        do {
+            var str = Instruction.parse(mPtr).mnemonic
+            mPtr = mPtr.add(p_size)
+            count++
+        } while (str != "b" && str != "bl" && str != "blx" && str != "ret")
+        return count
     }
+
+    function recommandInlineHook(mPtr){
+        mPtr = ptr(mPtr)
+        var index = getNextB(mPtr)
+        if (index > 3){
+            return mPtr
+        }else{
+            return ptr(Instruction.parse(mPtr.add(p_size*(index-1))).opStr.split("#")[1]).sub(soAddr)
+        }
+    }
+}
+
+//有些时候遇到的游戏数据的保存会出现问题,只能整体的保存类(其实用处不大,涉及到存储的是指针就用不了了)
+class MemoryUtil {
+
+    /**
+     * 指定mPtr开始,保存长度为size的大小到本地文件
+     */
+    static Save(mPtr,size,fileName){
+        var soAddr = Module.findBaseAddress(soName) 
+        var path = new NativeFunction(soAddr.add(0xadf13c),'pointer',[])().add(p_size*3).readUtf16String()+"/"+ (fileName==undefined?"lzy.dat":fileName)
+        var fopen = new NativeFunction(Module.findExportByName(null,'fopen'),'pointer',['pointer','pointer'])
+        var fwrite = new NativeFunction(Module.findExportByName(null,'fwrite'),'pointer',['pointer','int','int','pointer'])
+        var fclose = new NativeFunction(Module.findExportByName(null,'fclose'),'int',['pointer'])
+        var stream = fopen(allcStr(path),allcStr("w"))
+        Memory.protect(ptr(mPtr),size,'rwx')
+        fwrite(ptr(mPtr),1,size,ptr(stream))
+        fclose(stream)
+    }
+    /**
+     * 从指定文件,加载长度为size的大小到mPtr
+     */
+    static Load(mPtr,size,fileName){
+        var soAddr = Module.findBaseAddress(soName)
+        var path = new NativeFunction(soAddr.add(0xadf13c),'pointer',[])().add(p_size*3).readUtf16String()+"/"+ (fileName==undefined?"lzy.dat":fileName)
+        var fopen = new NativeFunction(Module.findExportByName(null,'fopen'),'pointer',['pointer','pointer'])
+        var fread = new NativeFunction(Module.findExportByName(null,'fread'),'pointer',['pointer','int','int','pointer'])
+        var fclose = new NativeFunction(Module.findExportByName(null,'fclose'),'int',['pointer'])
+        var stream = fopen(allcStr(path),allcStr("r"))
+        Memory.protect(ptr(mPtr),size,'rwx')
+        fread(ptr(mPtr),1,size,ptr(stream))
+        fclose(stream)
+    }
+    
 }
