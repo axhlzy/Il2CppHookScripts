@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/05/12 17:47
+ * @UpdateTime  2021/05/27 18:13
  * @Des         frida hook u3d functions script
  */
 
@@ -117,17 +117,17 @@ var arrayName =
 
 // 有些机型对dlopen的hook可能导致游戏崩溃
 var taskId = setInterval(() => {
-    // return
+    return
     console.log("\nWaitting load libil2cpp ...... ")
     if (Module.findBaseAddress(soName) != null){
         LOG("Found il2cpp at "+Module.findBaseAddress(soName)+" And Enter initImages")
-        initImages()
+        Hook_dlopen_init()
         clearInterval(taskId)
     }
 }, 1000)
 
 //启动的时机，去Hook_dlopen_init中的todo做一些比较早期的处理
-// setImmediate(Hook_dlopen_init)
+setImmediate(Hook_dlopen_init)
 function Hook_dlopen_init() {
 
     soAddr = Module.findBaseAddress(soName)
@@ -231,12 +231,12 @@ function initImages(){
     //提前初始化一些常用的就是
     function initU3DFunctions(){
         f_getName           = new NativeFunction(p_getName          = find_method("UnityEngine.CoreModule","Object","GetName",1),'pointer',['pointer'])
-        f_getLayer          = new NativeFunction(f_getLayer         = find_method("UnityEngine.CoreModule","GameObject","get_layer",0),'int',['pointer'])
-        f_getTransform      = new NativeFunction(f_getTransform     = find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
-        f_getParent         = new NativeFunction(f_getParent        = find_method("UnityEngine.CoreModule","Transform","GetParent",0),'pointer',['pointer'])
-        f_getChildCount     = new NativeFunction(f_getChildCount    = find_method("UnityEngine.CoreModule","Transform","get_childCount",0),'int',['pointer'])
-        f_getChild          = new NativeFunction(f_getChild         = find_method("UnityEngine.CoreModule","Transform","GetChild",1),'pointer',['pointer','int'])
-        f_get_pointerEnter  = new NativeFunction(f_get_pointerEnter = find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
+        f_getLayer          = new NativeFunction(p_getLayer         = find_method("UnityEngine.CoreModule","GameObject","get_layer",0),'int',['pointer'])
+        f_getTransform      = new NativeFunction(p_getTransform     = find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
+        f_getParent         = new NativeFunction(p_getParent        = find_method("UnityEngine.CoreModule","Transform","GetParent",0),'pointer',['pointer'])
+        f_getChildCount     = new NativeFunction(p_getChildCount    = find_method("UnityEngine.CoreModule","Transform","get_childCount",0),'int',['pointer'])
+        f_getChild          = new NativeFunction(p_getChild         = find_method("UnityEngine.CoreModule","Transform","GetChild",1),'pointer',['pointer','int'])
+        f_get_pointerEnter  = new NativeFunction(p_get_pointerEnter = find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
         // var f_getTag         = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_tag",0,true),'pointer',['pointer'])
     }
 }
@@ -927,6 +927,20 @@ function FuckKnownType(strType,mPtr){
     }
 }
 
+function HookSendMessage(){
+    try{
+        var UnityPlayer = Java.use("com.unity3d.player.UnityPlayer")
+        UnityPlayer.UnitySendMessage.implementation = function(str0,str1,str2){
+            console.warn("\n--------------\tCalled UnitySendMessage\t--------------")
+            console.log("UnityPlayer.UnitySendMessage(\x1b[96m'"+str0+"','"+str1+"','"+str2+"'\x1b[0m)")
+            this.UnitySendMessage(str0,str1,str2)
+            PrintStackTrace()
+        }
+    }catch(e){
+    }
+    
+}
+
 function reflash(){
     d()
     arrMethodInfo.splice(0,arrMethodInfo.length)
@@ -1099,6 +1113,13 @@ function setFunctionValue(mPtr,value,index){
     })
 }
 
+function SendMessage(str0,str1,str2){
+    Java.perform(function(){
+        var UnityPlayer = Java.use("com.unity3d.player.UnityPlayer")
+        UnityPlayer.UnitySendMessage(str0,str1,str2)
+    })
+}
+
 /**
  * 方便对 m(cls) 列出的 mathod 进行调用
  * @param {Pointer} mPtr 
@@ -1135,19 +1156,9 @@ function breakInline(mPtr){
     mPtr = checkPointer(mPtr)
     Interceptor.attach(mPtr,{
         onEnter:function(args){
-            if (Process.arch == "arm64"){
-                var x0 = this.context.x0
-                var x1 = this.context.x1
-                var x2 = this.context.x2
-                var x3 = this.context.x3
-                LOG("\nCalled function at "+mPtr+"\n"+x0+"\t"+x1+"\t"+x2+"\t"+x3,LogColor.C36)
-            } else if (Process.arch == "arm"){
-                var r0 = this.context.r0
-                var r1 = this.context.r1
-                var r2 = this.context.r2
-                var r3 = this.context.r3
-                LOG("\nCalled function at "+mPtr+"\n"+r0+"\t"+r1+"\t"+r2+"\t"+r3,LogColor.C36)
-            }
+            LOG("\n---------------------------------------------\n\n"
+            +"Called function at "+mPtr+"\n"
+            + JSON.stringify(this.context),LogColor.C36)
         },
         onLeave:function(ret){}
     })
@@ -1157,28 +1168,28 @@ function breakInline(mPtr){
  * 快速的打印出我们使用inlinehook操作ui需要hook的函数定义,暂时先这么用着
  * (TODO:后续看搞一个inlinehook版本的find_method(),让inlinehook对unity的hook更方便友好)
  */
- function printInfo(){
-
+function printInfo(){
+     
     LOG('\n\t// find_method("UnityEngine.UI","Button","OnPointerClick",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_OnPointerClick      = base + "+find_method("UnityEngine.UI","Button","OnPointerClick",1).sub(soAddr)+";",LogColor.C36)
+    LOG("\tunsigned long p_OnPointerClick      = base + "+canUseInlineHook(find_method("UnityEngine.UI","Button","OnPointerClick",1),3)+";",LogColor.C36)
     LOG('\t// find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0,false)',LogColor.C36)
-    LOG("\tunsigned long p_get_pointerEnter    = base + "+find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0).sub(soAddr)+";",LogColor.C36)
+    LOG("\tunsigned long p_get_pointerEnter    = base + "+canUseInlineHook(find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),3)+";",LogColor.C36)
     LOG('\t// find_method("UnityEngine.CoreModule","GameObject","SetActive",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_SetActive           = base + "+find_method("UnityEngine.CoreModule","GameObject","SetActive",1).sub(soAddr)+";",LogColor.C36)
+    LOG("\tunsigned long p_SetActive           = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","GameObject","SetActive",1),3)+";",LogColor.C36)
     LOG('\t// find_method("UnityEngine.CoreModule","GameObject","get_transform",0,false)',LogColor.C36)
-    LOG("\tunsigned long p_getTransform        = base + "+find_method("UnityEngine.CoreModule","GameObject","get_transform",0).sub(soAddr)+";",LogColor.C36)
+    LOG("\tunsigned long p_getTransform        = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),3)+";",LogColor.C36)
     LOG('\t// find_method("UnityEngine.CoreModule","Object","GetName",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_getName             = base + "+find_method("UnityEngine.CoreModule","Object","GetName",1).sub(soAddr)+";",LogColor.C36)
+    LOG("\tunsigned long p_getName             = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Object","GetName",1),3)+";",LogColor.C36)
     LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetParent",0,false)',LogColor.C36)
-    LOG("\tunsigned long p_getParent           = base + "+find_method("UnityEngine.CoreModule","Transform","GetParent",0).sub(soAddr)+";",LogColor.C36)
+    LOG("\tunsigned long p_getParent           = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","GetParent",0),3)+";",LogColor.C36)
     LOG('\t// find_method("UnityEngine.CoreModule","Transform","get_childCount",0,false)',LogColor.C36)
-    LOG("\tunsigned long p_getChildCount       = base + "+find_method("UnityEngine.CoreModule","Transform","get_childCount",0).sub(soAddr)+";",LogColor.C36)
+    LOG("\tunsigned long p_getChildCount       = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","get_childCount",0),3)+";",LogColor.C36)
     LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetChild",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_getChild            = base + "+find_method("UnityEngine.CoreModule","Transform","GetChild",1).sub(soAddr)+";",LogColor.C36)
+    LOG("\tunsigned long p_getChild            = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","GetChild",1),3)+";",LogColor.C36)
     LOG('\t// find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_setlocalScale       = base + "+find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1).sub(soAddr)+";",LogColor.C36)
+    LOG("\tunsigned long p_setlocalScale       = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1),3)+";",LogColor.C36)
     LOG('\t// find_method("UnityEngine.CoreModule","Component","get_gameObject",0,false)',LogColor.C36)
-    LOG("\tunsigned long p_get_gameObject      = base + "+find_method("UnityEngine.CoreModule","Component","get_gameObject",0).sub(soAddr)+";",LogColor.C36)
+    LOG("\tunsigned long p_get_gameObject      = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Component","get_gameObject",0),3)+";",LogColor.C36)
 
     LOG('\n\t// find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1,false)',LogColor.C96)
     LOG("\tf_setLocalPosition \t= reinterpret_cast<void *(*)(void *, void *)>\t\t(base + "+find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1).sub(soAddr)+");",LogColor.C96)
@@ -1203,6 +1214,25 @@ function breakInline(mPtr){
     LOG("\tunsigned long p_SetString    = base + "+ (SetString ==0 ? "0x0" : SetString.sub(soAddr)) +";")
 
     LOG("\n")
+}
+
+function printExp(){
+    LOG("\til2cpp_get_corlib = (Il2CppImage *(*)()) ( soAddr + "+Module.findExportByName(soName,'il2cpp_get_corlib').sub(soAddr)+");",LogColor.C36)
+    LOG("\til2cpp_domain_get = (Il2CppDomain *(*)()) ( soAddr + "+Module.findExportByName(soName,'il2cpp_domain_get').sub(soAddr)+");",LogColor.C36)
+    LOG("\til2cpp_domain_get_assemblies = (Il2CppAssembly **(*)(const Il2CppDomain *,size_t *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_domain_get_assemblies').sub(soAddr)+");",LogColor.C36)
+    LOG("\til2cpp_assembly_get_image = (Il2CppImage *(*)(const Il2CppAssembly *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_assembly_get_image').sub(soAddr)+");",LogColor.C36)
+    LOG("\til2cpp_image_get_class_count = (size_t (*)(const Il2CppImage *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_image_get_class_count').sub(soAddr)+");",LogColor.C36)
+    LOG("\til2cpp_image_get_class = (Il2CppClass *(*)(const Il2CppImage *,size_t)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_image_get_class').sub(soAddr)+");",LogColor.C36)
+    LOG("\til2cpp_class_get_methods = (MethodInfo *(*)(Il2CppClass *,void **)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_class_get_methods').sub(soAddr)+");",LogColor.C36)
+    LOG("\til2cpp_class_from_type = (Il2CppClass *(*)(const Il2CppType *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_class_from_type').sub(soAddr)+");",LogColor.C36)
+    LOG("\til2cpp_class_get_type = (Il2CppType *(*)(Il2CppClass *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_class_get_type').sub(soAddr)+");",LogColor.C36)
+    LOG("\til2cpp_class_from_system_type = (Il2CppClass *(*)(Il2CppReflectionType *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_class_from_system_type').sub(soAddr)+");",LogColor.C36)
+    LOG("\til2cpp_class_from_name = (Il2CppClass *(*)(const Il2CppImage *, const char *,const char *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_class_from_name').sub(soAddr)+");",LogColor.C36)
+    LOG("\til2cpp_class_get_method_from_name = (MethodInfo *(*)(Il2CppClass *,const char *,int)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_class_get_method_from_name').sub(soAddr)+");",LogColor.C36)
+    LOG("\til2cpp_string_new = (MonoString *(*)(const char *))  ( soAddr + "+Module.findExportByName(soName,'il2cpp_string_new').sub(soAddr)+");",LogColor.C36)
+    LOG("\til2cpp_type_get_name = (char *(*)(const Il2CppType *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_type_get_name').sub(soAddr)+");",LogColor.C36)
+    LOG("\til2cpp_type_get_class_or_element_class = (Il2CppClass *(*)(const Il2CppType *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_type_get_class_or_element_class').sub(soAddr)+");",LogColor.C36)
+    
 }
 
 /**
@@ -1687,7 +1717,8 @@ function seeString(addr){
  * @returns 
  */
 function checkPointer(mPtr) {
-    if (typeof(mPtr) != "number" || soAddr == null || soAddr == 0) return ptr(0)
+    mPtr = ptr(Number(mPtr))
+    if (soAddr == null || soAddr == 0) return ptr(0)
     if (mPtr == undefined || mPtr ==null) return ptr(0)
     return Number(mPtr) < Number(soAddr) ? soAddr.add(ptr(mPtr)) :ptr(mPtr)
 }
@@ -2361,7 +2392,7 @@ function HookOnPointerClick(){
             pointerEventData = args[1]
             if (pointerEventData == 0) return 
             var gameObj = f_get_pointerEnter(pointerEventData)
-            var m_transform = f_getTransform(gameObj)
+            // var m_transform = f_getTransform(gameObj)
 
             showGameObject(gameObj)
 
@@ -2528,7 +2559,7 @@ function HookPlayerPrefs(){
                     this.arg1 = args[1]
                 },
                 onLeave:function(ret){
-                    LOG("\n[*] '"+ret +"' = GetFloat('"+this.arg0.add(p_size*3).readUtf16String()+"',"+this.arg1+")",LogColor.C36)
+                    LOG("\n[*] '"+ret +"' = GetFloat('"+readU16(this.arg0)+"',"+this.arg1+")",LogColor.C36)
                     if (isShowPrintStack) PrintStackTraceN(this.context)
                 }
             })
@@ -2543,7 +2574,7 @@ function HookPlayerPrefs(){
                     this.arg1 = args[1]
                 },
                 onLeave:function(ret){
-                    var s_arg0 = this.arg0.add(p_size*3).readUtf16String()
+                    var s_arg0 = readU16(this.arg0)
                     var i_arg1 = this.arg1
                     LOG("\n[*] '"+ret.toInt32() +"' = GetInt('"+s_arg0+"',"+i_arg1+")",LogColor.C36)
                     if (isShowPrintStack) PrintStackTraceN(this.context)
@@ -2560,7 +2591,7 @@ function HookPlayerPrefs(){
                     this.arg0 = args[0]
                 },
                 onLeave:function(ret){
-                    LOG("\n[*] '"+ret.add(p_size*3).readUtf16String()+"' = GetString('"+this.arg0.add(p_size*3).readUtf16String()+"')",LogColor.C36)
+                    LOG("\n[*] '"+readU16(ret)+"' = GetString('"+readU16(this.arg0)+"')",LogColor.C36)
                     if (isShowPrintStack) PrintStackTraceN(this.context)
                 }
             })
@@ -2574,7 +2605,7 @@ function HookPlayerPrefs(){
         if (Addr_SetFloat != 0){
             Interceptor.attach(Addr_SetFloat,{
                 onEnter:function(args){
-                    this.arg0 = args[0].add(p_size*3).readUtf16String()
+                    this.arg0 = readU16(args[0])
                     this.arg1 = ( args[1] == 0 ? 0 : args[1].readFloat())
                 },
                 onLeave:function(ret){
@@ -2589,7 +2620,7 @@ function HookPlayerPrefs(){
         if (Addr_SetInt!=0){
             Interceptor.attach(Addr_SetInt,{
                 onEnter:function(args){
-                    this.arg0 = args[0].add(p_size*3).readUtf16String()
+                    this.arg0 = readU16(args[0])
                     this.arg1 = args[1]
                 },
                 onLeave:function(ret){
@@ -2604,8 +2635,8 @@ function HookPlayerPrefs(){
         if (Addr_SetString!=0){
             Interceptor.attach(Addr_SetString,{
                 onEnter:function(args){
-                    this.arg0 = args[0].add(p_size*3).readUtf16String()
-                    this.arg1 = args[1].add(p_size*3).readUtf16String()
+                    this.arg0 = readU16(args[0])
+                    this.arg1 = readU16(args[1])
                 },
                 onLeave:function(ret){
                     LOG("\n[*] SetString('"+this.arg0+"','"+this.arg1+"')",LogColor.C36)
@@ -2792,16 +2823,18 @@ function findTransform(mPtr,level,filter){
 /**
  * 
  * @param {Pointer} mPtr 
- * @param {int} Type 0 true/false | 1 int | 2 Pointer 
+ * @param {int} Type 0 true/false | 1 int | 2 Pointer | 3 sub(soAddr)
  * @returns 
  */
 function canUseInlineHook(mPtr,Type){
-    
+    mPtr = checkPointer(mPtr)
     if (Type == undefined) Type = 0
 
     if (Type == 0) return getNextB(mPtr) > 3
     if (Type == 1) return getNextB(mPtr)
-    if (Type == 2) return recommandInlineHook(mPtr)
+    if (Type == 2) return ptr(recommandInlineHook(mPtr))
+    if (Type == 3) return ptr(recommandInlineHook(mPtr)).sub(soAddr)
+
 
     function getNextB(mPtr){
         mPtr = ptr(mPtr)
