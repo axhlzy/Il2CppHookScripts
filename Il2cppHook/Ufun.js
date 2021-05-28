@@ -2,10 +2,9 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/05/27 18:13
+ * @UpdateTime  2021/05/12 19:14
  * @Des         frida hook u3d functions script
  */
-
 
 const soName = "libil2cpp.so"
 const p_size = Process.pointerSize
@@ -15,7 +14,8 @@ var soAddr = 0
 var il2cpp_get_corlib,il2cpp_domain_get,il2cpp_domain_get_assemblies,il2cpp_assembly_get_image,
     il2cpp_image_get_class_count,il2cpp_image_get_class,
     il2cpp_class_get_methods,il2cpp_class_from_type,il2cpp_class_get_type,il2cpp_class_from_system_type,il2cpp_class_from_name,il2cpp_class_get_method_from_name,
-    il2cpp_string_new,il2cpp_type_get_name,il2cpp_type_get_class_or_element_class
+    il2cpp_string_new,il2cpp_type_get_name,il2cpp_type_get_class_or_element_class,
+    il2cpp_class_num_fields,il2cpp_class_get_fields
 
 /**
  * 这里统一使用 f_xxx 声明函数,使用 p_xxx 声明函数地址
@@ -36,6 +36,11 @@ var arr_img_addr    = new Array()
 var arr_img_names   = new Array()
 //存放MethodInfo指针（供动态断点 a() 提供更详细的信息）
 var arrMethodInfo   = new Array()
+
+//过滤 只显示指定ClassName下的Methods
+var enableFilter = false
+var filterClass =
+[]
 
 //只存在于B时候的临时变量，用来记录需要断点的方法地址并方便 b 移除，避免重复显示
 var t_arrayAddr
@@ -226,6 +231,11 @@ function initImages(){
         il2cpp_type_get_name                    = new NativeFunction(Module.findExportByName(soName,"il2cpp_type_get_name"),'pointer',["pointer"])
         //Il2CppClass* il2cpp_type_get_class_or_element_class(const Il2CppType *type)
         il2cpp_type_get_class_or_element_class  = new NativeFunction(Module.findExportByName(soName,"il2cpp_type_get_class_or_element_class"),'pointer',["pointer"])
+    
+        //size_t il2cpp_class_num_fields(const Il2CppClass* klass)
+        il2cpp_class_num_fields                 = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_num_fields"),'int',["pointer"])
+        //FieldInfo* il2cpp_class_get_fields(Il2CppClass *klass, void* *iter)
+        il2cpp_class_get_fields                 = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_get_fields"),'pointer',["pointer","pointer"])
     }
     
     //提前初始化一些常用的就是
@@ -277,8 +287,7 @@ function n(mPtr){
 }
 
 function nn(mPtr){
-    mPtr = checkPointer(mPtr)
-    Interceptor.revert(mPtr)
+    Interceptor.revert(checkPointer(mPtr))
 }
 
 function d(){
@@ -717,7 +726,13 @@ function breakPoint(mPtr,index,name){
             LOG("Called "+funcName + "\t at "+method_addr +"("+method_addr.sub(soAddr)+") | MethodInfo "+ptr(mPtr),LogColor.C96)
             LOG("----------------------",LogColor.C33)
             var isStatic = funcName.indexOf("static")==-1
-            if (isStatic)LOG("  inst | \t\t"+args[0],LogColor.C36)
+            if (isStatic){
+                var insDes = ""
+                try {
+                    insDes = SeeTypeToString(args[0],1)
+                }catch(e){}
+                LOG("  inst | \t\t"+args[0] +"\t["+insDes+"]",LogColor.C36)
+            }
             for(var i=0;i<arr_method_info[2];i++){
                 var typeCls = arr_method_info[3][i]
                 var strType = getClassName(typeCls)
@@ -798,8 +813,20 @@ function breakPoints(filter,isAnalyticParameter){
             Interceptor.attach(currentAddr, {
                 onEnter: function(args){
                     if(++count_method_times[index] < maxCallTime){
-                        var strMethodP = t_arrayMethod.length == 0 ? "" : " ("+t_arrayMethod[index]+")"
-                        LOG("called : "+currentAddr.sub(soAddr)+strMethodP+"\t--->\t"+arrayName[index] +"\n",LogColor.C36)
+                        if (enableFilter){
+                            var temp = getClassNameFromMethodInfo(t_arrayMethod[index])
+                            for (var i=0;i<filterClass.length;i++){
+                                var maxLength = filterClass[i].length > maxLength ? filterClass[1].length : maxLength
+                            }
+                            var retStr = getFunctionDesStr(t_arrayMethod,index,maxLength)
+                            filterClass.forEach((value)=>{
+                                if (temp.indexOf(value)!=-1 && temp.length == value.length){
+                                    LOG("called : "+currentAddr.sub(soAddr) + retStr +" --->\t"+arrayName[index] +"\n",LogColor.C36)
+                                }
+                            })
+                        }else{
+                            LOG("\ncalled : "+currentAddr.sub(soAddr) + getFunctionDesStr(t_arrayMethod,index,13) +" --->\t"+arrayName[index],LogColor.C36)
+                        }
                     }
                 },
                 onLeave: function(retval){
@@ -809,6 +836,31 @@ function breakPoints(filter,isAnalyticParameter){
         }catch(e){
             LOG(e,LogColor.C91)
         }
+    }
+
+    function getFunctionDesStr(methodInfos,index,maxlength){
+        var strMethodP = ""
+        var strMethodC = ""
+        if (methodInfos.length != 0){
+            strMethodP = " ("+methodInfos[index]+")"
+            strMethodC = getClassNameFromMethodInfo(methodInfos[index])
+            strMethodC = alignStr(strMethodC,maxlength)
+            strMethodC += "("+getClassAddrFromMethodInfo(methodInfos[index])+")"
+        }
+        return strMethodP + "\t" + strMethodC
+    }
+
+    function alignStr(str,size){
+        var srcSize = str.length
+        if (srcSize >= size){
+            str = str.substring(0,size-1)
+            str += "."
+        }else{
+            for (var i=size-srcSize;i>0;i--){
+                str += " "
+            }
+        }
+        return str
     }
 }
 
@@ -860,7 +912,11 @@ function SeeTypeToString(obj,b){
     }else{
         return readU16(s_type)
     }
+}
 
+function readSingle(value){
+    var temp = Memory.alloc(p_size*2)
+    return temp.writePointer(value).readFloat()
 }
 
 /**
@@ -873,15 +929,21 @@ function SeeTypeToString(obj,b){
  */
 function FuckKnownType(strType,mPtr){
     try{
+        mPtr = ptr(mPtr)
         switch(strType){
             case "Void"         : 
             case "Object[]"     : return ""
-            case "String"       : return mPtr == 0 ? "" : readU16(mPtr)
+            case "String"       : 
+                if (mPtr == 0 ) return ""
+                return mPtr.add(0xC).readPointer().readCString()
             case "Boolean"      : return (mPtr.toInt32() == 1) ? "True" : "False"
             case "Int32"        : 
             case "Int64"        : 
-            case "Single"       : return mPtr.toInt32()
+                return mPtr.toInt32()
+            case "Single"       : 
+                return readSingle(mPtr)
             case "Object"       : 
+            case "Transform"    : 
             case "GameObject"   : return SeeTypeToString(mPtr,false)
             case "Texture"      : 
                 var w = new NativeFunction(find_method("UnityEngine.CoreModule","Texture","GetDataWidth",0),'int',['pointer'])(mPtr)
@@ -891,19 +953,21 @@ function FuckKnownType(strType,mPtr){
                 r = r == 0 ? "False":"True"
                 m = m == 0 ? "Repeat" : (m == 1 ? "Clamp" : (m == 2 ? "Mirror":"MirrorOnce"))
                 return JSON.stringify([m,w,h,r])
-            case "RectTransform":
-                // var pivot = new NativeFunction(find_method("UnityEngine.CoreModule","RectTransform","get_pivot",0),'pointer',['pointer'])(mPtr)
-                // var rect = new NativeFunction(find_method("UnityEngine.CoreModule","RectTransform","get_sizeDelta",0),'pointer',['pointer'])(mPtr)
-                // var str1 = FuckKnownType("Vector2",pivot)
-                // var str2 = FuckKnownType("Rect",rect)
-                return ""
-            case "Component":
+
+            case "Component"    :
                 if (mPtr == 0x0) return ""
                 var mTransform = new NativeFunction(find_method("UnityEngine.CoreModule","Component","get_transform",0),'pointer',['pointer'])(mPtr)
                 var mGameObject = new NativeFunction(find_method("UnityEngine.CoreModule","Component","get_gameObject",0),'pointer',['pointer'])(mPtr)
                 var gName = getObjName(mGameObject)
                 return gName + "\tG:"+mGameObject +" T:"+mTransform+""
-            case "IntPtr"       : return readU16(new NativeFunction(find_method('mscorlib','IntPtr','ToString',0),'pointer',['pointer'])(mPtr))
+            case "IntPtr"       : 
+                if (mPtr == 0x0) return "0x0"
+                return readU16(new NativeFunction(find_method('mscorlib','IntPtr','ToString',0),'pointer',['pointer'])(mPtr))
+            case "Action"       : 
+                if (mPtr == 0x0) return "0x0"
+                return ptr(mPtr).add(0x14).readPointer().readPointer().sub(soAddr)
+            case "Char"         :
+                return mPtr.readCString()
             case "Text"         : return readU16(new NativeFunction(find_method("UnityEngine.UI","Text","get_text",0),'pointer',['pointer'])(mPtr))
             case "Vector2"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Vector2","ToString",0),'pointer',['pointer'])(mPtr))
             case "Vector3"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Vector3","ToString",0),'pointer',['pointer'])(mPtr))
@@ -911,7 +975,6 @@ function FuckKnownType(strType,mPtr){
             case "Color"        : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Color","ToString",0),'pointer',['pointer'])(mPtr))
             case "Color32"      : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Color32","ToString",0),'pointer',['pointer'])(mPtr))
             case "Event"        : return readU16(new NativeFunction(find_method("UnityEngine.IMGUIModule","Event","ToString",0),'pointer',['pointer'])(mPtr))
-            case "Type"         : return readU16(new NativeFunction(find_method("mscorlib","Type","ToString",0),'pointer',['pointer'])(mPtr))
             case "Bounds"       : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Bounds","ToString",0),'pointer',['pointer'])(mPtr))
             case "TextAsset"    : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","TextAsset","ToString",0),'pointer',['pointer'])(mPtr))
             case "Rect"         : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Rect","ToString",0),'pointer',['pointer'])(mPtr))
@@ -919,11 +982,12 @@ function FuckKnownType(strType,mPtr){
             case "Quaternion"   : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Quaternion","ToString",0),'pointer',['pointer'])(mPtr))
             case "Pose"         : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Pose","ToString",0),'pointer',['pointer'])(mPtr))
             case "Plane"        : return readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Plane","ToString",0),'pointer',['pointer'])(mPtr))
-            default : return "UnKnown"
+            case "Type"         : return readU16(new NativeFunction(find_method("mscorlib","Type","ToString",0),'pointer',['pointer'])(mPtr))
+            default             : return readU16(new NativeFunction(find_method("mscorlib","Object","ToString",0),'pointer',['pointer'])(mPtr))
         }
     }catch(e){
         // LOG(e)
-        return "Error"
+        return " ? "
     }
 }
 
@@ -1044,6 +1108,31 @@ var il2cppTabledefs = {
     METHOD_ATTRIBUTE_PINVOKE_IMPL               : 0x2000,
 }
 
+
+var FieldAccess = { 
+    FIELD_ATTRIBUTE_FIELD_ACCESS_MASK     : 0x0007,
+    FIELD_ATTRIBUTE_COMPILER_CONTROLLED   : 0x0000,
+    FIELD_ATTRIBUTE_PRIVATE               : 0x0001,
+    FIELD_ATTRIBUTE_FAM_AND_ASSEM         : 0x0002,
+    FIELD_ATTRIBUTE_ASSEMBLY              : 0x0003,
+    FIELD_ATTRIBUTE_FAMILY                : 0x0004,
+    FIELD_ATTRIBUTE_FAM_OR_ASSEM          : 0x0005,
+    FIELD_ATTRIBUTE_PUBLIC                : 0x0006,
+
+    FIELD_ATTRIBUTE_STATIC                : 0x0010,
+    FIELD_ATTRIBUTE_INIT_ONLY             : 0x0020,
+    FIELD_ATTRIBUTE_LITERAL               : 0x0040,
+    FIELD_ATTRIBUTE_NOT_SERIALIZED        : 0x0080,
+    FIELD_ATTRIBUTE_SPECIAL_NAME          : 0x0200,
+    FIELD_ATTRIBUTE_PINVOKE_IMPL          : 0x2000,
+
+    FIELD_ATTRIBUTE_RESERVED_MASK         : 0x9500,
+    FIELD_ATTRIBUTE_RT_SPECIAL_NAME       : 0x0400,
+    FIELD_ATTRIBUTE_HAS_FIELD_MARSHAL     : 0x1000,
+    FIELD_ATTRIBUTE_HAS_DEFAULT           : 0x8000,
+    FIELD_ATTRIBUTE_HAS_FIELD_RVA         : 0x0100
+}
+
 var LogColor = {
     WHITE:0,RED:1,YELLOW:3,
     C31:31,C32:32,C33:33,C34:34,C35:35,C36:36,
@@ -1058,6 +1147,10 @@ function getClassName(klass){
 
 function getMethodName(method){
     return ptr(method).add(p_size*2).readPointer().readCString()
+}
+
+function getFieldsCount(kclass){
+    return il2cpp_class_num_fields(ptr(kclass))
 }
 
 function getImgName(img){
@@ -1235,6 +1328,14 @@ function printExp(){
     
 }
 
+function getClassAddrFromMethodInfo(methodInfo){
+    return ptr(methodInfo).add(p_size*3).readPointer()
+}
+
+function getClassNameFromMethodInfo(methodInfo){
+    return getClassName(getClassAddrFromMethodInfo(methodInfo))
+}
+
 /**
  * 通过 methodinfo 找到当前方法的 class 中的所有方法
  * @param {Pointer} methodInfo 
@@ -1243,8 +1344,8 @@ function printExp(){
 function listClsFromMethodInfo(methodInfo) {
     if (methodInfo == null || methodInfo == undefined) return
     var Pcls = ptr(methodInfo).add(p_size*3).readPointer()
-    if (Pcls != null) m(Pcls)
     showMethodInfo(methodInfo)
+    if (Pcls != null) m(Pcls)
 }
 
 function showMethodInfo(methodInfo) {
@@ -1260,8 +1361,126 @@ function showMethodInfo(methodInfo) {
     var Il2CppAssembly = ptr(Il2CppImage).add(p_size*2)
 
     LOG("\nCurrent Function "+ methodName+"\t"+getMethodParametersCount(methodInfo)+"\t0x"+Number(methodInfo).toString(16) + " ---> " +methodPointer + " ---> " +methodPointerR+"\n",LogColor.C96)
-    LOG(methodName+" ---> "+clsName+"("+Il2CppClass+") ---> "+(String(clsNamespaze).length==0?" - ":clsNamespaze)+" ---> "+imgName+"("+Il2CppImage+") ---> Il2CppAssembly("+Il2CppAssembly+")\n",LogColor.C96)
+    LOG(methodName+" ---> "+clsName+"("+Il2CppClass+") ---> "+(String(clsNamespaze).length==0?" - ":clsNamespaze)+" ---> "+imgName+"("+Il2CppImage+") ---> Il2CppAssembly("+Il2CppAssembly+")",LogColor.C96)
 }
+
+function listFieldsFromMethodInfo(methodInfo,instance){
+    if (methodInfo == null || methodInfo == undefined) return
+    var Pcls = ptr(methodInfo).add(p_size*3).readPointer()
+    showMethodInfo(methodInfo)
+    if (Pcls != null) listFieldsFromCls(Pcls,instance)
+}
+
+function listFieldsFromCls(klass,instance){
+    klass = ptr(klass)
+    instance = ptr(instance)
+    var fieldsCount = getFieldsCount(klass)
+    if(fieldsCount <= 0) return
+    LOG("\nFound "+fieldsCount+" Fields in class: "+getClassName(klass)+" ("+klass+")",LogColor.C96)
+    //...\Data\il2cpp\libil2cpp\il2cpp-class-internals.h
+    var iter = Memory.alloc(p_size);
+    var field = null
+    var maxlength = 0
+    var arrStr = new Array()
+    while (field = il2cpp_class_get_fields(klass, iter)) {
+        if (field == 0x0) break
+        var fieldName = field.readPointer().readCString()
+        var filedType = field.add(p_size).readPointer()
+        var filedOffset = "0x"+field.add(3*p_size).readInt().toString(16)
+        var field_class = il2cpp_class_from_type(filedType)
+        var fieldClassName = getClassName(field_class)
+        var accessStr = fuckAccess(filedType)
+        accessStr = accessStr.substring(0,accessStr.length-1)
+        var retStr = filedOffset+"\t"+accessStr+"\t"+fieldClassName+"\t"+field_class+"\t"+fieldName
+        arrStr.push(retStr)
+        maxlength = retStr.length < maxlength ? maxlength : retStr.length
+    }
+    LOG("\n"+getLine(maxlength+5),LogColor.C33)
+
+    /**
+     * mStr[0] offset
+     * mStr[1] access flag str
+     * mStr[2] field class name
+     * mStr[3] field class pointer
+     * mStr[4] field name
+     */
+    arrStr.sort((x,y)=>{
+        return parseInt(x.split("\t")[0]) - parseInt(y.split("\t")[0])
+    }).forEach((str,index)=>{
+        //静态变量的值并不在该类中
+        if (str.indexOf("static")!=-1) str = str.replace("0x0","---") +"\n"
+        var mStr = str.split("\t")
+        //值解析
+        if (mStr[0].indexOf("---")!=0) {
+            var mName = mStr[2]
+            LOG("["+index+"] "+mStr[0]+" "+mStr[1]+" "+mStr[2]+"("+mStr[3]+")"+" "+mStr[4],LogColor.C36)
+            if (instance != undefined){
+                var mPtr = ptr(instance).add(mStr[0])
+                var realP = mPtr.readPointer()
+                var fRet = FuckKnownType(mName,realP)
+                fRet = fRet == "UnKnown" ? (mPtr + " ---> " + realP) : (mPtr + " ---> " + realP + " ---> " + fRet)
+                LOG("\t"+fRet + "\n",LogColor.C90)
+            }
+        }
+    })
+    LOG(getLine(maxlength+5),LogColor.C33)
+
+    function fuckAccess(m_type){
+        var attrs = m_type.add(p_size).readPointer()
+        var outPut = ""
+        var access = attrs & FieldAccess.FIELD_ATTRIBUTE_FIELD_ACCESS_MASK
+        switch (access) {
+            case FieldAccess.FIELD_ATTRIBUTE_PRIVATE:
+                outPut += "private "
+                break;
+            case FieldAccess.FIELD_ATTRIBUTE_PUBLIC:
+                outPut += "public "
+                break;
+            case FieldAccess.FIELD_ATTRIBUTE_FAMILY:
+                outPut += "protected "
+                break;
+            case FieldAccess.FIELD_ATTRIBUTE_ASSEMBLY:
+            case FieldAccess.FIELD_ATTRIBUTE_FAM_AND_ASSEM:
+                outPut += "internal "
+                break;
+            case FieldAccess.FIELD_ATTRIBUTE_FAM_OR_ASSEM:
+                outPut += "protected internal "
+                break;
+        }
+        if (attrs & FieldAccess.FIELD_ATTRIBUTE_LITERAL) {
+            outPut += "const "
+        } else {
+            if (attrs & FieldAccess.FIELD_ATTRIBUTE_STATIC) {
+                outPut += "static "
+            }
+            if (attrs & FieldAccess.FIELD_ATTRIBUTE_INIT_ONLY) {
+                outPut += "readonly "
+            }
+        }
+        return outPut
+    }
+}
+
+function findClass(imageName,className){
+    var currentlib = 0
+    arr_img_names.forEach(function(name,index){
+        if (name == imageName){
+            currentlib = arr_img_addr[index]
+        }
+    })
+    var klass = il2cpp_class_from_name(currentlib, Memory.allocUtf8String(imageName), Memory.allocUtf8String(className))
+    if (klass == 0){
+        for(var j=0;j<il2cpp_image_get_class_count(currentlib).toInt32();j++){
+            var il2CppClass = il2cpp_image_get_class(currentlib,j)
+            if (getClassName(il2CppClass) == className) {
+                klass = il2CppClass
+                break
+            }
+        }
+    }
+    return klass
+}
+
 /**
  * 获取Unity的一些基本信息
  */
@@ -2891,3 +3110,4 @@ class MemoryUtil {
     }
     
 }
+
