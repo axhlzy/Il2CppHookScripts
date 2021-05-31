@@ -1,4 +1,4 @@
-## Script
+## Scripts
 该文件目录下的脚本用作Il2CppDumper生成的script.json，筛选函数dps.py 用作bpoints.js进行批量断点
 
 ## Il2cppHook
