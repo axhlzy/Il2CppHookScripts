@@ -1,11 +1,12 @@
-## Scripts
+## DumperScript
 该文件目录下的脚本用作Il2CppDumper生成的script.json，筛选函数dps.py 用作bpoints.js进行批量断点
 
 ## Il2cppHook
-该文件目录下的脚本用作，u3d游戏编译成libil2cpp.so，进行解析的脚本
+libil2cpp.so 解析脚本
+[参考简书的说明](https://www.jianshu.com/p/230f51dc09c0)
 
 ## MonoHook
-该文件目录下的脚本用作，u3d游戏编译成libmono.so，进行解析的脚本
+libmono.so 解析脚本
 
 ## Others
 一些其他的脚本
