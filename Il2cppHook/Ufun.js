@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/05/12 19:14
+ * @UpdateTime  2021/05/31 16:19
  * @Des         frida hook u3d functions script
  */
 
@@ -381,15 +381,42 @@ function C(ImgOrPtr){
     LOG(getLine(85),LogColor.C33)
 }
 
-/**
- * 清空缓存
- */
+//reflash
 function r(){
     reflash()
 }
 
+//print list result
 function p(filter){
     print_list_result(filter)
+}
+
+//list all from class
+function lafc(klass){
+    LOG("\nFields :",LogColor.RED)
+    listFieldsFromCls(klass,undefined,1)
+    LOG("\nMethods :",LogColor.RED)
+    list_Methods(klass,true)
+}
+
+//list methods from class
+function lmfc(klass){
+    list_Methods(klass,true)
+}
+
+//list methods from methodinfo   当前methodinfo所属类的methods
+function lmfm(methodInfo){
+    listMethodsFromMethodInfo(methodInfo)
+}
+
+//list fields from methodinfo
+function lffm(methodInfo,instance){
+    listFieldsFromMethodInfo(methodInfo,instance)
+}
+
+//list fields from class
+function lffc(klass,instance){
+    listFieldsFromCls(klass,instance)
 }
 
 /**
@@ -471,7 +498,7 @@ function list_Methods(klass,isShowMore){
     var iter = Memory.alloc(p_size)
     var method = NULL
     var count_methods = 0
-    LOG(getLine(85),LogColor.C33)
+    LOG("\n"+getLine(85),LogColor.C33)
     try{
         while (method = il2cpp_class_get_methods(klass, iter)) {
             var methodName = getMethodName(method)
@@ -517,6 +544,7 @@ function list_Methods(klass,isShowMore){
  *  根据 ImageName , ClassName , functionName , argsCount 找到对应 function 的地址
  *  最后一个参数 isRealAddr 用作显示静态分析地址还是当前内存地址（带这个参数则只返回地址，不带则列表信息）
  *  find_method("UnityEngine.UI","Text","get_text",0)
+ *  find_method("UnityEngine.UI","Text","get_text",0,false)
  * @param {String} imageName 
  * @param {String} className 
  * @param {String} functionName 
@@ -525,6 +553,7 @@ function list_Methods(klass,isShowMore){
  */
 function find_method(imageName,className,functionName,argsCount,isRealAddr){
 
+    if (imageName == undefined || imageName == null || className == null  || functionName == null  || argsCount == null ) return ptr(0)
     // var corlib = il2cpp_get_corlib()
     if (isRealAddr == undefined) isRealAddr = true
     var currentlib = 0
@@ -690,6 +719,7 @@ function get_method_des(method,isArray){
  * @param {String} name 
  */
 function breakPoint(mPtr,index,name){
+    if (mPtr == undefined || mPtr == null) return 
     var arr_method_info = NULL
     try{
         arr_method_info = get_method_des(mPtr,true)
@@ -901,10 +931,7 @@ function print_deserted_methods(){
     })
 }
 
-/**
- *  用来区分transform和gameObj
- * @param {Object} obj 
- */
+// 查看类型的,主要用来区分transform和gameObj
 function SeeTypeToString(obj,b){
     var s_type   = new NativeFunction(find_method("UnityEngine.CoreModule","Object","ToString",0,true),'pointer',['pointer'])(ptr(obj))
     if (b == undefined) {
@@ -914,9 +941,9 @@ function SeeTypeToString(obj,b){
     }
 }
 
+//读取浮点数 ptr().readFloat() === readSingle(ptr().readPointer())
 function readSingle(value){
-    var temp = Memory.alloc(p_size*2)
-    return temp.writePointer(value).readFloat()
+    return Memory.alloc(p_size*2).writePointer(value).readFloat()
 }
 
 /**
@@ -953,7 +980,6 @@ function FuckKnownType(strType,mPtr){
                 r = r == 0 ? "False":"True"
                 m = m == 0 ? "Repeat" : (m == 1 ? "Clamp" : (m == 2 ? "Mirror":"MirrorOnce"))
                 return JSON.stringify([m,w,h,r])
-
             case "Component"    :
                 if (mPtr == 0x0) return ""
                 var mTransform = new NativeFunction(find_method("UnityEngine.CoreModule","Component","get_transform",0),'pointer',['pointer'])(mPtr)
@@ -1005,6 +1031,7 @@ function HookSendMessage(){
     
 }
 
+//清空
 function reflash(){
     d()
     arrMethodInfo.splice(0,arrMethodInfo.length)
@@ -1107,7 +1134,6 @@ var il2cppTabledefs = {
     METHOD_ATTRIBUTE_NEW_SLOT                   : 0x0100,
     METHOD_ATTRIBUTE_PINVOKE_IMPL               : 0x2000,
 }
-
 
 var FieldAccess = { 
     FIELD_ATTRIBUTE_FIELD_ACCESS_MASK     : 0x0007,
@@ -1341,7 +1367,7 @@ function getClassNameFromMethodInfo(methodInfo){
  * @param {Pointer} methodInfo 
  * @returns 
  */
-function listClsFromMethodInfo(methodInfo) {
+function listMethodsFromMethodInfo(methodInfo) {
     if (methodInfo == null || methodInfo == undefined) return
     var Pcls = ptr(methodInfo).add(p_size*3).readPointer()
     showMethodInfo(methodInfo)
@@ -1372,11 +1398,13 @@ function listFieldsFromMethodInfo(methodInfo,instance){
 }
 
 function listFieldsFromCls(klass,instance){
+    if (klass == undefined || klass == null) return
     klass = ptr(klass)
-    instance = ptr(instance)
+    if (instance !=undefined) instance = ptr(instance)
     var fieldsCount = getFieldsCount(klass)
     if(fieldsCount <= 0) return
-    LOG("\nFound "+fieldsCount+" Fields in class: "+getClassName(klass)+" ("+klass+")",LogColor.C96)
+    if (arguments[2] == undefined)
+        LOG("\nFound "+fieldsCount+" Fields in class: "+getClassName(klass)+" ("+klass+")",LogColor.C96)
     //...\Data\il2cpp\libil2cpp\il2cpp-class-internals.h
     var iter = Memory.alloc(p_size);
     var field = null
@@ -1567,50 +1595,42 @@ function getUnityInfo(){
         //public static string cloudProjectId()
         if (Addr_cloudProjectId != 0)
             LOG("[*] cloudProjectId \t\t: "+ 
-            new NativeFunction(Addr_cloudProjectId,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(Addr_cloudProjectId,'pointer',[])())+"\n"+line20,LogColor.C36)
     
         //public static string get_productName()
         if (Addr_productName != 0)
             LOG("[*] productName \t\t: "+
-            new NativeFunction(Addr_productName,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(Addr_productName,'pointer',[])())+"\n"+line20,LogColor.C36)
     
         //public static extern string get_identifier()
         if (Addr_identifier != 0)
             LOG("[*] identifier \t\t\t: "+
-            new NativeFunction(Addr_identifier,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(Addr_identifier,'pointer',[])())+"\n"+line20,LogColor.C36)
     
         //public static string version()
         if (Addr_version != 0)
             LOG("[*] version \t\t\t: "+ 
-            new NativeFunction(Addr_version,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(Addr_version,'pointer',[])())+"\n"+line20,LogColor.C36)
     
         //public static string unityVersion()
         if (Addr_unityVersion != 0)
             LOG("[*] unityVersion \t\t: "+ 
-            new NativeFunction(Addr_unityVersion,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(Addr_unityVersion,'pointer',[])())+"\n"+line20,LogColor.C36)
     
         //public static string dataPath()
         if (Addr_dataPath != 0)
             LOG("[*] dataPath \t\t\t: "+
-            new NativeFunction(Addr_dataPath,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(Addr_dataPath,'pointer',[])())+"\n"+line20,LogColor.C36)
     
         //public static string streamingAssetsPath()
         if (Addr_streamingAssetsPath != 0)
             LOG("[*] streamingAssetsPath \t: "+
-            new NativeFunction(Addr_streamingAssetsPath,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(Addr_streamingAssetsPath,'pointer',[])())+"\n"+line20,LogColor.C36)
     
         //public static string persistentDataPath
         if (Addr_persistentDataPath !=0)
             LOG("[*] persistentDataPath \t\t: "+
-            new NativeFunction(Addr_persistentDataPath,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(Addr_persistentDataPath,'pointer',[])())+"\n"+line20,LogColor.C36)
     
         //public static NetworkReachability internetReachability()
         if (Addr_internetReachability!=0){
@@ -1704,13 +1724,11 @@ function getUnityInfo(){
     
         if (addr_get_deviceModel != 0)
             LOG("[*] deviceModel \t\t: "+ 
-            new NativeFunction(addr_get_deviceModel,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(addr_get_deviceModel,'pointer',[])())+"\n"+line20,LogColor.C36)
     
         if (addr_get_deviceName != 0)
             LOG("[*] deviceName \t\t\t: "+ 
-            new NativeFunction(addr_get_deviceName,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(addr_get_deviceName,'pointer',[])())+"\n"+line20,LogColor.C36)
         
         if (addr_get_deviceType != 0)
             LOG("[*] deviceType \t\t\t: "+ 
@@ -1718,8 +1736,7 @@ function getUnityInfo(){
         
         if (addr_get_deviceUniqueIdentifier != 0)
             LOG("[*] deviceUniqueIdentifier \t: "+ 
-            new NativeFunction(addr_get_deviceUniqueIdentifier,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(addr_get_deviceUniqueIdentifier,'pointer',[])())+"\n"+line20,LogColor.C36)
         
         if (addr_get_graphicsDeviceID != 0)
             LOG("[*] graphicsDeviceID \t\t: "+ 
@@ -1727,13 +1744,11 @@ function getUnityInfo(){
         
         if (addr_get_graphicsDeviceName != 0)
             LOG("[*] graphicsDeviceName \t\t: "+ 
-            new NativeFunction(addr_get_graphicsDeviceName,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(addr_get_graphicsDeviceName,'pointer',[])())+"\n"+line20,LogColor.C36)
             
         if (addr_get_graphicsDeviceVersion != 0)
             LOG("[*] graphicsDeviceVersion \t: "+ 
-            new NativeFunction(addr_get_graphicsDeviceVersion,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(addr_get_graphicsDeviceVersion,'pointer',[])())+"\n"+line20,LogColor.C36)
         
         if (addr_get_graphicsShaderLevel != 0)
             LOG("[*] graphicsShaderLevel \t: "+ 
@@ -1749,13 +1764,11 @@ function getUnityInfo(){
         
         if (addr_get_operatingSystem != 0)
             LOG("[*] operatingSystem \t\t: "+ 
-            new NativeFunction(addr_get_operatingSystem,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(addr_get_operatingSystem,'pointer',[])())+"\n"+line20,LogColor.C36)
     
         if (addr_get_processorType != 0)
             LOG("[*] processorType \t\t: "+ 
-            new NativeFunction(addr_get_processorType,'pointer',[])()
-            .add(p_size*3).readUtf16String()+"\n"+line20,LogColor.C36)
+            readU16(new NativeFunction(addr_get_processorType,'pointer',[])())+"\n"+line20,LogColor.C36)
             
         if (addr_get_systemMemorySize != 0)
             LOG("[*] systemMemorySize \t\t: "+ 
@@ -1821,7 +1834,7 @@ function getApkInfo(){
 
         var ApkLocation = appInfo.sourceDir.value
         var TempFile = appInfo.dataDir.value
-        LOG("\n[*]Location\t\t"+ApkLocation+"\n\t\t\t"+TempFile,LogColor.C36)
+        LOG("\n[*]Location\t\t"+ApkLocation+"\n\t\t\t"+getLibPath()+"\n\t\t\t"+TempFile,LogColor.C36)
 
         //PackageManager.GET_SIGNATURES == 0x00000040
         var pis = context.getPackageManager().getPackageInfo(str_pkgName, 0x00000040)
@@ -1863,6 +1876,16 @@ function getApkInfo(){
                 arrayOfChar[j] = hexDigits[(0xF & k >>> 4)]
                 arrayOfChar[++j] = hexDigits[(k & 0xF)]
             }
+        }
+
+        function getLibPath(name){
+            var retStr = ""
+            Java.perform(function(){
+                var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
+                var libPath = context.getApplicationInfo().nativeLibraryDir.value
+                retStr =  libPath +"/"+ (name == undefined ? "" : name)
+            })
+            return retStr
         }
     })
 }
@@ -1924,10 +1947,6 @@ function seeHexR(addr,length){
 
 function seeHexA(addr,length){
     LOG(hexdump(ptr(addr),{length:length}))
-}
-
-function seeString(addr){
-    LOG(readU16(addr))
 }
 
 /**
@@ -2003,16 +2022,6 @@ function Toast(msg){
         var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
         Java.use("android.widget.Toast").makeText(context,Java.use("java.lang.String").$new(msg),1).show()
     })
-}
-
-function getLibPath(name){
-    var retStr = ""
-    Java.perform(function(){
-        var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
-        var libPath = context.getApplicationInfo().nativeLibraryDir.value
-        retStr =  libPath +"/"+ (name == undefined ? "" : name)
-    })
-    return retStr
 }
 
 /**
@@ -2173,7 +2182,7 @@ function SetLocalRotation(mTransform,x,y,z,w){
 }
 
 /**
- * getGameObject
+ * getGameObject     transform -> GameObject
  * @param {Pointer}  transform
  */
  function getGameObject(transform){
@@ -2254,11 +2263,17 @@ function newLine(){
 }
 
 function Pay(){
+    //todo google支付相关
     find_method("Assembly-CSharp","Purchaser","BuyProductID",1,false)
 }
 
+function Update(){
+    //todo 更新相关
+    find_method("UnityEngine.UI","CanvasScaler","Update",0,false)
+}
+
 function Text(){
-    
+    //Text 相关
     HookTrackText()
     // HookGetSetText()
 
@@ -2340,12 +2355,6 @@ function Text(){
         //called : 0x787e20 (0xb6147808)  --->    public FontStyle get_fontStyle ()
     }
 
-}
-
-
-
-function Update(){
-    find_method("UnityEngine.UI","CanvasScaler","Update",0,false)
 }
 
 /**
@@ -2871,7 +2880,7 @@ function HookDebugLog(){
     if (addr_log_debug != 0){
         Interceptor.attach(addr_log_debug,{
             onEnter:function(args){
-                LOG("\n[*] Debug.LOG('"+args[0].add(p_size*3).readUtf16String()+"')",LogColor.C36)
+                LOG("\n[*] Debug.LOG('"+readU16(args[0])+"')",LogColor.C36)
             },
             onLeave:function(ret){
     
@@ -2883,7 +2892,7 @@ function HookDebugLog(){
     if (addr_log_logger != 0){
         Interceptor.attach(addr_log_logger,{
             onEnter:function(args){
-                LOG("\n[*] Logger.LOG('"+args[0].add(p_size*3).readUtf16String()+"')",LogColor.C32)
+                LOG("\n[*] Logger.LOG('"+readU16(args[0])+"')",LogColor.C32)
             },
             onLeave:function(ret){
     
@@ -2916,7 +2925,7 @@ function HookLoadScene(){
  * ps:不建议打印底层的层级，展现一大篇出来毫无重点
  * @param {Number} mPtr Transform Pointer
  * @param {Number} level 最大显示层级
- * @param {Boolean} inCall 内部调用，去掉一些LOG
+ * @param {Boolean} inCall 内部调用，去掉LOG的相关判断
  */
 function PrintHierarchy(mPtr,level,inCall){
     LogFlag = true
@@ -3085,7 +3094,7 @@ class MemoryUtil {
      */
     static Save(mPtr,size,fileName){
         var soAddr = Module.findBaseAddress(soName) 
-        var path = new NativeFunction(soAddr.add(0xadf13c),'pointer',[])().add(p_size*3).readUtf16String()+"/"+ (fileName==undefined?"lzy.dat":fileName)
+        var path = readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Application","get_persistentDataPath",0),'pointer',[])())+"/"+ (fileName==undefined?"lzy.dat":fileName)
         var fopen = new NativeFunction(Module.findExportByName(null,'fopen'),'pointer',['pointer','pointer'])
         var fwrite = new NativeFunction(Module.findExportByName(null,'fwrite'),'pointer',['pointer','int','int','pointer'])
         var fclose = new NativeFunction(Module.findExportByName(null,'fclose'),'int',['pointer'])
@@ -3099,7 +3108,7 @@ class MemoryUtil {
      */
     static Load(mPtr,size,fileName){
         var soAddr = Module.findBaseAddress(soName)
-        var path = new NativeFunction(soAddr.add(0xadf13c),'pointer',[])().add(p_size*3).readUtf16String()+"/"+ (fileName==undefined?"lzy.dat":fileName)
+        var path = readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Application","get_persistentDataPath",0),'pointer',[])())+"/"+ (fileName==undefined?"lzy.dat":fileName)
         var fopen = new NativeFunction(Module.findExportByName(null,'fopen'),'pointer',['pointer','pointer'])
         var fread = new NativeFunction(Module.findExportByName(null,'fread'),'pointer',['pointer','int','int','pointer'])
         var fclose = new NativeFunction(Module.findExportByName(null,'fclose'),'int',['pointer'])
