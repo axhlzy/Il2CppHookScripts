@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/06/16 10:16
+ * @UpdateTime  2021/06/16 10:38
  * @Des         frida hook u3d functions script
  */
 
@@ -272,29 +272,6 @@ function b(mPtr){
 }
 
 /**
- * nop 指定函数 (相对地址/绝对地址都可以填)
- * @param {Number} mPtr 
- */
-function n(mPtr){
-    var src_ptr = mPtr
-    mPtr = checkPointer(mPtr)
-    //原函数的引用也可以再replace中调用
-    // var srcFunc = new NativeFunction(mPtr,'void',['pointer','pointer','pointer','pointer'])
-    Interceptor.replace(mPtr,new NativeCallback(function(arg0,arg1,arg2,arg3){
-        LOG("\nCalled NOP function ---> "+mPtr+" (0x"+String(src_ptr).toString(16)+")",LogColor.YELLOW)
-        // srcFunc(arg0,arg1,arg2,arg3)
-    },'void',['pointer','pointer','pointer','pointer']))
-}
-
-function nn(mPtr){
-    Interceptor.revert(checkPointer(mPtr))
-}
-
-function d(){
-    Interceptor.detachAll()
-}
-
-/**
  * 查找 Method 地址
  * @param {String} ImageName 
  * @param {String} ClassName 
@@ -379,6 +356,35 @@ function C(ImgOrPtr){
         }
     })
     LOG(getLine(85),LogColor.C33)
+}
+
+//R(0xabcd,(srcFunc,arg0,arg1,arg2,arg3)=>{......})
+function R(mPtr,callBack){
+  var src_ptr = mPtr
+  mPtr = checkPointer(mPtr)
+  //原函数的引用也可以再replace中调用
+  var srcFunc = new NativeFunction(mPtr,'pointer',['pointer','pointer','pointer','pointer'])
+  Interceptor.replace(mPtr,new NativeCallback(function(arg0,arg1,arg2,arg3){
+    LOG("\nCalled Replaced function ---> "+mPtr+" (0x"+String(src_ptr).toString(16)+")",LogColor.YELLOW)
+    var ret = callBack(srcFunc,arg0,arg1,arg2,arg3)
+    return ret == null ? ptr(0) : ret
+  },'pointer',['pointer','pointer','pointer','pointer']))
+}
+
+/**
+ * nop 指定函数 (相对地址/绝对地址都可以填)
+ * @param {Number} mPtr 
+ */
+function n(mPtr){
+  R(mPtr,()=>{return ptr(0)})
+}
+
+function nn(mPtr){
+  Interceptor.revert(checkPointer(mPtr))
+}
+
+function d(){
+    Interceptor.detachAll()
 }
 
 //reflash
