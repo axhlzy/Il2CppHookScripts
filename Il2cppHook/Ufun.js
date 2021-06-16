@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/05/31 16:19
+ * @UpdateTime  2021/06/16 10:16
  * @Des         frida hook u3d functions script
  */
 
@@ -2587,19 +2587,17 @@ function destroyObj(gameObj){
     new NativeFunction(find_method("UnityEngine.CoreModule","Object","Destroy",1,true),'pointer',['pointer'])(ptr(gameObj))
 }
 
-function HookSetActive(){
+/**
+ * @param {int} defaltActive 0 setActive(false) 1 setActive(true) 2 all
+ */
+var arr_SetActive_name = new Array()
+var arr_SetActive_count = new Array()
+function HookSetActive(defaltActive){
+    if (defaltActive == undefined) defaltActive = 1
     Interceptor.attach(find_method("UnityEngine","GameObject","SetActive",1,true),{
         onEnter:function(args){
-            //显示SetActive为true的项
-            if (args[1].toInt32() == 1) {
-                LOG("\n"+getLine(38),LogColor.YELLOW)
-                LOG("public extern void SetActive( "+(args[1].toInt32()==0?"false":"true")+" );",LogColor.C36)
-                LOG(getLine(20),LogColor.C33)
-                showGameObject(args[0])
-            }
-            return 
-            //显示SetActive为false的项
-            if (args[1].toInt32() == 0) {
+            if (filterDuplicateName(args[0]) == -1) return
+            if (defaltActive == 2 || args[1].toInt32() == defaltActive) {
                 LOG("\n"+getLine(38),LogColor.YELLOW)
                 LOG("public extern void SetActive( "+(args[1].toInt32()==0?"false":"true")+" );",LogColor.C36)
                 LOG(getLine(20),LogColor.C33)
@@ -2608,6 +2606,21 @@ function HookSetActive(){
         },
         onLeave:function(retval){}
     })
+
+    function filterDuplicateName(gObj,maxCount){
+        var gobjName = readU16(f_getName(ptr(gObj)))
+        if (arr_SetActive_name.indexOf(gobjName) == -1){
+            arr_SetActive_name.push(gobjName)
+            arr_SetActive_count.push(0)
+        }else{
+            for (var i=0;i<arr_SetActive_name.length;i++){
+                if (arr_SetActive_name[i] == gobjName){
+                    arr_SetActive_count[i] += 1
+                    if (arr_SetActive_count[i] > (maxCount==undefined?10:maxCount)) return -1
+                }
+            }
+        }
+    }
 }
 
 function HookOnPointerClick(){
