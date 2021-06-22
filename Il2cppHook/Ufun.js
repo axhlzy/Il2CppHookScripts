@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/06/16 10:38
+ * @UpdateTime  2021/06/22 15:33
  * @Des         frida hook u3d functions script
  */
 
@@ -36,14 +36,15 @@ var arr_img_addr    = new Array()
 var arr_img_names   = new Array()
 //存放MethodInfo指针（供动态断点 a() 提供更详细的信息）
 var arrMethodInfo   = new Array()
-
-//过滤 只显示指定ClassName下的Methods
-var enableFilter = false
-var filterClass =
-[]
-
+//filterDuplicateOBJ 
+var outFilterData   = new Array()
+var outFilterCount  = new Array()
 //只存在于B时候的临时变量，用来记录需要断点的方法地址并方便 b 移除，避免重复显示
 var t_arrayAddr
+
+//过滤 只显示指定ClassName下的Methods {enableFilter = true ; filterClass.push("xxxxx") //即可开启过滤clsName}
+var enableFilter = false
+var filterClass = []
 
 //兼容之前的python脚本筛选，同时也是 addBreakPoints() 或者是 a() 所添加的断点的函数也是存放在这里的
 var arrayAddr =
@@ -358,14 +359,26 @@ function C(ImgOrPtr){
     LOG(getLine(85),LogColor.C33)
 }
 
+//attach A(0xabcd,(args)=>{},(ret)=>{})
+function A(mPtr, mOnEnter, mOnLeave) {
+    Interceptor.attach(checkPointer(mPtr),{
+        onEnter: function (args) {
+            if (mOnEnter != undefined) mOnEnter(args)
+        },
+        onLeave: function (ret) {
+            if (mOnLeave != undefined) mOnLeave(ret)
+        }
+    })
+}
+
 //R(0xabcd,(srcFunc,arg0,arg1,arg2,arg3)=>{......})
 function R(mPtr,callBack){
-  var src_ptr = mPtr
+  var src_ptr = ptr(mPtr)
   mPtr = checkPointer(mPtr)
-  //原函数的引用也可以再replace中调用
+  //原函数的引用也可以再replace中调用findTransform
   var srcFunc = new NativeFunction(mPtr,'pointer',['pointer','pointer','pointer','pointer'])
   Interceptor.replace(mPtr,new NativeCallback(function(arg0,arg1,arg2,arg3){
-    LOG("\nCalled Replaced function ---> "+mPtr+" (0x"+String(src_ptr).toString(16)+")",LogColor.YELLOW)
+    LOG("\nCalled Replaced function ---> "+mPtr+" ("+src_ptr+")",LogColor.YELLOW)
     var ret = callBack(srcFunc,arg0,arg1,arg2,arg3)
     return ret == null ? ptr(0) : ret
   },'pointer',['pointer','pointer','pointer','pointer']))
@@ -995,7 +1008,8 @@ function FuckKnownType(strType,mPtr){
             case "IntPtr"       : 
                 if (mPtr == 0x0) return "0x0"
                 return readU16(new NativeFunction(find_method('mscorlib','IntPtr','ToString',0),'pointer',['pointer'])(mPtr))
-            case "Action"       : 
+            case "Action"       :
+            case "Action`1"     : 
                 if (mPtr == 0x0) return "0x0"
                 return ptr(mPtr).add(0x14).readPointer().readPointer().sub(soAddr)
             case "Char"         :
@@ -1277,16 +1291,38 @@ function breakWithArgs(mPtr,argCount){
     })
 }
 
-function breakInline(mPtr){
+function breakInline(mPtr, filterRigster, maxCount) {
+    if (maxCount == undefined) maxCount = 10
     mPtr = checkPointer(mPtr)
     Interceptor.attach(mPtr,{
-        onEnter:function(args){
+        onEnter: function (args) {
+            if (Process.arch != "arm" && filterRigster != undefined
+                && filterDuplicateOBJ(String(filterReg(filterRigster, this.context)), maxCount) == -1) return
             LOG("\n---------------------------------------------\n\n"
-            +"Called function at "+mPtr+"\n"
-            + JSON.stringify(this.context),LogColor.C36)
+                +"Called function at "+mPtr+"\n"
+                + JSON.stringify(this.context),LogColor.C36)
         },
         onLeave:function(ret){}
     })
+    
+    function filterReg(ft, context) {
+        switch (ft) {
+            case "r0": return context.r0
+            case "r1": return context.r1
+            case "r2": return context.r2
+            case "r3": return context.r3
+            case "r4": return context.r4
+            case "r5": return context.r5
+            case "r6": return context.r6
+            case "r7": return context.r7
+            case "r8": return context.r8
+            case "r9": return context.r9
+            case "r10": return context.r10
+            case "r11": return context.r11
+            case "r12": return context.r12
+            case "lr": return context.lr
+        }
+    }
 }
 
 /**
@@ -1973,7 +2009,7 @@ function checkPointer(mPtr) {
  * @param {Int} range 展示的范围
  * @param {Int} sign 1:正向 2:反向(小端存储，同IDA)   不填写着以当前pointer为中心位置打印信息
  */
-function printCtx(pointer,range,sign){
+function printCtx(pointer,range,sign,redLine){
     if (Process.arch != "arm") return
     if (sign != undefined){
         for (var i = 0;i<range;i++){
@@ -1997,7 +2033,9 @@ function printCtx(pointer,range,sign){
         }else if (sign == 2){
             cur_str = cur_tmp[8]+cur_tmp[9] +' '+cur_tmp[6]+cur_tmp[7] +' '+cur_tmp[4]+cur_tmp[5] +' '+cur_tmp[2]+cur_tmp[3]
         }
-        LOG(cur_p+"\t"+cur_str+"\t"+Instruction.parse(cur_p),i==0?LogColor.RED:LogColor.WHITE)
+        LOG(cur_p + "\t" + cur_str + "\t" + Instruction.parse(cur_p),
+            (redLine == undefined ? i == 0 : i == redLine) ?
+            LogColor.RED : LogColor.WHITE)
     }
 }
 
@@ -2596,13 +2634,11 @@ function destroyObj(gameObj){
 /**
  * @param {int} defaltActive 0 setActive(false) 1 setActive(true) 2 all
  */
-var arr_SetActive_name = new Array()
-var arr_SetActive_count = new Array()
 function HookSetActive(defaltActive){
     if (defaltActive == undefined) defaltActive = 1
     Interceptor.attach(find_method("UnityEngine","GameObject","SetActive",1,true),{
         onEnter:function(args){
-            if (filterDuplicateName(args[0]) == -1) return
+            if (filterDuplicateOBJ(readU16(f_getName(ptr(args[0])))) == -1) return
             if (defaltActive == 2 || args[1].toInt32() == defaltActive) {
                 LOG("\n"+getLine(38),LogColor.YELLOW)
                 LOG("public extern void SetActive( "+(args[1].toInt32()==0?"false":"true")+" );",LogColor.C36)
@@ -2612,17 +2648,26 @@ function HookSetActive(defaltActive){
         },
         onLeave:function(retval){}
     })
+}
 
-    function filterDuplicateName(gObj,maxCount){
-        var gobjName = readU16(f_getName(ptr(gObj)))
-        if (arr_SetActive_name.indexOf(gobjName) == -1){
-            arr_SetActive_name.push(gobjName)
-            arr_SetActive_count.push(0)
-        }else{
-            for (var i=0;i<arr_SetActive_name.length;i++){
-                if (arr_SetActive_name[i] == gobjName){
-                    arr_SetActive_count[i] += 1
-                    if (arr_SetActive_count[i] > (maxCount==undefined?10:maxCount)) return -1
+/**
+ * 大于最大出现次数返回值为 -1
+ * @param {String} objstr 重复出现的str 
+ * @param {int} maxCount 最大出现次数
+ * @returns ? -1
+ */
+function filterDuplicateOBJ(objstr, maxCount) {
+    if (outFilterData.indexOf(objstr) == -1){
+        outFilterData.push(objstr)
+        outFilterCount.push(0)
+    }else{
+        for (var i=0;i<outFilterData.length;i++){
+            if (outFilterData[i] == objstr){
+                outFilterCount[i] += 1
+                if (outFilterCount[i] >= (maxCount == undefined ? 10 : maxCount)) {
+                        return -1
+                } else {
+                    return outFilterCount[i]
                 }
             }
         }
@@ -3139,3 +3184,48 @@ class MemoryUtil {
     
 }
 
+/**
+ * 使用系统 8.1  R7即为中断号
+ * 参考 https://bbs.pediy.com/thread-268086.htm
+ */
+function fuckSVC() {
+    var LIBC = "libc.so"
+    var syscall = Module.findExportByName(LIBC,"syscall")
+    LOG("\nsyscall addr = " + syscall + "\n",LogColor.C92)
+    var endFuncOff = 0x0
+    var svcOff = 0x0
+    for (var p = 0; p < 20; p++){
+        if (Instruction.parse(syscall.add(p_size * p)).mnemonic == "svc") svcOff = p 
+        if (Instruction.parse(syscall.add(p_size * p)).mnemonic == "b") {
+            endFuncOff = p + 1
+            break
+        }
+    }
+    printCtx(syscall, endFuncOff, 2, svcOff)
+    
+    var svcAddr = syscall.add(svcOff * p_size)
+    LOG("\nsvc addr = " + syscall.add(svcOff * p_size) + "\n", LogColor.C92)
+    
+    var arr_context = new Array()
+    Interceptor.attach(svcAddr,{
+        onEnter: function (args) {
+            if (filterDuplicateOBJ(String(this.context.r7), 10 ,false) != -1) {
+                LOG("\n---------------------------------------------",LogColor.YELLOW)
+                arr_context.length = 0
+                //R7 中断号 参考 unistd-common.h 
+                LOG("R7:" + this.context.r7,LogColor.C94)
+                LOG("sp:" + this.context.sp+ "\t" + "pc:" + this.context.pc,LogColor.C94)
+                LOG("R0:" + this.context.r0)
+                LOG("R1:" + this.context.r1)
+                LOG("R2:" + this.context.r2)
+                LOG("R3:" + this.context.r3)
+                arr_context.push(this.context.r0)
+                arr_context.push(this.context.r1)
+                arr_context.push(this.context.r2)
+                arr_context.push(this.context.r3)
+                // LOG(JSON.stringify(arr_context))
+            }
+        },
+        onLeave: function (ret) {}
+    })
+}
