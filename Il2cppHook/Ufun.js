@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/07/06 15:59
+ * @UpdateTime  2021/07/16 10:22
  * @Des         frida hook u3d functions script
  */
 
@@ -824,7 +824,7 @@ function breakPoint(mPtr,index,name){
                 var strType = getClassName(typeCls)
                 //静态方法没有上下文，反之有则arg+1
                 var ClsArg = args[(isStatic?i+1:i)]
-                var result = FuckKnownType(strType,ClsArg)
+                var result = FuckKnownType(strType,ClsArg,typeCls)
                 LOG("  arg"+i+" | "+arr_method_info[4][i]+"\t--->\t"+ ClsArg +"\t"+ 
                     ((String(ClsArg).length)<9?"\t":"")+
                     strType+" ("+typeCls+")"+"\t"+result,LogColor.C36)
@@ -833,7 +833,7 @@ function breakPoint(mPtr,index,name){
         onLeave:function(ret){
             // if(index!=undefined && count_method_times[index] > maxCallTime) return
             var strType = getClassName(arr_method_info[1])
-            var result = FuckKnownType(strType, ret)
+            var result = FuckKnownType(strType, ret, arr_method_info[1])
             var methodStr = arr_method_info.length == 0 ? "" : " ("+arr_method_info[1]+")"
             LOG("  ret  |"+arr_method_info[5]+"\t--->\t"+ret +
                 //这里的长度在32位的时候是十个长度 0xc976bb40 故小于9就多给他添加一个\t补齐显示
@@ -1027,6 +1027,14 @@ function FuckKnownType(strType,mPtr,tPtr){
                 arr_retStr.push(FuckKnownType(type,item))
             }
             return JSON.stringify(arr_retStr)
+        }
+
+        //数组类型的数据解析
+        if (strType.startsWith("Dictionary")) {
+            tPtr = ptr(tPtr)
+            var addr_getCount = getAddrFromName(tPtr, "get_Count")
+            var count = callFunction(addr_getCount,mPtr)
+            return count + "\t"+FuckKnownType("-1",mPtr,0x0)
         }
 
         switch(strType){
@@ -1372,12 +1380,12 @@ function SendMessage(str0,str1,str2){
 
 function breakWithArgs(mPtr,argCount){
     mPtr = checkPointer(mPtr)
-    if (argCount ==undefined ) argCount = 1
+    if (argCount ==undefined ) argCount = 4
     Interceptor.attach(mPtr,{
         onEnter:function(args){
             LOG("\nCalled from "+String(mPtr).toString(16)+" ---> "+String(mPtr.sub(soAddr)).toString(16),LogColor.C36)
             switch(argCount){
-                case 1: LOG(args[0]); break
+                case 1: LOG(args[0],LogColor.C36); break
                 case 2: LOG(args[0]+"\t"+args[1],LogColor.C36); break
                 case 3: LOG(args[0]+"\t"+args[1]+"\t"+args[2],LogColor.C36); break
                 case 4: LOG(args[0]+"\t"+args[1]+"\t"+args[2]+"\t"+args[3],LogColor.C36); break
