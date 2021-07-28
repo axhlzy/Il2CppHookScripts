@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/07/16 10:22
+ * @UpdateTime  2021/07/28 19:01
  * @Des         frida hook u3d functions script
  */
 
@@ -367,6 +367,10 @@ function C(ImgOrPtr){
 
 //attach A(0xabcd,(args)=>{},(ret)=>{})
 function A(mPtr, mOnEnter, mOnLeave) {
+    if (mPtr == null || mPtr == 0) {
+        LOG("Can't attach nullptr")
+        return
+    }
     Interceptor.attach(checkPointer(mPtr),{
         onEnter: function (args) {
             if (mOnEnter != undefined) mOnEnter(args)
@@ -406,9 +410,55 @@ function d(){
     Interceptor.detachAll()
 }
 
-//reflash
 function r(){
     reflash()
+}
+
+function D() {
+    d()
+    r()
+}
+
+function B_UnityJNI() {
+    
+}
+
+function ShowAA() {
+    
+    Java.perform(() => {
+        var JCSDKProxy = Java.use("com.jcsdk.plugin.JCSDKProxy")
+
+        JCSDKProxy.showInter.implementation = function(){
+            this.showInter()
+            PrintStackTrace()
+        }
+    })
+    
+}
+
+function B_Rate() {
+    d()
+    arrayAddr.length = 0 ? a() : ""
+    B("Rate")
+}
+
+function B_Show() {
+    d()
+    arrayAddr.length == 0 ? a() : ""
+    B("Show")
+}
+
+function B_Reward() {
+    d()
+    arrayAddr.length == 0 ? a() : ""
+    B("Reward")
+}
+
+function B_Interstitial() {
+    d()
+    arrayAddr.length == 0 ? a() : ""
+    B("Interstitial")
+    B("FullScreenAd")
 }
 
 //print list result
@@ -780,16 +830,7 @@ function breakPoint(mPtr,index,name){
     try{
         arr_method_info = get_method_des(mPtr,true)
     }catch(e){
-        mPtr = checkPointer(mPtr)
-        Interceptor.attach(mPtr,{
-            onEnter:function(args){
-                
-            },
-            onLeave:function(ret){
-                // if(index!=undefined && ++count_method_times[index] > maxCallTime) return
-                LOG("\n[*] called : "+mPtr.sub(soAddr)+" ("+arrMethodInfo[index]+")"+"\t--->\t"+name +"  ret ---> "+ret,LogColor.C36)
-            } 
-        })
+        breakWithArgs(checkPointer(mPtr))
         return
     }
 
@@ -1076,8 +1117,14 @@ function FuckKnownType(strType,mPtr,tPtr){
                 return readU16(callFunction(find_method('mscorlib','IntPtr','ToString',0),mPtr))
             case "Action"           :
             case "Action`1"         : 
+            case "Action`2"         : 
                 if (mPtr == 0x0)    return "0x0"
                 return ptr(mPtr).add(0x14).readPointer().readPointer().sub(soAddr)
+            case "Delegate"         : 
+                if (mPtr == 0x0) return "0x0"
+                var tmp_ptr = ptr(mPtr).add(0x8).readPointer()
+                var temp_m_target = ptr(mPtr).add(0x10).readPointer()
+                return tmp_ptr + "("+tmp_ptr.sub(soAddr)+")  m_target:"+temp_m_target+"  virtual:"+(ptr(mPtr).add(0x30).readInt()==0x0?"false":"true")
             case "Char"             :
                 return mPtr.readCString()
             case "FillMethod":
@@ -1355,13 +1402,6 @@ function setFunctionValue(mPtr,value,index){
             if (index == undefined) ret.replace(ptr(value))
             LOG("\nCalled function at "+mPtr +" ---> "+mPtr.sub(soAddr)+" Changed RET",LogColor.C93)
         }
-    })
-}
-
-function SendMessage(str0,str1,str2){
-    Java.perform(function(){
-        var UnityPlayer = Java.use("com.unity3d.player.UnityPlayer")
-        UnityPlayer.UnitySendMessage(str0,str1,str2)
     })
 }
 
@@ -1653,6 +1693,7 @@ function listFieldsFromCls(klass,instance){
 
 function findClass(imageName,className){
     var currentlib = 0
+    if (imageName == "") imageName = "Assembly-CSharp"
     arr_img_names.forEach(function(name,index){
         if (name == imageName){
             currentlib = arr_img_addr[index]
@@ -2431,6 +2472,186 @@ function newLine(){
     }
 }
 
+
+function SendMessage(str0, str1, str2) {
+    
+    // Java 
+    Java.perform(function(){
+        Java.use("com.unity3d.player.UnityPlayer").UnitySendMessage(str0,str1,str2)
+    })
+
+    // Native
+    // callFunction(Module.findExportByName("libunity.so","UnitySendMessage"),allcStr(str0,1),allcStr(str1,1),allcStr(str2,1))
+}
+
+function SendMessageImpl() {
+
+    IronSourceEvents()
+    // MaxSdkCallbacks()
+    // MoPubManager()
+    // TTPluginsGameObject()
+
+    SendMessage('GameAnalytics','OnCommandCenterUpdated','')
+    SendMessage('GameAnalytics','OnRemoteConfigsUpdated','')
+
+    function IronSourceEvents() {
+        SendMessage("IronSourceEvents", "onRewardedVideoAvailabilityChanged", "true")
+        SendMessage("IronSourceEvents", "onRewardedVideoAdShowFailedDemandOnly", "true")
+        SendMessage('IronSourceEvents', 'onInterstitialAdReady', '')
+        SendMessage("IronSourceEvents", "onRewardedVideoAdOpened", "")
+        SendMessage("IronSourceEvents", "onRewardedVideoAdStarted", "")
+        SendMessage("IronSourceEvents", "onRewardedVideoAdEnded", "")
+        SendMessage("IronSourceEvents", "onRewardedVideoAdRewarded", "{'placement_reward_name':'Virtual Item','placement_name':'DefaultRewardedVideo','placement_reward_amount':'1','placement_id':'0'}")
+        SendMessage("IronSourceEvents", "onRewardedVideoAdClosed", "")
+    }
+
+    function MaxSdkCallbacks() {
+
+        SendMessage('MaxSdkCallbacks','ForwardEvent','name=OnSdkInitializedEvent\nconsentDialogState=2\ncountryCode=SG\n')
+
+        SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdDisplayedEvent\nadUnitId=ec1a772e0459f45b");
+        SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdReceivedRewardEvent\nrewardAmount=0\nadUnitId=ec1a772e0459f45b\nrewardLabel=");
+        SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdHiddenEvent\nadUnitId=ec1a772e0459f45b");
+        SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdLoadedEvent\nadUnitId=ec1a772e0459f45b");
+    }
+
+    function MoPubManager() {
+
+        // java.lang.Throwable
+        // at com.unity3d.player.UnityPlayer.UnitySendMessage(Native Method)
+        // at com.mopub.unity.MoPubUnityPlugin$UnityEvent.Emit(MoPubUnityPlugin.java:95)
+        // at com.mopub.unity.MoPubRewardedVideoUnityPluginManager.onRewardedVideoClosed(MoPubRewardedVideoUnityPluginManager.java:67)
+        // at com.mopub.mobileads.MoPubRewardedVideos$1.callback(MoPubRewardedVideos.java:87)
+        // at com.mopub.mobileads.MoPubRewardedVideos.showRewardedVideo(MoPubRewardedVideos.java:77)
+        // at com.mopub.mobileads.MoPubRewardedVideos.showRewardedVideo(MoPubRewardedVideos.java:103)
+        // at com.mopub.unity.MoPubRewardedVideoUnityPlugin$2.run(MoPubRewardedVideoUnityPlugin.java:122)
+        // at com.mopub.unity.MoPubUnityPlugin$10.run(MoPubUnityPlugin.java:526)
+        // at android.os.Handler.handleCallback(Handler.java:790)
+        // at android.os.Handler.dispatchMessage(Handler.java:99)
+        // at android.os.Looper.loop(Looper.java:164)
+        // at android.app.ActivityThread.main(ActivityThread.java:6494)
+        // at java.lang.reflect.Method.invoke(Native Method)
+        // at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:438)
+        // at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:807)
+
+        SendMessage("UnityFacebookSDKPlugin", "UnityFacebookSDKPlugin", "{\"key_hash\":\"NgS2u0aEWjJAWRbMgtyAolzO6s8=\\n\"}")
+        SendMessage("MoPubManager", "EmitSdkInitializedEvent", "[\"0fe07d2ca88549ff9598aed6c45f0773\",\"70\"]")
+        SendMessage("MoPubManager", "EmitInterstitialLoadedEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
+        SendMessage('MoPubManager', 'EmitAdLoadedEvent', '["f7a8241fad1041bda59f303eae75be2d","320","50"]')
+        SendMessage("MoPubManager", "EmitRewardedVideoLoadedEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
+        
+        SendMessage("MoPubManager", "EmitRewardedVideoShownEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
+        SendMessage("MoPubManager", "EmitRewardedVideoReceivedRewardEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
+        SendMessage("MoPubManager", "EmitRewardedVideoClosedEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
+    }
+
+    function TTPluginsGameObject() {
+        SendMessage("TTPluginsGameObject","OnRewardedAdsShown","");
+        SendMessage("TTPluginsGameObject","OnRewardedAdsClosed","{\"shouldReward\":true,\"network\":\"admob-unityads\",\"revenue\":0.00138,\"currency\":\"USD\",\"precision\":\"ESTIMATED\"}");
+        SendMessage("TTPluginsGameObject","OnRewardedAdsReady","{\"loaded\":true}");
+    }
+}
+
+function JNI() {
+
+    // UnityEngine.AndroidJNIModule.AndroidJNI public static Boolean CallBooleanMethod (IntPtr obj,IntPtr methodID,jvalue[] args)
+    find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "CallBooleanMethod", 3, false)
+    // UnityEngine.AndroidJNIModule.AndroidJNI public static IntPtr CallObjectMethod (IntPtr obj,IntPtr methodID,jvalue[] args)
+    find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "CallObjectMethod", 3, false)
+    // UnityEngine.AndroidJNIModule.AndroidJNI public static IntPtr NewStringUTF (String bytes)
+    find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "NewStringUTF", 1, false)   //c#String to jstring
+    
+    // UnityEngine.AndroidJNIModule.AndroidJNIHelper   public static IntPtr GetMethodID (IntPtr javaClass,String methodName,String signature)
+    find_method("UnityEngine.AndroidJNIModule", "AndroidJNIHelper", "GetMethodID", 3, false)
+    // UnityEngine.AndroidJNIModule.AndroidJNIHelper   public static String GetSignature (Object obj)
+    find_method("UnityEngine.AndroidJNIModule", "AndroidJNIHelper", "GetSignature", 1, false)
+     
+    // UnityEngine.AndroidJNIModule.AndroidJNISafe     public static IntPtr CallStaticObjectMethod (IntPtr clazz,IntPtr methodID,jvalue[] args)
+    find_method("UnityEngine.AndroidJNIModule", "AndroidJNISafe", "CallStaticObjectMethod", 3, false)
+    // UnityEngine.AndroidJNIModule.AndroidJNISafe     public static Boolean CallBooleanMethod (IntPtr obj,IntPtr methodID,jvalue[] args)
+    find_method("UnityEngine.AndroidJNIModule", "AndroidJNISafe", "CallBooleanMethod", 3, false)
+}
+
+function ADS() {
+
+    //TODO 归纳总结广告平台调用，最终目的是从native层解决广告移植问题
+
+    /**
+     *  MaxSdkCallbacks
+     */
+
+    // MaxSdkCallbacks      findClass("MaxSdk.Scripts","MaxSdkCallbacks")
+    // ForwardEvent         find_method("MaxSdk.Scripts","MaxSdkCallbacks","ForwardEvent",1,false)
+    // sendMessage 到达 ForwardEvent ,再到 CanInvokeEvent 判断是否能进行 真实native函数调用
+    // public static void ShowRewardedAd(string adUnitIdentifier, string placement)
+    // public static void ShowInterstitial(string adUnitIdentifier, string placement)
+    a(findClass("MaxSdk.Scripts", "MaxSdkAndroid"))
+    
+    
+    /**
+     *  IronSource
+     * 
+     *  IronSourcePlacement 三个参数的构造函数，三个fields
+     * 
+     *  在 IronSourceEvents.onRewardedVideoAdRewarded(String) 的参数（java传过来的参数），
+     *  使用 IronSourceEvents.getPlacementFromObject（key-value的形式解析，只保留值） 解析为 IronSourcePlacement
+     */
+
+    // public void ShowInterstitial(string placementName, Action CloseAction, Action FailedAction)
+    // public void ShowRewarded(string placementName, Action FinishedAction, Action SkippedAction, Action FailedAction)
+    a(findClass("Assembly-CSharp", "SDKWrapper"))
+
+    // IronSource findClass("Assembly-CSharp","IronSource")
+    // isRewardedVideoAvailable() / isInterstitialReady()
+    // public static IronSource get_Agent ()
+    a(findClass("Assembly-CSharp", "IronSource"))
+
+    // public void onRewardedVideoAdOpened(string empty)
+    // public void onRewardedVideoAdRewarded(string description)  find_method("Assembly-CSharp","IronSourceEvents","onRewardedVideoAdRewarded",1,false)
+    // public void onRewardedVideoAdClicked(string description)
+    // public void onRewardedVideoAdClosed(string empty)
+    // public void onRewardedVideoAdEnded(string empty)
+    // public void onRewardedVideoAdShowFailed(string description)  ===> onRewardedVideoAdShowFailed inlinehook -> onRewardedVideoAdRewarded
+    // public void onRewardedVideoAvailabilityChanged(string stringAvailable)   "true"
+    a(findClass("Assembly-CSharp", "IronSourceEvents"))
+
+    // public bool isRewardedVideoAvailable()
+    // public void setMetaData(string key, string value) // 常出问题的jni调用
+    // public void showInterstitial() / public void showInterstitial(string placementName)
+    // public void showRewardedVideo() / public void showRewardedVideo(string placementName)
+    a(findClass("Assembly-CSharp", "AndroidAgent"))
+
+
+
+    /**
+     *  MoPubManager
+     */
+
+    // public void EmitRewardedVideoReceivedRewardEvent(string argsJson)
+    // public void EmitRewardedVideoShownEvent(string argsJson)
+    // public void EmitRewardedVideoClosedEvent(string argsJson)
+    a(findClass("Assembly-CSharp", "MoPubManager"))
+
+    // Assembly-CSharp.MoPub   public static Void ShowRewardedVideo (String adUnitId,String customData)
+    find_method("Assembly-CSharp", "MoPub", "ShowRewardedVideo", 2, false)
+    // Assembly-CSharp.MoPub   public static Void ShowInterstitialAd (String adUnitId)
+    find_method("Assembly-CSharp", "MoPub", "ShowInterstitialAd", 1, false)
+    // Assembly-CSharp.MoPub   public static Boolean HasRewardedVideo (String adUnitId)
+    find_method("Assembly-CSharp", "MoPub", "HasRewardedVideo", 1, false)
+    
+
+    // Assembly-CSharp.VoodooSauce     public static Void ShowRewardedVideo (Action`1 onComplete,String tag)
+    find_method("Assembly-CSharp", "VoodooSauce", "ShowRewardedVideo", 2, false)
+    // Assembly-CSharp.VoodooSauce     public static Void ShowInterstitial (Action onComplete,Boolean ignoreConditions,String tag)
+    find_method("Assembly-CSharp", "VoodooSauce", "ShowInterstitial", 3, false)
+    // Assembly-CSharp.VoodooSauce     public static Boolean IsRewardedVideoAvailable ()
+    find_method("Assembly-CSharp", "VoodooSauce", "IsRewardedVideoAvailable", 0, false)
+    
+    // Assembly-CSharp.AndroidTenjin   public override Void SendEvent (String eventName)
+    find_method("Assembly-CSharp", "AndroidTenjin", "SendEvent", 1, false)
+
+}
+
 function Pay(){
     //todo google支付相关
     find_method("Assembly-CSharp","Purchaser","BuyProductID",1,false)
@@ -2533,10 +2754,9 @@ function Text(){
  * @param {Function} Callback 
  */
 function runOnMain(UpDatePtr,Callback){
-    if (Callback ==undefined || UpDatePtr == undefined) return
-    Interceptor.attach(checkPointer(UpDatePtr),{
-        onEnter:function(args){
-            if (Callback != undefined && Callback != null){
+    if (Callback == undefined || UpDatePtr == undefined) return
+    A(UpDatePtr, () => {
+        if (Callback != undefined && Callback != null){
                 try{
                     Callback()
                 }catch(e){
@@ -2544,9 +2764,6 @@ function runOnMain(UpDatePtr,Callback){
                 }
                 Callback = null
             }
-        },
-        onLeave:function(ret){
-        }
     })
 }
 
@@ -2760,17 +2977,14 @@ function destroyObj(gameObj){
  */
 function HookSetActive(defaltActive){
     if (defaltActive == undefined) defaltActive = 1
-    Interceptor.attach(find_method("UnityEngine","GameObject","SetActive",1,true),{
-        onEnter:function(args){
-            if (filterDuplicateOBJ(readU16(f_getName(ptr(args[0])))) == -1) return
+    A(find_method("UnityEngine", "GameObject", "SetActive", 1), (args) => {
+        if (filterDuplicateOBJ(readU16(f_getName(ptr(args[0])))) == -1) return
             if (defaltActive == 2 || args[1].toInt32() == defaltActive) {
                 LOG("\n"+getLine(38),LogColor.YELLOW)
                 LOG("public extern void SetActive( "+(args[1].toInt32()==0?"false":"true")+" );",LogColor.C36)
                 LOG(getLine(20),LogColor.C33)
                 showGameObject(args[0])
             }
-        },
-        onLeave:function(retval){}
     })
 }
 
@@ -2798,10 +3012,12 @@ function filterDuplicateOBJ(objstr, maxCount) {
     }
 }
 
-function HookOnPointerClick(){
+function HookOnPointerClick() {
+    
+    var OnPointerClick = find_method("UnityEngine.UI","Button","OnPointerClick",1)
 
     var pointerEventData = null
-    Interceptor.attach(find_method("UnityEngine.UI","Button","OnPointerClick",1),{
+    Interceptor.attach(OnPointerClick,{
         onEnter:function(args){
             LOG("\n"+getLine(38),LogColor.YELLOW)
             LOG("public void OnPointerClick( "+(args[1])+" );",LogColor.C36)
@@ -2963,52 +3179,34 @@ function HookPlayerPrefs(){
 
     function InterceptorGetFunctions(){
 
-        //public static extern float GetFloat(string key, float defaultValue)
-        var Addr_GetFloat       = find_method("UnityEngine.CoreModule","PlayerPrefs","GetFloat",2,true)
-        if (Addr_GetFloat !=0){
-            Interceptor.attach(Addr_GetFloat,{
-                onEnter:function(args){
-                    this.arg0 = args[0]
-                    this.arg1 = args[1]
-                },
-                onLeave:function(ret){
-                    LOG("\n[*] '"+ret +"' = GetFloat('"+readU16(this.arg0)+"',"+this.arg1+")",LogColor.C36)
-                    if (isShowPrintStack) PrintStackTraceN(this.context)
-                }
-            })
-        }
+        //public static extern float GetFloat(string key, float defaultValue
+        A(find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetFloat", 2, true), (args) => {
+            this.arg0 = args[0]
+            this.arg1 = args[1]
+        }, (ret) => {
+            LOG("\n[*] '"+ret +"' = GetFloat('"+readU16(this.arg0)+"',"+this.arg1+")",LogColor.C36)
+            if (isShowPrintStack) PrintStackTraceN(this.context)
+        })
  
         //public static extern int GetInt(string key, int defaultValue)
-        var Addr_GetInt         = find_method("UnityEngine.CoreModule","PlayerPrefs","GetInt",2,true)
-        if (Addr_GetInt !=0){
-            Interceptor.attach(Addr_GetInt,{
-                onEnter:function(args){
-                    this.arg0 = args[0]
-                    this.arg1 = args[1]
-                },
-                onLeave:function(ret){
-                    var s_arg0 = readU16(this.arg0)
-                    var i_arg1 = this.arg1
-                    LOG("\n[*] '"+ret.toInt32() +"' = GetInt('"+s_arg0+"',"+i_arg1+")",LogColor.C36)
-                    if (isShowPrintStack) PrintStackTraceN(this.context)
-                    if (s_arg0.indexOf("SaleBoughted")!=-1) ret.replace(ptr(0x1))
-                }
-            })
-        }
+        A(find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetInt", 2, true), (args) => {
+            this.arg0 = args[0]
+            this.arg1 = args[1]
+        }, (ret) => {
+            var s_arg0 = readU16(this.arg0)
+            var i_arg1 = this.arg1
+            LOG("\n[*] '"+ret.toInt32() +"' = GetInt('"+s_arg0+"',"+i_arg1+")",LogColor.C36)
+            if (isShowPrintStack) PrintStackTraceN(this.context)
+            if (s_arg0.indexOf("SaleBoughted")!=-1) ret.replace(ptr(0x1))
+        })
         
         //public static string GetString(string key)
-        var Addr_GetString      = find_method("UnityEngine.CoreModule","PlayerPrefs","GetString",1,true)
-        if (Addr_GetString !=0){
-            Interceptor.attach(Addr_GetString,{
-                onEnter:function(args){
-                    this.arg0 = args[0]
-                },
-                onLeave:function(ret){
-                    LOG("\n[*] '"+readU16(ret)+"' = GetString('"+readU16(this.arg0)+"')",LogColor.C36)
-                    if (isShowPrintStack) PrintStackTraceN(this.context)
-                }
-            })
-        }
+        A(find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetString", 1, true), (args) => {
+            this.arg0 = args[0]
+        }, (ret) => {
+            LOG("\n[*] '"+readU16(ret)+"' = GetString('"+readU16(this.arg0)+"')",LogColor.C36)
+            if (isShowPrintStack) PrintStackTraceN(this.context)
+        })
     }
 
     function InterceptorSetFunctions(){
@@ -3060,30 +3258,17 @@ function HookPlayerPrefs(){
     }
 }
 
-function HookDebugLog(){
-    var addr_log_debug = find_method("UnityEngine.CoreModule","Debug","Log",1,true)
-    if (addr_log_debug != 0){
-        Interceptor.attach(addr_log_debug,{
-            onEnter:function(args){
-                LOG("\n[*] Debug.LOG('"+readU16(args[0])+"')",LogColor.C36)
-            },
-            onLeave:function(ret){
+function HookDebugLog() {
     
-            }
-        })
-    }
+    A(find_method("UnityEngine.CoreModule","Debug","Log",1,true), (args) => {
+        LOG("\n[*] Debug.LOG('"+readU16(args[0])+"')",LogColor.C36)
+    })
 
-    var addr_log_logger = find_method("UnityEngine.CoreModule","Logger","Log",1,true)
-    if (addr_log_logger != 0){
-        Interceptor.attach(addr_log_logger,{
-            onEnter:function(args){
-                LOG("\n[*] Logger.LOG('"+readU16(args[0])+"')",LogColor.C32)
-            },
-            onLeave:function(ret){
+    A(find_method("UnityEngine.CoreModule","Logger","Log",1,true), (args) => {
+        LOG("\n[*] Logger.LOG('"+readU16(args[0])+"')",LogColor.C32)
+    })
     
-            }
-        })
-    }
+
 }
 
 function HookLoadScene(){
@@ -3094,14 +3279,11 @@ function HookLoadScene(){
         LOG("\nCurrentScene   --->   "+readU16(get_name(current_scene.toInt32()))+"\n",LogColor.C36)
     }
 
-    Interceptor.attach(find_method("UnityEngine.CoreModule","SceneManager","LoadScene",2),{
-        onEnter:function(args){
-            LOG("\nCalled public static Scene LoadScene (String sceneName,LoadSceneParameters parameters)",LogColor.C36)
-            LOG(" arg0  --->\t"+args[0]+"\t"+readU16(args[0]),LogColor.C36)
-        }, 
-        onLeave:function(ret){
-            LOG(" ret  --->\t"+ret,LogColor.C36)
-        }
+    A(find_method("UnityEngine.CoreModule", "SceneManager", "LoadScene", 2), (args) => {
+        LOG("\nCalled public static Scene LoadScene (String sceneName,LoadSceneParameters parameters)",LogColor.C36)
+        LOG(" arg0  --->\t"+args[0]+"\t"+readU16(args[0]),LogColor.C36)
+    }, (ret) => {
+        LOG(" ret  --->\t"+ret,LogColor.C36)
     })
 }
 
@@ -3321,9 +3503,8 @@ function fuckSVC() {
     LOG("\nsvc addr = " + syscall.add(svcOff * p_size) + "\n", LogColor.C92)
     
     var arr_context = new Array()
-    Interceptor.attach(svcAddr,{
-        onEnter: function (args) {
-            if (filterDuplicateOBJ(String(this.context.r7), 10 ,false) != -1) {
+    A(svcAddr, (args) => {
+        if (filterDuplicateOBJ(String(this.context.r7), 10 ,false) != -1) {
                 LOG("\n---------------------------------------------",LogColor.YELLOW)
                 arr_context.length = 0
                 //R7 中断号 参考 unistd-common.h 
@@ -3339,8 +3520,6 @@ function fuckSVC() {
                 arr_context.push(this.context.r3)
                 // LOG(JSON.stringify(arr_context))
             }
-        },
-        onLeave: function (ret) {}
     })
 }
 
