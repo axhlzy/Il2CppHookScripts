@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/07/28 19:01
+ * @UpdateTime  2021/07/29 14:53
  * @Des         frida hook u3d functions script
  */
 
@@ -371,7 +371,7 @@ function A(mPtr, mOnEnter, mOnLeave) {
         LOG("Can't attach nullptr")
         return
     }
-    Interceptor.attach(checkPointer(mPtr),{
+    Interceptor.attach(checkPointer(ptr(mPtr)),{
         onEnter: function (args) {
             if (mOnEnter != undefined) mOnEnter(args)
         },
@@ -490,7 +490,8 @@ function lffm(methodInfo,instance){
 }
 
 //list fields from class
-function lffc(klass,instance){
+function lffc(klass, instance) {
+    //对于枚举类型也可以使用，枚举类型也是fields
     listFieldsFromCls(klass,instance)
 }
 
@@ -1030,7 +1031,7 @@ function print_deserted_methods(){
 
 // 查看类型的,主要用来区分transform和gameObj
 function SeeTypeToString(obj,b){
-    var s_type   = new NativeFunction(find_method("UnityEngine.CoreModule","Object","ToString",0,true),'pointer',['pointer'])(ptr(obj))
+    var s_type = callFunction(find_method("UnityEngine.CoreModule", "Object", "ToString", 0), ptr(obj))
     if (b == undefined) {
         LOG(readU16(s_type))
     }else{
@@ -1048,18 +1049,18 @@ function readSingle(value){
  * 将mPtr指向的位置以 strType 类型解析并返回 String 
  * 拓展解析一些常用的类，用b断某个方法的时候就可以很方便的打印出参数
  * @param {String}  strType  类型字符串
- * @param {Pointer} mPtr     内存指针
- * @param {Pointer} tPtr     类指针
+ * @param {Pointer} mPtr     内存指针cls
+ * @param {Pointer} tPtr     类指针（非必选）
  * @returns {String}         简写字符串描述
  */
 function FuckKnownType(strType,mPtr,tPtr){
     try{
         mPtr = ptr(mPtr)
+        tPtr = ptr(tPtr)
 
         //数组类型的数据解析
         if (strType.endsWith("[]")) {
-            tPtr = ptr(tPtr)
-            var addr_getCount = getAddrFromName(tPtr,"get_Count")
+            var addr_getCount = getAddrFromName(tPtr, "get_Count")
             var addr_get_Item = getAddrFromName(tPtr, "get_Item")
             var arr_retStr = new Array()
             for (var index = 0; index < callFunction(addr_getCount, mPtr); index++) {
@@ -1072,10 +1073,24 @@ function FuckKnownType(strType,mPtr,tPtr){
 
         //数组类型的数据解析
         if (strType.startsWith("Dictionary")) {
-            tPtr = ptr(tPtr)
             var addr_getCount = getAddrFromName(tPtr, "get_Count")
             var count = callFunction(addr_getCount,mPtr)
             return count + "\t"+FuckKnownType("-1",mPtr,0x0)
+        }
+
+        //枚举解析
+        if (class_is_enum(tPtr)) {
+            var iter = Memory.alloc(p_size)
+            var field
+            var enumIndex = 0
+            while (field = il2cpp_class_get_fields(tPtr, iter)) {
+                if (field == 0x0) break
+                var fieldName = field.readPointer().readCString()
+                var filedType = field.add(p_size).readPointer()
+                var field_class = il2cpp_class_from_type(filedType)
+                if (String(field_class) != String(tPtr)) continue
+                if (Number(mPtr) == Number(enumIndex++)) return (strType != "1" ? "Eunm -> " : "") + fieldName
+            }
         }
 
         switch(strType){
@@ -1127,12 +1142,6 @@ function FuckKnownType(strType,mPtr,tPtr){
                 return tmp_ptr + "("+tmp_ptr.sub(soAddr)+")  m_target:"+temp_m_target+"  virtual:"+(ptr(mPtr).add(0x30).readInt()==0x0?"false":"true")
             case "Char"             :
                 return mPtr.readCString()
-            case "FillMethod":
-                if (mPtr == 0x0) return "Horizontal"
-                if (mPtr == 0x1) return "Vertical"
-                if (mPtr == 0x2) return "Radial90"
-                if (mPtr == 0x3) return "Radial180"
-                if (mPtr == 0x4) return "Radial360"
             case "Text"             : return readU16(callFunction(find_method("UnityEngine.UI","Text","get_text",0),mPtr))
             case "Vector2"          : return readU16(callFunction(find_method("UnityEngine.CoreModule","Vector2","ToString",0),mPtr))
             case "Vector3"          : return readU16(callFunction(find_method("UnityEngine.CoreModule","Vector3","ToString",0),mPtr))
@@ -1152,7 +1161,8 @@ function FuckKnownType(strType,mPtr,tPtr){
             case "TextMeshProUGUI"  : return readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "GetParsedText", 0), mPtr))
             default                 : return readU16(callFunction(find_method("mscorlib","Object","ToString",0),mPtr))
         }
-    }catch(e){
+    }
+    catch (e) {
         // LOG(e)
         return " ? "
     }
@@ -1392,16 +1402,13 @@ function setFunctionBoolean(mPtr,boolean,index){
 
 function setFunctionValue(mPtr,value,index){
     mPtr = checkPointer(mPtr)
-    Interceptor.attach(mPtr,{
-        onEnter:function(args){
-            if (index != undefined){
-                args[index] = ptr(value)
-            }
-        },
-        onLeave:function(ret){
-            if (index == undefined) ret.replace(ptr(value))
-            LOG("\nCalled function at "+mPtr +" ---> "+mPtr.sub(soAddr)+" Changed RET",LogColor.C93)
+    A(mPtr, (args) => {
+        if (index != undefined){
+            args[index] = ptr(value)
         }
+    }, (ret) => {
+        if (index == undefined) ret.replace(ptr(value))
+        LOG("\nCalled function at "+mPtr +" ---> "+mPtr.sub(soAddr)+" Changed RET",LogColor.C93)
     })
 }
 
@@ -1410,30 +1417,31 @@ function setFunctionValue(mPtr,value,index){
  * @param {Pointer} mPtr 
  * @returns 
  */
- function callFunction(mPtr){
-    if (mPtr == undefined || mPtr == null) return 
-    for(var i = 1;i <= (arguments.length < 5 ? 5 : arguments.length) - 1 ; i++) 
+function callFunction(mPtr){
+    if (mPtr == undefined || mPtr == null || mPtr == 0x0) return ptr(0x0)
+    for (var i = 1; i <= (arguments.length < 5 ? 5 : arguments.length) - 1; i++)
         arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))
-    return new NativeFunction(checkPointer(mPtr),'pointer',['pointer','pointer','pointer','pointer'])
-        (arguments[1],arguments[2],arguments[3],arguments[4])
+    return new NativeFunction(checkPointer(mPtr), 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
+        (arguments[1], arguments[2], arguments[3], arguments[4])
+}
+
+function callFunctionRB(mPtr){
+    return callFunction(mPtr).toInt32() == 1
 }
 
 function breakWithArgs(mPtr,argCount){
     mPtr = checkPointer(mPtr)
-    if (argCount ==undefined ) argCount = 4
-    Interceptor.attach(mPtr,{
-        onEnter:function(args){
-            LOG("\nCalled from "+String(mPtr).toString(16)+" ---> "+String(mPtr.sub(soAddr)).toString(16),LogColor.C36)
-            switch(argCount){
-                case 1: LOG(args[0],LogColor.C36); break
-                case 2: LOG(args[0]+"\t"+args[1],LogColor.C36); break
-                case 3: LOG(args[0]+"\t"+args[1]+"\t"+args[2],LogColor.C36); break
-                case 4: LOG(args[0]+"\t"+args[1]+"\t"+args[2]+"\t"+args[3],LogColor.C36); break
-            }
-        },
-        onLeave:function(ret){
-            LOG("End Function return " + ret,LogColor.C36)
+    if (argCount == undefined) argCount = 4
+    A(mPtr, (args) => {
+        LOG("\nCalled from "+String(mPtr).toString(16)+" ---> "+String(mPtr.sub(soAddr)).toString(16),LogColor.C36)
+        switch(argCount){
+            case 1: LOG(args[0],LogColor.C36); break
+            case 2: LOG(args[0]+"\t"+args[1],LogColor.C36); break
+            case 3: LOG(args[0]+"\t"+args[1]+"\t"+args[2],LogColor.C36); break
+            case 4: LOG(args[0]+"\t"+args[1]+"\t"+args[2]+"\t"+args[3],LogColor.C36); break
         }
+    }, (ret) => {
+        LOG("End Function return " + ret,LogColor.C36)
     })
 }
 
@@ -1590,13 +1598,15 @@ function listFieldsFromCls(klass,instance){
     if (instance !=undefined) instance = ptr(instance)
     var fieldsCount = getFieldsCount(klass)
     if(fieldsCount <= 0) return
+    var is_enum = class_is_enum(klass)
     if (arguments[2] == undefined)
-        LOG("\nFound "+fieldsCount+" Fields in class: "+getClassName(klass)+" ("+klass+")",LogColor.C96)
+        LOG("\nFound "+fieldsCount+" Fields"+(is_enum==0x1?"(enum)":"")+" in class: "+getClassName(klass)+" ("+klass+")",LogColor.C96)
     //...\Data\il2cpp\libil2cpp\il2cpp-class-internals.h
     var iter = Memory.alloc(p_size);
     var field = null
     var maxlength = 0
     var arrStr = new Array()
+    var enumIndex = 0
     while (field = il2cpp_class_get_fields(klass, iter)) {
         if (field == 0x0) break
         var fieldName = field.readPointer().readCString()
@@ -1605,8 +1615,9 @@ function listFieldsFromCls(klass,instance){
         var field_class = il2cpp_class_from_type(filedType)
         var fieldClassName = getClassName(field_class)
         var accessStr = fuckAccess(filedType)
-        accessStr = accessStr.substring(0,accessStr.length-1)
-        var retStr = filedOffset+"\t"+accessStr+"\t"+fieldClassName+"\t"+field_class+"\t"+fieldName
+        accessStr = accessStr.substring(0, accessStr.length - 1)
+        var enumStr = (is_enum && (String(field_class) == String(klass))) ? (enumIndex++ + "\t") : " "
+        var retStr = filedOffset+"\t"+accessStr+"\t"+fieldClassName+"\t"+field_class+"\t"+fieldName + "\t"+enumStr
         arrStr.push(retStr)
         maxlength = retStr.length < maxlength ? maxlength : retStr.length
     }
@@ -1628,7 +1639,10 @@ function listFieldsFromCls(klass,instance){
         //值解析
         if (mStr[0].indexOf("---")!=0) {
             var mName = mStr[2]
-            LOG("["+index+"] "+mStr[0]+" "+mStr[1]+" "+mStr[2]+"("+mStr[3]+")"+" "+mStr[4],LogColor.C36)
+            var indexStr = String("["+index+"]")
+            var indexSP = indexStr.length == 3 ? " " : ""
+            var enumStr = String(mStr[5]).length == 1 ? String(mStr[5]+" ") : String(mStr[5])
+            LOG(indexStr + indexSP +" "+mStr[0]+" "+mStr[1]+" "+mStr[2]+"("+mStr[3]+") "+enumStr+" "+mStr[4],LogColor.C36)
             if (instance != undefined){
                 var mPtr = ptr(instance).add(mStr[0])
                 var realP = mPtr.readPointer()
@@ -1719,7 +1733,7 @@ function getUnityInfo(){
 
     var line20 = getLine(20)
 
-    Application()
+    // Application()
     SystemInfo()
     // Time()
 
@@ -1728,19 +1742,13 @@ function getUnityInfo(){
         console.error("------------------- TIME -------------------")
     
         //public static extern float get_time()
-        var addr_get_time = find_method("UnityEngine.CoreModule","Time","get_time",0,true)
-        if (addr_get_time != 0)
-            LOG("[*] get_time \t\t\t: "+new NativeFunction(addr_get_time,'float',[])()+"\n"+line20,LogColor.C36)
+        LOG("[*] get_time \t\t\t: "+callFunction(find_method("UnityEngine.CoreModule","Time","get_time",0)).toInt32()+"\n"+line20,LogColor.C36)
     
         //public static extern float deltaTime()
-        var addr_deltaTime = find_method("UnityEngine.CoreModule","Time","deltaTime",0,true)
-        if (addr_deltaTime != 0)
-            LOG("[*] deltaTime \t\t\t: "+new NativeFunction(addr_deltaTime,'float',[])()+"\n"+line20,LogColor.C36)
-    
+        LOG("[*] deltaTime \t\t\t: " + callFunction(find_method("UnityEngine.CoreModule", "Time", "deltaTime", 0)).toInt32() + "\n" + line20, LogColor.C36)
+        
         //public static extern float get_fixedDeltaTime()
-        var addr_get_fixedDeltaTime = find_method("UnityEngine.CoreModule","Time","get_fixedDeltaTime",0,true)
-        if (addr_get_fixedDeltaTime != 0)
-            LOG("[*] fixedDeltaTime \t\t: "+new NativeFunction(addr_get_fixedDeltaTime,'float',[])()+"\n"+line20,LogColor.C36)
+        LOG("[*] fixedDeltaTime \t\t: "+callFunction(find_method("UnityEngine.CoreModule","Time","get_fixedDeltaTime",0)).toInt32()+"\n"+line20,LogColor.C36)
     
         //public static extern float get_fixedTime()
         var addr_get_fixedTime = find_method("UnityEngine.CoreModule","Time","get_fixedTime",0,true)
@@ -1774,94 +1782,66 @@ function getUnityInfo(){
     }
     
     function Application(){
-        LOG("------------------- Application -------------------",LogColor.RED)
+        LOG("------------------- Application -------------------", LogColor.RED)
         
-        var Addr_cloudProjectId         = find_method("UnityEngine.CoreModule","Application","get_cloudProjectId",0,true)
-        var Addr_dataPath               = find_method("UnityEngine.CoreModule","Application","get_dataPath",0,true)
-        var Addr_identifier             = find_method("UnityEngine.CoreModule","Application","get_identifier",0,true)
-        var Addr_internetReachability   = find_method("UnityEngine.CoreModule","Application","get_internetReachability",0,true)
-        var Addr_isMobilePlatform       = find_method("UnityEngine.CoreModule","Application","get_isMobilePlatform",0,true)
-        var Addr_isConsolePlatform      = find_method("UnityEngine.CoreModule","Application","get_isConsolePlatform",0,true)
-        var Addr_isEditor               = find_method("UnityEngine.CoreModule","Application","get_isEditor",0,true)
-        var Addr_productName            = find_method("UnityEngine.CoreModule","Application","get_productName",0,true)
-        var Addr_streamingAssetsPath    = find_method("UnityEngine.CoreModule","Application","get_streamingAssetsPath",0,true)
-        var Addr_version                = find_method("UnityEngine.CoreModule","Application","get_version",0,true)
-        var Addr_unityVersion           = find_method("UnityEngine.CoreModule","Application","get_unityVersion",0,true)
         var Addr_systemLanguage         = find_method("UnityEngine.CoreModule","Application","get_systemLanguage",0,true)
-        var Addr_isPlaying              = find_method("UnityEngine.CoreModule","Application","get_isPlaying",0,true)
-        var Addr_persistentDataPath     = find_method("UnityEngine.CoreModule","Application","get_persistentDataPath",0,true)
         var Addr_dpi                    = find_method("UnityEngine.CoreModule","Application","get_dpi",0,true)
         var Addr_get_height             = find_method("UnityEngine.CoreModule","Application","get_height",0,true)
         var Addr_get_width              = find_method("UnityEngine.CoreModule","Application","get_width",0,true)
         var Addr_get_orientation        = find_method("UnityEngine.CoreModule","Application","get_orientation",0,true)
     
         //public static string cloudProjectId()
-        if (Addr_cloudProjectId != 0)
-            LOG("[*] cloudProjectId \t\t: "+ 
-            readU16(new NativeFunction(Addr_cloudProjectId,'pointer',[])())+"\n"+line20,LogColor.C36)
+        LOG("[*] cloudProjectId \t\t: "+ 
+            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_cloudProjectId",0)))+"\n"+line20,LogColor.C36)
     
         //public static string get_productName()
-        if (Addr_productName != 0)
-            LOG("[*] productName \t\t: "+
-            readU16(new NativeFunction(Addr_productName,'pointer',[])())+"\n"+line20,LogColor.C36)
+        LOG("[*] productName \t\t: "+
+            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_productName",0)))+"\n"+line20,LogColor.C36)
     
         //public static extern string get_identifier()
-        if (Addr_identifier != 0)
-            LOG("[*] identifier \t\t\t: "+
-            readU16(new NativeFunction(Addr_identifier,'pointer',[])())+"\n"+line20,LogColor.C36)
+        LOG("[*] identifier \t\t\t: "+
+            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_identifier",0)))+"\n"+line20,LogColor.C36)
     
         //public static string version()
-        if (Addr_version != 0)
-            LOG("[*] version \t\t\t: "+ 
-            readU16(new NativeFunction(Addr_version,'pointer',[])())+"\n"+line20,LogColor.C36)
+        LOG("[*] version \t\t\t: "+ 
+            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_version",0)))+"\n"+line20,LogColor.C36)
     
         //public static string unityVersion()
-        if (Addr_unityVersion != 0)
-            LOG("[*] unityVersion \t\t: "+ 
-            readU16(new NativeFunction(Addr_unityVersion,'pointer',[])())+"\n"+line20,LogColor.C36)
+        LOG("[*] unityVersion \t\t: "+ 
+            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_unityVersion",0)))+"\n"+line20,LogColor.C36)
     
         //public static string dataPath()
-        if (Addr_dataPath != 0)
-            LOG("[*] dataPath \t\t\t: "+
-            readU16(new NativeFunction(Addr_dataPath,'pointer',[])())+"\n"+line20,LogColor.C36)
+        LOG("[*] dataPath \t\t\t: "+
+            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_dataPath",0)))+"\n"+line20,LogColor.C36)
     
         //public static string streamingAssetsPath()
-        if (Addr_streamingAssetsPath != 0)
-            LOG("[*] streamingAssetsPath \t: "+
-            readU16(new NativeFunction(Addr_streamingAssetsPath,'pointer',[])())+"\n"+line20,LogColor.C36)
+        LOG("[*] streamingAssetsPath \t: "+
+            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_streamingAssetsPath",0)))+"\n"+line20,LogColor.C36)
     
         //public static string persistentDataPath
-        if (Addr_persistentDataPath !=0)
-            LOG("[*] persistentDataPath \t\t: "+
-            readU16(new NativeFunction(Addr_persistentDataPath,'pointer',[])())+"\n"+line20,LogColor.C36)
+        LOG("[*] persistentDataPath \t\t: "+
+            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_persistentDataPath",0)))+"\n"+line20,LogColor.C36)
     
         //public static NetworkReachability internetReachability()
-        if (Addr_internetReachability!=0){
-            var value = new NativeFunction(Addr_internetReachability,'int',[])()
-            LOG("[*] internetReachability \t: "+
-                (value==0?"NotReachable":(value==1?"ReachableViaCarrierDataNetwork":"ReachableViaLocalAreaNetwork"))+"\n"+line20,LogColor.C36)
-        }
+        var value = callFunction(find_method("UnityEngine.CoreModule","Application","get_internetReachability",0,true))
+        LOG("[*] internetReachability \t: "+
+            (value==0?"NotReachable":(value==1?"ReachableViaCarrierDataNetwork":"ReachableViaLocalAreaNetwork"))+"\n"+line20,LogColor.C36)
     
-        //public static bool get_isMobilePlatform()
-        if (Addr_isMobilePlatform!=0)
-            LOG("[*] isMobilePlatform \t\t: "+
-            (new NativeFunction(Addr_isMobilePlatform,'bool',[])()==1?"true":"false")+"\n"+line20,LogColor.C36)
+        //public static bool get_isMobilePlatform(
+        LOG("[*] isMobilePlatform \t\t: "+
+            callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isMobilePlatform",0))+"\n"+line20,LogColor.C36)
     
         //public static bool get_isConsolePlatform()
-        if (Addr_isConsolePlatform!=0)
-            LOG("[*] isConsolePlatform \t\t: "+
-            (new NativeFunction(Addr_isConsolePlatform,'bool',[])()==1?"true":"false")+"\n"+line20,LogColor.C36)
+        LOG("[*] isConsolePlatform \t\t: "+
+            (callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isConsolePlatform")))+"\n"+line20,LogColor.C36)
     
-        //public static bool get_isEditor()
-        if (Addr_isEditor!=0)
-            LOG("[*] isEditor \t\t\t: "+
-            (new NativeFunction(Addr_isEditor,'bool',[])()==1?"true":"false")+"\n"+line20,LogColor.C36)
-    
+        //public static bool get_isEditor(
+        LOG("[*] isEditor \t\t\t: "+
+            callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isEditor",0))+"\n"+line20,LogColor.C36)
     
         //public static extern bool get_isPlaying();
-        if (Addr_isPlaying !=0)
-            LOG("[*] isPlaying \t\t\t: "+
-            (new NativeFunction(Addr_isPlaying,'bool',[])()==1?"true":"false")+"\n"+line20,LogColor.C36)
+        LOG("[*] isPlaying \t\t\t: "+
+            callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isPlaying",0))+"\n"+line20,LogColor.C36)
         
         //public static float dpi() 
         if (Addr_dpi !=0)
@@ -1923,7 +1903,6 @@ function getUnityInfo(){
         var addr_get_processorType = find_method("UnityEngine.CoreModule","SystemInfo","get_processorType",0,true)
         var addr_get_systemMemorySize = find_method("UnityEngine.CoreModule","SystemInfo","get_systemMemorySize",0,true)
         var addr_get_processorCount = find_method("UnityEngine.CoreModule","SystemInfo","get_processorCount",0,true)
-        var addr_get_operatingSystemFamily = find_method("UnityEngine.CoreModule","SystemInfo","get_operatingSystemFamily",0,true)
     
         if (addr_get_deviceModel != 0)
             LOG("[*] deviceModel \t\t: "+ 
@@ -1935,7 +1914,7 @@ function getUnityInfo(){
         
         if (addr_get_deviceType != 0)
             LOG("[*] deviceType \t\t\t: "+ 
-            DeviceType(new NativeFunction(addr_get_deviceType,'int',[])())+"\n"+line20,LogColor.C36)
+            FuckKnownType("1",callFunction(find_method("UnityEngine.CoreModule","SystemInfo","get_deviceType",0)),findClass("UnityEngine.CoreModule","DeviceType"))+"\n"+line20,LogColor.C36)
         
         if (addr_get_deviceUniqueIdentifier != 0)
             LOG("[*] deviceUniqueIdentifier \t: "+ 
@@ -1981,27 +1960,8 @@ function getUnityInfo(){
             LOG("[*] processorCount \t\t: "+ 
             new NativeFunction(addr_get_processorCount,'int',[])()+"\n"+line20,LogColor.C36)
     
-        if (addr_get_operatingSystemFamily != 0)
-            LOG("[*] operatingSystemFamily \t: "+ 
-            operatingSystemFamily(new NativeFunction(addr_get_operatingSystemFamily,'int',[])())+"\n"+line20,LogColor.C36)
-        
-        function operatingSystemFamily(int_arg){
-            switch(int_arg){
-                case 0 : return "Other"
-                case 1 : return "MaxOsX"
-                case 2 : return "Windows"
-                case 3 : return "Linux"
-            }
-        }
-        
-        function DeviceType(int_arg){
-            switch(int_arg){
-                case 0 : return "Unknown"
-                case 1 : return "Handeld"
-                case 2 : return "Desktop"
-                case 3 : return "Console"
-            }
-        }
+        LOG("[*] operatingSystemFamily \t: "+ 
+            FuckKnownType("1",callFunction(find_method("UnityEngine.CoreModule","SystemInfo","get_operatingSystemFamily",0)),findClass("UnityEngine.CoreModule","OperatingSystemFamily"))+"\n"+line20,LogColor.C36)
     }
 }
 
@@ -2353,33 +2313,25 @@ function GetFloat(key){
 }
 
 function GetString(key){
-    var ret = new NativeFunction(find_method("UnityEngine.CoreModule","PlayerPrefs","GetString",1,true),'pointer',['pointer'])(allcStr(key,""))
+    var ret = callFunction(find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetString", 1), allcStr(key, ""))
     LOG("\n[*] GetString('"+key+"')\t--->\t"+readU16(ret)+"\n",LogColor.C95)
 }
 
 function SetLocalScale(mTransform,x,y,z){
-    var set_localScale_Injected = find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1,true)
-    if (set_localScale_Injected ==0 ) return
-    new NativeFunction(set_localScale_Injected,'pointer',['pointer','pointer'])(ptr(mTransform),allcVector(x,y,z))
+    callFunction(find_method("UnityEngine.CoreModule", "Transform", "set_localScale_Injected", 1), ptr(mTransform), allcVector(x, y, z))
 }
 
 function SetLocalPosition(mTransform,x,y,z){
-    var set_localPosition_Injected = find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1,true)
-    if (set_localPosition_Injected ==0 ) return
-    new NativeFunction(set_localPosition_Injected,'pointer',['pointer','pointer'])(ptr(mTransform),allcVector(x,y,z))
+    callFunction(find_method("UnityEngine.CoreModule", "Transform", "set_localPosition_Injected", 1), ptr(mTransform), allcVector(x, y, z))
 }
 
 function SetPosition(mTransform,x,y,z){
-    var set_Position_Injected = find_method("UnityEngine.CoreModule","Transform","set_Position_Injected",1,true)
-    if (set_Position_Injected ==0 ) return
-    new NativeFunction(set_Position_Injected,'pointer',['pointer','pointer'])(ptr(mTransform),allcVector(x,y,z))
+    callFunction(find_method("UnityEngine.CoreModule", "Transform", "set_Position_Injected", 1), ptr(mTransform), allcVector(x, y, z))
 }
 
 function SetLocalRotation(mTransform,x,y,z,w){
     // var set_Rotation_Injected = find_method("UnityEngine.CoreModule","Transform","set_Rotation_Injected",1,true)
-    var set_localRotation_Injected = find_method("UnityEngine.CoreModule","Transform","set_localRotation_Injected",1,true)
-    if (set_localRotation_Injected ==0 ) return
-    new NativeFunction(set_localRotation_Injected,'pointer',['pointer','pointer'])(ptr(mTransform),allcVector(x,y,z,w))
+    callFunction(find_method("UnityEngine.CoreModule", "Transform", "set_localRotation_Injected", 1), ptr(mTransform), allcVector(x, y, z, w))
 }
 
 /**
@@ -2395,7 +2347,11 @@ function SetLocalRotation(mTransform,x,y,z,w){
  * @param {Pointer}  transform
  */
  function getGameObject(transform){
-    return new NativeFunction(find_method("UnityEngine.CoreModule","Component","get_gameObject",0),'pointer',['pointer'])(ptr(transform))
+    return callFunction(find_method("UnityEngine.CoreModule","Component","get_gameObject",0),ptr(transform))
+}
+
+function class_is_enum(Pcls) {
+    return callFunction(Module.findExportByName("libil2cpp.so","il2cpp_class_is_enum"),Pcls) == 0x1
 }
 
 /**
@@ -2403,8 +2359,8 @@ function SetLocalRotation(mTransform,x,y,z,w){
  * @param {Pointer}  transform/GameObj/.......
  */
 function getType(mPtr, TYPE) {
-    var p_type = new NativeFunction(find_method('mscorlib','Object','GetType',0),'pointer',['pointer'])(ptr(mPtr))
-    var p_name = readU16(new NativeFunction(find_method("mscorlib","Type","ToString",0),'pointer',['pointer'])(ptr(p_type)))
+    var p_type = callFunction(find_method('mscorlib', 'Object', 'GetType', 0), ptr(mPtr))
+    var p_name = readU16(callFunction(find_method("mscorlib", "Type", "ToString", 0), ptr(p_type)))
     if (TYPE != undefined) return p_name + "(" + p_type + ")"
     LOG("\nType === > " + p_type + "\n" + "Name === > " + p_name + "\n", LogColor.C36)
 }
@@ -2414,14 +2370,12 @@ function getType(mPtr, TYPE) {
  * @param {Pointer} obj this指针
  * @param {Pointer} type 
  */
-function GetComponent(obj,type){
-    var f_GetComponent = new NativeFunction(find_method('UnityEngine.CoreModule','Component','GetComponent',1),'pointer',['pointer','pointer'])
-    return f_GetComponent(ptr(obj),ptr(type))
+function GetComponent(obj, type) {
+    return callFunction(find_method('UnityEngine.CoreModule', 'Component', 'GetComponent', 1), ptr(obj), ptr(type))
 }
 
 function GetComponentG(obj,type){
-    var f_GetComponent = new NativeFunction(find_method('UnityEngine.CoreModule','GameObject','GetComponent',1),'pointer',['pointer','pointer'])
-    return f_GetComponent(ptr(obj),ptr(type))
+    return callFunction(find_method('UnityEngine.CoreModule', 'GameObject', 'GetComponent', 1), ptr(obj), ptr(type))
 }
 
 function GetTypeFromHandle(obj){
@@ -2677,14 +2631,10 @@ function Text(){
         var f_get_text = new NativeFunction(find_method("UnityEngine.UI",'Text','get_text',0),'pointer',['pointer'])
         var TrackText = find_method('UnityEngine.UI','FontUpdateTracker','TrackText',1)
         // var UntrackText = find_method('UnityEngine.UI','FontUpdateTracker','UntrackText',1)
-        if (TrackText != 0){
-            Interceptor.attach(TrackText,{
-                onEnter:function(args){
-                    LOG("TrackText : " + args[0] + "\t" +f_get_text(args[0]) +"\t"+ readU16(f_get_text(args[0])))
-                },
-                onLeave:function(ret){}
-            })
-        }
+
+        A(find_method('UnityEngine.UI', 'FontUpdateTracker', 'TrackText', 1), (args) => {
+            LOG("TrackText : " + args[0] + "\t" +f_get_text(args[0]) +"\t"+ readU16(f_get_text(args[0])))
+        })
     }
 
     function HookGetSetText(){
@@ -2696,32 +2646,20 @@ function Text(){
         var arr_src_str = ['Hold To Run','8082','免费获得','+400','暂停','HEADSHOT']
         var arr_rep_str = ['FuckMusic','-99','','-200²','pause','击中头部']
         
-        function hookSet(){
-            var addr_set = find_method("UnityEngine.UI",'Text','set_text',1)
-            if (addr_set != 0){
-                Interceptor.attach(addr_set,{
-                    onEnter:function(args){
-                        LOG("\n"+"called set_text("+args[1]+")\n["+ReadLength(args[1])+"]\t"+readU16(args[1]),LogColor.C33)
-                        var newP = strReplace(args[1])
-                        if (newP != 0) args[1] = newP
-                    },
-                    onLeave:function(ret){}
-                })
-            }
+        function hookSet() {
+            A(find_method("UnityEngine.UI", 'Text', 'set_text', 1), (args) => {
+                LOG("\n"+"called set_text("+args[1]+")\n["+ReadLength(args[1])+"]\t"+readU16(args[1]),LogColor.C33)
+                var newP = strReplace(args[1])
+                if (newP != 0) args[1] = newP
+            })
         }
     
-        function hookGet(){
-            var addr_get = find_method("UnityEngine.UI",'Text','get_text',0)
-            if (addr_get != 0){
-                Interceptor.attach(addr_get,{
-                    onEnter:function(args){},
-                    onLeave:function(ret){
-                        LOG("\n"+"called "+ret+" = get_text()\n["+ReadLength(ret)+"]\t"+readU16(ret),LogColor.C32)
-                        var newP = strReplace(ret)
-                        if (newP != 0) ret.replace(newP)
-                    }
-                })
-            }
+        function hookGet() {
+            A(find_method("UnityEngine.UI", 'Text', 'get_text', 0), (args) => { }, (ret) => {
+                LOG("\n"+"called "+ret+" = get_text()\n["+ReadLength(ret)+"]\t"+readU16(ret),LogColor.C32)
+                var newP = strReplace(ret)
+                if (newP != 0) ret.replace(newP)
+            })
         }
     
         var memcmp = Module.findExportByName("libc.so","memcmp")
@@ -2816,104 +2754,63 @@ function showTransform(transform){
         PrintHierarchy(transform,1,true)
     }
 
-    var addr_get_eulerAngles = find_method("UnityEngine.CoreModule","Transform","get_eulerAngles",0,true)
-    if (addr_get_eulerAngles != 0){
-        var f_get_eulerAngles = new NativeFunction(addr_get_eulerAngles,'pointer',['pointer','pointer'])
-        var eulerAngles_vector3 = allcVector(0,0,0)
-        f_get_eulerAngles(eulerAngles_vector3,transform)
-        LOG("eulerAngles\t("+eulerAngles_vector3+")\t--->\t"+eulerAngles_vector3.readFloat()+"\t"+eulerAngles_vector3.add(p_size).readFloat()+"\t"+eulerAngles_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
+    var eulerAngles_vector3 = allcVector(0,0,0)
+    callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_eulerAngles", 0), eulerAngles_vector3, transform)
+    LOG("eulerAngles\t(" + eulerAngles_vector3 + ")\t--->\t" + eulerAngles_vector3.readFloat() + "\t" + eulerAngles_vector3.add(p_size).readFloat() + "\t" + eulerAngles_vector3.add(p_size * 2).readFloat(), LogColor.C36)
 
-    var addr_get_forward = find_method("UnityEngine.CoreModule","Transform","get_forward",0,true)
-    if (addr_get_forward != 0){
-        var f_get_forward = new NativeFunction(addr_get_forward,'pointer',['pointer','pointer'])
-        var forward_vector3 = allcVector(0,0,0)
-        f_get_forward(forward_vector3,transform)
-        LOG("forward\t\t("+forward_vector3+")\t--->\t"+forward_vector3.readFloat()+"\t"+forward_vector3.add(p_size).readFloat()+"\t"+forward_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
+    var forward_vector3 = allcVector(0,0,0)
+    callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_forward", 0), forward_vector3, transform)
+    LOG("forward\t\t(" + forward_vector3 + ")\t--->\t" + forward_vector3.readFloat() + "\t" + forward_vector3.add(p_size).readFloat() + "\t" + forward_vector3.add(p_size * 2).readFloat(), LogColor.C36)
 
-    var addr_get_position = find_method("UnityEngine.CoreModule","Transform","get_position",0,true)
-    if (addr_get_position != 0){
-        var f_get_position = new NativeFunction(addr_get_position,'pointer',['pointer','pointer'])
-        var Position_vector3 = allcVector(0,0,0)
-        f_get_position(Position_vector3,transform)
-        LOG("position\t("+Position_vector3+")\t--->\t"+Position_vector3.readFloat()+"\t"+Position_vector3.add(p_size).readFloat()+"\t"+Position_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
-
-    var addr_get_localPosition = find_method("UnityEngine.CoreModule","Transform","get_localPosition",0,true)
-    if (addr_get_localPosition != 0){
-        var f_get_localPosition = new NativeFunction(addr_get_localPosition,'pointer',['pointer','pointer'])
-        var localPosition_vector3 = allcVector(0,0,0)
-        f_get_localPosition(localPosition_vector3,transform)
-        LOG("localPosition\t("+localPosition_vector3+")\t--->\t"+localPosition_vector3.readFloat()+"\t"+localPosition_vector3.add(p_size).readFloat()+"\t"+localPosition_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
+    var Position_vector3 = allcVector(0,0,0)
+    callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_position", 0), Position_vector3, transform)
+    LOG("position\t(" + Position_vector3 + ")\t--->\t" + Position_vector3.readFloat() + "\t" + Position_vector3.add(p_size).readFloat() + "\t" + Position_vector3.add(p_size * 2).readFloat(), LogColor.C36)
     
-    var addr_get_localRotation = find_method("UnityEngine.CoreModule","Transform","get_localRotation",0,true)
-    if (addr_get_localRotation != 0){
-        var f_get_localRotation = new NativeFunction(addr_get_localRotation,'pointer',['pointer','pointer'])
-        var localRotation_Quaternion = allcVector(0,0,0,0)
-        f_get_localRotation(localRotation_Quaternion,transform)
-        LOG("localRotation\t("+localRotation_Quaternion+")\t--->\t"+localRotation_Quaternion.readFloat()+"\t"+localRotation_Quaternion.add(p_size).readFloat()+"\t"+localRotation_Quaternion.add(p_size*2).readFloat()+"\t"+localRotation_Quaternion.add(p_size*3).readFloat(),LogColor.C36)
-    }
-
-    var addr_get_localScale = find_method("UnityEngine.CoreModule","Transform","get_localScale",0,true)
-    if (addr_get_localScale != 0){
-        var f_get_localScale = new NativeFunction(addr_get_localScale,'pointer',['pointer','pointer'])
-        var localScale_vector3 = allcVector(0,0,0)
-        f_get_localScale(localScale_vector3,transform)
-        LOG("localScale\t("+localScale_vector3+")\t--->\t"+localScale_vector3.readFloat()+"\t"+localScale_vector3.add(p_size).readFloat()+"\t"+localScale_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
-
-    var addr_get_lossyScale = find_method("UnityEngine.CoreModule","Transform","get_lossyScale",0,true)
-    if (addr_get_lossyScale != 0){
-        var f_get_lossyScale = new NativeFunction(addr_get_lossyScale,'pointer',['pointer','pointer'])
-        var lossyScale_vector3 = allcVector(0,0,0)
-        f_get_lossyScale(lossyScale_vector3,transform)
-        LOG("lossyScale\t("+lossyScale_vector3+")\t--->\t"+lossyScale_vector3.readFloat()+"\t"+lossyScale_vector3.add(p_size).readFloat()+"\t"+lossyScale_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
-
-    var addr_get_right = find_method("UnityEngine.CoreModule","Transform","get_right",0,true)
-    if (addr_get_right != 0){
-        var f_get_right = new NativeFunction(addr_get_right,'pointer',['pointer','pointer'])
-        var right_vector3 = allcVector(0,0,0)
-        f_get_right(right_vector3,transform)
-        LOG("right\t\t("+right_vector3+")\t--->\t"+right_vector3.readFloat()+"\t"+right_vector3.add(p_size).readFloat()+"\t"+right_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
-
-    var addr_get_up = find_method("UnityEngine.CoreModule","Transform","get_up",0,true)
-    if (addr_get_up != 0){
-        var f_get_up = new NativeFunction(addr_get_up,'pointer',['pointer','pointer'])
-        var up_vector3 = allcVector(0,0,0)
-        f_get_up(up_vector3,transform)
-        LOG("up\t\t("+up_vector3+")\t--->\t"+up_vector3.readFloat()+"\t"+up_vector3.add(p_size).readFloat()+"\t"+up_vector3.add(p_size*2).readFloat(),LogColor.C36)
-    }
+    var localPosition_vector3 = allcVector(0,0,0)
+    callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_localPosition", 0), localPosition_vector3, transform)
+    LOG("localPosition\t(" + localPosition_vector3 + ")\t--->\t" + localPosition_vector3.readFloat() + "\t" + localPosition_vector3.add(p_size).readFloat() + "\t" + localPosition_vector3.add(p_size * 2).readFloat(), LogColor.C36)
     
-    var addr_get_rotation = find_method("UnityEngine.CoreModule","Transform","get_rotation",0,true)
-    if (addr_get_rotation != 0){
-        var f_get_rotation = new NativeFunction(addr_get_rotation,'pointer',['pointer','pointer'])
-        var rotation_Quaternion = allcVector(0,0,0,0)
-        f_get_rotation(rotation_Quaternion,transform)
-        LOG("rotation\t("+rotation_Quaternion+")\t--->\t"+rotation_Quaternion.readFloat()+"\t"+rotation_Quaternion.add(p_size).readFloat()+"\t"+rotation_Quaternion.add(p_size*2).readFloat()+"\t"+rotation_Quaternion.add(p_size*3).readFloat(),LogColor.C36)
-    }
+    var localRotation_Quaternion = allcVector(0,0,0,0)
+    callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_localRotation", 0), localRotation_Quaternion, transform)
+    LOG("localRotation\t(" + localRotation_Quaternion + ")\t--->\t" + localRotation_Quaternion.readFloat() + "\t" + localRotation_Quaternion.add(p_size).readFloat() + "\t" + localRotation_Quaternion.add(p_size * 2).readFloat() + "\t" + localRotation_Quaternion.add(p_size * 3).readFloat(), LogColor.C36)
+    
+    var localScale_vector3 = allcVector(0,0,0)
+    callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_localScale", 0), localScale_vector3, transform)
+    LOG("localScale\t(" + localScale_vector3 + ")\t--->\t" + localScale_vector3.readFloat() + "\t" + localScale_vector3.add(p_size).readFloat() + "\t" + localScale_vector3.add(p_size * 2).readFloat(), LogColor.C36)
+
+    var lossyScale_vector3 = allcVector(0,0,0)
+    callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_lossyScale", 0), lossyScale_vector3, transform)
+    LOG("lossyScale\t(" + lossyScale_vector3 + ")\t--->\t" + lossyScale_vector3.readFloat() + "\t" + lossyScale_vector3.add(p_size).readFloat() + "\t" + lossyScale_vector3.add(p_size * 2).readFloat(), LogColor.C36)
+
+    var right_vector3 = allcVector(0,0,0)
+    callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_right", 0), right_vector3, transform)
+    LOG("right\t\t(" + right_vector3 + ")\t--->\t" + right_vector3.readFloat() + "\t" + right_vector3.add(p_size).readFloat() + "\t" + right_vector3.add(p_size * 2).readFloat(), LogColor.C36)
+
+    var up_vector3 = allcVector(0,0,0)
+    callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_up", 0), up_vector3, transform)
+    LOG("up\t\t(" + up_vector3 + ")\t--->\t" + up_vector3.readFloat() + "\t" + up_vector3.add(p_size).readFloat() + "\t" + up_vector3.add(p_size * 2).readFloat(), LogColor.C36)
+    
+    var rotation_Quaternion = allcVector(0,0,0,0)
+    callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_rotation", 0, true), rotation_Quaternion, transform)
+    LOG("rotation\t(" + rotation_Quaternion + ")\t--->\t" + rotation_Quaternion.readFloat() + "\t" + rotation_Quaternion.add(p_size).readFloat() + "\t" + rotation_Quaternion.add(p_size * 2).readFloat() + "\t" + rotation_Quaternion.add(p_size * 3).readFloat(), LogColor.C36)
 }
 
 function showEventData(eventData){
-    LOG("--------- EventData ---------",LogColor.C33)
-    eventData = ptr(eventData) 
-    var f_get_position = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_position",0,true),'pointer',['pointer','pointer'])
+    LOG("--------- EventData ---------", LogColor.C33)
+    
+    eventData = ptr(eventData)
+    
     var click_vector2 = allcVector()
-    f_get_position(click_vector2,eventData)
+    callFunction(find_method("UnityEngine.UI", "PointerEventData", "get_position", 0), click_vector2, eventData)
     LOG("ClickPositon\t--->\t"+click_vector2.readFloat()+"\t"+click_vector2.add(p_size).readFloat(),LogColor.C36)
     
     var f_get_clickTime = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_clickTime",0,true),'float',['pointer'])
     LOG("clickTime\t--->\t"+f_get_clickTime(eventData),LogColor.C36)
 
-    var f_get_clickCount = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_clickCount",0,true),'int',['pointer'])
-    LOG("clickCount\t--->\t"+f_get_clickCount(eventData),LogColor.C36)
+    LOG("clickCount\t--->\t" + callFunction(find_method("UnityEngine.UI", "PointerEventData", "get_clickCount", 0), eventData), LogColor.C36)
     
-    var f_get_delta = new NativeFunction(find_method("UnityEngine.UI","PointerEventData","get_delta",0,true),'pointer',['pointer','pointer'])
     var delta_vector2 = allcVector()
-    f_get_delta(delta_vector2,eventData)
+    callFunction(find_method("UnityEngine.UI","PointerEventData","get_delta",0),allcVector(),eventData)
     LOG("delta\t\t--->\t"+delta_vector2.readFloat()+"\t"+delta_vector2.add(p_size).readFloat(),LogColor.C36)
     
     // 原UnityEngine.UI.PointerEventData.ToString
@@ -2965,11 +2862,11 @@ function GotoScene(str){
 } 
 
 function setActive(gameObj,visible){
-    new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","SetActive",1,true),'pointer',['pointer','int'])(ptr(gameObj),visible?0x1:0x0)
+    callFunction(find_method("UnityEngine.CoreModule","GameObject","SetActive",1),ptr(gameObj),visible?0x1:0x0)
 }
 
 function destroyObj(gameObj){
-    new NativeFunction(find_method("UnityEngine.CoreModule","Object","Destroy",1,true),'pointer',['pointer'])(ptr(gameObj))
+    callFunction(find_method("UnityEngine.CoreModule", "Object", "Destroy", 1), ptr(gameObj))
 }
 
 /**
@@ -3212,49 +3109,31 @@ function HookPlayerPrefs(){
     function InterceptorSetFunctions(){
 
         //public static extern float GetFloat(string key, float defaultValue)
-        var Addr_SetFloat       = find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2,true)
-        if (Addr_SetFloat != 0){
-            Interceptor.attach(Addr_SetFloat,{
-                onEnter:function(args){
-                    this.arg0 = readU16(args[0])
-                    this.arg1 = ( args[1] == 0 ? 0 : args[1].readFloat())
-                },
-                onLeave:function(ret){
-                    LOG("\n[*] SetFloat('"+this.arg0+"',"+this.arg1+")",LogColor.C36)
-                    if (isShowPrintStack) PrintStackTraceN(this.context)
-                }
-            })
-        }
+        A(find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetFloat", 2), (args) => {
+            this.arg0 = readU16(args[0])
+            this.arg1 = ( args[1] == 0 ? 0 : args[1].readFloat())
+        }, (ret) => {
+            LOG("\n[*] SetFloat('"+this.arg0+"',"+this.arg1+")",LogColor.C36)
+            if (isShowPrintStack) PrintStackTraceN(this.context)
+        })
         
         //public static extern int GetInt(string key, int defaultValue)
-        var Addr_SetInt         = find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2,true)
-        if (Addr_SetInt!=0){
-            Interceptor.attach(Addr_SetInt,{
-                onEnter:function(args){
-                    this.arg0 = readU16(args[0])
-                    this.arg1 = args[1]
-                },
-                onLeave:function(ret){
-                    LOG("\n[*] SetInt('"+this.arg0+"',"+this.arg1+")",LogColor.C36)
-                    if (isShowPrintStack) PrintStackTraceN(this.context)
-                }
-            })
-        }
+        A(find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetInt", 2, true), (args) => {
+            this.arg0 = readU16(args[0])
+            this.arg1 = args[1]
+        }, (ret) => {
+            LOG("\n[*] SetInt('"+this.arg0+"',"+this.arg1+")",LogColor.C36)
+            if (isShowPrintStack) PrintStackTraceN(this.context)
+        })
         
         //public static string GetString(string key)
-        var Addr_SetString      = find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2,true)
-        if (Addr_SetString!=0){
-            Interceptor.attach(Addr_SetString,{
-                onEnter:function(args){
-                    this.arg0 = readU16(args[0])
-                    this.arg1 = readU16(args[1])
-                },
-                onLeave:function(ret){
-                    LOG("\n[*] SetString('"+this.arg0+"','"+this.arg1+"')",LogColor.C36)
-                    if (isShowPrintStack) PrintStackTraceN(this.context)
-                }
-            })
-        }
+        A(find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetString", 2), (args) => {
+            this.arg0 = readU16(args[0])
+            this.arg1 = readU16(args[1])
+        }, (ret) => {
+            LOG("\n[*] SetString('"+this.arg0+"','"+this.arg1+"')",LogColor.C36)
+            if (isShowPrintStack) PrintStackTraceN(this.context)
+        })
     }
 }
 
@@ -3268,7 +3147,6 @@ function HookDebugLog() {
         LOG("\n[*] Logger.LOG('"+readU16(args[0])+"')",LogColor.C32)
     })
     
-
 }
 
 function HookLoadScene(){
@@ -3437,13 +3315,8 @@ function canUseInlineHook(mPtr,Type){
     }
 
     function recommandInlineHook(mPtr){
-        mPtr = ptr(mPtr)
-        var index = getNextB(mPtr)
-        if (index > 3){
-            return mPtr
-        }else{
-            return ptr(Instruction.parse(mPtr.add(p_size*(index-1))).opStr.split("#")[1]).sub(soAddr)
-        }
+        var index = getNextB(ptr(mPtr))
+        return index > 3 ? mPtr : ptr(Instruction.parse(mPtr.add(p_size*(index-1))).opStr.split("#")[1]).sub(soAddr)
     }
 }
 
