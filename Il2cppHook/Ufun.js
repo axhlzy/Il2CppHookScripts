@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/07/29 14:53
+ * @UpdateTime  2021/08/05 16:35
  * @Des         frida hook u3d functions script
  */
 
@@ -11,15 +11,18 @@ const p_size = Process.pointerSize
 var soAddr = 0
 
 //声明一些需要用到的导出函数
-var il2cpp_get_corlib,il2cpp_domain_get,il2cpp_domain_get_assemblies,il2cpp_assembly_get_image,
-    il2cpp_image_get_class_count,il2cpp_image_get_class,
-    il2cpp_class_get_methods,il2cpp_class_from_type,il2cpp_class_get_type,il2cpp_class_from_system_type,il2cpp_class_from_name,il2cpp_class_get_method_from_name,
-    il2cpp_string_new,il2cpp_type_get_name,il2cpp_type_get_class_or_element_class,
-    il2cpp_class_num_fields,il2cpp_class_get_fields
+var il2cpp_get_corlib, il2cpp_domain_get, il2cpp_domain_get_assemblies, il2cpp_assembly_get_image,
+    il2cpp_image_get_class_count, il2cpp_image_get_class,
+    il2cpp_class_get_methods, il2cpp_class_from_type, il2cpp_class_get_type, il2cpp_class_from_system_type, il2cpp_class_from_name, il2cpp_class_get_method_from_name,
+    il2cpp_string_new, il2cpp_type_get_name, il2cpp_type_get_class_or_element_class,
+    il2cpp_class_num_fields, il2cpp_class_get_fields
 
 //这里统一使用 f_xxx 声明函数,使用 p_xxx 声明函数地址
-var f_getName,f_getLayer,f_getTransform,f_getParent,f_getChildCount,f_getChild,f_get_pointerEnter,f_pthread_create,f_getpid,f_gettid
-var p_getName,p_getLayer,p_getTransform,p_getParent,p_getChildCount,p_getChild,p_get_pointerEnter,p_pthread_create,p_getpid,p_gettid
+var f_getName, f_getLayer, f_getTransform, f_getParent, f_getChildCount, f_getChild, f_get_pointerEnter, f_pthread_create, f_getpid, f_gettid, f_sleep
+var p_getName, p_getLayer, p_getTransform, p_getParent, p_getChildCount, p_getChild, p_get_pointerEnter, p_pthread_create, p_getpid, p_gettid, p_sleep
+
+//libart.so中的函数初始化
+var DecodeJObject, GetDescriptor, ArtCurrent
 
 //格式化展示使用到
 var lastTime = 0
@@ -37,6 +40,8 @@ var arrMethodInfo   = new Array()
 //filterDuplicateOBJ 
 var outFilterData   = new Array()
 var outFilterCount  = new Array()
+//findClassCache
+var findClassCache  = new Array()
 //只存在于B时候的临时变量，用来记录需要断点的方法地址并方便 b 移除，避免重复显示
 var t_arrayAddr
 
@@ -196,6 +201,7 @@ function initImages(){
     list_Images()
     initU3DFunctions()
     initLibCFunctions()
+    initLibArtFunctions()
     LogFlag = true
     
     function initExportFunctions(){
@@ -255,6 +261,26 @@ function initImages(){
         f_pthread_create = new NativeFunction(p_pthread_create = Module.findExportByName(null, "pthread_create"),'pointer',['pointer','pointer','pointer','pointer'])
         f_gettid = new NativeFunction(p_gettid = Module.findExportByName(null, "gettid"),'int',[])
         f_getpid = new NativeFunction(p_getpid = Module.findExportByName(null, "getpid"),'int',[])
+        f_sleep  = new NativeFunction(p_sleep  = Module.findExportByName(null, "sleep"),'int',['int'])
+    }
+
+    function initLibArtFunctions() {
+        DecodeJObject = Module.findExportByName("libart.so", "_ZNK3art6Thread13DecodeJObjectEP8_jobject")
+        GetDescriptor = Module.findExportByName("libart.so", "_ZN3art6mirror5Class13GetDescriptorEPNSt3__112basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEE")
+    
+        return
+
+        // 以下方法不稳定
+
+        var srcFunc = new NativeFunction(DecodeJObject, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
+        Interceptor.replace(DecodeJObject, new NativeCallback(function (arg0, arg1, arg2, arg3) {
+            ArtCurrent = arg0
+            return srcFunc(arg0, arg1, arg2, arg3)
+        }, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer']))
+
+        RunOnNewThread(() => {
+            Interceptor.revert(DecodeJObject)
+        },2000)
     }
 }
 
@@ -299,15 +325,20 @@ function P(mPtr,range){
     printCtx(mPtr,(range==undefined?20:range),2)
 }
 
-//默认就用Assembly-CSharp，用的最多
+//默认就用Assembly-CSharp
 function a(imgOrCls){
     if (imgOrCls == undefined) {
         for (var i = 0 ;i< arr_img_names.length;i++){
-            if ( arr_img_names[i] == 'Assembly-CSharp'){
+            if (arr_img_names[i] == 'Assembly-CSharp'){
                 imgOrCls = arr_img_addr[i]
                 break
             }
         }
+    } else if (imgOrCls == "ALL") {
+        for (var i = 0 ;i< arr_img_names.length;i++){
+            addBreakPoints(arr_img_addr[i])
+        }
+        return 
     }
     addBreakPoints(imgOrCls)
 }
@@ -315,6 +346,13 @@ function a(imgOrCls){
 function B(filter,isAnalyticParameter){
     if (arrayAddr.length == 0) a()
     //默认不要详细参数，都显示可能导致卡顿而且太乱了，建议再需要的时候新开cmd再使用b去指定某个method
+    breakPoints(filter,isAnalyticParameter == undefined ? false : isAnalyticParameter)
+}
+
+//遍历所有的img，添加所有方法，也是一个不太建议的使用方式，需要全部遍历的情况建议使用dps.py配合bpoints.js来使用
+function BA(filter,isAnalyticParameter) {
+    D()
+    a("ALL")
     breakPoints(filter,isAnalyticParameter == undefined ? false : isAnalyticParameter)
 }
 
@@ -1426,7 +1464,19 @@ function callFunction(mPtr){
 }
 
 function callFunctionRB(mPtr){
-    return callFunction(mPtr).toInt32() == 1
+    return callFunctionRI(mPtr) == 1
+}
+
+function callFunctionRI(mPtr){
+    return callFunction(mPtr).toInt32()
+}
+
+function callFunctionRS(mPtr){
+    return readSingle(callFunction(mPtr))
+}
+
+function callFunctionRF(mPtr){
+    return callFunction(mPtr).readFloat()
 }
 
 function breakWithArgs(mPtr,argCount){
@@ -1705,25 +1755,78 @@ function listFieldsFromCls(klass,instance){
     }
 }
 
+/**
+ * 根据 imgName 和 clsName 来查找cls pointer
+ * 正常情况填写两个参数，如果第二个参数没有填写的情况，就把第一个参数视作第二个参数，使用遍历查找
+ * 知道 imageName 就把他填好，不知道的话遍历速度会比较慢（也就第一次）
+ * @param {String} imageName imgName
+ * @param {String} className clsName
+ * @returns 
+ */
 function findClass(imageName,className){
-    var currentlib = 0
-    if (imageName == "") imageName = "Assembly-CSharp"
-    arr_img_names.forEach(function(name,index){
-        if (name == imageName){
-            currentlib = arr_img_addr[index]
+    if (className == undefined) {
+        // 只填写一个参数的情况 (这里的imageName视作className)
+        return func1(arguments[0])
+    } else {
+        // 填写完整参数的情况
+        return func2(arguments[0],arguments[1])
+    }
+
+    function func1(className) {
+        //先找缓存
+        var retPointer = findclsInCache(className)
+        if (retPointer != undefined) return retPointer
+        //正常遍历
+        for (let i = 0; i < arr_img_addr.length; i++) {
+            const element = arr_img_addr[i]
+            retPointer = findcls(element, className)
+            if (retPointer != 0) return retPointer
         }
-    })
-    var klass = il2cpp_class_from_name(currentlib, Memory.allocUtf8String(imageName), Memory.allocUtf8String(className))
-    if (klass == 0){
-        for(var j=0;j<il2cpp_image_get_class_count(currentlib).toInt32();j++){
-            var il2CppClass = il2cpp_image_get_class(currentlib,j)
-            if (getClassName(il2CppClass) == className) {
-                klass = il2CppClass
-                break
+        return retPointer
+    }
+
+    function func2(imageName, className, useCache){
+        var currentlib = 0
+        if (imageName == "") imageName = "Assembly-CSharp"
+        arr_img_names.forEach(function(name,index){
+            if (name == imageName){
+                currentlib = arr_img_addr[index]
+            }
+        })
+        // 第一种使用导出函数查找
+        var klass = il2cpp_class_from_name(currentlib, Memory.allocUtf8String(imageName), Memory.allocUtf8String(className))
+        // 第二种遍历查找
+        if (klass == 0 || klass == undefined) klass = findcls(currentlib, className, useCache)
+        return klass
+    }
+
+    function findcls(imgPtr, clsName, useCache) {
+        var retPtr = ptr(0)
+        useCache = (useCache == undefined ? false : true)
+        //为了缓存是否需要遍历所有
+        //如果第一次遍历没有完全，那么第二次查找到第一次已经遍历到了的还挺快，如果超出范围又得重新走一遍遍历，所以默认还是让它第一次遍历所有
+        var forAll = true
+        //正常遍历
+        for (var j = 0; j < il2cpp_image_get_class_count(imgPtr).toInt32(); j++){
+            var il2CppClass = il2cpp_image_get_class(imgPtr, j)
+            var clsNameC = getClassName(il2CppClass)
+            //cache 中没有的话，就把该条clsptr添加进 findClassCache
+            if (useCache && findClassCache.length == 0) LOG("Waitting ...")
+            if (useCache && String(findClassCache).indexOf(String(il2CppClass)) == -1) findClassCache.push(il2CppClass)
+            // LOG(""+clsNameC+"\t"+clsName+"\t"+il2CppClass )
+            if (clsNameC == clsName) {
+                if (!forAll) return il2CppClass
+                retPtr = il2CppClass
             }
         }
+        return retPtr
     }
-    return klass
+
+    function findclsInCache(clsName) {
+        for (let index = 0; index < findClassCache.length; index++) {
+            if (getClassName(findClassCache[index]) == clsName) return findClassCache[index]
+        }
+    }
 }
 
 /**
@@ -1732,236 +1835,305 @@ function findClass(imageName,className){
 function getUnityInfo(){
 
     var line20 = getLine(20)
+    var retStr = undefined
 
-    // Application()
-    SystemInfo()
+    Application()
+    // SystemInfo()
     // Time()
+    // Environment()
 
-    function Time(){
+    LOG(getLine(60),LogColor.RED)
+    
+    function Application() {
+        
+        LOG("------------------- Application -------------------", LogColor.RED)
+        
+        //public static string cloudProjectId()
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "Application", "get_cloudProjectId", 0)))
+        if (retStr != undefined) LOG("[*] cloudProjectId \t\t: " + retStr + "\n" + line20, LogColor.C36)
+    
+        //public static string get_productName()
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "Application", "get_productName", 0)))
+        if (retStr != undefined) LOG("[*] productName \t\t: " + retStr + "\n" + line20, LogColor.C36)
+    
+        //public static extern string get_identifier()
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "Application", "get_identifier", 0)))
+        if (retStr != undefined) LOG("[*] identifier \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //public static string version()
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "Application", "get_version", 0)))
+        if (retStr != undefined) LOG("[*] version \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //public static string unityVersion()
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "Application", "get_unityVersion", 0)))
+        if (retStr != undefined) LOG("[*] unityVersion \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //public static extern RuntimePlatform get_platform()
+        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Application", "get_platform", 0)), findClass("UnityEngine.CoreModule", "RuntimePlatform"))
+        if (retStr != undefined) LOG("[*] platform \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+    
+        //public static string dataPath()
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "Application", "get_dataPath", 0)))
+        if (retStr != undefined) LOG("[*] dataPath \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+    
+        //public static string streamingAssetsPath()
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "Application", "get_streamingAssetsPath", 0)))
+        if (retStr != undefined) LOG("[*] streamingAssetsPath \t: " + retStr + "\n" + line20, LogColor.C36)
+    
+        //public static string persistentDataPath
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "Application", "get_persistentDataPath", 0)))
+        if (retStr != undefined) LOG("[*] persistentDataPath \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //public static NetworkReachability internetReachability()
+        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Application", "get_internetReachability", 0)), findClass("UnityEngine.CoreModule", "NetworkReachability"))
+        if (retStr != undefined) LOG("[*] internetReachability \t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //public static bool get_isMobilePlatform()
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isMobilePlatform",0))
+        if (retStr != undefined) LOG("[*] isMobilePlatform \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //public static bool get_isConsolePlatform()
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isConsolePlatform"))
+        if (retStr != undefined) LOG("[*] isConsolePlatform \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //public static bool get_isEditor()
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isEditor",0))
+        if (retStr != undefined) LOG("[*] isEditor \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //public static extern bool get_isPlaying()
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isPlaying",0))
+        if (retStr != undefined) LOG("[*] isPlaying \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+        
+        //public static float dpi() 
+        retStr = callFunctionRI(find_method("UnityEngine.CoreModule","Screen","get_dpi",0))
+        if (retStr != undefined) LOG("[*] Dpi \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+    
+        //public static extern int get_height()
+        //public static extern int get_width()
+        var height = callFunction(find_method("UnityEngine.CoreModule", "Screen", "get_height", 0)).toInt32()
+        var width = callFunction(find_method("UnityEngine.CoreModule", "Screen", "get_width", 0)).toInt32()
+        if (height != 0 && width != 0) LOG("[*] height*width \t\t: " + height + " × " + width + "\n" + line20, LogColor.C36)
+        
+        //public static extern FullScreenMode get_fullScreenMode()
+        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Screen", "get_fullScreenMode", 0)), findClass("UnityEngine.CoreModule", "FullScreenMode"))
+        if (retStr != undefined) LOG("[*] FullScreenMode \t\t: " + retStr + "\n" + line20, LogColor.C36)
+    
+        //public static ScreenOrientation get_orientation()
+        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Screen", "get_orientation", 0)), findClass("UnityEngine.CoreModule", "ScreenOrientation"))
+        if (retStr != undefined) LOG("[*] ScreenOrientation \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //public static extern SystemLanguage get_systemLanguage()
+        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Application", "get_systemLanguage", 0)), findClass("UnityEngine.CoreModule", "SystemLanguage"))
+        if (retStr != undefined) LOG("[*] SystemLanguage \t\t: " + retStr + "\n" + line20, LogColor.C36)
+        
+    }
+    
+    function SystemInfo() {
+        
+        LOG("------------------- SystemInfo -------------------", LogColor.RED)
+
+        retStr = FuckKnownType("1",callFunction(find_method("UnityEngine.CoreModule","SystemInfo","get_copyTextureSupport",0)),findClass("UnityEngine.CoreModule","CopyTextureSupport"))
+        if (retStr != undefined && retStr != "") LOG("[*] copyTextureSupport \t\t: " + retStr + "\n" + line20, LogColor.C36)
+        
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_deviceModel", 0)))
+        if (retStr != undefined && retStr !=  "") LOG("[*] deviceModel \t\t: " + retStr + "\n" + line20, LogColor.C36)
+        
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_deviceName", 0)))
+        if (retStr != undefined && retStr != "") LOG("[*] deviceName \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsDeviceVendor", 0)))
+        if (retStr != undefined && retStr != "") LOG("[*] graphicsDeviceVendor \t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsUVStartsAtTop", 0))
+        if (retStr != undefined) LOG("[*] graphicsUVStartsAtTop \t: " + retStr + "\n" + line20, LogColor.C36)
+        
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_hasHiddenSurfaceRemovalOnGPU ", 0))
+        if (retStr != undefined) LOG("[*] HiddenSurfaceRemovalOnGPU \t: " + retStr + "\n" + line20, LogColor.C36)
+        
+        // retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsDeviceType", 0)), findClass("UnityEngine.CoreModule", "GraphicsDeviceType"))
+        // if (retStr != undefined && retStr != "") LOG("[*] graphicsDeviceType \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = FuckKnownType("1",callFunction(find_method("UnityEngine.CoreModule","SystemInfo","get_deviceType",0)),findClass("UnityEngine.CoreModule","DeviceType"))
+        if (retStr != undefined && retStr != "") LOG("[*] deviceType \t\t\t: " + retStr + "\n" + line20, LogColor.C36) 
+
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_deviceUniqueIdentifier", 0)))
+        if (retStr != undefined && retStr != "") LOG("[*] deviceUniqueIdentifier \t: " + retStr + "\n" + line20, LogColor.C36)
+                
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsDeviceID", 0)))
+        if (retStr != undefined && retStr != "") LOG("[*] graphicsDeviceID \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsDeviceName", 0)))
+        if (retStr != undefined && retStr != "") LOG("[*] graphicsDeviceName \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsDeviceVersion", 0)))
+        if (retStr != undefined && retStr != "") LOG("[*] graphicsDeviceVersion \t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsShaderLevel", 0)).toInt32()
+        if (retStr != undefined && retStr != "") LOG("[*] graphicsShaderLevel \t: " + retStr + "\n" + line20, LogColor.C36)
+        
+        retStr = callFunctionRI(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsMemorySize", 0))
+        if (retStr != undefined && retStr != "") LOG("[*] graphicsMemorySize \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = callFunctionRI(find_method("UnityEngine.CoreModule", "SystemInfo", "get_maxTextureSize", 0))
+        if (retStr != undefined && retStr != "") LOG("[*] maxTextureSize \t\t: " + retStr + "\n" + line20, LogColor.C36)
+            
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_operatingSystem", 0)))
+        if (retStr != undefined && retStr != "") LOG("[*] operatingSystem \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_processorType", 0)))
+        if (retStr != undefined && retStr != "") LOG("[*] processorType \t\t: " + retStr + "\n" + line20, LogColor.C36) 
+
+        retStr = callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_systemMemorySize", 0)).toInt32() + " MB"
+        if (retStr != undefined && retStr != "") LOG("[*] systemMemorySize \t\t: " + retStr + "\n" + line20, LogColor.C36) 
+        
+        retStr = FuckKnownType("1",callFunction(find_method("UnityEngine.CoreModule","SystemInfo","get_operatingSystemFamily",0)),findClass("UnityEngine.CoreModule","OperatingSystemFamily"))
+        if (retStr != undefined && retStr != "") LOG("[*] operatingSystemFamily \t: " + retStr + "\n" + line20, LogColor.C36)
+               
+        retStr = callFunctionRI(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportedRenderTargetCount", 0))
+        if (retStr != undefined && retStr != "") LOG("[*] supportedRenderTargetCount \t\t: " + retStr + "\n" + line20, LogColor.C36)
+        
+        retStr = callFunctionRI(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportsMultisampledTextures", 0))
+        if (retStr != undefined && retStr != "") LOG("[*] supportsMultisampledTextures \t: " + retStr + "\n" + line20, LogColor.C36)
+        
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportsGraphicsFence", 0))
+        if (retStr != undefined && retStr != "") LOG("[*] supportsGraphicsFence \t\t: " + retStr + "\n" + line20, LogColor.C36)
+        
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportsMultisampleAutoResolve", 0))
+        if (retStr != undefined && retStr != "") LOG("[*] supportsMultisampleAutoResolve \t: " + retStr + "\n" + line20, LogColor.C36)
+        
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportsMultisampledTextures", 0))
+        if (retStr != undefined && retStr != "") LOG("[*] supportsMultisampledTextures \t: " + retStr + "\n" + line20, LogColor.C36)
+        
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportsMultiview", 0))
+        if (retStr != undefined && retStr != "") LOG("[*] supportsMultiview \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportsShadows", 0))
+        if (retStr != undefined && retStr != "") LOG("[*] supportsShadows \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportsStoreAndResolveAction", 0))
+        if (retStr != undefined && retStr != "") LOG("[*] supportsStoreAndResolveAction \t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_usesReversedZBuffer", 0))
+        if (retStr != undefined && retStr != "") LOG("[*] usesReversedZBuffer \t\t: " + retStr + "\n" + line20, LogColor.C36)
+        
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportsRenderTargetArrayIndexFromVertexShader", 0))
+        if (retStr != undefined && retStr != "") LOG("[*] supportsRenderTargetArrayIndexFromVertexShader \t: " + retStr + "\n" + line20, LogColor.C36)
+
+
+
+         
+    } 
+
+    function Time() {
 
         console.error("------------------- TIME -------------------")
     
         //public static extern float get_time()
-        LOG("[*] get_time \t\t\t: "+callFunction(find_method("UnityEngine.CoreModule","Time","get_time",0)).toInt32()+"\n"+line20,LogColor.C36)
+        retStr = callFunctionRS(find_method("UnityEngine.CoreModule", "Time", "get_time", 0))
+        if (retStr != undefined && retStr != 0x0) LOG("[*] get_time \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
     
         //public static extern float deltaTime()
-        LOG("[*] deltaTime \t\t\t: " + callFunction(find_method("UnityEngine.CoreModule", "Time", "deltaTime", 0)).toInt32() + "\n" + line20, LogColor.C36)
+        retStr = callFunctionRS(find_method("UnityEngine.CoreModule", "Time", "get_deltaTime", 0))
+        if (retStr != undefined && retStr != 0x0) LOG("[*] deltaTime \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
         
         //public static extern float get_fixedDeltaTime()
-        LOG("[*] fixedDeltaTime \t\t: "+callFunction(find_method("UnityEngine.CoreModule","Time","get_fixedDeltaTime",0)).toInt32()+"\n"+line20,LogColor.C36)
-    
-        //public static extern float get_fixedTime()
-        var addr_get_fixedTime = find_method("UnityEngine.CoreModule","Time","get_fixedTime",0,true)
-        if (addr_get_fixedTime != 0)
-            LOG("[*] fixedTime \t\t\t: "+new NativeFunction(addr_get_fixedTime,'float',[])()+"\n"+line20,LogColor.C36)
-    
-        //public static extern int get_frameCount()
-        var addr_get_frameCount = find_method("UnityEngine.CoreModule","Time","get_frameCount",0,true)
-        if (addr_get_frameCount != 0)
-            LOG("[*] frameCount \t\t\t: "+new NativeFunction(addr_get_frameCount,'int',[])()+"\n"+line20,LogColor.C36)
+        retStr = callFunctionRS(find_method("UnityEngine.CoreModule", "Time", "get_fixedDeltaTime", 0))
+        if (retStr != undefined && retStr != 0x0) LOG("[*] fixedDeltaTime \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //get_realtimeSinceStartup() : Single
+        retStr = callFunctionRS(find_method("UnityEngine.CoreModule", "Time", "get_realtimeSinceStartup", 0))
+        if (retStr != undefined && retStr != 0x0) LOG("[*] realtimeSinceStartup \t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //get_smoothDeltaTime() : Single
+        retStr = callFunctionRS(find_method("UnityEngine.CoreModule", "Time", "get_smoothDeltaTime", 0))
+        if (retStr != undefined && retStr != 0x0) LOG("[*] smoothDeltaTime \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //get_timeScale() : Single
+        retStr = callFunctionRS(find_method("UnityEngine.CoreModule", "Time", "get_timeScale", 0))
+        if (retStr != undefined && retStr != 0x0) LOG("[*] timeScale \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //get_timeSinceLevelLoad() : Single
+        retStr = callFunctionRS(find_method("UnityEngine.CoreModule", "Time", "get_timeSinceLevelLoad", 0))
+        if (retStr != undefined && retStr != 0x0) LOG("[*] timeSinceLevelLoad \t\t: " + retStr + "\n" + line20, LogColor.C36)
         
+        //get_unscaledDeltaTime() : Single
+        retStr = callFunctionRS(find_method("UnityEngine.CoreModule", "Time", "get_unscaledDeltaTime", 0))
+        if (retStr != undefined && retStr != 0x0) LOG("[*] unscaledDeltaTime \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //get_unscaledTime() : Single
+        retStr = callFunctionRS(find_method("UnityEngine.CoreModule", "Time", "get_unscaledTime", 0))
+        if (retStr != undefined && retStr != 0x0) LOG("[*] unscaledTime \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //public static extern float get_fixedTime()
+        retStr = callFunction(find_method("UnityEngine.CoreModule", "Time", "get_fixedTime", 0))
+        if (retStr != undefined && retStr != 0x0) LOG("[*] fixedTime \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        //public static extern int get_frameCount()
+        retStr = callFunction(find_method("UnityEngine.CoreModule", "Time", "get_frameCount", 0)).toInt32()
+        if (retStr != undefined && retStr != 0x0) LOG("[*] frameCount \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+
         //public static extern float get_inFixedTimeStep()
-        var addr_get_inFixedTimeStep = find_method("UnityEngine.CoreModule","Time","get_inFixedTimeStep",0,true)
-        if (addr_get_inFixedTimeStep != 0)
-            LOG("[*] inFixedTimeStep \t\t: "+(new NativeFunction(addr_get_inFixedTimeStep,'float',[])()==0?"false":"true")+"\n"+line20,LogColor.C36)
-    
+        retStr = callFunction(find_method("UnityEngine.CoreModule", "Time", "get_inFixedTimeStep", 0))
+        if (retStr != undefined && retStr != 0x0) LOG("[*] inFixedTimeStep \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
         //public static extern float realtimeSinceStartup()
-        var addr_realtimeSinceStartup = find_method("UnityEngine.CoreModule","Time","realtimeSinceStartup",0,true)
-        if (addr_realtimeSinceStartup != 0)
-            LOG("[*] realtimeSinceStartup \t\t: "+new NativeFunction(addr_realtimeSinceStartup,'float',[])()+"\n"+line20,LogColor.C36)
+        retStr = callFunction(find_method("UnityEngine.CoreModule", "Time", "realtimeSinceStartup", 0))
+        if (retStr != undefined && retStr != 0x0) LOG("[*] realtimeSinceStartup \t: " + retStr + "\n" + line20, LogColor.C36)
     
         //public static extern float get_renderedFrameCount()
-        var addr_get_renderedFrameCount = find_method("UnityEngine.CoreModule","Time","get_renderedFrameCount",0,true)
-        if (addr_get_renderedFrameCount != 0)
-            LOG("[*] renderedFrameCount \t\t: "+new NativeFunction(addr_get_renderedFrameCount,'float',[])()+"\n"+line20,LogColor.C36)
+        retStr = callFunction(find_method("UnityEngine.CoreModule", "Time", "get_renderedFrameCount", 0))
+        if (retStr != undefined && retStr != 0x0) LOG("[*] renderedFrameCount \t\t: " + retStr + "\n" + line20, LogColor.C36)
     
         //public static float smoothDeltaTime()
-        var addr_smoothDeltaTime = find_method("UnityEngine.CoreModule","Time","smoothDeltaTime",0,true)
-        if (addr_smoothDeltaTime != 0)
-            LOG("[*] smoothDeltaTime \t\t: "+new NativeFunction(addr_smoothDeltaTime,'float',[])()+"\n"+line20,LogColor.C36)
+        retStr = callFunction(find_method("UnityEngine.CoreModule", "Time", "smoothDeltaTime", 0))
+        if (retStr != undefined && retStr != 0x0) LOG("[*] smoothDeltaTime \t\t: " + retStr + "\n" + line20, LogColor.C36)
     }
-    
-    function Application(){
-        LOG("------------------- Application -------------------", LogColor.RED)
+
+    function Environment() {
         
-        var Addr_systemLanguage         = find_method("UnityEngine.CoreModule","Application","get_systemLanguage",0,true)
-        var Addr_dpi                    = find_method("UnityEngine.CoreModule","Application","get_dpi",0,true)
-        var Addr_get_height             = find_method("UnityEngine.CoreModule","Application","get_height",0,true)
-        var Addr_get_width              = find_method("UnityEngine.CoreModule","Application","get_width",0,true)
-        var Addr_get_orientation        = find_method("UnityEngine.CoreModule","Application","get_orientation",0,true)
-    
-        //public static string cloudProjectId()
-        LOG("[*] cloudProjectId \t\t: "+ 
-            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_cloudProjectId",0)))+"\n"+line20,LogColor.C36)
-    
-        //public static string get_productName()
-        LOG("[*] productName \t\t: "+
-            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_productName",0)))+"\n"+line20,LogColor.C36)
-    
-        //public static extern string get_identifier()
-        LOG("[*] identifier \t\t\t: "+
-            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_identifier",0)))+"\n"+line20,LogColor.C36)
-    
-        //public static string version()
-        LOG("[*] version \t\t\t: "+ 
-            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_version",0)))+"\n"+line20,LogColor.C36)
-    
-        //public static string unityVersion()
-        LOG("[*] unityVersion \t\t: "+ 
-            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_unityVersion",0)))+"\n"+line20,LogColor.C36)
-    
-        //public static string dataPath()
-        LOG("[*] dataPath \t\t\t: "+
-            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_dataPath",0)))+"\n"+line20,LogColor.C36)
-    
-        //public static string streamingAssetsPath()
-        LOG("[*] streamingAssetsPath \t: "+
-            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_streamingAssetsPath",0)))+"\n"+line20,LogColor.C36)
-    
-        //public static string persistentDataPath
-        LOG("[*] persistentDataPath \t\t: "+
-            readU16(callFunction(find_method("UnityEngine.CoreModule","Application","get_persistentDataPath",0)))+"\n"+line20,LogColor.C36)
-    
-        //public static NetworkReachability internetReachability()
-        var value = callFunction(find_method("UnityEngine.CoreModule","Application","get_internetReachability",0,true))
-        LOG("[*] internetReachability \t: "+
-            (value==0?"NotReachable":(value==1?"ReachableViaCarrierDataNetwork":"ReachableViaLocalAreaNetwork"))+"\n"+line20,LogColor.C36)
-    
-        //public static bool get_isMobilePlatform(
-        LOG("[*] isMobilePlatform \t\t: "+
-            callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isMobilePlatform",0))+"\n"+line20,LogColor.C36)
-    
-        //public static bool get_isConsolePlatform()
-        LOG("[*] isConsolePlatform \t\t: "+
-            (callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isConsolePlatform")))+"\n"+line20,LogColor.C36)
-    
-        //public static bool get_isEditor(
-        LOG("[*] isEditor \t\t\t: "+
-            callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isEditor",0))+"\n"+line20,LogColor.C36)
-    
-        //public static extern bool get_isPlaying();
-        LOG("[*] isPlaying \t\t\t: "+
-            callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isPlaying",0))+"\n"+line20,LogColor.C36)
+        LOG("------------------- Environment -------------------", LogColor.RED)
         
-        //public static float dpi() 
-        if (Addr_dpi !=0)
-            LOG("[*] dpi \t\t\t: "+
-            new NativeFunction(Addr_dpi,'float',[])()+"\n"+line20,LogColor.C36)
-    
-        //public static extern int get_height()
-        //public static extern int get_width()
-        if (Addr_get_height != 0 && Addr_get_width != 0)
-            LOG("[*] height*width \t\t: "+
-            new NativeFunction(Addr_get_height,'int',[])()+"×"+
-            new NativeFunction(Addr_get_width,'int',[])()+"\n"+line20,LogColor.C36)
-    
-        //public static ScreenOrientation get_orientation()
-        if (Addr_get_orientation != 0){
-            var value = new NativeFunction(Addr_get_orientation,'int',[])()
-            switch (value){
-                case 0:value = "Unknow" ; break
-                case 1:value = "Portrait" ; break
-                case 2:value = "PortraitUpsideDown" ; break
-                case 3:value = "Landscape" ; break
-                case 4:value = "LandscapeRight" ; break
-                case 5:value = "AutoRotation" ; break
-            }
-            LOG("[*] ScreenOrientation \t\t: "+value,LogColor.C36)
-        }
-    
-        //public static extern SystemLanguage get_systemLanguage()
-        if (Addr_systemLanguage != 0){
-            var value = new NativeFunction(Addr_systemLanguage,'int',[])()
-            switch (value){
-                case 6  : value = "Chinese" ; break
-                case 40 : value = "ChineseSimplified" ; break
-                case 41 : value = "ChineseTraditional" ; break
-                case 10 : value = "English" ; break
-                case 16 : value = "Japanese" ; break
-                case 42 : value = "Unknown" ; break
-                default : value = value;
-            }
-            LOG("[*] systemLanguage \t\t: "+value,LogColor.C36)
-        }
-    }
-    
-    function SystemInfo(){
-        
-        LOG("------------------- SystemInfo -------------------",LogColor.RED)
-    
-        var addr_get_deviceModel = find_method("UnityEngine.CoreModule","SystemInfo","get_deviceModel",0,true)
-        var addr_get_deviceName = find_method("UnityEngine.CoreModule","SystemInfo","get_deviceName",0,true)
-        var addr_get_deviceType = find_method("UnityEngine.CoreModule","SystemInfo","get_deviceType",0,true)
-        var addr_get_deviceUniqueIdentifier = find_method("UnityEngine.CoreModule","SystemInfo","get_deviceUniqueIdentifier",0,true)
-        var addr_get_graphicsDeviceID  = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsDeviceID",0,true)
-        var addr_get_graphicsDeviceName = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsDeviceName",0,true)
-        var addr_get_graphicsDeviceVersion = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsDeviceVersion",0,true)
-        var addr_get_graphicsMemorySize = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsMemorySize",0,true)
-        var addr_get_graphicsShaderLevel = find_method("UnityEngine.CoreModule","SystemInfo","get_graphicsShaderLevel",0,true)
-        var addr_get_maxTextureSize = find_method("UnityEngine.CoreModule","SystemInfo","get_maxTextureSize",0,true)
-        var addr_get_operatingSystem = find_method("UnityEngine.CoreModule","SystemInfo","get_operatingSystem",0,true)
-        var addr_get_processorType = find_method("UnityEngine.CoreModule","SystemInfo","get_processorType",0,true)
-        var addr_get_systemMemorySize = find_method("UnityEngine.CoreModule","SystemInfo","get_systemMemorySize",0,true)
-        var addr_get_processorCount = find_method("UnityEngine.CoreModule","SystemInfo","get_processorCount",0,true)
-    
-        if (addr_get_deviceModel != 0)
-            LOG("[*] deviceModel \t\t: "+ 
-            readU16(new NativeFunction(addr_get_deviceModel,'pointer',[])())+"\n"+line20,LogColor.C36)
-    
-        if (addr_get_deviceName != 0)
-            LOG("[*] deviceName \t\t\t: "+ 
-            readU16(new NativeFunction(addr_get_deviceName,'pointer',[])())+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_deviceType != 0)
-            LOG("[*] deviceType \t\t\t: "+ 
-            FuckKnownType("1",callFunction(find_method("UnityEngine.CoreModule","SystemInfo","get_deviceType",0)),findClass("UnityEngine.CoreModule","DeviceType"))+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_deviceUniqueIdentifier != 0)
-            LOG("[*] deviceUniqueIdentifier \t: "+ 
-            readU16(new NativeFunction(addr_get_deviceUniqueIdentifier,'pointer',[])())+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_graphicsDeviceID != 0)
-            LOG("[*] graphicsDeviceID \t\t: "+ 
-            new NativeFunction(addr_get_graphicsDeviceID,'int',[])()+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_graphicsDeviceName != 0)
-            LOG("[*] graphicsDeviceName \t\t: "+ 
-            readU16(new NativeFunction(addr_get_graphicsDeviceName,'pointer',[])())+"\n"+line20,LogColor.C36)
-            
-        if (addr_get_graphicsDeviceVersion != 0)
-            LOG("[*] graphicsDeviceVersion \t: "+ 
-            readU16(new NativeFunction(addr_get_graphicsDeviceVersion,'pointer',[])())+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_graphicsShaderLevel != 0)
-            LOG("[*] graphicsShaderLevel \t: "+ 
-            new NativeFunction(addr_get_graphicsShaderLevel,'int',[])()+"\n"+line20,LogColor.C36)
-            
-        if (addr_get_graphicsMemorySize != 0)
-            LOG("[*] graphicsMemorySize \t\t: "+ 
-            new NativeFunction(addr_get_graphicsMemorySize,'int',[])()+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_maxTextureSize != 0)
-            LOG("[*] maxTextureSize \t\t: "+ 
-            new NativeFunction(addr_get_maxTextureSize,'int',[])()+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_operatingSystem != 0)
-            LOG("[*] operatingSystem \t\t: "+ 
-            readU16(new NativeFunction(addr_get_operatingSystem,'pointer',[])())+"\n"+line20,LogColor.C36)
-    
-        if (addr_get_processorType != 0)
-            LOG("[*] processorType \t\t: "+ 
-            readU16(new NativeFunction(addr_get_processorType,'pointer',[])())+"\n"+line20,LogColor.C36)
-            
-        if (addr_get_systemMemorySize != 0)
-            LOG("[*] systemMemorySize \t\t: "+ 
-            new NativeFunction(addr_get_systemMemorySize,'int',[])()+"\n"+line20,LogColor.C36)
-        
-        if (addr_get_processorCount != 0)
-            LOG("[*] processorCount \t\t: "+ 
-            new NativeFunction(addr_get_processorCount,'int',[])()+"\n"+line20,LogColor.C36)
-    
-        LOG("[*] operatingSystemFamily \t: "+ 
-            FuckKnownType("1",callFunction(find_method("UnityEngine.CoreModule","SystemInfo","get_operatingSystemFamily",0)),findClass("UnityEngine.CoreModule","OperatingSystemFamily"))+"\n"+line20,LogColor.C36)
+        // retStr = callFunction(find_method("mscorlib", "Environment", "get_CurrentManagedThreadId", 0)).toInt32()
+        // if (retStr != undefined) LOG("[*] CurrentManagedThreadId \t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = readU16(callFunction(find_method("mscorlib", "Environment", "GetOSVersionString", 0)))
+        if (retStr != undefined) LOG("[*] OSVersionString \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = readU16(callFunction(find_method("mscorlib", "Environment", "GetMachineConfigPath", 0)))
+        if (retStr != undefined) LOG("[*] MachineConfigPath \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = callFunction(find_method("mscorlib", "Environment", "GetPageSize", 0)).toInt32()
+        if (retStr != undefined) LOG("[*] PageSize \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = callFunctionRB(find_method("mscorlib", "Environment", "get_HasShutdownStarted", 0))
+        if (retStr != undefined) LOG("[*] HasShutdownStarted \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = callFunctionRB(find_method("mscorlib", "Environment", "get_Is64BitProcess", 0))
+        if (retStr != undefined) LOG("[*] Is64BitProcess \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = callFunctionRB(find_method("mscorlib", "Environment", "get_IsRunningOnWindows", 0))
+        if (retStr != undefined) LOG("[*] IsRunningOnWindows \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        // retStr = readU16(callFunction(find_method("mscorlib", "Environment", "get_NewLine", 0)))
+        // if (retStr != undefined) LOG("[*] NewLine \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = FuckKnownType("1", callFunction(find_method("mscorlib", "OperatingSystem", "get_Platform", 0), callFunction(find_method("mscorlib", "Environment", "get_OSVersion", 0))), findClass("mscorlib", "PlatformID"))
+        if (retStr != undefined) LOG("[*] PlatformID \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = callFunction(find_method("mscorlib", "Environment", "get_ProcessorCount", 0)).toInt32()
+        if (retStr != undefined) LOG("[*] processorCount \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = callFunction(find_method("mscorlib", "Environment", "get_TickCount", 0)).toInt32()
+        if (retStr != undefined) LOG("[*] TickCount \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = readU16(callFunction(find_method("mscorlib", "Environment", "get_MachineName", 0)))
+        if (retStr != undefined) LOG("[*] MachineName \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = readU16(callFunction(find_method("mscorlib", "Environment", "get_UserDomainName", 0)))
+        if (retStr != undefined) LOG("[*] UserDomainName \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = readU16(callFunction(find_method("mscorlib", "Environment", "get_UserName", 0)))
+        if (retStr != undefined) LOG("[*] UserName \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
     }
 }
 
@@ -2070,7 +2242,8 @@ function launchApp(pkgName){
  * 读取c#字符串
  * @param {Number} mPtr c#字符串指针}
  */
-function readU16(mPtr){
+function readU16(mPtr) {
+    if (mPtr == 0) return undefined
     return ptr(mPtr).add(p_size*2+4).readUtf16String()
 }
 
@@ -2342,6 +2515,14 @@ function SetLocalRotation(mTransform,x,y,z,w){
     return readU16(f_getName(ptr(gameObj)))
 }
 
+function gameObjToTransform(transform) {
+    return getGameObject(transform)
+}
+
+function transformToGameObj(gameObj) {
+    return f_getTransform(gameObj)
+}
+
 /**
  * getGameObject     transform -> GameObject
  * @param {Pointer}  transform
@@ -2434,14 +2615,14 @@ function SendMessage(str0, str1, str2) {
         Java.use("com.unity3d.player.UnityPlayer").UnitySendMessage(str0,str1,str2)
     })
 
-    // Native
+    // Native 好像有点问题 不太行
     // callFunction(Module.findExportByName("libunity.so","UnitySendMessage"),allcStr(str0,1),allcStr(str1,1),allcStr(str2,1))
 }
 
 function SendMessageImpl() {
 
-    IronSourceEvents()
-    // MaxSdkCallbacks()
+    // IronSourceEvents()
+    MaxSdkCallbacks()
     // MoPubManager()
     // TTPluginsGameObject()
 
@@ -2495,7 +2676,8 @@ function SendMessageImpl() {
         SendMessage("MoPubManager", "EmitRewardedVideoLoadedEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
         
         SendMessage("MoPubManager", "EmitRewardedVideoShownEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
-        SendMessage("MoPubManager", "EmitRewardedVideoReceivedRewardEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
+        // SendMessage("MoPubManager", "EmitRewardedVideoReceivedRewardEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
+        SendMessage('MoPubManager','EmitRewardedVideoReceivedRewardEvent','["a44632b619174dfa98c46420592a3756","","0"]')
         SendMessage("MoPubManager", "EmitRewardedVideoClosedEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
     }
 
@@ -2527,6 +2709,9 @@ function JNI() {
 }
 
 function ADS() {
+
+    // ShowCrossPromo() 这种东西一般要注意nop
+    // 0x53bdb8 (0xc4b85bf4)  SwCrossPromo (0xc4b66e00) --->  private Void Show ()
 
     //TODO 归纳总结广告平台调用，最终目的是从native层解决广告移植问题
 
@@ -2593,6 +2778,8 @@ function ADS() {
     // Assembly-CSharp.MoPub   public static Boolean HasRewardedVideo (String adUnitId)
     find_method("Assembly-CSharp", "MoPub", "HasRewardedVideo", 1, false)
     
+
+
 
     // Assembly-CSharp.VoodooSauce     public static Void ShowRewardedVideo (Action`1 onComplete,String tag)
     find_method("Assembly-CSharp", "VoodooSauce", "ShowRewardedVideo", 2, false)
@@ -3398,20 +3585,36 @@ function fuckSVC() {
 
 var newThreadCallBack = () => { }
 var newThreadDelay = 0
+var LshowLOG = false
 var newThreadSrcCallBack = new NativeCallback(function (arg0, arg1, arg2, arg3) {
-    LOG("\nEnter new Thread pid:" + f_getpid() + " tid:" + f_gettid(), LogColor.C36)
+    if (LshowLOG) LOG("\nEnter new Thread pid:" + f_getpid() + " tid:" + f_gettid(), LogColor.C36)
     while (newThreadDelay-- > 0) {
-        LOG("Sleep -> " + newThreadDelay +" secs",LogColor.C94)
+        if (LshowLOG) LOG("Sleep -> " + newThreadDelay + " secs", LogColor.C94)
         Thread.sleep(1)
     }
-    LOG("Called newThreadCallBack",LogColor.C34)
+    if (LshowLOG) LOG("Called newThreadCallBack", LogColor.C34)
     newThreadCallBack()
     return ptr(0)
 }, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
 
-function RunOnNewThread(callback, delay) {
+function RunOnNewThread(callback, delay, showLOG) {
     newThreadCallBack = callback
+    LshowLOG = showLOG
     if (delay != undefined) newThreadDelay = delay
     if (p_pthread_create == null || p_gettid == null || p_getpid == null) return
-    callFunction(p_pthread_create, Memory.alloc(p_size) , ptr(0), newThreadSrcCallBack ,ptr(0))
+    callFunction(p_pthread_create, Memory.alloc(p_size), ptr(0), newThreadSrcCallBack, ptr(0))
+}
+
+// https://www.jianshu.com/p/dba5e5ef2ad5?utm_campaign=maleskine&utm_content=note&utm_medium=seo_notes&utm_source=recommendation
+/**
+ * 未找到 void *Art::Current() 就将就这么用一下
+ * 运行这个 getJclassName 函数时候再两秒钟内触发一下 DecodeJObject 函数即可得到 jclsName
+ * @param {*} jclsName 
+ */
+function getJclassName(jclsName, retStr, delaySec) {
+    onlyStr == undefined ? false : true
+    var pVoid = callFunction(DecodeJObject, ArtCurrent, jclsName)
+    var k_class = callFunction(GetDescriptor, pVoid, Memory.alloc(p_size))
+    if (ret) return String(ptr(k_class).readCString())
+    LOG("\n" + String(ptr(k_class).readCString()), LogColor.C36)
 }
