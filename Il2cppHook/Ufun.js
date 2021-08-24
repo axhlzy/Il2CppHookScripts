@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/08/09 14:11
+ * @UpdateTime  2021/08/24 18:27
  * @Des         frida hook u3d functions script
  */
 
@@ -301,7 +301,7 @@ function main() {
                 ArtCurrent = args[0]
             })
             
-            // 三秒检测一次 ArtCurrent 是否拿到，拿到了就取消Attach
+            // 五秒检测一次 ArtCurrent 是否拿到，拿到了就取消Attach
             var taskID = setInterval(() => {
                 if (ArtCurrent != undefined) {
                     d(DecodeJObject)
@@ -2705,14 +2705,15 @@ function SendMessage(str0, str1, str2) {
 
 function SendMessageImpl() {
 
-    IronSourceEvents()
-    MaxSdkCallbacks()
+    // IronSourceEvents()
+    // MaxSdkCallbacks()
     MoPubManager()
-    TTPluginsGameObject()
+    // TTPluginsGameObject()
 
     SendMessage('GameAnalytics','OnCommandCenterUpdated','')
     SendMessage('GameAnalytics','OnRemoteConfigsUpdated','')
-
+    SendMessage('UnityFacebookSDKPlugin', 'OnInitComplete', '{"key_hash":"0eWmEB4CY7TpepNbZdxCOaz2Crs=\n"}')
+    
     function IronSourceEvents() {
         SendMessage("IronSourceEvents", "onRewardedVideoAvailabilityChanged", "true")
         SendMessage("IronSourceEvents", "onRewardedVideoAdShowFailedDemandOnly", "true")
@@ -2720,7 +2721,7 @@ function SendMessageImpl() {
         SendMessage("IronSourceEvents", "onRewardedVideoAdOpened", "")
         SendMessage("IronSourceEvents", "onRewardedVideoAdStarted", "")
         SendMessage("IronSourceEvents", "onRewardedVideoAdEnded", "")
-        SendMessage("IronSourceEvents", "onRewardedVideoAdRewarded", "{'placement_reward_name':'Virtual Item','placement_name':'DefaultRewardedVideo','placement_reward_amount':'1','placement_id':'0'}")
+        SendMessage("IronSourceEvents", "onRewardedVideoAdRewarded", "{'placement_reward_name':'Virtual Item','placement_name':'rewardedVideo','placement_reward_amount':'1','placement_id':'2'}")
         SendMessage("IronSourceEvents", "onRewardedVideoAdClosed", "")
     }
 
@@ -3370,6 +3371,22 @@ function HookLoadScene(){
         LOG(" arg0  --->\t"+args[0]+"\t"+readU16(args[0]),LogColor.C36)
     }, (ret) => {
         LOG(" ret  --->\t"+ret,LogColor.C36)
+    })
+}
+
+function HookUnityExit() {
+
+    var packageName = ""
+
+    R(find_method("UnityEngine.CoreModule", "Application", "Quit", 0), () => {
+        LOG("Called UnityEngine.CoreModule.Application.Quit")
+    })
+    R(find_method("UnityEngine.CoreModule", "Application", "Quit", 1), () => {
+        LOG("Called UnityEngine.CoreModule.Application.Quit")
+    })
+    R(find_method("UnityEngine.CoreModule", "Application", "Quit", 1), (srcCall) => {
+        LOG("SrcPackageName ===> " + readU16(srcCall()))
+        return packageName == "" ? srcCall() : allcStr(packageName)
     })
 }
 
