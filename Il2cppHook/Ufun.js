@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/09/08 12:07
+ * @UpdateTime  2021/09/08 19:11
  * @Des         frida hook u3d functions script
  */
 
@@ -36,18 +36,20 @@ var count_method_times
 // 断点的函数出现次数大于 maxCallTime 即不显示
 var maxCallTime = 10
 // 存放初始化（list_Images）时候的 imgaddr 以及 imgName
-var arr_img_addr        = new Array()
-var arr_img_names       = new Array()
+var arr_img_addr         = new Array()
+var arr_img_names        = new Array()
 // 存放MethodInfo指针（供动态断点 a() 提供更详细的信息）
-var arrMethodInfo       = new Array()
+var arrMethodInfo        = new Array()
 // filterDuplicateOBJ 
-var outFilterMap        = new Map()
+var outFilterMap         = new Map()
 // findClassCache 第二次使用findClass的缓存
-var findClassCache      = new Array()
+var findClassCache       = new Array()
 // 用来记录已经被 replace 的函数地址
-var arr_nop_addr        = new Array()
+var arr_nop_addr         = new Array()
 // 用来记录已经被 Attach  的函数Listener
-var map_attach_listener = new Map()
+var map_attach_listener  = new Map()
+// find_class 的缓存
+var map_find_class_cache = new Map()
 // 只存在于B时候的临时变量，用来记录需要断点的方法地址并方便 b 移除，避免重复显示
 var t_arrayAddr
 
@@ -1837,15 +1839,20 @@ function listFieldsFromCls(klass,instance){
  * @param {String} className clsName
  * @returns 
  */
-function findClass(imageName,className){
+function findClass(imageName, className) {
     if (arguments[1] == undefined) {
         // 只填写一个参数的情况 (这里的imageName视作className)
-        return func1(arguments[0])
+        var cache = map_find_class_cache.get(arguments[0])
+        if (cache != null) return ptr(cache)        
+        var ret = func1(arguments[0])
+        map_find_class_cache.set(arguments[0], ret)        
+        return ret
     } else {
         // 填写完整参数的情况
         return func2(arguments[0],arguments[1])
     }
 
+    // 这是早期的缓存，不好用，直接加一个map来存就行了
     function func1(className) {
         // 先找缓存
         var retPointer = findclsInCache(className)
@@ -2725,7 +2732,7 @@ function SendMessageImpl(platform) {
     SendMessage('GameAnalytics','OnCommandCenterUpdated','')
     SendMessage('GameAnalytics','OnRemoteConfigsUpdated','')
     SendMessage('UnityFacebookSDKPlugin', 'OnInitComplete', '{"key_hash":"0eWmEB4CY7TpepNbZdxCOaz2Crs=\n"}')
-    
+
     function IronSourceEvents() {
         SendMessage("IronSourceEvents", "onRewardedVideoAvailabilityChanged", "true")
         SendMessage("IronSourceEvents", "onRewardedVideoAdShowFailedDemandOnly", "true")
@@ -2739,12 +2746,18 @@ function SendMessageImpl(platform) {
 
     function MaxSdkCallbacks() {
 
-        SendMessage('MaxSdkCallbacks','ForwardEvent','name=OnSdkInitializedEvent\nconsentDialogState=2\ncountryCode=SG\n')
 
-        SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdDisplayedEvent\nadUnitId=ec1a772e0459f45b")
-        SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdReceivedRewardEvent\nrewardAmount=0\nadUnitId=ec1a772e0459f45b\nrewardLabel=")
-        SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdHiddenEvent\nadUnitId=ec1a772e0459f45b")
-        SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdLoadedEvent\nadUnitId=ec1a772e0459f45b")
+        SendMessage('MaxSdkCallbacks','ForwardEvent','networkName=AppLovin\nname=OnRewardedAdRevenuePaidEvent\nrevenue=0.014579974174499511\nplacement=\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\n')
+        SendMessage('MaxSdkCallbacks','ForwardEvent','networkName=AppLovin\nname=OnRewardedAdDisplayedEvent\nrevenue=0.014579974174499511\nplacement=\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\n')
+        SendMessage('MaxSdkCallbacks','ForwardEvent','revenue=0.014579974174499511\nnetworkName=AppLovin\nname=OnRewardedAdReceivedRewardEvent\nplacement=\nrewardAmount=0\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\nrewardLabel=\n')
+        SendMessage('MaxSdkCallbacks','ForwardEvent','networkName=AppLovin\nname=OnRewardedAdHiddenEvent\nrevenue=0.014579974174499511\nplacement=\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\n')
+
+
+        // SendMessage('MaxSdkCallbacks','ForwardEvent','name=OnSdkInitializedEvent\nconsentDialogState=2\ncountryCode=SG\n')
+        // SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdDisplayedEvent\nadUnitId=ec1a772e0459f45b")
+        // SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdReceivedRewardEvent\nrewardAmount=0\nadUnitId=ec1a772e0459f45b\nrewardLabel=")
+        // SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdHiddenEvent\nadUnitId=ec1a772e0459f45b")
+        // SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdLoadedEvent\nadUnitId=ec1a772e0459f45b")
     }
 
     function MoPubManager() {
@@ -3730,5 +3743,54 @@ function findInMemory(typeStr) {
             retStr = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext().getPackageName()
         })
         return retStr 
+    }
+}
+
+/**
+ *  1. Init UnityEngine.RectTransform_var   UnityEngine.UI.Text_var   
+    2. public static Type GetTypeFromHandle(RuntimeTypeHandle handle)       RuntimeTypeHandle ---> Type
+    3. public static extern Object[] FindObjectsOfType(Type type)           Type ---> Type[] instance
+    4. 返回的数组 size：add(0xC) / real : add(0xF)
+        c3bd6660  60 a3 60 cb 00 00 00 00 00 00 00 00 86 00 00 00  `.`.............
+        c3bd6670  80 f6 14 c4 30 f5 14 c4 70 f6 14 c4 30 f6 14 c4  ....0...p...0...
+        c3bd6680  f0 f5 14 c4 d0 f5 14 c4 00 fc 14 c4 a0 f5 14 c4  ................
+        c3bd6690  90 f5 14 c4 60 f5 14 c4 40 f5 14 c4 10 f5 14 c4  ....`...@.......
+        c3bd66a0  20 f6 14 c4 00 f5 14 c4 e0 f4 14 c4 70 f5 14 c4   ...........p...
+
+    [Pixel XL::Stick Warfare: Blood Strike]-> FindObjectsOfType(0xE2A9E0,0x2A9D90,0xDEC,"Text")
+        0xc2d56cc0 ---> 开始
+        0xc2d60d48 ---> 每日任务
+        0xc2d60bb0 ---> Lv0
+        0xc2d603b8 ---> 分享
+        0xc2d75908 ---> 购买 ($2)
+        0xc2d75770 ---> 回馈
+        0xc2d75660 ---> 你玩游戏所获得的经验值为两倍,
+        这效果可以和其他加成叠加
+        0xc2d75110 ---> 装备
+        0xc2d75088 ---> 物品
+        0xc2b94bb0 ---> 已拥有
+        0xc2b94b28 ---> 金币: <Color=#ffc000>0 G</Color>
+        0xc2b946e8 ---> 关闭
+        0xc2b945d8 ---> 购买 ($2)
+        0xc2b944c8 ---> 现金: <Color=#1ed300>0 $</Color>
+        0xc2b94110 ---> 离开
+    ......
+
+ * @param {*} typeVar   类型 UnityEngine.RectTransform_var UnityEngine.UI.Text_var 等等
+ * @param {*} initFuc   初始化函数
+ * @param {*} index     初始化函数的参数 index
+ * @param {*} typeStr   用于FuckKnownType解析的参数类型
+ */
+function FindObjectsOfType(typeVar, initFuc, index, typeStr) {
+    typeVar = checkPointer(typeVar)
+    if (ptr(typeVar).readPointer() == 0x0) callFunction(initFuc, index)
+    var FindObjectsOfType = find_method("UnityEngine.CoreModule", "Object", "FindObjectsOfType", 1, true)
+    var GetTypeFromHandle = find_method("mscorlib", "Type", "GetTypeFromHandle", 1, true)
+    var mType = callFunction(GetTypeFromHandle, ptr(typeVar).readPointer())
+    var mInstances = callFunction(FindObjectsOfType, mType, 0)
+    // seeHexA(mInstances)
+    for (var i = 0; i < ptr(mInstances).add(0xC).readInt(); i++){
+        var current = ptr(mInstances).add(p_size * (4 + i)).readPointer()
+        LOG(current + " ---> " + FuckKnownType(typeStr,current,findClass(typeStr)))
     }
 }
