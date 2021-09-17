@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/09/08 19:11
+ * @UpdateTime  2021/09/17 19:13
  * @Des         frida hook u3d functions script
  */
 
@@ -50,6 +50,8 @@ var arr_nop_addr         = new Array()
 var map_attach_listener  = new Map()
 // find_class 的缓存
 var map_find_class_cache = new Map()
+// find_method 的缓存
+var map_find_method_cache = new Map()
 // 只存在于B时候的临时变量，用来记录需要断点的方法地址并方便 b 移除，避免重复显示
 var t_arrayAddr
 
@@ -550,6 +552,29 @@ function D(){
     nnn()
 }
 
+function B_Text() {
+    D()
+    A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {        
+        var strName = readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0]))        
+        if (strName.indexOf(":") == -1) {
+            if (!strName.startsWith("-")) {
+                LOG("\nCalled TMP_Text.get_transform INS:" + args[0], LogColor.C36)
+                LOG("\t----> |" + strName + "|", LogColor.C96)
+            }
+        }
+        if (strName == "Collect 30 Keys to Unlock Chests and Earn A Tropy") {
+            TmpSetTo(args[0], "收集30把钥匙打开箱子，赢取一个奖励")            
+        }
+        if (strName == "ADVENTURE MODE") {
+            TmpSetTo(args[0], "成就模式")         
+        }
+    })
+
+    function TmpSetTo(ins,str) {
+        callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "set_text", 1), ins, allocStr(str, ""))        
+    }
+}
+
 function B_UnityJNI() {
     D()
     a(findClass("AndroidJNI"))
@@ -782,6 +807,13 @@ function find_method(imageName, className, functionName, argsCount, isRealAddr) 
     if (imageName == undefined || imageName == null || className == null || functionName == null || argsCount == null) return ptr(0)
     // var corlib = il2cpp_get_corlib()
     if (isRealAddr == undefined) isRealAddr = true
+
+    //真实地址才使用缓存
+    if (isRealAddr) {
+        var tmpKey = imageName+"."+className+"."+functionName+"."+argsCount
+        var cache = map_find_method_cache.get(tmpKey)
+        if (cache != null) return ptr(cache)
+    }
     var currentlib = 0
     arr_img_names.forEach(function(name,index){
         if (name == imageName){
@@ -802,7 +834,10 @@ function find_method(imageName, className, functionName, argsCount, isRealAddr) 
     if (klass == 0 ) return ptr(0)
     var method = il2cpp_class_get_method_from_name(klass, allocStr(functionName), argsCount)
     if (method == 0) return ptr(0)
-    if (arguments[5] !=undefined) return method
+    if (arguments[5] != undefined) return method
+    //缓存
+    map_find_method_cache.set(tmpKey, method.readPointer())  
+
     if (isRealAddr) return isRealAddr ? method.readPointer():method.readPointer().sub(soAddr)
 
     var parameters_count = getMethodParametersCount(method)
@@ -1178,12 +1213,12 @@ function readSingle(value){
  * @returns {String}         简写字符串描述
  */
 function FuckKnownType(strType,mPtr,tPtr){
-    try{
+    // try{
         mPtr = ptr(mPtr)
         tPtr = ptr(tPtr)
-        
+
         // 数组类型的数据解析
-        if (strType.endsWith("[]")) {
+        if (tPtr > 0x100 && strType.endsWith("[]")) {
             var addr_getCount = getAddrFromName(tPtr, "get_Count")
             var addr_get_Item = getAddrFromName(tPtr, "get_Item")
             var arr_retStr = new Array()
@@ -1196,14 +1231,14 @@ function FuckKnownType(strType,mPtr,tPtr){
         }
         
         // Dictionary 数据解析
-        if (strType.startsWith("Dictionary")) {
+        if (tPtr > 0x100 && strType.startsWith("Dictionary")) {
             var addr_getCount = getAddrFromName(tPtr, "get_Count")
             var count = callFunction(addr_getCount,mPtr)
             return count + "\t"+FuckKnownType("-1",mPtr,0x0)
         }
         
         // 枚举解析
-        if (class_is_enum(tPtr)) {
+        if (tPtr > 0x100 && class_is_enum(tPtr)) {
             var iter = Memory.alloc(p_size)
             var field
             var enumIndex = 0
@@ -1265,7 +1300,13 @@ function FuckKnownType(strType,mPtr,tPtr){
                 var temp_m_target = ptr(mPtr).add(0x10).readPointer()
                 return tmp_ptr + "(" + tmp_ptr.sub(soAddr) + ")  m_target:" + temp_m_target + "  virtual:" + (ptr(mPtr).add(0x30).readInt() == 0x0 ? "false" : "true")
             case "Char"             : return mPtr.readCString()
-            case "JObject"          : return getJclassName(mPtr,true)
+            case "JObject"          : return getJclassName(mPtr, true)
+            case "OBJ":
+                var objName = getObjName(mPtr)
+                var tmp_type_Ptr = callFunction(find_method("mscorlib", "Object", "GetType", 0), mPtr)
+                var tmp_str_Ptr = callFunction(find_method("mscorlib", "Object", "ToString", 0), mPtr)
+                if (tPtr == 0x1) return [objName,readU16(tmp_str_Ptr),tmp_type_Ptr]
+                return objName + "\t\t" + readU16(tmp_str_Ptr) + " ("+tmp_type_Ptr+")"
             case "Text"             : return readU16(callFunction(find_method("UnityEngine.UI", "Text", "get_text", 0), mPtr))
             case "Vector2"          : return readU16(callFunction(find_method("UnityEngine.CoreModule", "Vector2", "ToString", 0), mPtr))
             case "Vector3"          : return readU16(callFunction(find_method("UnityEngine.CoreModule", "Vector3", "ToString", 0), mPtr))
@@ -1285,10 +1326,61 @@ function FuckKnownType(strType,mPtr,tPtr){
             case "TextMeshProUGUI"  : return readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "GetParsedText", 0), mPtr))            
             default                 : return readU16(callFunction(find_method("mscorlib", "Object", "ToString", 0), mPtr))            
         }
-    }
-    catch (e) {
+    // }
+    // catch (e) {
         // LOG(e)
-        return " ? "
+    //     return " ? "
+    // }
+}
+
+/**
+ * 解析 运行时类型
+ * @param {*} strType   类型字符串
+ * @param {*} mPtr      内存指针
+ */
+function FuckRuntimeType(strType, mPtr) {
+    if (strType == undefined || mPtr == undefined)
+    switch (strType) {
+        case "UnityEngine.RectTransform":
+
+            break
+        case "UnityEngine.CanvasRenderer":
+
+            break
+        case "TMPro.TextMeshProUGUI":
+
+            break
+        case "UnityEngine.AudioListener":
+
+            break
+        case "UnityEngine.UI.CanvasScaler":
+
+            break
+        case "UnityEngine.UI.VerticalLayoutGroup":
+
+            break
+        case "UnityEngine.UI.HorizontalLayoutGroup":
+
+            break
+        case "UnityEngine.UI.Button":
+
+            break
+        case "UnityEngine.UI.GraphicRaycaster":
+
+            break
+        case "UnityEngine.Canvas":
+
+            break
+        case "UnityEngine.Canvas":
+
+            break
+        default:
+            // 过滤游戏引擎的关键类，待完善 。。。。
+            if (strType.startsWith("UnityEngine.") || strType.startsWith("TMPro.")) break
+            // 游戏开发者自己写的component
+            var tCls = findClass(strType)
+            if (tCls != 0x0) lffc(tCls, mPtr)
+            break
     }
 }
 
@@ -2377,14 +2469,21 @@ function seeHexA(addr, length, color) {
  * @param {Pointer} mPtr 
  * @returns 
  */
-function checkPointer(mPtr) {    
+var mdMap = null
+function checkPointer(mPtr) {
     if (mPtr == undefined || mPtr == null || soAddr == null || soAddr == 0) return ptr(0)
     mPtr = ptr(Number(mPtr))
-    var mdmap = new ModuleMap((md) => {
-        if (md.name = soName) return true
-    })
-    if (mdmap.has(soAddr.add(mPtr))) return soAddr.add(mPtr)
-    return mPtr
+    if (mdMap == null) {
+        var mdMap = new ModuleMap((md) => {
+            // 如果是一下so的地址就直接返回，如不是就给它加上一个soAddr
+            if (md.name = soName || md.name == "libart.so"|| md.name == "libc.so") return true
+        })
+    }
+    if (mdMap.has(mPtr)) {
+        return mPtr
+    } else {
+        return soAddr.add(mPtr)
+    }
 }
 
 /**
@@ -2616,11 +2715,11 @@ function transformToGameObj(gameObj) {
  * @param {Pointer}  transform
  */
  function getGameObject(transform){
-    return callFunction(find_method("UnityEngine.CoreModule","Component","get_gameObject",0),ptr(transform))
+     return callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), ptr(transform))
 }
 
 function class_is_enum(Pcls) {
-    return callFunction(Module.findExportByName("libil2cpp.so","il2cpp_class_is_enum"),Pcls) == 0x1
+    return callFunction(Module.findExportByName("libil2cpp.so", "il2cpp_class_is_enum"), Pcls) == 0x1
 }
 
 /**
@@ -3689,9 +3788,15 @@ function PatchCode(mPtr, mList) {
 function findInMemory(typeStr) {
 
     switch (typeStr) {
+        case "Dex1":
+            find("54 61 70 20 54 6F 20 53 74 61 72 74", (pattern, address, size) => {
+                LOG('Found ' + pattern + " Address: " + address.toString() + "\n",LogColor.C36)
+            })
+            break
         case "Dex":
-            find("64 65 78 0a 30 33 35 00", () => {
+            find("64 65 78 0a 30 33 35 00", (pattern, address, size) => {
                 // TODO
+                LOG('Found ' + pattern + " Address: " + address.toString() + "\n",LogColor.C36)
             })
             break
         case "global-metadata.dat":
@@ -3747,6 +3852,26 @@ function findInMemory(typeStr) {
 }
 
 /**
+ * 两种方式查找 根据路径查找指定gameobj
+ * @param {String} path 路径或者是顶层gobjName
+ */
+function findGameObject(path, transform) {
+    try {
+        if (transform == undefined) {
+            // GameObject.find（静态方法）得到GameObject,路径查找
+            showGameObject(callFunction(find_method("UnityEngine.CoreModule", "GameObject", "Find", 1), allocStr(path, "")))
+        } else if (getType(transform, 1).indexOf("Transform") != -1) {            
+            // Transform.find(非静态方法) 得到的也是transform，指定查找起始点，可以查找隐藏对象
+            showGameObject(getGameObject(callFunction(find_method("UnityEngine.CoreModule", "Transform", "Find", 1), transform, allocStr(path, ""))))
+        } else {
+            LOG("\narguments[1] Need a Transform Ptr\n", LogColor.RED)
+        }
+    } catch (error) {
+        LOG("\nNot Found ...\n", LogColor.RED)        
+    }
+}
+
+/**
  *  1. Init UnityEngine.RectTransform_var   UnityEngine.UI.Text_var   
     2. public static Type GetTypeFromHandle(RuntimeTypeHandle handle)       RuntimeTypeHandle ---> Type
     3. public static extern Object[] FindObjectsOfType(Type type)           Type ---> Type[] instance
@@ -3776,21 +3901,126 @@ function findInMemory(typeStr) {
         0xc2b94110 ---> 离开
     ......
 
- * @param {*} typeVar   类型 UnityEngine.RectTransform_var UnityEngine.UI.Text_var 等等
+ * @param {*} typeVar   类型 目前还是手动去找一下，后续再看看源码搞个动态获取
+        （ps:但是还是有可能出现没有初始化的情况，所以还是得借助ida去查看出初始化函数以及index）
+        //在arm32的时候是以下样子
+            UnityEngine.RectTransform_var 
+            UnityEngine.UI.Text_var 
+            TMPro.TMP_SubMesh_var 
+            TMPro.TextMeshPro_var 等等
+        //在arm64的时候是以下样子
+            UnityEngine.Component$$GetComponents<Component>
+            UnityEngine.Component$$GetComponents<CanvasGroup>
+            UnityEngine.GameObject$$GetComponent<Button>
+            UnityEngine.GameObject$$GetComponent<Image>
  * @param {*} initFuc   初始化函数
  * @param {*} index     初始化函数的参数 index
  * @param {*} typeStr   用于FuckKnownType解析的参数类型
  */
-function FindObjectsOfType(typeVar, initFuc, index, typeStr) {
+function FindObjectsOfTypeOld(typeVar, initFuc, index, typeStr) {
     typeVar = checkPointer(typeVar)
-    if (ptr(typeVar).readPointer() == 0x0) callFunction(initFuc, index)
-    var FindObjectsOfType = find_method("UnityEngine.CoreModule", "Object", "FindObjectsOfType", 1, true)
-    var GetTypeFromHandle = find_method("mscorlib", "Type", "GetTypeFromHandle", 1, true)
-    var mType = callFunction(GetTypeFromHandle, ptr(typeVar).readPointer())
-    var mInstances = callFunction(FindObjectsOfType, mType, 0)
-    // seeHexA(mInstances)
-    for (var i = 0; i < ptr(mInstances).add(0xC).readInt(); i++){
+    typeVar = ptr(typeVar).readPointer()
+    if (typeVar == 0x0) callFunction(initFuc, index)
+    var mType = callFunction(find_method("mscorlib", "Type", "GetTypeFromHandle", 1), typeVar)
+    var mInstances = callFunction(find_method("UnityEngine.CoreModule", "Object", "FindObjectsOfType", 1), mType, 1)
+    var arrLenth = ptr(mInstances).add(p_size * 3).readInt()
+    LOG("\n")
+    seeHexA(mInstances, p_size * (arrLenth + 4), LogColor.C33)    
+    var Titile = "Found '" + typeStr + "' instances       size: " + arrLenth
+    LOG("\n" + getLine(Titile.length), LogColor.C94)    
+    LOG(Titile, LogColor.C94)
+    LOG(getLine(Titile.length) + "\n", LogColor.C94)    
+    for (var i = 0; i < arrLenth; i++){
         var current = ptr(mInstances).add(p_size * (4 + i)).readPointer()
-        LOG(current + " ---> " + FuckKnownType(typeStr,current,findClass(typeStr)))
+        LOG(current + " ---> " + FuckKnownType(typeStr, current, findClass(typeStr)), LogColor.C36)
     }
+    LOG("\n")
+}
+
+function FindObjectsOfType(RuntimeType, typeStr) {
+    listObj(callFunction(find_method("UnityEngine.CoreModule", "Object", "FindObjectsOfType", 1).sub(soAddr), RuntimeType, 0), typeStr)
+
+    function listObj(arrPtr, typeStr) {
+        if (typeStr == undefined) typeStr = "OBJ"
+        var arrLenth = ptr(arrPtr).add(p_size * 3).readInt()
+        LOG("\n")
+        for (var i = 0; i < arrLenth; i++){
+            var current = ptr(arrPtr).add(p_size * (4 + i)).readPointer()
+            var arrRet = FuckKnownType(typeStr, current, 0x1)
+            if (i == 0) {
+                LOG(arrRet[1] + "(" + arrRet[2] + ")", LogColor.C91)
+                LOG("---> Count:" + arrLenth + "\n", LogColor.C31)
+            }
+            LOG("[*] " + current + " ---> " + arrRet[0], LogColor.C36)            
+        }
+        LOG("\n")
+    }
+}
+
+/**
+ * GetComponents(getGameObject(0x9aca17a0),getRuntimeTypeFromBss(38557020))
+ * @param {*} GameObject 
+ * @param {*} RuntimeType 
+ * @param {*} TYPE 
+ * @returns 
+ */
+function GetComponents(GameObject, RuntimeType, TYPE) {
+    
+    TYPE = TYPE == undefined ? 0x1 : TYPE
+    var ComponentsFucAddr = 0x0 
+    if (TYPE == 0x0) {
+        var G_GetComponents = find_method("UnityEngine.CoreModule", "GameObject", "GetComponents", 1)
+        ComponentsFucAddr = G_GetComponents == 0x0 ? find_method("UnityEngine.CoreModule", "Component", "GetComponents", 1) : G_GetComponents
+    } else if (TYPE == 0x1) {
+        var G_GetComponents = find_method("UnityEngine.CoreModule", "GameObject", "GetComponentsInParent", 1)
+        ComponentsFucAddr = G_GetComponents == 0x0 ? find_method("UnityEngine.CoreModule", "Component", "GetComponentsInParent", 1) : G_GetComponents
+    } else {
+        var G_GetComponents = find_method("UnityEngine.CoreModule", "GameObject", "GetComponentsInChildren", 1)
+        ComponentsFucAddr = G_GetComponents == 0x0 ? find_method("UnityEngine.CoreModule", "Component", "GetComponentsInChildren", 1) : G_GetComponents
+    }
+
+    var arrPtr = callFunction(ComponentsFucAddr, GameObject, RuntimeType)
+    
+    // 并不是所有游戏都有GetComponentsInParent
+    if (ComponentsFucAddr == 0x0 || arrPtr == 0x0) {
+        LOG("ComponentsFucAddr = "+ComponentsFucAddr + "  arrPtr = "+arrPtr)
+        throw new Error("ComponentsFucAddr Not Found Or RetArr Error")
+    }
+    listObj(arrPtr)
+
+    function listObj(arrPtr) {
+        var typeStr = "OBJ"
+        var arrLenth = ptr(arrPtr).add(p_size * 3).readInt()
+        LOG("\n")
+        var lastName = ""
+        for (var i = 0; i < arrLenth; i++){
+            var current = ptr(arrPtr).add(p_size * (4 + i)).readPointer()
+            var arrRet = FuckKnownType(typeStr, current, 0x1)
+            if (lastName == "" || lastName != arrRet[0]) {
+                LOG((i == 0 ? "" : "\n") + "[*] " + arrRet[0], LogColor.C36)                
+                lastName = arrRet[0]
+            }    
+            LOG("\t" + current + " ---> " + arrRet[1] + "("+arrRet[2]+")", LogColor.C36)            
+        }
+        LOG("\n")
+    }
+}
+
+/**
+ * 
+ * @param {*} bssPtr    bss 段的 UnityEngine.Component_var / UnityEngine.MonoBehaviour_var / UnityEngine.RectTransform_var / UnityEngine.UI.Text_var ......
+ * @param {*} initFuc   初始化函数地址（非必填）
+ * @param {*} index     初始化index（非必填）
+ * @returns 
+ */
+function getRuntimeTypeFromBss(bssPtr, initFuc, index) {
+    var handle = ptr(soAddr.add(bssPtr)).readPointer()
+    if (handle == 0x0) {
+        if (initFuc == undefined || index == undefined) {
+            throw new Error("bss未初始化，且未填写初始化函数\n借助IDA查看初始化函数以及Index")
+        }
+        callFunction(initFuc, index)
+    }
+    var runtimeType = callFunction(find_method("mscorlib", "Type", "GetTypeFromHandle", 1), handle)
+    return runtimeType
 }
