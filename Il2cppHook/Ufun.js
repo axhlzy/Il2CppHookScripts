@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/09/17 19:13
+ * @UpdateTime  2021/09/30 18:53
  * @Des         frida hook u3d functions script
  */
 
@@ -552,27 +552,61 @@ function D(){
     nnn()
 }
 
-function B_Text() {
-    D()
-    A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {        
-        var strName = readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0]))        
-        if (strName.indexOf(":") == -1) {
-            if (!strName.startsWith("-")) {
-                LOG("\nCalled TMP_Text.get_transform INS:" + args[0], LogColor.C36)
-                LOG("\t----> |" + strName + "|", LogColor.C96)
-            }
-        }
-        if (strName == "Collect 30 Keys to Unlock Chests and Earn A Tropy") {
-            TmpSetTo(args[0], "收集30把钥匙打开箱子，赢取一个奖励")            
-        }
-        if (strName == "ADVENTURE MODE") {
-            TmpSetTo(args[0], "成就模式")         
-        }
-    })
+//System.Text.StringBuilder
+function B_ToString() {
+    A(find_method("mscorlib", "StringBuilder", "ToString", 0), () => { }, (ret) => { LOG(readU16(ret)) })
+}
 
-    function TmpSetTo(ins,str) {
-        callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "set_text", 1), ins, allocStr(str, ""))        
+//public static Void TrackText (Text t)
+function B_Text(TYPE) {
+    try {
+        LOG("Unity.TextMeshPro.TMP_Text.get_transform ===> "+find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0).sub(soAddr))
+        TMP_Text()
+    } catch (e) {
+        LOG("DO NOT USE TMP_Text", LogColor.RED)        
     }
+
+    try {
+        LOG("UnityEngine.UI.Text.get_text ===> "+find_method("UnityEngine.UI", "Text", "get_text", 0).sub(soAddr))
+        LOG("UnityEngine.UI.Text.set_text ===> "+find_method("UnityEngine.UI", "Text", "set_text", 1).sub(soAddr))
+        UnityEngine_UI_Text()
+    } catch (e) {
+        LOG("DO NOT USE UnityEngine_UI_Text", LogColor.RED)        
+    }
+
+    function TMP_Text() {
+        D()
+        A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {        
+            var strName = readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0]))        
+            if (strName.indexOf(":") == -1) {
+                if (!strName.startsWith("-")) {
+                    LOG("\nCalled TMP_Text.get_transform INS:" + args[0], LogColor.C36)
+                    LOG("\t----> |" + strName + "|", LogColor.C96)
+                }
+            }
+            if (strName == "ADVENTURE MODE") {
+                TmpSetTo(args[0], "成就模式")         
+            }
+        })
+
+        function TmpSetTo(ins,str) {
+            callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "set_text", 1), ins, allocStr(str, ""))        
+        }
+    }
+
+    function UnityEngine_UI_Text() {
+        A(find_method("UnityEngine.UI", "Text", "get_text", 0), undefined, (ret) => {
+            var tmp = readU16(ret)
+            if (tmp.indexOf("00:") != 0) LOG("get ---> " + tmp, LogColor.C36)            
+        })
+
+        A(find_method("UnityEngine.UI", "Text", "set_text", 1), (args) => {
+            var tmp = readU16(args[1])
+            if (tmp.indexOf("00:") != 0) LOG("set ---> " + tmp, LogColor.C36)            
+        })
+    }
+
+   
 }
 
 function B_UnityJNI() {
@@ -1213,7 +1247,7 @@ function readSingle(value){
  * @returns {String}         简写字符串描述
  */
 function FuckKnownType(strType,mPtr,tPtr){
-    // try{
+    try{
         mPtr = ptr(mPtr)
         tPtr = ptr(tPtr)
 
@@ -1326,11 +1360,11 @@ function FuckKnownType(strType,mPtr,tPtr){
             case "TextMeshProUGUI"  : return readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "GetParsedText", 0), mPtr))            
             default                 : return readU16(callFunction(find_method("mscorlib", "Object", "ToString", 0), mPtr))            
         }
-    // }
-    // catch (e) {
+    }
+    catch (e) {
         // LOG(e)
-    //     return " ? "
-    // }
+        return " ? "
+    }
 }
 
 /**
@@ -1722,6 +1756,11 @@ function printInfo() {
     LOG("\tunsigned long p_setlocalScale       = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1),3)+";",LogColor.C36)
     LOG('\t// find_method("UnityEngine.CoreModule","Component","get_gameObject",0,false)',LogColor.C36)
     LOG("\tunsigned long p_get_gameObject      = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Component","get_gameObject",0),3)+";",LogColor.C36)
+    
+    LOG('\t// find_method("UnityEngine.CoreModule", "GameObject", "Find", 1,false)', LogColor.C36)
+    LOG("\tunsigned long gameObj_find          = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule", "GameObject", "Find", 1),3)+";",LogColor.C36)
+    LOG('\t// find_method("UnityEngine.CoreModule", "Transform", "Find", 1,false)',LogColor.C36)
+    LOG("\tunsigned long transform_find        = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "Find", 1),3)+";",LogColor.C36)
 
     LOG('\n\t// find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1,false)',LogColor.C96)
     LOG("\tf_setLocalPosition \t= reinterpret_cast<void *(*)(void *, void *)>\t\t(base + "+find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1).sub(soAddr)+");",LogColor.C96)
@@ -2479,11 +2518,8 @@ function checkPointer(mPtr) {
             if (md.name = soName || md.name == "libart.so"|| md.name == "libc.so") return true
         })
     }
-    if (mdMap.has(mPtr)) {
-        return mPtr
-    } else {
-        return soAddr.add(mPtr)
-    }
+    if (mdMap.has(mPtr)) return mPtr
+    return soAddr.add(mPtr)
 }
 
 /**
@@ -3908,12 +3944,15 @@ function findGameObject(path, transform) {
             UnityEngine.UI.Text_var 
             TMPro.TMP_SubMesh_var 
             TMPro.TextMeshPro_var 等等
-        //在arm64的时候是以下样子
+        //在arm64的时候是以下样子 （script.json）
             UnityEngine.Component$$GetComponents<Component>
             UnityEngine.Component$$GetComponents<CanvasGroup>
             UnityEngine.GameObject$$GetComponent<Button>
             UnityEngine.GameObject$$GetComponent<Image>
- * @param {*} initFuc   初始化函数
+        //其实在arm64中使用到的上述函数只是对原GetComponents的一层封装，就是多做了一步 UnityEngine_Component__get_gameObject 拿到对应的gobj
+        // (***(Method$UnityEngine.Component.GetComponents<Component>() + 0x30))() 这一步懒得手动去转了，后续还是考虑处理解析到外层封装然后直接调用
+        // arm64 和 arm32 一样会有一个初始化函数，这一点目前来说可能还是需要手动查找IDA
+* @param {*} initFuc   初始化函数
  * @param {*} index     初始化函数的参数 index
  * @param {*} typeStr   用于FuckKnownType解析的参数类型
  */
@@ -3936,6 +3975,7 @@ function FindObjectsOfTypeOld(typeVar, initFuc, index, typeStr) {
     }
     LOG("\n")
 }
+
 
 function FindObjectsOfType(RuntimeType, typeStr) {
     listObj(callFunction(find_method("UnityEngine.CoreModule", "Object", "FindObjectsOfType", 1).sub(soAddr), RuntimeType, 0), typeStr)
@@ -3965,7 +4005,6 @@ function FindObjectsOfType(RuntimeType, typeStr) {
  * @returns 
  */
 function GetComponents(GameObject, RuntimeType, TYPE) {
-    
     TYPE = TYPE == undefined ? 0x1 : TYPE
     var ComponentsFucAddr = 0x0 
     if (TYPE == 0x0) {
@@ -4013,11 +4052,11 @@ function GetComponents(GameObject, RuntimeType, TYPE) {
  * @param {*} index     初始化index（非必填）
  * @returns 
  */
-function getRuntimeTypeFromBss(bssPtr, initFuc, index) {
+function getRuntimeTypeFromBssOrData(bssPtr, initFuc, index) {
     var handle = ptr(soAddr.add(bssPtr)).readPointer()
     if (handle == 0x0) {
         if (initFuc == undefined || index == undefined) {
-            throw new Error("bss未初始化，且未填写初始化函数\n借助IDA查看初始化函数以及Index")
+            throw new Error("bss or data 未初始化，且未填写初始化函数\n借助IDA查看初始化函数以及Index")
         }
         callFunction(initFuc, index)
     }
