@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/09/30 18:53
+ * @UpdateTime  2021/10/18 19:12
  * @Des         frida hook u3d functions script
  */
 
@@ -15,8 +15,8 @@ var frida_env = ptr(0)
 var il2cpp_get_corlib, il2cpp_domain_get, il2cpp_domain_get_assemblies, il2cpp_assembly_get_image,
     il2cpp_image_get_class_count, il2cpp_image_get_class,
     il2cpp_class_get_methods, il2cpp_class_from_type, il2cpp_class_get_type, il2cpp_class_from_system_type, il2cpp_class_from_name, il2cpp_class_get_method_from_name,
-    il2cpp_string_new, il2cpp_type_get_name, il2cpp_type_get_class_or_element_class,
-    il2cpp_class_num_fields, il2cpp_class_get_fields
+    il2cpp_string_new, il2cpp_type_get_name, il2cpp_type_get_class_or_element_class, il2cpp_class_get_field_from_name,
+    il2cpp_class_num_fields, il2cpp_class_get_fields, il2cpp_field_static_get_value, il2cpp_field_static_set_value
 
 // 统一使用 f_xxx 声明函数,使用 p_xxx 声明函数地址
 var f_getName, f_getLayer, f_getTransform, f_getParent, f_getChildCount, f_getChild, f_get_pointerEnter, f_pthread_create, f_getpid, f_gettid, f_sleep
@@ -274,6 +274,12 @@ function main() {
             il2cpp_class_num_fields                 = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_num_fields"),'int',["pointer"])
             // FieldInfo* il2cpp_class_get_fields(Il2CppClass *klass, void* *iter)
             il2cpp_class_get_fields                 = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_get_fields"),'pointer',["pointer","pointer"])
+            // void il2cpp_field_static_get_value(FieldInfo *field, void *value)
+            il2cpp_field_static_get_value           = new NativeFunction(Module.findExportByName(soName,"il2cpp_field_static_get_value"),'pointer',["pointer","pointer"])
+            // void il2cpp_field_static_set_value(FieldInfo *field, void *value)
+            il2cpp_field_static_set_value           = new NativeFunction(Module.findExportByName(soName,"il2cpp_field_static_set_value"),'pointer',["pointer","pointer"])
+            // FieldInfo* il2cpp_class_get_field_from_name(Il2CppClass* klass, const char *name)
+            il2cpp_class_get_field_from_name        = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_get_field_from_name"),'pointer',["pointer","pointer"])
         }
         
         function initU3DFunctions(){
@@ -1735,55 +1741,65 @@ function breakInline(mPtr, filterRigster, maxCount) {
  * (TODO:后续看搞一个inlinehook版本的find_method(),让inlinehook对unity的hook更方便友好)
  */
 function printInfo() {
+
+    try {
+        LOG('\n\t// find_method("UnityEngine.UI","Button","OnPointerClick",1,false)',LogColor.C36)
+        LOG("\tunsigned long p_OnPointerClick      = base + "+canUseInlineHook(find_method("UnityEngine.UI","Button","OnPointerClick",1),3)+";",LogColor.C36)
+        LOG('\t// find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0,false)',LogColor.C36)
+        LOG("\tunsigned long p_get_pointerEnter    = base + "+canUseInlineHook(find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),3)+";",LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","GameObject","SetActive",1,false)',LogColor.C36)
+        LOG("\tunsigned long p_SetActive           = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","GameObject","SetActive",1),3)+";",LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","GameObject","get_transform",0,false)',LogColor.C36)
+        LOG("\tunsigned long p_getTransform        = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),3)+";",LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","Object","GetName",1,false)',LogColor.C36)
+        LOG("\tunsigned long p_getName             = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Object","GetName",1),3)+";",LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetParent",0,false)',LogColor.C36)
+        LOG("\tunsigned long p_getParent           = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","GetParent",0),3)+";",LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","Transform","get_childCount",0,false)',LogColor.C36)
+        LOG("\tunsigned long p_getChildCount       = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","get_childCount",0),3)+";",LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetChild",1,false)',LogColor.C36)
+        LOG("\tunsigned long p_getChild            = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","GetChild",1),3)+";",LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1,false)',LogColor.C36)
+        LOG("\tunsigned long p_setlocalScale       = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1),3)+";",LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","Component","get_gameObject",0,false)',LogColor.C36)
+        LOG("\tunsigned long p_get_gameObject      = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Component","get_gameObject",0),3)+";",LogColor.C36)
+        
+        LOG('\t// find_method("UnityEngine.CoreModule", "GameObject", "Find", 1,false)', LogColor.C36)
+        LOG("\tunsigned long gameObj_find          = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule", "GameObject", "Find", 1),3)+";",LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule", "Transform", "Find", 1,false)',LogColor.C36)
+        LOG("\tunsigned long transform_find        = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "Find", 1),3)+";",LogColor.C36)
+
+        LOG('\n\t// find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1,false)',LogColor.C96)
+        LOG("\tf_setLocalPosition \t= reinterpret_cast<void *(*)(void *, void *)>\t\t(base + "+find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1).sub(soAddr)+");",LogColor.C96)
+        LOG('\t// find_method("UnityEngine.UI","Text","set_text",1,false)',LogColor.C96)
+        LOG("\tf_set_text \t\t= reinterpret_cast<void *(*)(void *, MonoString *)>\t(base + "+find_method("UnityEngine.UI",'Text','set_text',1).sub(soAddr)+");",LogColor.C96)
+        LOG('\t// find_method("UnityEngine.UI","Text","get_text",0,false)',LogColor.C96)
+        LOG("\tf_get_text \t\t= reinterpret_cast<MonoString *(*)(void *)>\t\t(base + "+find_method("UnityEngine.UI",'Text','get_text',0).sub(soAddr)+");\n",LogColor.C96)
+
+        // return
+
+        LOG('\n\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2,false)')
+        var SetInt = find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2)
+        LOG("\tunsigned long p_SetInt       = base + "+ (SetInt ==0 ? "0x0" : SetInt.sub(soAddr)) +";")
+        LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","GetInt",2,false)')
+        var GetInt = find_method("UnityEngine.CoreModule","PlayerPrefs","GetInt",2)
+        LOG("\tunsigned long p_GetInt       = base + "+ (GetInt ==0 ? "0x0" : GetInt.sub(soAddr)) +";")
+        LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2,false)')
+        var SetFloat = find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2)
+        LOG("\tunsigned long p_SetFloat     = base + "+ (SetFloat ==0 ? "0x0" : SetFloat.sub(soAddr)) +";")
+        LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2,false)')
+        var SetString = find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2)
+        LOG("\tunsigned long p_SetString    = base + "+ (SetString ==0 ? "0x0" : SetString.sub(soAddr)) +";")
+
+        LOG('ins.recordSymbols({"il2cpp_string_new": ' + Module.findExportByName(soName, 'il2cpp_string_new').sub(soAddr)
+            + ', "FindClass": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "FindClass", 1).sub(soAddr)
+            + ', "GetStaticMethodID": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "GetStaticMethodID", 3).sub(soAddr)
+            + ',"CallStaticVoidMethod": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "CallStaticVoidMethod", 3).sub(soAddr)
+            +'})')
+    } catch (e) {
+        
+    }
      
-    LOG('\n\t// find_method("UnityEngine.UI","Button","OnPointerClick",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_OnPointerClick      = base + "+canUseInlineHook(find_method("UnityEngine.UI","Button","OnPointerClick",1),3)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0,false)',LogColor.C36)
-    LOG("\tunsigned long p_get_pointerEnter    = base + "+canUseInlineHook(find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),3)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","GameObject","SetActive",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_SetActive           = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","GameObject","SetActive",1),3)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","GameObject","get_transform",0,false)',LogColor.C36)
-    LOG("\tunsigned long p_getTransform        = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),3)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","Object","GetName",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_getName             = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Object","GetName",1),3)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetParent",0,false)',LogColor.C36)
-    LOG("\tunsigned long p_getParent           = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","GetParent",0),3)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","Transform","get_childCount",0,false)',LogColor.C36)
-    LOG("\tunsigned long p_getChildCount       = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","get_childCount",0),3)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetChild",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_getChild            = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","GetChild",1),3)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1,false)',LogColor.C36)
-    LOG("\tunsigned long p_setlocalScale       = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1),3)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule","Component","get_gameObject",0,false)',LogColor.C36)
-    LOG("\tunsigned long p_get_gameObject      = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Component","get_gameObject",0),3)+";",LogColor.C36)
-    
-    LOG('\t// find_method("UnityEngine.CoreModule", "GameObject", "Find", 1,false)', LogColor.C36)
-    LOG("\tunsigned long gameObj_find          = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule", "GameObject", "Find", 1),3)+";",LogColor.C36)
-    LOG('\t// find_method("UnityEngine.CoreModule", "Transform", "Find", 1,false)',LogColor.C36)
-    LOG("\tunsigned long transform_find        = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "Find", 1),3)+";",LogColor.C36)
-
-    LOG('\n\t// find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1,false)',LogColor.C96)
-    LOG("\tf_setLocalPosition \t= reinterpret_cast<void *(*)(void *, void *)>\t\t(base + "+find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1).sub(soAddr)+");",LogColor.C96)
-    LOG('\t// find_method("UnityEngine.UI","Text","set_text",1,false)',LogColor.C96)
-    LOG("\tf_set_text \t\t= reinterpret_cast<void *(*)(void *, MonoString *)>\t(base + "+find_method("UnityEngine.UI",'Text','set_text',1).sub(soAddr)+");",LogColor.C96)
-    LOG('\t// find_method("UnityEngine.UI","Text","get_text",0,false)',LogColor.C96)
-    LOG("\tf_get_text \t\t= reinterpret_cast<MonoString *(*)(void *)>\t\t(base + "+find_method("UnityEngine.UI",'Text','get_text',0).sub(soAddr)+");\n",LogColor.C96)
-
-    // return
-
-    LOG('\n\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2,false)')
-    var SetInt = find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2)
-    LOG("\tunsigned long p_SetInt       = base + "+ (SetInt ==0 ? "0x0" : SetInt.sub(soAddr)) +";")
-    LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","GetInt",2,false)')
-    var GetInt = find_method("UnityEngine.CoreModule","PlayerPrefs","GetInt",2)
-    LOG("\tunsigned long p_GetInt       = base + "+ (GetInt ==0 ? "0x0" : GetInt.sub(soAddr)) +";")
-    LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2,false)')
-    var SetFloat = find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2)
-    LOG("\tunsigned long p_SetFloat     = base + "+ (SetFloat ==0 ? "0x0" : SetFloat.sub(soAddr)) +";")
-    LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2,false)')
-    var SetString = find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2)
-    LOG("\tunsigned long p_SetString    = base + "+ (SetString ==0 ? "0x0" : SetString.sub(soAddr)) +";")
-
     LOG("\n")
 }
 
@@ -1887,33 +1903,41 @@ function listFieldsFromCls(klass,instance){
      * mStr[3] field class pointer
      * mStr[4] field name
      */
-    arrStr.sort((x,y)=>{
-        return parseInt(x.split("\t")[0]) - parseInt(y.split("\t")[0])        
-    }).forEach((str,index)=>{
-        // 静态变量的值并不在该类中
-        if (str.indexOf("static") != -1) str = str.replace("0x0", "---") + "\n"        
+    arrStr.sort((x, y) => {
+        return parseInt(x.split("\t")[0]) - parseInt(y.split("\t")[0])
+    }).forEach((str, index) => {
+        // 静态变量
+        // if (str.indexOf("static") != -1) str = str.replace("0x0", "---")
         var mStr = str.split("\t")        
-        // 值解析
-        if (mStr[0].indexOf("---") != 0) {            
-            var mName = mStr[2]
-            var indexStr = String("[" + index + "]")            
-            var indexSP = indexStr.length == 3 ? " " : ""            
-            var enumStr = String(mStr[5]).length == 1 ? String(mStr[5] + " ") : String(mStr[5])            
-            LOG(indexStr + indexSP + " " + mStr[0] + " " + mStr[1] + " " + mStr[2] + "(" + mStr[3] + ") " + enumStr + " " + mStr[4], LogColor.C36)
-            if (instance != undefined){
-                var mPtr = ptr(instance).add(mStr[0])
-                var realP = mPtr.readPointer()
-                var fRet = FuckKnownType(mName, realP, mStr[3])
-                // 当它是boolean的时候只保留 最后两位显示
-                if (mName == "Boolean") {
-                    var header = String(realP).substr(0, 2)                    
-                    var endstr = String(realP).substr(String(realP).length - 2, String(realP).length).replace("x", "0")                    
-                    var middle = getPoint((Process.arch == "arm" ? 10 : 14) - 2 - 2)
-                    realP = header + middle + endstr
-                }
-                fRet = fRet == "UnKnown" ? (mPtr + " ---> " + realP) : (mPtr + " ---> " + realP + " ---> " + fRet)                
-                LOG("\t" + fRet + "\n", LogColor.C90)                
+        // 值解析          
+        var mName = mStr[2]
+        var indexStr = String("[" + index + "]")            
+        var indexSP = indexStr.length == 3 ? " " : ""            
+        var enumStr = String(mStr[5]).length == 1 ? String(mStr[5] + " ") : String(mStr[5])            
+        LOG(indexStr + indexSP + " " + mStr[0] + " " + mStr[1] + " " + mStr[2] + "(" + mStr[3] + ") " + enumStr + " " + mStr[4], LogColor.C36)
+        if (instance != undefined && str.indexOf("static") == -1){
+            var mPtr = ptr(instance).add(mStr[0])
+            var realP = mPtr.readPointer()
+            var fRet = FuckKnownType(mName, realP, mStr[3])
+            // 当它是boolean的时候只保留 最后两位显示
+            if (mName == "Boolean") {
+                var header = String(realP).substr(0, 2)                    
+                var endstr = String(realP).substr(String(realP).length - 2, String(realP).length).replace("x", "0")                    
+                var middle = getPoint((Process.arch == "arm" ? 10 : 14) - 2 - 2)
+                realP = header + middle + endstr
             }
+            fRet = fRet == "UnKnown" ? (mPtr + " ---> " + realP) : (mPtr + " ---> " + realP + " ---> " + fRet)                
+            LOG("\t" + fRet + "\n", LogColor.C90)                
+        } else if (str.indexOf("static") != -1) {
+            // console.warn(+ptr(mStr[3])+allocStr(mStr[4])+"\t"+mStr[4])
+            var field = il2cpp_class_get_field_from_name(ptr(mStr[3]), allocStr(mStr[4]))
+            if (!field.isNull()) {
+                var addrOut = Memory.alloc(p_size)
+                il2cpp_field_static_get_value(field, addrOut)
+                var realP = addrOut.readPointer()
+                LOG("\t" + addrOut + " ---> " + realP+ " ---> " + FuckKnownType(mName, realP, mStr[3]), LogColor.C90)
+            }
+            LOG("\n")
         }
     })
     LOG(getLine(maxlength+5),LogColor.C33)
@@ -1961,6 +1985,16 @@ function listFieldsFromCls(klass,instance){
         return str
     }
 }
+
+function readStatic(imageName, className, fieldName) {
+    var pCls = findClass(imageName, className)
+    if (pCls == null) return ptr(-1)
+    const field = il2cpp_class_get_field_from_name(pCls, allocStr(fieldName))
+    if (field.isNull()) return ptr(-2)
+    const addrOut = Memory.alloc(Process.pointerSize)
+    il2cpp_field_static_get_value(field, addrOut)
+    return addrOut.readPointer()
+ }
 
 /**
  * 根据 imgName 和 clsName 来查找cls pointer
