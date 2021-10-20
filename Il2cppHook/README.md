@@ -47,42 +47,42 @@
 ### 用例
 1. **list_Images()   ===   i()**
    
-![](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/u3d_0.png)
+![](../imgs/u3d_0.png)
 
 2. **list_Classes(image,isShowClass)   ===   c()**
    
-![](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/u3d_1.png)
+![](../imgs/u3d_1.png)
 
 3. **list_Methods(klass,isShowMore)   ===   m()**
    
-![](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/u3d_2.png)
+![](../imgs/u3d_2.png)
 
-![](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/u3d_3.png)
+![](../imgs/u3d_3.png)
 
 4. **find_method(ImageName,ClassName,functionName,ArgsCount,isRealAddr)   ===   f()**
    
-![](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/u3d_4.png)
+![](../imgs/u3d_4.png)
 
 5. **addBP(imgOrCls)   ===   a()**
    
-![](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/u3d_5.png)
+![](../imgs/u3d_5.png)
 
 6. **breakPoints(filter)   ===   B()**
    
-![](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/u3d_6.png)
+![](../imgs/u3d_6.png)
 
 7. **breakPoint(ptr)   ===   b()**
    
-![](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/u3d_7.png)
+![](../imgs/u3d_7.png)
 
 8. **Interceptor.detachAll()   ===   d()** 
 
 9. **HookOnPointerClick()**
    
-![](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/u3d_8.png)
+![](../imgs/u3d_8.png)
 
 10. **Info()**
    
-![](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/u3d_9.png)
+![](../imgs/u3d_9.png)
 
 ....

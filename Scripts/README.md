@@ -11,15 +11,15 @@ frida使用的js脚本，用到dlopen来获得加载时机，并注入断点
 </pre>
 
 ###### python脚本的使用
-![1.png](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/1.png "bpoints.js")
+![1.png](../imgs/1.png) "bpoints.js")
 
 cp上述结果到 bpoints.js 中替换对应的部分，再用frida去加载这段js即可批量断点以上函数
 
 ###### 添加对libil2cpp.so的函数断点
-![2.png](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/2.png "dps.py")
+![2.png](../imgs/2.png "dps.py")
 
 ###### 点击按钮触发函数回调
-![3.png](https://github.com/axhlzy/Il2CppDumperTool/blob/master/imgs/3.png "dps.py")
+![3.png](../imgs/3.png "dps.py")
 
 ###### 这三个暴力使用，容易崩，不建议使用 
 HookExports,HookImports,HookSymbols
