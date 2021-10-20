@@ -3956,15 +3956,7 @@ function findGameObject(path, transform) {
         0xc2d56cc0 ---> 开始
         0xc2d60d48 ---> 每日任务
         0xc2d60bb0 ---> Lv0
-        0xc2d603b8 ---> 分享
-        0xc2d75908 ---> 购买 ($2)
-        0xc2d75770 ---> 回馈
-        0xc2d75660 ---> 你玩游戏所获得的经验值为两倍,
-        这效果可以和其他加成叠加
         0xc2d75110 ---> 装备
-        0xc2d75088 ---> 物品
-        0xc2b94bb0 ---> 已拥有
-        0xc2b94b28 ---> 金币: <Color=#ffc000>0 G</Color>
         0xc2b946e8 ---> 关闭
         0xc2b945d8 ---> 购买 ($2)
         0xc2b944c8 ---> 现金: <Color=#1ed300>0 $</Color>
@@ -4009,7 +4001,6 @@ function FindObjectsOfTypeOld(typeVar, initFuc, index, typeStr) {
     }
     LOG("\n")
 }
-
 
 function FindObjectsOfType(RuntimeType, typeStr) {
     listObj(callFunction(find_method("UnityEngine.CoreModule", "Object", "FindObjectsOfType", 1).sub(soAddr), RuntimeType, 0), typeStr)
