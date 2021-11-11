@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/10/18 19:12
+ * @UpdateTime  2021/11/11 12:52
  * @Des         frida hook u3d functions script
  */
 
@@ -36,18 +36,18 @@ var count_method_times
 // 断点的函数出现次数大于 maxCallTime 即不显示
 var maxCallTime = 10
 // 存放初始化（list_Images）时候的 imgaddr 以及 imgName
-var arr_img_addr         = new Array()
-var arr_img_names        = new Array()
+var arr_img_addr = new Array()
+var arr_img_names = new Array()
 // 存放MethodInfo指针（供动态断点 a() 提供更详细的信息）
-var arrMethodInfo        = new Array()
+var arrMethodInfo = new Array()
 // filterDuplicateOBJ 
-var outFilterMap         = new Map()
+var outFilterMap = new Map()
 // findClassCache 第二次使用findClass的缓存
-var findClassCache       = new Array()
+var findClassCache = new Array()
 // 用来记录已经被 replace 的函数地址
-var arr_nop_addr         = new Array()
+var arr_nop_addr = new Array()
 // 用来记录已经被 Attach  的函数Listener
-var map_attach_listener  = new Map()
+var map_attach_listener = new Map()
 // find_class 的缓存
 var map_find_class_cache = new Map()
 // find_method 的缓存
@@ -60,11 +60,9 @@ var t_arrayAddr
 var filterClass = []
 
 // 兼容之前的python脚本筛选，同时也是 addBreakPoints() 或者是 a() 所添加的断点的函数也是存放在这里的
-var arrayAddr =
-[]
+var arrayAddr = []
 
-var arrayName =
-[]
+var arrayName = []
 
 /**
  * --------------------------------------------------------------------------------------------
@@ -137,8 +135,9 @@ var arrayName =
  * --------------------------------------------------------------------------------------------
  */
 setImmediate(main)
+
 function main() {
-    
+
     wait_HookDlopen()
     // Wait_Interval()
     // Wait_NewTread()
@@ -189,7 +188,7 @@ function main() {
         var taskId = setInterval(() => {
             if (LshowLOG) LOG("\nWaitting load libil2cpp ...... ")
             soAddr = Module.findBaseAddress(soName)
-            if (soAddr != null) {            
+            if (soAddr != null) {
                 if (LshowLOG) LOG("Found il2cpp at " + soAddr + " And Enter initImages")
                 todo()
                 clearInterval(taskId)
@@ -224,9 +223,9 @@ function main() {
     }
 
     // 真实的 init 位置
-    function initImages(){
-    
-        LogFlag = false 
+    function initImages() {
+
+        LogFlag = false
         initExportFunctions()
         list_Images()
         initU3DFunctions()
@@ -234,70 +233,70 @@ function main() {
         initLibArtFunctions()
         initEnv()
         LogFlag = true
-        
-        function initExportFunctions(){
+
+        function initExportFunctions() {
             // const Il2CppImage* il2cpp_get_corlib()
-            il2cpp_get_corlib                       = new NativeFunction(Module.findExportByName(soName,"il2cpp_get_corlib"),'pointer',[])
+            il2cpp_get_corlib = new NativeFunction(Module.findExportByName(soName, "il2cpp_get_corlib"), 'pointer', [])
             // Il2CppDomain* il2cpp_domain_get()
-            il2cpp_domain_get                       = new NativeFunction(Module.findExportByName(soName,"il2cpp_domain_get"),'pointer',[])
+            il2cpp_domain_get = new NativeFunction(Module.findExportByName(soName, "il2cpp_domain_get"), 'pointer', [])
             // const Il2CppAssembly** il2cpp_domain_get_assemblies(const Il2CppDomain* domain, size_t* size)
-            il2cpp_domain_get_assemblies            = new NativeFunction(Module.findExportByName(soName,"il2cpp_domain_get_assemblies"),'pointer',['pointer','pointer'])
+            il2cpp_domain_get_assemblies = new NativeFunction(Module.findExportByName(soName, "il2cpp_domain_get_assemblies"), 'pointer', ['pointer', 'pointer'])
             // const Il2CppImage* il2cpp_assembly_get_image(const Il2CppAssembly *assembly)
-            il2cpp_assembly_get_image               = new NativeFunction(Module.findExportByName(soName,"il2cpp_assembly_get_image"),'pointer',['pointer'])
+            il2cpp_assembly_get_image = new NativeFunction(Module.findExportByName(soName, "il2cpp_assembly_get_image"), 'pointer', ['pointer'])
 
             // size_t il2cpp_image_get_class_count(const Il2CppImage * image)
-            il2cpp_image_get_class_count            = new NativeFunction(Module.findExportByName(soName,"il2cpp_image_get_class_count"),'pointer',['pointer'])
+            il2cpp_image_get_class_count = new NativeFunction(Module.findExportByName(soName, "il2cpp_image_get_class_count"), 'pointer', ['pointer'])
             // const Il2CppClass* il2cpp_image_get_class(const Il2CppImage * image, size_t index)
-            il2cpp_image_get_class                  = new NativeFunction(Module.findExportByName(soName,"il2cpp_image_get_class"),'pointer',['pointer','int'])
+            il2cpp_image_get_class = new NativeFunction(Module.findExportByName(soName, "il2cpp_image_get_class"), 'pointer', ['pointer', 'int'])
 
             // const MethodInfo* il2cpp_class_get_methods(Il2CppClass *klass, void* *iter)
-            il2cpp_class_get_methods                = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_get_methods"),'pointer',["pointer","pointer"])
+            il2cpp_class_get_methods = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_get_methods"), 'pointer', ["pointer", "pointer"])
             // Il2CppClass* il2cpp_class_from_type(const Il2CppType *type)
-            il2cpp_class_from_type                  = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_from_type"),'pointer',["pointer"])
+            il2cpp_class_from_type = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_from_type"), 'pointer', ["pointer"])
             // const Il2CppType* il2cpp_class_get_type(Il2CppClass *klass)
-            il2cpp_class_get_type                   = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_get_type"),'pointer',["pointer"])
+            il2cpp_class_get_type = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_get_type"), 'pointer', ["pointer"])
             // Il2CppClass* il2cpp_class_from_system_type(Il2CppReflectionType *type)
-            il2cpp_class_from_system_type           = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_from_system_type"),'pointer',["pointer"])
+            il2cpp_class_from_system_type = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_from_system_type"), 'pointer', ["pointer"])
             // Il2CppClass* il2cpp_class_from_name(const Il2CppImage* image, const char* namespaze, const char *name)
-            il2cpp_class_from_name                  = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_from_name"),'pointer',["pointer","pointer","pointer"])
+            il2cpp_class_from_name = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_from_name"), 'pointer', ["pointer", "pointer", "pointer"])
             // const MethodInfo* il2cpp_class_get_method_from_name(Il2CppClass *klass, const char* name, int argsCount)
-            il2cpp_class_get_method_from_name       = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_get_method_from_name"),'pointer',["pointer","pointer","int"])
+            il2cpp_class_get_method_from_name = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_get_method_from_name"), 'pointer', ["pointer", "pointer", "int"])
 
             // Il2CppString* il2cpp_string_new(const char* str)
-            il2cpp_string_new                       = new NativeFunction(Module.findExportByName(soName,"il2cpp_string_new"),'pointer',["pointer"])
+            il2cpp_string_new = new NativeFunction(Module.findExportByName(soName, "il2cpp_string_new"), 'pointer', ["pointer"])
             // char* il2cpp_type_get_name(const Il2CppType *type)
-            il2cpp_type_get_name                    = new NativeFunction(Module.findExportByName(soName,"il2cpp_type_get_name"),'pointer',["pointer"])
+            il2cpp_type_get_name = new NativeFunction(Module.findExportByName(soName, "il2cpp_type_get_name"), 'pointer', ["pointer"])
             // Il2CppClass* il2cpp_type_get_class_or_element_class(const Il2CppType *type)
-            il2cpp_type_get_class_or_element_class  = new NativeFunction(Module.findExportByName(soName,"il2cpp_type_get_class_or_element_class"),'pointer',["pointer"])
-        
+            il2cpp_type_get_class_or_element_class = new NativeFunction(Module.findExportByName(soName, "il2cpp_type_get_class_or_element_class"), 'pointer', ["pointer"])
+
             // size_t il2cpp_class_num_fields(const Il2CppClass* klass)
-            il2cpp_class_num_fields                 = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_num_fields"),'int',["pointer"])
+            il2cpp_class_num_fields = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_num_fields"), 'int', ["pointer"])
             // FieldInfo* il2cpp_class_get_fields(Il2CppClass *klass, void* *iter)
-            il2cpp_class_get_fields                 = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_get_fields"),'pointer',["pointer","pointer"])
+            il2cpp_class_get_fields = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_get_fields"), 'pointer', ["pointer", "pointer"])
             // void il2cpp_field_static_get_value(FieldInfo *field, void *value)
-            il2cpp_field_static_get_value           = new NativeFunction(Module.findExportByName(soName,"il2cpp_field_static_get_value"),'pointer',["pointer","pointer"])
+            il2cpp_field_static_get_value = new NativeFunction(Module.findExportByName(soName, "il2cpp_field_static_get_value"), 'pointer', ["pointer", "pointer"])
             // void il2cpp_field_static_set_value(FieldInfo *field, void *value)
-            il2cpp_field_static_set_value           = new NativeFunction(Module.findExportByName(soName,"il2cpp_field_static_set_value"),'pointer',["pointer","pointer"])
+            il2cpp_field_static_set_value = new NativeFunction(Module.findExportByName(soName, "il2cpp_field_static_set_value"), 'pointer', ["pointer", "pointer"])
             // FieldInfo* il2cpp_class_get_field_from_name(Il2CppClass* klass, const char *name)
-            il2cpp_class_get_field_from_name        = new NativeFunction(Module.findExportByName(soName,"il2cpp_class_get_field_from_name"),'pointer',["pointer","pointer"])
+            il2cpp_class_get_field_from_name = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_get_field_from_name"), 'pointer', ["pointer", "pointer"])
         }
-        
-        function initU3DFunctions(){
-            f_getName           = new NativeFunction(p_getName          = find_method("UnityEngine.CoreModule","Object","GetName",1),'pointer',['pointer'])
-            f_getLayer          = new NativeFunction(p_getLayer         = find_method("UnityEngine.CoreModule","GameObject","get_layer",0),'int',['pointer'])
-            f_getTransform      = new NativeFunction(p_getTransform     = find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])
-            f_getParent         = new NativeFunction(p_getParent        = find_method("UnityEngine.CoreModule","Transform","GetParent",0),'pointer',['pointer'])
-            f_getChildCount     = new NativeFunction(p_getChildCount    = find_method("UnityEngine.CoreModule","Transform","get_childCount",0),'int',['pointer'])
-            f_getChild          = new NativeFunction(p_getChild         = find_method("UnityEngine.CoreModule","Transform","GetChild",1),'pointer',['pointer','int'])
-            f_get_pointerEnter  = new NativeFunction(p_get_pointerEnter = find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),'pointer',['pointer'])
+
+        function initU3DFunctions() {
+            f_getName = new NativeFunction(p_getName = find_method("UnityEngine.CoreModule", "Object", "GetName", 1), 'pointer', ['pointer'])
+            f_getLayer = new NativeFunction(p_getLayer = find_method("UnityEngine.CoreModule", "GameObject", "get_layer", 0), 'int', ['pointer'])
+            f_getTransform = new NativeFunction(p_getTransform = find_method("UnityEngine.CoreModule", "GameObject", "get_transform", 0), 'pointer', ['pointer'])
+            f_getParent = new NativeFunction(p_getParent = find_method("UnityEngine.CoreModule", "Transform", "GetParent", 0), 'pointer', ['pointer'])
+            f_getChildCount = new NativeFunction(p_getChildCount = find_method("UnityEngine.CoreModule", "Transform", "get_childCount", 0), 'int', ['pointer'])
+            f_getChild = new NativeFunction(p_getChild = find_method("UnityEngine.CoreModule", "Transform", "GetChild", 1), 'pointer', ['pointer', 'int'])
+            f_get_pointerEnter = new NativeFunction(p_get_pointerEnter = find_method("UnityEngine.UI", "PointerEventData", "get_pointerEnter", 0), 'pointer', ['pointer'])
             // var f_getTag         = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_tag",0,true),'pointer',['pointer'])
         }
 
         function initLibCFunctions() {
-            f_pthread_create = new NativeFunction(p_pthread_create = Module.findExportByName(null, "pthread_create"),'pointer',['pointer','pointer','pointer','pointer'])
-            f_gettid = new NativeFunction(p_gettid = Module.findExportByName(null, "gettid"),'int',[])
-            f_getpid = new NativeFunction(p_getpid = Module.findExportByName(null, "getpid"),'int',[])
-            f_sleep  = new NativeFunction(p_sleep  = Module.findExportByName(null, "sleep"),'int',['int'])
+            f_pthread_create = new NativeFunction(p_pthread_create = Module.findExportByName(null, "pthread_create"), 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
+            f_gettid = new NativeFunction(p_gettid = Module.findExportByName(null, "gettid"), 'int', [])
+            f_getpid = new NativeFunction(p_getpid = Module.findExportByName(null, "getpid"), 'int', [])
+            f_sleep = new NativeFunction(p_sleep = Module.findExportByName(null, "sleep"), 'int', ['int'])
         }
 
         function initLibArtFunctions() {
@@ -309,7 +308,7 @@ function main() {
             A(DecodeJObject, (args) => {
                 ArtCurrent = args[0]
             })
-            
+
             // 五秒检测一次 ArtCurrent 是否拿到，拿到了就取消Attach
             var taskID = setInterval(() => {
                 if (ArtCurrent != undefined) {
@@ -337,7 +336,7 @@ function c(image, isShowClass) {
 }
 
 function m(klass) {
-    list_Methods(klass,1)
+    list_Methods(klass, 1)
 }
 
 function f(klass) {
@@ -348,7 +347,7 @@ function f(klass) {
  * 参数可以传递 绝对地址/相对地址/methodinfo指针（解析参数）
  * @param {Number} mPtr 
  */
-function b(mPtr) {    
+function b(mPtr) {
     breakPoint(mPtr)
 }
 
@@ -359,7 +358,7 @@ function b(mPtr) {
  * @param {String} functionName 
  * @param {Number} ArgsCount 
  */
-function F(ImageName, ClassName, functionName, ArgsCount) {    
+function F(ImageName, ClassName, functionName, ArgsCount) {
     find_method(ImageName, ClassName, functionName, ArgsCount, false)
 }
 
@@ -368,39 +367,39 @@ function F(ImageName, ClassName, functionName, ArgsCount) {
  * @param {Number} mPtr 绝对地址相对地址都可以
  * @param {Number} 打印指令条数
  */
-function P(mPtr, range) {    
+function P(mPtr, range) {
     printCtx(checkPointer(mPtr), (range == undefined ? 20 : range), 2)
 }
 
 // 默认就用Assembly-CSharp 和 MaxSdk.Scripts
-function a(imgOrCls) {    
+function a(imgOrCls) {
     if (imgOrCls == undefined) {
-        for (var i = 0; i < arr_img_names.length; i++){            
+        for (var i = 0; i < arr_img_names.length; i++) {
             //这两个都是 非常 常用的程序集
-            if (arr_img_names[i] == "Assembly-CSharp" || arr_img_names[i] == "MaxSdk.Scripts") {                
+            if (arr_img_names[i] == "Assembly-CSharp" || arr_img_names[i] == "MaxSdk.Scripts") {
                 imgOrCls = arr_img_addr[i]
             }
         }
-    } else if (imgOrCls == "ALL") {        
-        for (var i = 0; i < arr_img_names.length; i++){
-            addBreakPoints(arr_img_addr[i])            
+    } else if (imgOrCls == "ALL") {
+        for (var i = 0; i < arr_img_names.length; i++) {
+            addBreakPoints(arr_img_addr[i])
         }
-        return 
+        return
     }
     addBreakPoints(imgOrCls)
 }
 
-function B(filter, isAnalyticParameter) {    
-    if (arrayAddr.length == 0) a()    
+function B(filter, isAnalyticParameter) {
+    if (arrayAddr.length == 0) a()
     // 默认不要详细参数，都显示可能导致卡顿而且太乱了，建议再需要的时候新开cmd再使用b去指定某个method
-    breakPoints(filter, isAnalyticParameter == undefined ? false : isAnalyticParameter)    
+    breakPoints(filter, isAnalyticParameter == undefined ? false : isAnalyticParameter)
 }
 
 // 遍历所有的img，添加所有方法，也是一个不太建议的使用方式，需要全部遍历的情况建议使用dps.py配合bpoints.js来使用
-function BA(filter, isAnalyticParameter) {    
+function BA(filter, isAnalyticParameter) {
     D()
-    a("ALL")    
-    breakPoints(filter, isAnalyticParameter == undefined ? false : isAnalyticParameter)    
+    a("ALL")
+    breakPoints(filter, isAnalyticParameter == undefined ? false : isAnalyticParameter)
 }
 
 /**
@@ -409,50 +408,52 @@ function BA(filter, isAnalyticParameter) {
 function C(ImgOrPtr) {
     var corlib = il2cpp_get_corlib()
     var assemblyClass = il2cpp_class_from_name(corlib, allocStr("System.Reflection"), allocStr("Assembly"))
-    var assemblyLoad  = il2cpp_class_get_method_from_name(assemblyClass,allocStr("Load"), 1)
+    var assemblyLoad = il2cpp_class_get_method_from_name(assemblyClass, allocStr("Load"), 1)
     var assemblyGetTypes = il2cpp_class_get_method_from_name(assemblyClass, allocStr("GetTypes"), 0)
 
     // public static Assembly Load(string assemblyString)
-    var func_load = new NativeFunction(assemblyLoad.readPointer(), 'pointer', ['pointer', 'pointer'])    
+    var func_load = new NativeFunction(assemblyLoad.readPointer(), 'pointer', ['pointer', 'pointer'])
     // var func_load = new NativeFunction(assemblyLoad.readPointer(),'pointer',['pointer','pointer','pointer'])
-    
-    // public virtual Type[] GetTypes();
-    var func_getTypes = new NativeFunction(assemblyGetTypes.readPointer(), 'pointer', ['pointer', 'pointer'])    
 
-    LOG(getLine(85), LogColor.C33)    
+    // public virtual Type[] GetTypes();
+    var func_getTypes = new NativeFunction(assemblyGetTypes.readPointer(), 'pointer', ['pointer', 'pointer'])
+
+    LOG(getLine(85), LogColor.C33)
     arr_img_names
-        .filter(function (name, index) {        
-        if (ImgOrPtr != undefined && Number(arr_img_addr[index]) == Number(ImgOrPtr)) return name        
-        if (ImgOrPtr != undefined && name.indexOf(ImgOrPtr) != -1) return name            
-        // return name
-    }).forEach(function (name) {        
-        var logstr = "------------ " + name + " ------------"        
-        var logstrSub = ""        
-        LOG(logstr, LogColor.C33)        
-        for (var i = 0; i < logstr.length; i++) { logstrSub += "-" }        
-        LOG(logstrSub, LogColor.C33)        
-        var reflectionAssembly = func_load(allocStr(name, ""), ptr(0x0))        
-        // var reflectionAssembly = func_load(ptr(0x0)，allocStr(a_img_names[1],""),ptr(0x0))
-        var reflectionTypes = func_getTypes(reflectionAssembly, ptr(0x0))        
-        
-        var items = reflectionTypes.add(p_size * 4)        
-        var length = reflectionTypes.add(p_size * 3).readPointer().toInt32()        
-        for (var i = 0; i < length; i++){            
-            var klass = il2cpp_class_from_system_type(items.add(i * p_size).readPointer())            
-            // LOG("[*] "+klass+"\t"+getClassName(klass),LogColor.C36)
-            var type = il2cpp_class_get_type(klass)            
-            var t_name = il2cpp_type_get_name(type)
-            var p_klass = il2cpp_type_get_class_or_element_class(type)            
-            LOG("[*] " + p_klass + "\t" + t_name.readCString(), LogColor.C36)            
-        }
-    })
-    LOG(getLine(85), LogColor.C33)    
+        .filter(function (name, index) {
+            if (ImgOrPtr != undefined && Number(arr_img_addr[index]) == Number(ImgOrPtr)) return name
+            if (ImgOrPtr != undefined && name.indexOf(ImgOrPtr) != -1) return name
+            // return name
+        }).forEach(function (name) {
+            var logstr = "------------ " + name + " ------------"
+            var logstrSub = ""
+            LOG(logstr, LogColor.C33)
+            for (var i = 0; i < logstr.length; i++) {
+                logstrSub += "-"
+            }
+            LOG(logstrSub, LogColor.C33)
+            var reflectionAssembly = func_load(allocStr(name, ""), ptr(0x0))
+            // var reflectionAssembly = func_load(ptr(0x0)，allocStr(a_img_names[1],""),ptr(0x0))
+            var reflectionTypes = func_getTypes(reflectionAssembly, ptr(0x0))
+
+            var items = reflectionTypes.add(p_size * 4)
+            var length = reflectionTypes.add(p_size * 3).readPointer().toInt32()
+            for (var i = 0; i < length; i++) {
+                var klass = il2cpp_class_from_system_type(items.add(i * p_size).readPointer())
+                // LOG("[*] "+klass+"\t"+getClassName(klass),LogColor.C36)
+                var type = il2cpp_class_get_type(klass)
+                var t_name = il2cpp_type_get_name(type)
+                var p_klass = il2cpp_type_get_class_or_element_class(type)
+                LOG("[*] " + p_klass + "\t" + t_name.readCString(), LogColor.C36)
+            }
+        })
+    LOG(getLine(85), LogColor.C33)
 }
 
 // attach A(0xabcd,(args)=>{},(ret)=>{})
 function A(mPtr, mOnEnter, mOnLeave) {
     if (mPtr == null || mPtr == 0) {
-        LOG("Can't attach nullptr")        
+        LOG("Can't attach nullptr")
         return
     }
     mPtr = checkPointer(ptr(mPtr))
@@ -470,30 +471,32 @@ function A(mPtr, mOnEnter, mOnLeave) {
 }
 
 // R(0xabcd,(srcFunc,arg0,arg1,arg2,arg3)=>{......})
-function R(mPtr, callBack) {    
-    var src_ptr = ptr(mPtr)    
-    var TYPENOP = arguments[2] == undefined    
+function R(mPtr, callBack) {
+    var src_ptr = ptr(mPtr)
+    var TYPENOP = arguments[2] == undefined
     mPtr = checkPointer(mPtr)
     // 记录已经被 Replace 的函数地址
-    if (String(arr_nop_addr).indexOf(mPtr) == -1) {        
+    if (String(arr_nop_addr).indexOf(mPtr) == -1) {
         arr_nop_addr.push(String(mPtr))
     } else {
         //先取消掉再重新 replace
         Interceptor.revert(mPtr)
     }
     // 原函数的引用也可以再replace中调用findTransform
-    var srcFunc = new NativeFunction(mPtr, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])    
-    Interceptor.replace(mPtr, new NativeCallback(function (arg0, arg1, arg2, arg3) {        
+    var srcFunc = new NativeFunction(mPtr, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
+    Interceptor.replace(mPtr, new NativeCallback(function (arg0, arg1, arg2, arg3) {
         LOG("\nCalled " + (TYPENOP ? "Replaced" : "Nop") + " function ---> " + mPtr + " (" + src_ptr + ")", LogColor.YELLOW)
-        var ret = callBack(srcFunc, arg0, arg1, arg2, arg3)        
-        return ret == null ? ptr(0) : ret        
-    }, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer']))    
+        var ret = callBack(srcFunc, arg0, arg1, arg2, arg3)
+        return ret == null ? ptr(0) : ret
+    }, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer']))
 }
 
 // nop 指定函数
 function n(mPtr) {
-    if (mPtr == undefined) return    
-    R(mPtr, () => { return ptr(0) }, 0)    
+    if (mPtr == undefined) return
+    R(mPtr, () => {
+        return ptr(0)
+    }, 0)
 }
 
 // 取消被 nop 的函数
@@ -501,7 +504,7 @@ function nn(mPtr) {
     if (mPtr == undefined) return
     mPtr = checkPointer(mPtr)
     Interceptor.revert(mPtr)
-    for (var i = 0; i < arr_nop_addr.length; i++){
+    for (var i = 0; i < arr_nop_addr.length; i++) {
         if (String(arr_nop_addr[i]) == String(mPtr)) {
             arr_nop_addr = arr_nop_addr.splice(arr_nop_addr[i], 1)
         }
@@ -533,7 +536,7 @@ function d(mPtr) {
 
 function r() {
     d()
-    arrMethodInfo.splice(0, arrMethodInfo.length)    
+    arrMethodInfo.splice(0, arrMethodInfo.length)
     arrayAddr.length = 0
     arrayName.length = 0
     count_method_times = 0
@@ -541,85 +544,111 @@ function r() {
 }
 
 function showMap(map) {
-    LOG(getLine(20), LogColor.RED)    
-    var count = 0 
+    LOG(getLine(20), LogColor.RED)
+    var count = 0
     map.forEach((value, key, innerMap) => {
         LOG(key + " ---> " + value + "\t\tthis -> " + innerMap, LogColor.C36)
-        count ++ 
+        count++
     })
-    if (count == 0 ) LOG("Noting to Show ...",LogColor.C93)
-    LOG(getLine(10), LogColor.RED)    
-    LOG("Count Map Items : " + count,LogColor.C35)
-    LOG(getLine(20), LogColor.RED)    
+    if (count == 0) LOG("Noting to Show ...", LogColor.C93)
+    LOG(getLine(10), LogColor.RED)
+    LOG("Count Map Items : " + count, LogColor.C35)
+    LOG(getLine(20), LogColor.RED)
 }
 
-function D(){
+function D() {
     r()
     nnn()
 }
 
 //System.Text.StringBuilder
 function B_ToString() {
-    A(find_method("mscorlib", "StringBuilder", "ToString", 0), () => { }, (ret) => { LOG(readU16(ret)) })
+    A(find_method("mscorlib", "StringBuilder", "ToString", 0), () => {}, (ret) => {
+        LOG(readU16(ret))
+    })
 }
 
 //public static Void TrackText (Text t)
 function B_Text(TYPE) {
     try {
-        LOG("Unity.TextMeshPro.TMP_Text.get_transform ===> "+find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0).sub(soAddr))
-        TMP_Text()
+        LOG("Unity.TextMeshPro.TMP_Text.get_transform ===> " + find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0).sub(soAddr))
+        TextMeshPro()
     } catch (e) {
-        LOG("DO NOT USE TMP_Text", LogColor.RED)        
+        LOG("DO NOT USE TMP_Text", LogColor.RED)
     }
 
     try {
-        LOG("UnityEngine.UI.Text.get_text ===> "+find_method("UnityEngine.UI", "Text", "get_text", 0).sub(soAddr))
-        LOG("UnityEngine.UI.Text.set_text ===> "+find_method("UnityEngine.UI", "Text", "set_text", 1).sub(soAddr))
+        LOG("UnityEngine.UI.Text.get_text ===> " + find_method("UnityEngine.UI", "Text", "get_text", 0).sub(soAddr))
+        LOG("UnityEngine.UI.Text.set_text ===> " + find_method("UnityEngine.UI", "Text", "set_text", 1).sub(soAddr))
         UnityEngine_UI_Text()
     } catch (e) {
-        LOG("DO NOT USE UnityEngine_UI_Text", LogColor.RED)        
+        LOG("DO NOT USE UnityEngine_UI_Text", LogColor.RED)
     }
 
     function TMP_Text() {
         D()
-        A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {        
-            var strName = readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0]))        
+        A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {
+            var strName = readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0]))
             if (strName.indexOf(":") == -1) {
                 if (!strName.startsWith("-")) {
                     LOG("\nCalled TMP_Text.get_transform INS:" + args[0], LogColor.C36)
                     LOG("\t----> |" + strName + "|", LogColor.C96)
                 }
             }
-            if (strName == "ADVENTURE MODE") {
-                TmpSetTo(args[0], "成就模式")         
+            if (strName == "设置") {
+                TmpSetTo(args[0], "设置1")
+                // runOnMain(0x19dc41c, () => {
+                //     TmpSetTo(args[0], "设置1")
+                //     callFunction(0xF728D4, args[0], 1, 1)
+                // })
             }
         })
 
-        function TmpSetTo(ins,str) {
-            callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "set_text", 1), ins, allocStr(str, ""))        
+        function TmpSetTo(ins, str) {
+            callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "set_text", 1), ins, allocStr(str, ""))
+        }
+    }
+
+    function TextMeshPro() {
+        D()
+        A(find_method("Unity.TextMeshPro", "TextMeshPro", "get_transform", 0), (args) => {
+            var strName = readU16(callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "get_text", 0), args[0]))
+            if (strName.indexOf(":") == -1) {
+                if (!strName.startsWith("-")) {
+                    LOG("\nCalled TextMeshPro.get_transform INS:" + args[0], LogColor.C36)
+                    LOG("\t----> |" + strName + "|", LogColor.C96)
+                }
+            }
+            if (strName == "设置") {
+                TmpSetTo(args[0], "设置1")
+            }
+        })
+
+        function TmpSetTo(ins, str) {
+            callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "set_text", 1), ins, allocStr(str, ""))
         }
     }
 
     function UnityEngine_UI_Text() {
         A(find_method("UnityEngine.UI", "Text", "get_text", 0), undefined, (ret) => {
             var tmp = readU16(ret)
-            if (tmp.indexOf("00:") != 0) LOG("get ---> " + tmp, LogColor.C36)            
+            if (tmp.indexOf("00:") != 0) LOG("get ---> " + tmp, LogColor.C36)
         })
 
         A(find_method("UnityEngine.UI", "Text", "set_text", 1), (args) => {
             var tmp = readU16(args[1])
-            if (tmp.indexOf("00:") != 0) LOG("set ---> " + tmp, LogColor.C36)            
+            if (tmp.indexOf("00:") != 0) LOG("set ---> " + tmp, LogColor.C36)
         })
     }
 
-   
+
 }
 
 function B_UnityJNI() {
     D()
     a(findClass("AndroidJNI"))
     a(findClass("AndroidJNIHelper"))
-    B("",true)
+    B("", true)
 }
 
 function B_Rate() {
@@ -648,37 +677,37 @@ function B_Interstitial() {
 }
 
 // print list result
-function p(filter){
+function p(filter) {
     print_list_result(filter)
 }
 
 // list all from class
-function lafc(klass) {    
-    LOG("\nFields :", LogColor.RED)    
-    listFieldsFromCls(klass, undefined, 1)    
-    LOG("\nMethods :", LogColor.RED)    
-    list_Methods(klass, 1)    
+function lafc(klass) {
+    LOG("\nFields :", LogColor.RED)
+    listFieldsFromCls(klass, undefined, 1)
+    LOG("\nMethods :", LogColor.RED)
+    list_Methods(klass, 1)
 }
 
 // list methods from class
-function lmfc(klass) {    
-    list_Methods(klass, 1)    
+function lmfc(klass) {
+    list_Methods(klass, 1)
 }
 
 // list methods from methodinfo   当前methodinfo所属类的methods
-function lmfm(methodInfo) {    
-    listMethodsFromMethodInfo(methodInfo)    
+function lmfm(methodInfo) {
+    listMethodsFromMethodInfo(methodInfo)
 }
 
 // list fields from methodinfo
-function lffm(methodInfo, instance) {    
-    listFieldsFromMethodInfo(methodInfo, instance)    
+function lffm(methodInfo, instance) {
+    listFieldsFromMethodInfo(methodInfo, instance)
 }
 
 // list fields from class
-function lffc(klass, instance) {    
+function lffc(klass, instance) {
     //对于枚举类型也可以使用，枚举类型也是fields
-    listFieldsFromCls(klass, instance)    
+    listFieldsFromCls(klass, instance)
 }
 
 /**
@@ -686,7 +715,7 @@ function lffc(klass, instance) {
  */
 
 function list_Images(filter) {
-    arr_img_names.splice(0, arr_img_names.length)    
+    arr_img_names.splice(0, arr_img_names.length)
     arr_img_addr.splice(0, arr_img_addr.length)
 
     var domain = il2cpp_domain_get()
@@ -694,31 +723,31 @@ function list_Images(filter) {
     var assemblies = il2cpp_domain_get_assemblies(domain, size_t)
     var count_assemblies = 0
     var count_assemblies_all = 0
-    LOG(getLine(85),LogColor.C33)
+    LOG(getLine(85), LogColor.C33)
     var assemblies_count = size_t.readInt()
-    for (var i=0;i<assemblies_count;i++){
+    for (var i = 0; i < assemblies_count; i++) {
         var img_addr = il2cpp_assembly_get_image(assemblies.add(p_size * i)).readPointer()
         var img_name = img_addr.add(p_size).readPointer().readCString()
         var cls_count = il2cpp_image_get_class_count(img_addr).toInt32()
-        if (filter == undefined){
+        if (filter == undefined) {
             LOG("[*] " + img_addr + "\t" + cls_count + "\t" + img_name, LogColor.C36)
             count_assemblies++
-        }else if (img_name.indexOf(filter)!=-1){
+        } else if (img_name.indexOf(filter) != -1) {
             LOG("[*] " + img_addr + "\t" + cls_count + "\t" + img_name, LogColor.C36)
             count_assemblies++
         }
         arr_img_names.push(img_name)
         arr_img_addr.push(img_addr)
         count_assemblies_all++
-    }    
+    }
     LOG(getLine(28), LogColor.C33)
     var comstr = ""
     if (filter != undefined) comstr = " | All " + count_assemblies_all
     LOG("  List " + count_assemblies + " Images" + comstr, LogColor.RED)
-    LOG(getLine(85),LogColor.C33)
+    LOG(getLine(85), LogColor.C33)
 }
 
-function list_Classes(image,isShowClass){
+function list_Classes(image, isShowClass) {
     if (isShowClass == undefined) isShowClass = true
     var image = ptr(image)
     var cls_count = il2cpp_image_get_class_count(image).toInt32()
@@ -726,23 +755,23 @@ function list_Classes(image,isShowClass){
     var t_Namespaces = new Array()
     var t_Names = new Array()
     var t_il2CppClass = new Array()
-    LOG(getLine(85), LogColor.C33)    
-    for (var j = 0; j < cls_count; j++){
+    LOG(getLine(85), LogColor.C33)
+    for (var j = 0; j < cls_count; j++) {
         var il2CppClass = il2cpp_image_get_class(image, j)
         var name = il2CppClass.add(2 * p_size).readPointer().readCString()
         var nameSpace = il2CppClass.add(3 * p_size).readPointer().readCString()
-        if (a_Namespaces.indexOf(nameSpace) == -1) a_Namespaces.push(nameSpace)        
+        if (a_Namespaces.indexOf(nameSpace) == -1) a_Namespaces.push(nameSpace)
         t_il2CppClass.push(il2CppClass)
         t_Names.push(name)
         t_Namespaces.push(nameSpace)
     }
-    for(var i=0;i<a_Namespaces.length;i++){
+    for (var i = 0; i < a_Namespaces.length; i++) {
         LOG((i == 0 ? "" : (isShowClass ? "\n" : "")) + "[*] " + a_Namespaces[i], LogColor.C36)
         if (!isShowClass) continue
-        for (var j = 0; j < t_Names.length; j++){
+        for (var j = 0; j < t_Names.length; j++) {
             if (t_Namespaces[j] == a_Namespaces[i]) LOG("\t[-] " + t_il2CppClass[j] + "\t" + t_Names[j], LogColor.C36)
         }
-    }    
+    }
     var tmp = new Array()
     t_Namespaces.forEach(function (value) {
         if (tmp.indexOf(value) == -1) tmp.push(value)
@@ -753,7 +782,7 @@ function list_Classes(image,isShowClass){
 }
 
 // 0 1 2
-function list_Methods(klass,TYPE){
+function list_Methods(klass, TYPE) {
 
     if (TYPE == undefined) TYPE = 0
 
@@ -765,7 +794,7 @@ function list_Methods(klass,TYPE){
     var method = NULL
     var count_methods = 0
     if (TYPE == 1) LOG("\n" + getLine(85), LogColor.C33)
-    try{
+    try {
         while (method = il2cpp_class_get_methods(klass, iter)) {
             var methodName = getMethodName(method)
             var retClass = il2cpp_class_from_type(getMethodReturnType(method))
@@ -779,53 +808,54 @@ function list_Methods(klass,TYPE){
 
                 // 解析参数
                 var arr_args = new Array()
-                var arr_args_type_addr = new Array()                            
-                for (var i = 0; i < parameters_count; i++){                    
-                    try{
+                var arr_args_type_addr = new Array()
+                for (var i = 0; i < parameters_count; i++) {
+                    try {
                         var ParameterInfo = method.add(p_size * 5).readPointer()
                         var Il2CppType = ParameterInfo.add(p_size * i * 4)
                         var typeClass = il2cpp_class_from_type(getParameterType(Il2CppType))
                         var TypeName = getClassName(typeClass)
-                        arr_args.push(TypeName+" "+getParameterName(ParameterInfo))
-                        arr_args_type_addr.push(TypeName+" "+typeClass)
-                    }catch(e){}
+                        arr_args.push(TypeName + " " + getParameterName(ParameterInfo))
+                        // 这里的TypeName 和 typeClass 之间之所以不用 /t 是因为多参数
+                        arr_args_type_addr.push(TypeName + " " + typeClass)
+                    } catch (e) {}
                 }
 
                 if (TYPE != 2) {
-                    LOG((count_methods==0?"":"\n")+"[*] "+method+" ---> "
-                        + method.readPointer() + " ---> " + method.readPointer().sub(soAddr) + "\t"
-                        + (!TYPE ? (parameters_count + "\t") : "") + "\n\t"
-                        + get_method_modifier(method)
-                        + retName + " "
-                        + methodName + " "
-                        + "(" + arr_args + ")" + "\t", LogColor.C36)
+                    var realAddr = method.readPointer()
+                    LOG((count_methods == 0 ? "" : "\n") + "[*] " + method + " ---> " +
+                        realAddr + (realAddr == 0x0 ? "" : (" ---> " + method.readPointer().sub(soAddr))) + "\t" +
+                        (!TYPE ? (parameters_count + "\t") : "") + "\n\t" +
+                        get_method_modifier(method) +
+                        retName + " " +
+                        methodName + " " +
+                        "(" + arr_args + ")" + "\t", LogColor.C36)
                 }
-                
+
                 count_methods++
 
                 if (TYPE != 2) {
                     if (!TYPE) continue
-
                     LOG("\t\t---> ret\t" + retName + "\t" + retClass, LogColor.C90)
                     LOG("\t\t---> cls\t" + arr_args_type_addr, LogColor.C90)
                 }
             }
         }
-    }catch(e){
+    } catch (e) {
         // LOG(e)
     }
     if (TYPE != 2) {
-        LOG(getLine(85), LogColor.C33)
+        LOG(getLine(85) + "\n", LogColor.C33)
     } else {
-        return new Array(AretName,AretAddr)
+        return new Array(AretName, AretAddr)
     }
 }
 
 
 // 解析cls指针下的函数名,返回匹配的函数地址
-function getAddrFromName(clsptr, str) {
+function getFunctionAddrFromName(clsptr, str) {
     var retArray = list_Methods(clsptr, 2)
-    for (var i = 0; i < retArray[0].length; i++) {        
+    for (var i = 0; i < retArray[0].length; i++) {
         if (retArray[0][i].indexOf(str) != -1) return retArray[1][i]
     }
     return -1
@@ -850,19 +880,19 @@ function find_method(imageName, className, functionName, argsCount, isRealAddr) 
 
     //真实地址才使用缓存
     if (isRealAddr) {
-        var tmpKey = imageName+"."+className+"."+functionName+"."+argsCount
+        var tmpKey = imageName + "." + className + "." + functionName + "." + argsCount
         var cache = map_find_method_cache.get(tmpKey)
         if (cache != null) return ptr(cache)
     }
     var currentlib = 0
-    arr_img_names.forEach(function(name,index){
-        if (name == imageName){
+    arr_img_names.forEach(function (name, index) {
+        if (name == imageName) {
             currentlib = arr_img_addr[index]
         }
     })
     var klass = il2cpp_class_from_name(currentlib, Memory.allocUtf8String(imageName), Memory.allocUtf8String(className))
     if (klass == 0) {
-        for (var j = 0; j < il2cpp_image_get_class_count(currentlib).toInt32(); j++){
+        for (var j = 0; j < il2cpp_image_get_class_count(currentlib).toInt32(); j++) {
             var il2CppClass = il2cpp_image_get_class(currentlib, j)
             if (getClassName(il2CppClass) == className) {
                 klass = il2CppClass
@@ -870,33 +900,33 @@ function find_method(imageName, className, functionName, argsCount, isRealAddr) 
             }
         }
     }
-    
-    if (klass == 0 ) return ptr(0)
+
+    if (klass == 0) return ptr(0)
     var method = il2cpp_class_get_method_from_name(klass, allocStr(functionName), argsCount)
     if (method == 0) return ptr(0)
     if (arguments[5] != undefined) return method
     //缓存
-    map_find_method_cache.set(tmpKey, method.readPointer())  
+    map_find_method_cache.set(tmpKey, method.readPointer())
 
-    if (isRealAddr) return isRealAddr ? method.readPointer():method.readPointer().sub(soAddr)
+    if (isRealAddr) return isRealAddr ? method.readPointer() : method.readPointer().sub(soAddr)
 
     var parameters_count = getMethodParametersCount(method)
     var arr_args = new Array()
     var arr_args_type_addr = new Array()
-    for (var i = 0; i < parameters_count; i++){        
+    for (var i = 0; i < parameters_count; i++) {
         var ParameterInfo = method.add(p_size * 5).readPointer().add(p_size * i * 4)
         var typeClass = il2cpp_class_from_type(getParameterType(ParameterInfo))
         var TypeName = getClassName(typeClass)
         arr_args.push(TypeName + " " + getParameterName(ParameterInfo))
         arr_args_type_addr.push(TypeName + " " + typeClass)
     }
-    var disStr = get_method_modifier(method)
-        + getClassName(il2cpp_class_from_type(getMethodReturnType(method))) + " "
-        + getMethodName(method) + " "
-        + "(" + arr_args + ")" + "\t"
-    LOG(getLine(85),LogColor.C33)
-    LOG(imageName+"."+className+"\t"+disStr,LogColor.RED)
-    LOG("----------------------------",LogColor.C33)
+    var disStr = get_method_modifier(method) +
+        getClassName(il2cpp_class_from_type(getMethodReturnType(method))) + " " +
+        getMethodName(method) + " " +
+        "(" + arr_args + ")" + "\t"
+    LOG(getLine(85), LogColor.C33)
+    LOG(imageName + "." + className + "\t" + disStr, LogColor.RED)
+    LOG("----------------------------", LogColor.C33)
     var ShowMore = false
     LOG("Il2CppImage\t---->\t" + currentlib + (ShowMore ? " (" + currentlib.add(p_size).readPointer().readCString() + ")" : ""))
     LOG("Il2CppClass\t---->\t" + klass + (ShowMore ? " (" + getClassName(klass) + ")" : ""))
@@ -905,48 +935,48 @@ function find_method(imageName, className, functionName, argsCount, isRealAddr) 
     LOG(getLine(85), LogColor.C33)
 }
 
-function addBreakPoints(imgOrCls){
+function addBreakPoints(imgOrCls) {
     imgOrCls = ptr(imgOrCls)
     var method_count = 0
     var count = 0
-    try{
+    try {
         count = il2cpp_image_get_class_count(imgOrCls).toInt32()
-    }catch(e){
-        LOG("Error imgOrCls ",LogColor.RED)
+    } catch (e) {
+        LOG("Error imgOrCls ", LogColor.RED)
         return
     }
     // 判断是image还是class
-    LOG(getLine(85),LogColor.C33)
+    LOG(getLine(85), LogColor.C33)
     if (String(arr_img_addr).indexOf(imgOrCls) != -1) {
-        for (var j = 0; j < count; j++){            
+        for (var j = 0; j < count; j++) {
             var il2CppClass = il2cpp_image_get_class(imgOrCls, j)
             addFunctions(il2CppClass)
         }
-    }else{
+    } else {
         addFunctions(imgOrCls)
     }
-    
+
     LOG("------------------------------------------", LogColor.C33)
     LOG("  Added " + method_count + " Methods    |    All " + arrayAddr.length, LogColor.RED)
-    LOG(getLine(85),LogColor.C33)
+    LOG(getLine(85), LogColor.C33)
 
-    function addFunctions(cls){
+    function addFunctions(cls) {
         var iter = Memory.alloc(p_size)
         var method = NULL
-        try{
+        try {
             while (method = il2cpp_class_get_methods(cls, iter)) {
                 if (Number(method) == 0) break
                 var methodName = get_method_des(method)
                 var methodAddr = method.readPointer()
                 if (methodAddr == 0) continue
-                LOG("[*] "+methodAddr+" ---> "+methodAddr.sub(soAddr)+"\t"+methodName,LogColor.C36)
-                if (arrayName.indexOf(methodName)!=-1) continue
+                LOG("[*] " + methodAddr + " ---> " + methodAddr.sub(soAddr) + "\t" + methodName, LogColor.C36)
+                if (arrayName.indexOf(methodName) != -1) continue
                 arrayName.push(methodName)
                 arrayAddr.push(methodAddr.sub(soAddr))
                 arrMethodInfo.push(method)
-                method_count ++ 
+                method_count++
             }
-        }catch(e){
+        } catch (e) {
             // LOG(e)
         }
     }
@@ -957,57 +987,57 @@ function addBreakPoints(imgOrCls){
  * @param {Number} method MethodInfo指针
  * @param {*} isArray 内部函数调用 b()
  */
-function get_method_des(method,isArray){
+function get_method_des(method, isArray) {
     method = ptr(method)
     var methodName = getMethodName(method)
     var retClass = il2cpp_class_from_type(getMethodReturnType(method))
     var retName = getClassName(retClass)
     var parameters_count = getMethodParametersCount(method)
     var permission = get_method_modifier(method)
-    
+
     // 解析参数
     var arr_args = new Array()
     var arr_args_t = new Array()
     var arr_args_n = new Array()
-    for (var i = 0; i < parameters_count; i++){        
-        var ParameterInfo = method.add(p_size * 5).readPointer().add(p_size * i * 4)        
-        var typeClass = il2cpp_class_from_type(getParameterType(ParameterInfo))        
+    for (var i = 0; i < parameters_count; i++) {
+        var ParameterInfo = method.add(p_size * 5).readPointer().add(p_size * i * 4)
+        var typeClass = il2cpp_class_from_type(getParameterType(ParameterInfo))
         var TypeName = getClassName(typeClass)
         var paraName = getParameterName(ParameterInfo)
-        arr_args.push(TypeName + " " + paraName)        
+        arr_args.push(TypeName + " " + paraName)
         arr_args_t.push(typeClass)
         arr_args_n.push(paraName)
     }
 
     // 补空格对齐
     var maxlength = 0
-    for (var i = 0; i < arr_args_n.length; i++){        
-        maxlength = maxlength > arr_args_n[i].length ? maxlength : arr_args_n[i].length        
+    for (var i = 0; i < arr_args_n.length; i++) {
+        maxlength = maxlength > arr_args_n[i].length ? maxlength : arr_args_n[i].length
     }
-    for (var i = 0; i < arr_args_n.length; i++){        
-        arr_args_n[i] += getSpace(maxlength - arr_args_n[i].length)        
+    for (var i = 0; i < arr_args_n.length; i++) {
+        arr_args_n[i] += getSpace(maxlength - arr_args_n[i].length)
     }
 
-    var ret_str = permission + retName + " " + methodName + " (" + arr_args + ")"    
+    var ret_str = permission + retName + " " + methodName + " (" + arr_args + ")"
 
-    if (isArray==undefined?false:true){
+    if (isArray == undefined ? false : true) {
         var a_ret = new Array()
-        a_ret.push(ret_str)                 //字符串简述
-        a_ret.push(retClass)                //返回值类型
-        a_ret.push(parameters_count)        //参数个数
-        a_ret.push(arr_args_t)              //参数class列表
-        a_ret.push(arr_args_n)              //参数名称
-        a_ret.push(getSpace(maxlength))     //参数最大长度（补齐）
+        a_ret.push(ret_str) //字符串简述
+        a_ret.push(retClass) //返回值类型
+        a_ret.push(parameters_count) //参数个数
+        a_ret.push(arr_args_t) //参数class列表
+        a_ret.push(arr_args_n) //参数名称
+        a_ret.push(getSpace(maxlength)) //参数最大长度（补齐）
         // LOG(JSON.stringify(a_ret))
         return a_ret
     }
 
     return ret_str
 
-    function getSpace(length){
+    function getSpace(length) {
         var retStr = ""
-        for (var i = 0; i < length; i++){            
-            retStr += " "            
+        for (var i = 0; i < length; i++) {
+            retStr += " "
         }
         return retStr
     }
@@ -1019,12 +1049,12 @@ function get_method_des(method,isArray){
  * @param {Number} index 
  * @param {String} name 
  */
-function breakPoint(mPtr,index,name){
-    if (mPtr == undefined || mPtr == null) return 
+function breakPoint(mPtr, index, name) {
+    if (mPtr == undefined || mPtr == null) return
     var arr_method_info = NULL
-    try{
-        arr_method_info = get_method_des(mPtr,true)
-    }catch(e){
+    try {
+        arr_method_info = get_method_des(mPtr, true)
+    } catch (e) {
         breakWithArgs(checkPointer(mPtr))
         return
     }
@@ -1032,36 +1062,36 @@ function breakPoint(mPtr,index,name){
     var method_addr = ptr(mPtr).readPointer()
 
     //移除在 B 中添加的条目避免重复显示
-    if (t_arrayAddr != undefined ){
+    if (t_arrayAddr != undefined) {
         var t_method_addr = method_addr.sub(soAddr)
-        t_arrayAddr.forEach(function(value,index){ 
+        t_arrayAddr.forEach(function (value, index) {
             if (Number(value) == Number(t_method_addr)) count_method_times[index] = maxCallTime
         })
     }
 
     var funcName = arr_method_info[0]
     var titleStr = String("Called " + funcName + "\t at " + method_addr + "(" + method_addr.sub(soAddr) + ") | MethodInfo " + ptr(mPtr))
-    
+
     // LOG(method_addr.sub(soAddr))
     A(method_addr, (args) => {
         // if(index!=undefined && ++count_method_times[index] > maxCallTime) return
         LOG("\n-----------------------------------------------------------", LogColor.C33)
-        LOG(titleStr,LogColor.C96)
-        LOG("----------------------",LogColor.C33)
+        LOG(titleStr, LogColor.C96)
+        LOG("----------------------", LogColor.C33)
         var isStatic = funcName.indexOf("static") == -1
-        if (isStatic){
-        var insDes = ""
-        try {
-            insDes = SeeTypeToString(args[0],1)
-        }catch(e){}
+        if (isStatic) {
+            var insDes = ""
+            try {
+                insDes = SeeTypeToString(args[0], 1)
+            } catch (e) {}
             LOG("  inst | \t\t" + args[0] + "\t[" + insDes + "]", LogColor.C36)
         }
-        for (var i = 0; i < arr_method_info[2]; i++){
+        for (var i = 0; i < arr_method_info[2]; i++) {
             var typeCls = arr_method_info[3][i]
             var strType = getClassName(typeCls)
             //静态方法没有上下文，反之有则arg+1
             var ClsArg = args[(isStatic ? i + 1 : i)]
-            var result = FuckKnownType(IsJNIFunction(titleStr,strType),ClsArg,typeCls)
+            var result = FuckKnownType(IsJNIFunction(titleStr, strType), ClsArg, typeCls)
             LOG("  arg" + i + " | " + arr_method_info[4][i] + "\t--->\t" + ClsArg + "\t" +
                 ((String(ClsArg).length) < 9 ? "\t" : "") +
                 strType + " (" + typeCls + ")" + "\t" + result, LogColor.C36)
@@ -1090,18 +1120,18 @@ function breakPoint(mPtr,index,name){
  * @param {String} filter 查询筛选
  * @param {Boolean} isAnalyticParameter 是否解析参数
  */
-function breakPoints(filter,isAnalyticParameter){
+function breakPoints(filter, isAnalyticParameter) {
     // Interceptor.detachAll()
     t_arrayAddr = new Array()
     var t_arrayName = new Array()
     var t_arrayMethod = new Array()
-    if (filter == undefined || filter == ""){
+    if (filter == undefined || filter == "") {
         t_arrayName = arrayName
         t_arrayAddr = arrayAddr
         t_arrayMethod = arrMethodInfo
-    }else{
-        arrayName.forEach(function(value,index){
-            if (value.indexOf(filter)!=-1){
+    } else {
+        arrayName.forEach(function (value, index) {
+            if (value.indexOf(filter) != -1) {
                 t_arrayName.push(value)
                 t_arrayAddr.push(arrayAddr[index])
                 t_arrayMethod.push(arrMethodInfo[index])
@@ -1109,16 +1139,18 @@ function breakPoints(filter,isAnalyticParameter){
         })
     }
 
-    count_method_times = new Array(t_arrayName.length)    
-    for (var t = 0; t < t_arrayAddr.length; t++){        
-        count_method_times[t] = Number(1)        
+    count_method_times = new Array(t_arrayName.length)
+    for (var t = 0; t < t_arrayAddr.length; t++) {
+        count_method_times[t] = Number(1)
     }
 
     t_arrayAddr
-        .map(function(temp){return soAddr.add(temp)})
-        .forEach(function(value,index){
-            LOG("-------------------------",LogColor.C90)
-            LOG('currentAddr:' + value + "\t"+t_arrayName[index],LogColor.C32)
+        .map(function (temp) {
+            return soAddr.add(temp)
+        })
+        .forEach(function (value, index) {
+            LOG("-------------------------", LogColor.C90)
+            LOG('currentAddr:' + value + "\t" + t_arrayName[index], LogColor.C32)
             // var a1 = isAnalyticParameter ? arrayMethod[index] : value
             // var a2 = isAnalyticParameter ? undefined : index
             if (isAnalyticParameter) {
@@ -1126,64 +1158,64 @@ function breakPoints(filter,isAnalyticParameter){
                 // 等价 contine
                 return 0
             }
-            try{
-                funcTmp(value,index,t_arrayName)
+            try {
+                funcTmp(value, index, t_arrayName)
                 // breakPoint(a1,a2,t_arrayName[index])
-            }catch(e){
-                funcTmp(value.add(1),index,t_arrayName)
+            } catch (e) {
+                funcTmp(value.add(1), index, t_arrayName)
                 // breakPoint(a1.add(1),a2,t_arrayName[index])
-            }            
-            LOG("\t\t---->"+index+"\t"+value.sub(soAddr)+" is prepared ",LogColor.C33)
+            }
+            LOG("\t\t---->" + index + "\t" + value.sub(soAddr) + " is prepared ", LogColor.C33)
         })
-    LOG("------------------------------------------",LogColor.C33)
-    LOG("  Added "+t_arrayAddr.length+" BreakPoints    |    All "+arrayAddr.length,LogColor.RED)
-    LOG("-------------------------------------------------------------------------------------",LogColor.C33)
+    LOG("------------------------------------------", LogColor.C33)
+    LOG("  Added " + t_arrayAddr.length + " BreakPoints    |    All " + arrayAddr.length, LogColor.RED)
+    LOG("-------------------------------------------------------------------------------------", LogColor.C33)
 
-    function funcTmp(currentAddr,index,arrayName){
+    function funcTmp(currentAddr, index, arrayName) {
         try {
             A(currentAddr, () => {
                 if (++count_method_times[index] < maxCallTime) {
                     // 之前是单独添加了一个字段来控制，后面这里改成这样进行筛选判断简洁点
-                    if (filterClass.length != 0){
+                    if (filterClass.length != 0) {
                         var temp = getClassNameFromMethodInfo(t_arrayMethod[index])
-                        for (var i = 0; i < filterClass.length; i++){                            
-                            var maxLength = filterClass[i].length > maxLength ? filterClass[1].length : maxLength                            
+                        for (var i = 0; i < filterClass.length; i++) {
+                            var maxLength = filterClass[i].length > maxLength ? filterClass[1].length : maxLength
                         }
-                        var retStr = getFunctionDesStr(t_arrayMethod, index, maxLength)                        
-                        filterClass.forEach((value) => {                            
-                            if (temp.indexOf(value) != -1 && temp.length == value.length) {                                
-                                LOG("called : "+currentAddr.sub(soAddr) + retStr +" --->\t"+arrayName[index] +"\n",LogColor.C36)
+                        var retStr = getFunctionDesStr(t_arrayMethod, index, maxLength)
+                        filterClass.forEach((value) => {
+                            if (temp.indexOf(value) != -1 && temp.length == value.length) {
+                                LOG("called : " + currentAddr.sub(soAddr) + retStr + " --->\t" + arrayName[index] + "\n", LogColor.C36)
                             }
                         })
-                    }else{
-                        LOG("\ncalled : "+currentAddr.sub(soAddr) + getFunctionDesStr(t_arrayMethod,index,13) +" --->\t"+arrayName[index],LogColor.C36)
+                    } else {
+                        LOG("\ncalled : " + currentAddr.sub(soAddr) + getFunctionDesStr(t_arrayMethod, index, 13) + " --->\t" + arrayName[index], LogColor.C36)
                     }
                 }
-            }, () => { }, false)
-        }catch(e){
-            LOG(e,LogColor.C91)
+            }, () => {}, false)
+        } catch (e) {
+            LOG(e, LogColor.C91)
         }
     }
 
-    function getFunctionDesStr(methodInfos,index,maxlength){
+    function getFunctionDesStr(methodInfos, index, maxlength) {
         var strMethodP = ""
         var strMethodC = ""
-        if (methodInfos.length != 0){
-            strMethodP = " ("+methodInfos[index]+")"
+        if (methodInfos.length != 0) {
+            strMethodP = " (" + methodInfos[index] + ")"
             strMethodC = getClassNameFromMethodInfo(methodInfos[index])
-            strMethodC = alignStr(strMethodC,maxlength)
-            strMethodC += "("+getClassAddrFromMethodInfo(methodInfos[index])+")"
+            strMethodC = alignStr(strMethodC, maxlength)
+            strMethodC += "(" + getClassAddrFromMethodInfo(methodInfos[index]) + ")"
         }
         return strMethodP + "\t" + strMethodC
     }
 
-    function alignStr(str, size) {        
-        var srcSize = str.length        
-        if (srcSize >= size) {            
-            str = str.substring(0, size - 1)            
+    function alignStr(str, size) {
+        var srcSize = str.length
+        if (srcSize >= size) {
+            str = str.substring(0, size - 1)
             str += "."
-        }else{
-            for (var i = size - srcSize; i > 0; i--){                
+        } else {
+            for (var i = size - srcSize; i > 0; i--) {
                 str += " "
             }
         }
@@ -1194,53 +1226,70 @@ function breakPoints(filter,isAnalyticParameter){
 /**
  * 有时候方法太多遍历一遍太费时间，就需要手动调用该方法把打印出来的值替换开始处的值（arrayAddr/arrayName）
  */
-function print_list_result(filter){
-    if (arrayAddr == null || arrayAddr.length ==0) return
-    if (filter == undefined){
-        LOG("\n-------------- list result --------------",LogColor.C36)
-        LOG("\nvar arrayAddr = \n"+JSON.stringify(arrayAddr))
-        LOG("\nvar arrayName = \n"+JSON.stringify(arrayName)+"\n")
-        LOG("\nCOUNT:"+arrayAddr.length+"\n-----------------------------------------",LogColor.C36)
-    }else{
-        LOG("\n---- list result by Search '"+filter+"' ----",LogColor.C36)
+function print_list_result(filter) {
+    if (arrayAddr == null || arrayAddr.length == 0) return
+    if (filter == undefined) {
+        LOG("\n-------------- list result --------------", LogColor.C36)
+        LOG("\nvar arrayAddr = \n" + JSON.stringify(arrayAddr))
+        LOG("\nvar arrayName = \n" + JSON.stringify(arrayName) + "\n")
+        LOG("\nCOUNT:" + arrayAddr.length + "\n-----------------------------------------", LogColor.C36)
+    } else {
+        LOG("\n---- list result by Search '" + filter + "' ----", LogColor.C36)
         var temp_names = new Array()
         var temp_addrs = new Array()
-        arrayName.forEach(function(value,index){
-            if (value.indexOf(filter)!=-1){
+        arrayName.forEach(function (value, index) {
+            if (value.indexOf(filter) != -1) {
                 temp_names.push(value)
                 temp_addrs.push(arrayAddr[index])
             }
         })
-        LOG("\nvar arrayAddr = \n"+JSON.stringify(temp_addrs))
-        LOG("\nvar arrayName = \n"+JSON.stringify(temp_names)+"\n")
-        LOG("\nCOUNT:"+temp_addrs.length+"\n-----------------------------------------",LogColor.C36)
+        LOG("\nvar arrayAddr = \n" + JSON.stringify(temp_addrs))
+        LOG("\nvar arrayName = \n" + JSON.stringify(temp_names) + "\n")
+        LOG("\nCOUNT:" + temp_addrs.length + "\n-----------------------------------------", LogColor.C36)
     }
 }
 
 /**
  * 显示哪些因为超出了最大调用次数的函数地址名称以及index
  */
-function print_deserted_methods(){
+function print_deserted_methods() {
     if (count_method_times == null || count_method_times.length == 0) return
-    LOG("------------------deserted methods------------------\n",LogColor.C92)
-    count_method_times.forEach(function(value,index){
-        if (Number(value)>maxCallTime) LOG("[*] "+arrayAddr[index].add(soAddr)+"\t"+arrayAddr[index]+"\t"+arrMethodInfo[index]+"\t("+index+")"+"\t--->\t"+arrayName[index]+"\n",LogColor.C32)
+    LOG("------------------deserted methods------------------\n", LogColor.C92)
+    count_method_times.forEach(function (value, index) {
+        if (Number(value) > maxCallTime) LOG("[*] " + arrayAddr[index].add(soAddr) + "\t" + arrayAddr[index] + "\t" + arrMethodInfo[index] + "\t(" + index + ")" + "\t--->\t" + arrayName[index] + "\n", LogColor.C32)
     })
 }
 
 // 查看类型的,主要用来区分transform和gameObj
-function SeeTypeToString(obj,b){
+function SeeTypeToString(obj, b) {
+    if (obj == undefined || ptr(obj) == ptr(0)) return
     var s_type = callFunction(find_method("UnityEngine.CoreModule", "Object", "ToString", 0), ptr(obj))
     if (b == undefined) {
         LOG(readU16(s_type))
-    }else{
+    } else {
         return readU16(s_type)
     }
 }
 
 // 读取浮点数 ptr().readFloat() === readSingle(ptr().readPointer())
-function readSingle(value){
-    return Memory.alloc(p_size*2).writePointer(value).readFloat()
+function readSingle(value) {
+    return Memory.alloc(p_size * 2).writePointer(value).readFloat()
+}
+
+function readBoolean(value) {
+    return Memory.alloc(1).writePointer(value).readU8() == 0x1
+}
+
+function readInt(value) {
+    return Memory.alloc(p_size).writePointer(value).readInt()
+}
+
+function readUInt(value) {
+    return Memory.alloc(p_size).writePointer(value).readUInt()
+}
+
+function readUInt64(value) {
+    return Memory.alloc(p_size * 2).writePointer(value).readU64()
 }
 
 /**
@@ -1252,33 +1301,44 @@ function readSingle(value){
  * @param {Pointer} tPtr     类指针（非必选）
  * @returns {String}         简写字符串描述
  */
-function FuckKnownType(strType,mPtr,tPtr){
-    try{
+function FuckKnownType(strType, mPtr, tPtr) {
+    if (mPtr == 0x0 && strType != "Boolean") return "NULL"
+    if (tPtr == undefined) tPtr == 0
+    try {
         mPtr = ptr(mPtr)
         tPtr = ptr(tPtr)
 
         // 数组类型的数据解析
-        if (tPtr > 0x100 && strType.endsWith("[]")) {
-            var addr_getCount = getAddrFromName(tPtr, "get_Count")
-            var addr_get_Item = getAddrFromName(tPtr, "get_Item")
+        if (tPtr != 0 && strType.endsWith("[]")) {
+            var addr_getCount = getFunctionAddrFromName(tPtr, "get_Count")
+            var addr_get_Item = getFunctionAddrFromName(tPtr, "get_Item")
             var arr_retStr = new Array()
             for (var index = 0; index < callFunction(addr_getCount, mPtr); index++) {
                 var item = callFunction(addr_get_Item, mPtr, index)
                 var type = String(strType).split("[]")[0]
-                arr_retStr.push(FuckKnownType(type,item))
+                // LOG("--->" + mPtr + " " + type + " " + addr_get_Item, LogColor.RED)
+                if (type.indexOf("Int") != -1) {
+                    // int数组转回int该有的显示类型
+                    arr_retStr.push(item.toInt32())
+                } else if (type.indexOf(".........") != -1) {
+                    //TODO
+                } else {
+                    // 通用解法速度偏慢，所以前面针对性的先处理一些常用的类型处理
+                    arr_retStr.push(FuckKnownType(type, item, findClass(type)))
+                }
             }
             return JSON.stringify(arr_retStr)
         }
-        
+
         // Dictionary 数据解析
-        if (tPtr > 0x100 && strType.startsWith("Dictionary")) {
-            var addr_getCount = getAddrFromName(tPtr, "get_Count")
-            var count = callFunction(addr_getCount,mPtr)
-            return count + "\t"+FuckKnownType("-1",mPtr,0x0)
+        if (tPtr != 0 && strType.startsWith("Dictionary")) {
+            var addr_getCount = getFunctionAddrFromName(tPtr, "get_Count")
+            var count = callFunction(addr_getCount, mPtr)
+            return count + "\t" + FuckKnownType("-1", mPtr, 0x0)
         }
-        
+
         // 枚举解析
-        if (tPtr > 0x100 && class_is_enum(tPtr)) {
+        if (tPtr != 0 && class_is_enum(tPtr)) {
             var iter = Memory.alloc(p_size)
             var field
             var enumIndex = 0
@@ -1292,82 +1352,101 @@ function FuckKnownType(strType,mPtr,tPtr){
             }
         }
 
-        switch(strType){
-            case "Void"             :
+        switch (strType) {
+            case "Void":
                 return ""
-            case "String"           : 
-                if (mPtr == 0 ) return ""
-                // return mPtr.add(0xC).readPointer().readCString()
+            case "String":
                 return readU16(mPtr)
             case "Boolean":
-                var temp = Memory.alloc(p_size)
-                temp.writePointer(mPtr)
-                return (temp.readU8() == 0x1) ? "True" : "False"
-            case "Int32"            : 
-            case "Int64"            : 
-                return mPtr.toInt32()
-            case "Single"           : 
+                return readBoolean(mPtr) ? "True" : "False"
+            case "Int32":
+                return readInt(mPtr)
+            case "UInt32":
+                return readUInt(mPtr)
+            case "Int64":
+                return readUInt64(mPtr)
+            case "Single":
                 return readSingle(mPtr)
-            case "Object"           : 
-            case "Transform"        : 
-            case "GameObject"       :
+            case "Object":
+            case "Transform":
+            case "GameObject":
                 return SeeTypeToString(mPtr, false)
-            case "Texture"          : 
-                var w = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "GetDataWidth", 0), mPtr)                
-                var h = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "GetDataHeight", 0), mPtr)                
-                var r = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "get_isReadable", 0), mPtr)                
-                var m = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "get_wrapMode", 0), mPtr)                
+            case "Texture":
+                var w = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "GetDataWidth", 0), mPtr)
+                var h = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "GetDataHeight", 0), mPtr)
+                var r = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "get_isReadable", 0), mPtr)
+                var m = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "get_wrapMode", 0), mPtr)
                 r = r == 0 ? "False" : "True"
                 m = m == 0 ? "Repeat" : (m == 1 ? "Clamp" : (m == 2 ? "Mirror" : "MirrorOnce"))
-                return JSON.stringify([m,w,h,r])
-            case "Component"        :
-                if (mPtr == 0x0)    return ""                
-                var mTransform = callFunction(find_method("UnityEngine.CoreModule", "Component", "get_transform", 0), mPtr)                
-                var mGameObject = callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), mPtr)                
+                return JSON.stringify([m, w, h, r])
+            case "Component":
+                if (mPtr == 0x0) return ""
+                var mTransform = callFunction(find_method("UnityEngine.CoreModule", "Component", "get_transform", 0), mPtr)
+                var mGameObject = callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), mPtr)
                 var gName = getObjName(mGameObject)
-                return gName + "\tG:" + mGameObject + " T:" + mTransform + ""            
-            case "IntPtr"           : 
-                if (mPtr == 0x0)    return "0x0"
+                return gName + "\tG:" + mGameObject + " T:" + mTransform + ""
+            case "IntPtr":
+                if (mPtr == 0x0) return "0x0"
                 return readU16(callFunction(find_method('mscorlib', 'IntPtr', 'ToString', 0), mPtr))
-            case "Action"           :
-            case "Action`1"         : 
-            case "Action`2"         : 
-                if (mPtr == 0x0)    return "0x0"
+            case "Block":
+            case "Block`1":
+            case "Action":
+            case "Action`1":
+            case "Action`2":
+                if (mPtr == 0x0) return "0x0"
                 return ptr(mPtr).add(0x14).readPointer().readPointer().sub(soAddr)
-            case "Delegate"         : 
+            case "Delegate":
                 if (mPtr == 0x0) return "0x0"
                 var tmp_ptr = ptr(mPtr).add(0x8).readPointer()
                 var temp_m_target = ptr(mPtr).add(0x10).readPointer()
                 return tmp_ptr + "(" + tmp_ptr.sub(soAddr) + ")  m_target:" + temp_m_target + "  virtual:" + (ptr(mPtr).add(0x30).readInt() == 0x0 ? "false" : "true")
-            case "Char"             : return mPtr.readCString()
-            case "JObject"          : return getJclassName(mPtr, true)
+            case "Char":
+                return mPtr.readCString()
+            case "JObject":
+                return getJclassName(mPtr, true)
             case "OBJ":
                 var objName = getObjName(mPtr)
                 var tmp_type_Ptr = callFunction(find_method("mscorlib", "Object", "GetType", 0), mPtr)
                 var tmp_str_Ptr = callFunction(find_method("mscorlib", "Object", "ToString", 0), mPtr)
-                if (tPtr == 0x1) return [objName,readU16(tmp_str_Ptr),tmp_type_Ptr]
-                return objName + "\t\t" + readU16(tmp_str_Ptr) + " ("+tmp_type_Ptr+")"
-            case "Text"             : return readU16(callFunction(find_method("UnityEngine.UI", "Text", "get_text", 0), mPtr))
-            case "Vector2"          : return readU16(callFunction(find_method("UnityEngine.CoreModule", "Vector2", "ToString", 0), mPtr))
-            case "Vector3"          : return readU16(callFunction(find_method("UnityEngine.CoreModule", "Vector3", "ToString", 0), mPtr))
-            case "Vector4"          : return readU16(callFunction(find_method("UnityEngine.CoreModule", "Vector4", "ToString", 0), mPtr))
-            case "Color"            : return readU16(callFunction(find_method("UnityEngine.CoreModule", "Color", "ToString", 0), mPtr))            
-            case "Color32"          : return readU16(callFunction(find_method("UnityEngine.CoreModule", "Color32", "ToString", 0), mPtr))            
-            case "Event"            : return readU16(callFunction(find_method("UnityEngine.IMGUIModule", "Event", "ToString", 0), mPtr))            
-            case "Bounds"           : return readU16(callFunction(find_method("UnityEngine.CoreModule", "Bounds", "ToString", 0), mPtr))            
-            case "TextAsset"        : return readU16(callFunction(find_method("UnityEngine.CoreModule", "TextAsset", "ToString", 0), mPtr))            
-            case "Rect"             : return readU16(callFunction(find_method("UnityEngine.CoreModule", "Rect", "ToString", 0), mPtr))            
-            case "Ray"              : return readU16(callFunction(find_method("UnityEngine.CoreModule", "Ray", "ToString", 0), mPtr))            
-            case "Quaternion"       : return readU16(callFunction(find_method("UnityEngine.CoreModule", "Quaternion", "ToString", 0), mPtr))            
-            case "Pose"             : return readU16(callFunction(find_method("UnityEngine.CoreModule", "Pose", "ToString", 0), mPtr))            
-            case "Plane"            : return readU16(callFunction(find_method("UnityEngine.CoreModule", "Plane", "ToString", 0), mPtr))            
-            case "Type"             : return readU16(callFunction(find_method("mscorlib", "Type", "ToString", 0), mPtr))            
-            case "TextMeshPro"      :
-            case "TextMeshProUGUI"  : return readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "GetParsedText", 0), mPtr))            
-            default                 : return readU16(callFunction(find_method("mscorlib", "Object", "ToString", 0), mPtr))            
+                if (tPtr == 0x1) return [objName, readU16(tmp_str_Ptr), tmp_type_Ptr]
+                return objName + "\t\t" + readU16(tmp_str_Ptr) + " (" + tmp_type_Ptr + ")"
+            case "Text":
+                return readU16(callFunction(find_method("UnityEngine.UI", "Text", "get_text", 0), mPtr))
+            case "Vector2":
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Vector2", "ToString", 0), mPtr))
+            case "Vector3":
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Vector3", "ToString", 0), mPtr))
+            case "Vector4":
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Vector4", "ToString", 0), mPtr))
+            case "Color":
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Color", "ToString", 0), mPtr))
+            case "Color32":
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Color32", "ToString", 0), mPtr))
+            case "Event":
+                return readU16(callFunction(find_method("UnityEngine.IMGUIModule", "Event", "ToString", 0), mPtr))
+            case "Bounds":
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Bounds", "ToString", 0), mPtr))
+            case "TextAsset":
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "TextAsset", "ToString", 0), mPtr))
+            case "Rect":
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Rect", "ToString", 0), mPtr))
+            case "Ray":
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Ray", "ToString", 0), mPtr))
+            case "Quaternion":
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Quaternion", "ToString", 0), mPtr))
+            case "Pose":
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Pose", "ToString", 0), mPtr))
+            case "Plane":
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Plane", "ToString", 0), mPtr))
+            case "Type":
+                return readU16(callFunction(find_method("mscorlib", "Type", "ToString", 0), mPtr))
+            case "TextMeshPro":
+            case "TextMeshProUGUI":
+                return readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "GetParsedText", 0), mPtr))
+            default:
+                return readU16(callFunction(find_method("mscorlib", "Object", "ToString", 0), mPtr))
         }
-    }
-    catch (e) {
+    } catch (e) {
         // LOG(e)
         return " ? "
     }
@@ -1380,48 +1459,48 @@ function FuckKnownType(strType,mPtr,tPtr){
  */
 function FuckRuntimeType(strType, mPtr) {
     if (strType == undefined || mPtr == undefined)
-    switch (strType) {
-        case "UnityEngine.RectTransform":
+        switch (strType) {
+            case "UnityEngine.RectTransform":
 
-            break
-        case "UnityEngine.CanvasRenderer":
+                break
+            case "UnityEngine.CanvasRenderer":
 
-            break
-        case "TMPro.TextMeshProUGUI":
+                break
+            case "TMPro.TextMeshProUGUI":
 
-            break
-        case "UnityEngine.AudioListener":
+                break
+            case "UnityEngine.AudioListener":
 
-            break
-        case "UnityEngine.UI.CanvasScaler":
+                break
+            case "UnityEngine.UI.CanvasScaler":
 
-            break
-        case "UnityEngine.UI.VerticalLayoutGroup":
+                break
+            case "UnityEngine.UI.VerticalLayoutGroup":
 
-            break
-        case "UnityEngine.UI.HorizontalLayoutGroup":
+                break
+            case "UnityEngine.UI.HorizontalLayoutGroup":
 
-            break
-        case "UnityEngine.UI.Button":
+                break
+            case "UnityEngine.UI.Button":
 
-            break
-        case "UnityEngine.UI.GraphicRaycaster":
+                break
+            case "UnityEngine.UI.GraphicRaycaster":
 
-            break
-        case "UnityEngine.Canvas":
+                break
+            case "UnityEngine.Canvas":
 
-            break
-        case "UnityEngine.Canvas":
+                break
+            case "UnityEngine.Canvas":
 
-            break
-        default:
-            // 过滤游戏引擎的关键类，待完善 。。。。
-            if (strType.startsWith("UnityEngine.") || strType.startsWith("TMPro.")) break
-            // 游戏开发者自己写的component
-            var tCls = findClass(strType)
-            if (tCls != 0x0) lffc(tCls, mPtr)
-            break
-    }
+                break
+            default:
+                // 过滤游戏引擎的关键类，待完善 。。。。
+                if (strType.startsWith("UnityEngine.") || strType.startsWith("TMPro.")) break
+                // 游戏开发者自己写的component
+                var tCls = findClass(strType)
+                if (tCls != 0x0) lffc(tCls, mPtr)
+                break
+        }
 }
 
 /**
@@ -1431,36 +1510,36 @@ function FuckRuntimeType(strType, mPtr) {
  */
 function ShowList(listPtr, valuePtr, type) {
     if (type = undefined) lffc(listPtr, valuePtr)
-    var a_get_Count = getAddrFromName(listPtr, "get_Count")    
-    var a_get_Capacity = getAddrFromName(listPtr, "get_Capacity")    
-    var a_get_Item = getAddrFromName(listPtr, "get_Item")    
+    var a_get_Count = getFunctionAddrFromName(listPtr, "get_Count")
+    var a_get_Capacity = getFunctionAddrFromName(listPtr, "get_Capacity")
+    var a_get_Item = getFunctionAddrFromName(listPtr, "get_Item")
 
-    var Count = callFunction(a_get_Count, valuePtr).toInt32()    
-    var Capacity = callFunction(a_get_Capacity, valuePtr).toInt32()    
-    LOG("\nList Size " + Count + " / " + Capacity + "   " + getType(valuePtr, 1) + "\n", LogColor.RED)    
+    var Count = callFunction(a_get_Count, valuePtr).toInt32()
+    var Capacity = callFunction(a_get_Capacity, valuePtr).toInt32()
+    LOG("\nList Size " + Count + " / " + Capacity + "   " + getType(valuePtr, 1) + "\n", LogColor.RED)
 
-    for (var i = 0; i < Count; i++){
-        var header = String("[" + i + "]").length == 3 ? String("[" + i + "]  ") : String("[" + i + "] ")        
-        var mPtr = callFunction(a_get_Item, valuePtr, i)        
+    for (var i = 0; i < Count; i++) {
+        var header = String("[" + i + "]").length == 3 ? String("[" + i + "]  ") : String("[" + i + "] ")
+        var mPtr = callFunction(a_get_Item, valuePtr, i)
         var name = ""
         try {
             name = getObjName(mPtr)
         } catch (e) {
-            name = FuckKnownType("-1", mPtr)            
+            name = FuckKnownType("-1", mPtr)
         }
-        LOG(header + ptr(mPtr) + "\t\t" + name, LogColor.C36)        
+        LOG(header + ptr(mPtr) + "\t\t" + name, LogColor.C36)
     }
-    LOG("\n" + FuckKnownType("-1", valuePtr) + "\n", LogColor.YELLOW)    
+    LOG("\n" + FuckKnownType("-1", valuePtr) + "\n", LogColor.YELLOW)
 }
 
-function HookSendMessage(){
+function HookSendMessage() {
     try {
-        var UnityPlayer = Java.use("com.unity3d.player.UnityPlayer")        
-        UnityPlayer.UnitySendMessage.implementation = function (str0, str1, str2) {            
-            console.warn("\n--------------\tCalled UnitySendMessage\t--------------")            
-            console.log("UnityPlayer.UnitySendMessage(\x1b[96m'" + str0 + "','" + str1 + "','" + str2 + "'\x1b[0m)")            
-            this.UnitySendMessage(str0, str1, str2)            
-            PrintStackTrace()            
+        var UnityPlayer = Java.use("com.unity3d.player.UnityPlayer")
+        UnityPlayer.UnitySendMessage.implementation = function (str0, str1, str2) {
+            console.warn("\n--------------\tCalled UnitySendMessage\t--------------")
+            console.log("UnityPlayer.UnitySendMessage(\x1b[96m'" + str0 + "','" + str1 + "','" + str2 + "'\x1b[0m)")
+            this.UnitySendMessage(str0, str1, str2)
+            PrintStackTrace()
         }
     } catch (e) {
         // LOG(e)
@@ -1471,23 +1550,28 @@ function HookSendMessage(){
  * 解析 Method 的权限符
  * @param {Number} method_ptr 
  */
-function get_method_modifier(method_ptr){
-    
-    var flags = ptr(method_ptr).add(p_size * 8 + 4).readU16()    
-    var access = flags & il2cppTabledefs.METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK    
+function get_method_modifier(method_ptr) {
+
+    var flags = ptr(method_ptr).add(p_size * 8 + 4).readU16()
+    var access = flags & il2cppTabledefs.METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK
     var ret_str = ""
-    switch(access){
+    switch (access) {
         case il2cppTabledefs.METHOD_ATTRIBUTE_PRIVATE:
-            ret_str += "private "; break        
+            ret_str += "private ";
+            break
         case il2cppTabledefs.METHOD_ATTRIBUTE_PUBLIC:
-            ret_str += "public "; break        
+            ret_str += "public ";
+            break
         case il2cppTabledefs.METHOD_ATTRIBUTE_FAMILY:
-            ret_str += "protected "; break        
+            ret_str += "protected ";
+            break
         case il2cppTabledefs.METHOD_ATTRIBUTE_ASSEM:
-        case il2cppTabledefs.METHOD_ATTRIBUTE_FAM_AND_ASSEM:            
-            ret_str += "internal "; break        
+        case il2cppTabledefs.METHOD_ATTRIBUTE_FAM_AND_ASSEM:
+            ret_str += "internal ";
+            break
         case il2cppTabledefs.METHOD_ATTRIBUTE_FAM_OR_ASSEM:
-            ret_str += "protected internal "; break        
+            ret_str += "protected internal ";
+            break
     }
 
     if (flags & il2cppTabledefs.METHOD_ATTRIBUTE_STATIC) {
@@ -1496,8 +1580,8 @@ function get_method_modifier(method_ptr){
 
     if (flags & il2cppTabledefs.METHOD_ATTRIBUTE_ABSTRACT) {
         ret_str += "abstract "
-        if ((flags & il2cppTabledefs.METHOD_ATTRIBUTE_VTABLE_LAYOUT_MASK) == il2cppTabledefs.METHOD_ATTRIBUTE_REUSE_SLOT) {            
-            ret_str += "override "            
+        if ((flags & il2cppTabledefs.METHOD_ATTRIBUTE_VTABLE_LAYOUT_MASK) == il2cppTabledefs.METHOD_ATTRIBUTE_REUSE_SLOT) {
+            ret_str += "override "
         }
     } else if (flags & il2cppTabledefs.METHOD_ATTRIBUTE_FINAL) {
         if ((flags & il2cppTabledefs.METHOD_ATTRIBUTE_VTABLE_LAYOUT_MASK) == il2cppTabledefs.METHOD_ATTRIBUTE_REUSE_SLOT) {
@@ -1513,122 +1597,148 @@ function get_method_modifier(method_ptr){
     if (flags & il2cppTabledefs.METHOD_ATTRIBUTE_PINVOKE_IMPL) {
         ret_str += "extern "
     }
-    
+
     return ret_str
 }
 
 /**
  * 可用的字体颜色demo
  */
-function printLogColors(){
+function printLogColors() {
     var str = "123456789"
-    console.log("----------------  listLogColors  ----------------")    
-    for (var i = 30; i <= 37; i++){        
-        console.log("\t\t\x1b[" + i + "m" + i + "\t" + str + "\x1b[0m")        
-    }
-    console.log("----------------------------------------------")    
-    for (var i = 40; i <= 47; i++){        
-        console.log("\t\t\x1b[" + i + "m" + i + "\t" + str + "\x1b[0m")        
+    console.log("----------------  listLogColors  ----------------")
+    for (var i = 30; i <= 37; i++) {
+        console.log("\t\t\x1b[" + i + "m" + i + "\t" + str + "\x1b[0m")
     }
     console.log("----------------------------------------------")
-    for (var i = 90; i <= 97; i++){        
-        console.log("\t\t\x1b[" + i + "m" + i + "\t" + str + "\x1b[0m")        
+    for (var i = 40; i <= 47; i++) {
+        console.log("\t\t\x1b[" + i + "m" + i + "\t" + str + "\x1b[0m")
     }
     console.log("----------------------------------------------")
-    for (var i = 100; i <= 107; i++){        
-        console.log("\t\t\x1b[" + i + "m" + i + "\t" + str + "\x1b[0m")        
+    for (var i = 90; i <= 97; i++) {
+        console.log("\t\t\x1b[" + i + "m" + i + "\t" + str + "\x1b[0m")
+    }
+    console.log("----------------------------------------------")
+    for (var i = 100; i <= 107; i++) {
+        console.log("\t\t\x1b[" + i + "m" + i + "\t" + str + "\x1b[0m")
     }
     console.log("----------------------------------------------")
 }
 
 var il2cppTabledefs = {
-    METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK         : 0x0007,
-    METHOD_ATTRIBUTE_COMPILER_CONTROLLED        : 0x0000,
-    METHOD_ATTRIBUTE_PRIVATE                    : 0x0001,
-    METHOD_ATTRIBUTE_FAM_AND_ASSEM              : 0x0002,
-    METHOD_ATTRIBUTE_ASSEM                      : 0x0003,
-    METHOD_ATTRIBUTE_FAMILY                     : 0x0004,
-    METHOD_ATTRIBUTE_FAM_OR_ASSEM               : 0x0005,
-    METHOD_ATTRIBUTE_PUBLIC                     : 0x0006,
+    METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK: 0x0007,
+    METHOD_ATTRIBUTE_COMPILER_CONTROLLED: 0x0000,
+    METHOD_ATTRIBUTE_PRIVATE: 0x0001,
+    METHOD_ATTRIBUTE_FAM_AND_ASSEM: 0x0002,
+    METHOD_ATTRIBUTE_ASSEM: 0x0003,
+    METHOD_ATTRIBUTE_FAMILY: 0x0004,
+    METHOD_ATTRIBUTE_FAM_OR_ASSEM: 0x0005,
+    METHOD_ATTRIBUTE_PUBLIC: 0x0006,
 
-    METHOD_ATTRIBUTE_STATIC                     : 0x0010,
-    METHOD_ATTRIBUTE_FINAL                      : 0x0020,
-    METHOD_ATTRIBUTE_VIRTUAL                    : 0x0040,
-    METHOD_ATTRIBUTE_ABSTRACT                   : 0x0400,
-    METHOD_ATTRIBUTE_PINVOKE_IMPL               : 0x2000,
-    METHOD_ATTRIBUTE_VTABLE_LAYOUT_MASK         : 0x0100,
+    METHOD_ATTRIBUTE_STATIC: 0x0010,
+    METHOD_ATTRIBUTE_FINAL: 0x0020,
+    METHOD_ATTRIBUTE_VIRTUAL: 0x0040,
+    METHOD_ATTRIBUTE_ABSTRACT: 0x0400,
+    METHOD_ATTRIBUTE_PINVOKE_IMPL: 0x2000,
+    METHOD_ATTRIBUTE_VTABLE_LAYOUT_MASK: 0x0100,
 
-    METHOD_ATTRIBUTE_REUSE_SLOT                 : 0x0000,
-    METHOD_ATTRIBUTE_NEW_SLOT                   : 0x0100,
-    METHOD_ATTRIBUTE_PINVOKE_IMPL               : 0x2000,
+    METHOD_ATTRIBUTE_REUSE_SLOT: 0x0000,
+    METHOD_ATTRIBUTE_NEW_SLOT: 0x0100,
+    METHOD_ATTRIBUTE_PINVOKE_IMPL: 0x2000,
 }
 
-var FieldAccess = { 
-    FIELD_ATTRIBUTE_FIELD_ACCESS_MASK     : 0x0007,
-    FIELD_ATTRIBUTE_COMPILER_CONTROLLED   : 0x0000,
-    FIELD_ATTRIBUTE_PRIVATE               : 0x0001,
-    FIELD_ATTRIBUTE_FAM_AND_ASSEM         : 0x0002,
-    FIELD_ATTRIBUTE_ASSEMBLY              : 0x0003,
-    FIELD_ATTRIBUTE_FAMILY                : 0x0004,
-    FIELD_ATTRIBUTE_FAM_OR_ASSEM          : 0x0005,
-    FIELD_ATTRIBUTE_PUBLIC                : 0x0006,
+var FieldAccess = {
+    FIELD_ATTRIBUTE_FIELD_ACCESS_MASK: 0x0007,
+    FIELD_ATTRIBUTE_COMPILER_CONTROLLED: 0x0000,
+    FIELD_ATTRIBUTE_PRIVATE: 0x0001,
+    FIELD_ATTRIBUTE_FAM_AND_ASSEM: 0x0002,
+    FIELD_ATTRIBUTE_ASSEMBLY: 0x0003,
+    FIELD_ATTRIBUTE_FAMILY: 0x0004,
+    FIELD_ATTRIBUTE_FAM_OR_ASSEM: 0x0005,
+    FIELD_ATTRIBUTE_PUBLIC: 0x0006,
 
-    FIELD_ATTRIBUTE_STATIC                : 0x0010,
-    FIELD_ATTRIBUTE_INIT_ONLY             : 0x0020,
-    FIELD_ATTRIBUTE_LITERAL               : 0x0040,
-    FIELD_ATTRIBUTE_NOT_SERIALIZED        : 0x0080,
-    FIELD_ATTRIBUTE_SPECIAL_NAME          : 0x0200,
-    FIELD_ATTRIBUTE_PINVOKE_IMPL          : 0x2000,
+    FIELD_ATTRIBUTE_STATIC: 0x0010,
+    FIELD_ATTRIBUTE_INIT_ONLY: 0x0020,
+    FIELD_ATTRIBUTE_LITERAL: 0x0040,
+    FIELD_ATTRIBUTE_NOT_SERIALIZED: 0x0080,
+    FIELD_ATTRIBUTE_SPECIAL_NAME: 0x0200,
+    FIELD_ATTRIBUTE_PINVOKE_IMPL: 0x2000,
 
-    FIELD_ATTRIBUTE_RESERVED_MASK         : 0x9500,
-    FIELD_ATTRIBUTE_RT_SPECIAL_NAME       : 0x0400,
-    FIELD_ATTRIBUTE_HAS_FIELD_MARSHAL     : 0x1000,
-    FIELD_ATTRIBUTE_HAS_DEFAULT           : 0x8000,
-    FIELD_ATTRIBUTE_HAS_FIELD_RVA         : 0x0100
+    FIELD_ATTRIBUTE_RESERVED_MASK: 0x9500,
+    FIELD_ATTRIBUTE_RT_SPECIAL_NAME: 0x0400,
+    FIELD_ATTRIBUTE_HAS_FIELD_MARSHAL: 0x1000,
+    FIELD_ATTRIBUTE_HAS_DEFAULT: 0x8000,
+    FIELD_ATTRIBUTE_HAS_FIELD_RVA: 0x0100
 }
 
-var LogColor = {    
-    WHITE: 0, RED: 1, YELLOW: 3,    
-    C31: 31, C32: 32, C33: 33, C34: 34, C35: 35, C36: 36,
-    C41: 41, C42: 42, C43: 43, C44: 44, C45: 45, C46: 46,    
-    C90: 90, C91: 91, C92: 92, C93: 93, C94: 94, C95: 95, C96: 96, C97: 97,    
-    C100: 100, C101: 101, C102: 102, C103: 103, C104: 104, C105: 105, C106: 106, C107: 107    
-}
- 
-function getClassName(klass) {    
-    return ptr(klass).add(p_size * 2).readPointer().readCString()  
+var LogColor = {
+    WHITE: 0,
+    RED: 1,
+    YELLOW: 3,
+    C31: 31,
+    C32: 32,
+    C33: 33,
+    C34: 34,
+    C35: 35,
+    C36: 36,
+    C41: 41,
+    C42: 42,
+    C43: 43,
+    C44: 44,
+    C45: 45,
+    C46: 46,
+    C90: 90,
+    C91: 91,
+    C92: 92,
+    C93: 93,
+    C94: 94,
+    C95: 95,
+    C96: 96,
+    C97: 97,
+    C100: 100,
+    C101: 101,
+    C102: 102,
+    C103: 103,
+    C104: 104,
+    C105: 105,
+    C106: 106,
+    C107: 107
 }
 
-function getMethodName(method) {    
-    return ptr(method).add(p_size * 2).readPointer().readCString()    
+function getClassName(klass) {
+    return ptr(klass).add(p_size * 2).readPointer().readCString()
 }
 
-function getFieldsCount(kclass) {    
+function getMethodName(method) {
+    return ptr(method).add(p_size * 2).readPointer().readCString()
+}
+
+function getFieldsCount(kclass) {
     return il2cpp_class_num_fields(ptr(kclass))
 }
 
-function getImgName(img) {    
-    return ptr(img).add(p_size * 1).readPointer().readCString()    
+function getImgName(img) {
+    return ptr(img).add(p_size * 1).readPointer().readCString()
 }
 
-function getMethodParametersCount(method) {    
-    return ptr(method).add(p_size * 8 + 4 + 2 + 2 + 2).readU8()    
+function getMethodParametersCount(method) {
+    return ptr(method).add(p_size * 8 + 4 + 2 + 2 + 2).readU8()
 }
 
-function getMethodParameters(method) {    
-    return ptr(method).add(p_size * 5).readPointer()    
+function getMethodParameters(method) {
+    return ptr(method).add(p_size * 5).readPointer()
 }
 
-function getMethodReturnType(method) {    
-    return ptr(method).add(p_size * 4).readPointer()    
+function getMethodReturnType(method) {
+    return ptr(method).add(p_size * 4).readPointer()
 }
 
-function getParameterName(ParameterInfo) {    
-    return ptr(ParameterInfo).readPointer().readCString()    
+function getParameterName(ParameterInfo) {
+    return ptr(ParameterInfo).readPointer().readCString()
 }
 
-function getParameterType(Il2CppType) {    
-    return ptr(Il2CppType).add(4 * 2 + p_size).readPointer()    
+function getParameterType(Il2CppType) {
+    return ptr(Il2CppType).add(4 * 2 + p_size).readPointer()
 }
 
 /**
@@ -1641,19 +1751,19 @@ function getParameterType(Il2CppType) {
  * @param {Boolean} boolean 返回值修改为True/False
  * @param {Number}  index   null == ret / {1,2....} 等于修改第几个参数
  */
-function setFunctionBoolean(mPtr, boolean, index) {    
-    setFunctionValue(mPtr, boolean == true ? 0x1 : 0x0, index)    
+function setFunctionBoolean(mPtr, boolean, index) {
+    setFunctionValue(mPtr, boolean == true ? 0x1 : 0x0, index)
 }
 
-function setFunctionValue(mPtr, value, index) {    
-    mPtr = checkPointer(mPtr)    
+function setFunctionValue(mPtr, value, index) {
+    mPtr = checkPointer(mPtr)
     A(mPtr, (args) => {
-        if (index != undefined){
+        if (index != undefined) {
             args[index] = ptr(value)
         }
     }, (ret) => {
-        if (index == undefined) ret.replace(ptr(value))        
-        LOG("\nCalled function at " + mPtr + " ---> " + mPtr.sub(soAddr) + " Changed RET", LogColor.C93)        
+        if (index == undefined) ret.replace(ptr(value))
+        LOG("\nCalled function at " + mPtr + " ---> " + mPtr.sub(soAddr) + " Changed RET", LogColor.C93)
     })
 }
 
@@ -1662,76 +1772,98 @@ function setFunctionValue(mPtr, value, index) {
  * @param {Pointer} mPtr 
  * @returns 
  */
-function callFunction(mPtr){
-    if (mPtr == undefined || mPtr == null || mPtr == 0x0) return ptr(0x0)    
-    for (var i = 1; i <= (arguments.length < 5 ? 5 : arguments.length) - 1; i++)        
-        arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))    
+function callFunction(mPtr) {
+    if (mPtr == undefined || mPtr == null || mPtr == 0x0) return ptr(0x0)
+    for (var i = 1; i <= (arguments.length < 5 ? 5 : arguments.length) - 1; i++)
+        arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))
     return new NativeFunction(checkPointer(mPtr), 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
         (arguments[1], arguments[2], arguments[3], arguments[4])
 }
 
-function callFunctionRB(mPtr) {    
+function callFunctionRB(mPtr) {
     return callFunctionRI(mPtr) == 1
 }
 
-function callFunctionRI(mPtr) {    
+function callFunctionRI(mPtr) {
     return callFunction(mPtr).toInt32()
 }
 
-function callFunctionRS(mPtr) {    
+function callFunctionRS(mPtr) {
     return readSingle(callFunction(mPtr))
 }
 
-function callFunctionRF(mPtr) {    
+function callFunctionRF(mPtr) {
     return callFunction(mPtr).readFloat()
 }
 
-function breakWithArgs(mPtr, argCount) {    
+function breakWithArgs(mPtr, argCount) {
     mPtr = checkPointer(mPtr)
     if (argCount == undefined) argCount = 4
     A(mPtr, (args) => {
-        LOG("\nCalled from " + String(mPtr).toString(16) + " ---> " + String(mPtr.sub(soAddr)).toString(16), LogColor.C36)        
-        switch(argCount){
-            case 1: LOG(args[0], LogColor.C36); break            
-            case 2: LOG(args[0] + "\t" + args[1], LogColor.C36); break            
-            case 3: LOG(args[0] + "\t" + args[1] + "\t" + args[2], LogColor.C36); break            
-            case 4: LOG(args[0] + "\t" + args[1] + "\t" + args[2] + "\t" + args[3], LogColor.C36); break            
+        LOG("\nCalled from " + String(mPtr).toString(16) + " ---> " + String(mPtr.sub(soAddr)).toString(16), LogColor.C36)
+        switch (argCount) {
+            case 1:
+                LOG(args[0], LogColor.C36);
+                break
+            case 2:
+                LOG(args[0] + "\t" + args[1], LogColor.C36);
+                break
+            case 3:
+                LOG(args[0] + "\t" + args[1] + "\t" + args[2], LogColor.C36);
+                break
+            case 4:
+                LOG(args[0] + "\t" + args[1] + "\t" + args[2] + "\t" + args[3], LogColor.C36);
+                break
         }
     }, (ret) => {
-        LOG("End Function return " + ret, LogColor.C36)        
+        LOG("End Function return " + ret, LogColor.C36)
     })
 }
 
-function breakInline(mPtr, filterRigster, maxCount) {    
+function breakInline(mPtr, filterRigster, maxCount) {
     if (maxCount == undefined) maxCount = 10
     mPtr = checkPointer(mPtr)
-    Interceptor.attach(mPtr,{
+    Interceptor.attach(mPtr, {
         onEnter: function (args) {
-            if (Process.arch != "arm" && filterRigster != undefined
-                && filterDuplicateOBJ(String(filterReg(filterRigster, this.context)), maxCount) == -1) return
-            LOG("\n---------------------------------------------\n\n"
-                +"Called function at "+mPtr+"\n"
-                + JSON.stringify(this.context),LogColor.C36)
+            if (Process.arch != "arm" && filterRigster != undefined &&
+                filterDuplicateOBJ(String(filterReg(filterRigster, this.context)), maxCount) == -1) return
+            LOG("\n---------------------------------------------\n\n" +
+                "Called function at " + mPtr + "\n" +
+                JSON.stringify(this.context), LogColor.C36)
         },
-        onLeave:function(ret){}
+        onLeave: function (ret) {}
     })
-    
+
     function filterReg(ft, context) {
         switch (ft) {
-            case "r0": return context.r0
-            case "r1": return context.r1
-            case "r2": return context.r2
-            case "r3": return context.r3
-            case "r4": return context.r4
-            case "r5": return context.r5
-            case "r6": return context.r6
-            case "r7": return context.r7
-            case "r8": return context.r8
-            case "r9": return context.r9
-            case "r10": return context.r10
-            case "r11": return context.r11
-            case "r12": return context.r12
-            case "lr": return context.lr
+            case "r0":
+                return context.r0
+            case "r1":
+                return context.r1
+            case "r2":
+                return context.r2
+            case "r3":
+                return context.r3
+            case "r4":
+                return context.r4
+            case "r5":
+                return context.r5
+            case "r6":
+                return context.r6
+            case "r7":
+                return context.r7
+            case "r8":
+                return context.r8
+            case "r9":
+                return context.r9
+            case "r10":
+                return context.r10
+            case "r11":
+                return context.r11
+            case "r12":
+                return context.r12
+            case "lr":
+                return context.lr
         }
     }
 }
@@ -1743,91 +1875,91 @@ function breakInline(mPtr, filterRigster, maxCount) {
 function printInfo() {
 
     try {
-        LOG('\n\t// find_method("UnityEngine.UI","Button","OnPointerClick",1,false)',LogColor.C36)
-        LOG("\tunsigned long p_OnPointerClick      = base + "+canUseInlineHook(find_method("UnityEngine.UI","Button","OnPointerClick",1),3)+";",LogColor.C36)
-        LOG('\t// find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0,false)',LogColor.C36)
-        LOG("\tunsigned long p_get_pointerEnter    = base + "+canUseInlineHook(find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0),3)+";",LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","GameObject","SetActive",1,false)',LogColor.C36)
-        LOG("\tunsigned long p_SetActive           = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","GameObject","SetActive",1),3)+";",LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","GameObject","get_transform",0,false)',LogColor.C36)
-        LOG("\tunsigned long p_getTransform        = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),3)+";",LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","Object","GetName",1,false)',LogColor.C36)
-        LOG("\tunsigned long p_getName             = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Object","GetName",1),3)+";",LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetParent",0,false)',LogColor.C36)
-        LOG("\tunsigned long p_getParent           = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","GetParent",0),3)+";",LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","Transform","get_childCount",0,false)',LogColor.C36)
-        LOG("\tunsigned long p_getChildCount       = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","get_childCount",0),3)+";",LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetChild",1,false)',LogColor.C36)
-        LOG("\tunsigned long p_getChild            = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","GetChild",1),3)+";",LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1,false)',LogColor.C36)
-        LOG("\tunsigned long p_setlocalScale       = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1),3)+";",LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","Component","get_gameObject",0,false)',LogColor.C36)
-        LOG("\tunsigned long p_get_gameObject      = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule","Component","get_gameObject",0),3)+";",LogColor.C36)
-        
-        LOG('\t// find_method("UnityEngine.CoreModule", "GameObject", "Find", 1,false)', LogColor.C36)
-        LOG("\tunsigned long gameObj_find          = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule", "GameObject", "Find", 1),3)+";",LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule", "Transform", "Find", 1,false)',LogColor.C36)
-        LOG("\tunsigned long transform_find        = base + "+canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "Find", 1),3)+";",LogColor.C36)
+        LOG('\n\t// find_method("UnityEngine.UI","Button","OnPointerClick",1,false)', LogColor.C36)
+        LOG("\tunsigned long p_OnPointerClick      = base + " + canUseInlineHook(find_method("UnityEngine.UI", "Button", "OnPointerClick", 1), 3) + ";", LogColor.C36)
+        LOG('\t// find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0,false)', LogColor.C36)
+        LOG("\tunsigned long p_get_pointerEnter    = base + " + canUseInlineHook(find_method("UnityEngine.UI", "PointerEventData", "get_pointerEnter", 0), 3) + ";", LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","GameObject","SetActive",1,false)', LogColor.C36)
+        LOG("\tunsigned long p_SetActive           = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "GameObject", "SetActive", 1), 3) + ";", LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","GameObject","get_transform",0,false)', LogColor.C36)
+        LOG("\tunsigned long p_getTransform        = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "GameObject", "get_transform", 0), 3) + ";", LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","Object","GetName",1,false)', LogColor.C36)
+        LOG("\tunsigned long p_getName             = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Object", "GetName", 1), 3) + ";", LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetParent",0,false)', LogColor.C36)
+        LOG("\tunsigned long p_getParent           = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "GetParent", 0), 3) + ";", LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","Transform","get_childCount",0,false)', LogColor.C36)
+        LOG("\tunsigned long p_getChildCount       = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "get_childCount", 0), 3) + ";", LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetChild",1,false)', LogColor.C36)
+        LOG("\tunsigned long p_getChild            = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "GetChild", 1), 3) + ";", LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1,false)', LogColor.C36)
+        LOG("\tunsigned long p_setlocalScale       = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "set_localScale_Injected", 1), 3) + ";", LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule","Component","get_gameObject",0,false)', LogColor.C36)
+        LOG("\tunsigned long p_get_gameObject      = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), 3) + ";", LogColor.C36)
 
-        LOG('\n\t// find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1,false)',LogColor.C96)
-        LOG("\tf_setLocalPosition \t= reinterpret_cast<void *(*)(void *, void *)>\t\t(base + "+find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1).sub(soAddr)+");",LogColor.C96)
-        LOG('\t// find_method("UnityEngine.UI","Text","set_text",1,false)',LogColor.C96)
-        LOG("\tf_set_text \t\t= reinterpret_cast<void *(*)(void *, MonoString *)>\t(base + "+find_method("UnityEngine.UI",'Text','set_text',1).sub(soAddr)+");",LogColor.C96)
-        LOG('\t// find_method("UnityEngine.UI","Text","get_text",0,false)',LogColor.C96)
-        LOG("\tf_get_text \t\t= reinterpret_cast<MonoString *(*)(void *)>\t\t(base + "+find_method("UnityEngine.UI",'Text','get_text',0).sub(soAddr)+");\n",LogColor.C96)
+        LOG('\t// find_method("UnityEngine.CoreModule", "GameObject", "Find", 1,false)', LogColor.C36)
+        LOG("\tunsigned long gameObj_find          = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "GameObject", "Find", 1), 3) + ";", LogColor.C36)
+        LOG('\t// find_method("UnityEngine.CoreModule", "Transform", "Find", 1,false)', LogColor.C36)
+        LOG("\tunsigned long transform_find        = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "Find", 1), 3) + ";", LogColor.C36)
+
+        LOG('\n\t// find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1,false)', LogColor.C96)
+        LOG("\tf_setLocalPosition \t= reinterpret_cast<void *(*)(void *, void *)>\t\t(base + " + find_method("UnityEngine.CoreModule", "Transform", "set_localPosition_Injected", 1).sub(soAddr) + ");", LogColor.C96)
+        LOG('\t// find_method("UnityEngine.UI","Text","set_text",1,false)', LogColor.C96)
+        LOG("\tf_set_text \t\t= reinterpret_cast<void *(*)(void *, MonoString *)>\t(base + " + find_method("UnityEngine.UI", 'Text', 'set_text', 1).sub(soAddr) + ");", LogColor.C96)
+        LOG('\t// find_method("UnityEngine.UI","Text","get_text",0,false)', LogColor.C96)
+        LOG("\tf_get_text \t\t= reinterpret_cast<MonoString *(*)(void *)>\t\t(base + " + find_method("UnityEngine.UI", 'Text', 'get_text', 0).sub(soAddr) + ");\n", LogColor.C96)
 
         // return
 
         LOG('\n\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2,false)')
-        var SetInt = find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2)
-        LOG("\tunsigned long p_SetInt       = base + "+ (SetInt ==0 ? "0x0" : SetInt.sub(soAddr)) +";")
+        var SetInt = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetInt", 2)
+        LOG("\tunsigned long p_SetInt       = base + " + (SetInt == 0 ? "0x0" : SetInt.sub(soAddr)) + ";")
         LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","GetInt",2,false)')
-        var GetInt = find_method("UnityEngine.CoreModule","PlayerPrefs","GetInt",2)
-        LOG("\tunsigned long p_GetInt       = base + "+ (GetInt ==0 ? "0x0" : GetInt.sub(soAddr)) +";")
+        var GetInt = find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetInt", 2)
+        LOG("\tunsigned long p_GetInt       = base + " + (GetInt == 0 ? "0x0" : GetInt.sub(soAddr)) + ";")
         LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2,false)')
-        var SetFloat = find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2)
-        LOG("\tunsigned long p_SetFloat     = base + "+ (SetFloat ==0 ? "0x0" : SetFloat.sub(soAddr)) +";")
+        var SetFloat = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetFloat", 2)
+        LOG("\tunsigned long p_SetFloat     = base + " + (SetFloat == 0 ? "0x0" : SetFloat.sub(soAddr)) + ";")
         LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2,false)')
-        var SetString = find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2)
-        LOG("\tunsigned long p_SetString    = base + "+ (SetString ==0 ? "0x0" : SetString.sub(soAddr)) +";")
+        var SetString = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetString", 2)
+        LOG("\tunsigned long p_SetString    = base + " + (SetString == 0 ? "0x0" : SetString.sub(soAddr)) + ";")
 
-        LOG('ins.recordSymbols({"il2cpp_string_new": ' + Module.findExportByName(soName, 'il2cpp_string_new').sub(soAddr)
-            + ', "FindClass": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "FindClass", 1).sub(soAddr)
-            + ', "GetStaticMethodID": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "GetStaticMethodID", 3).sub(soAddr)
-            + ',"CallStaticVoidMethod": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "CallStaticVoidMethod", 3).sub(soAddr)
-            +'})')
+        LOG('ins.recordSymbols({"il2cpp_string_new": ' + Module.findExportByName(soName, 'il2cpp_string_new').sub(soAddr) +
+            ', "FindClass": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "FindClass", 1).sub(soAddr) +
+            ', "GetStaticMethodID": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "GetStaticMethodID", 3).sub(soAddr) +
+            ',"CallStaticVoidMethod": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "CallStaticVoidMethod", 3).sub(soAddr) +
+            '})')
     } catch (e) {
-        
+
     }
-     
+
     LOG("\n")
 }
 
 function printExp() {
-    
-    LOG("\n\til2cpp_get_corlib = (Il2CppImage *(*)()) ( soAddr + "+Module.findExportByName(soName,'il2cpp_get_corlib').sub(soAddr)+");",LogColor.C36)
-    LOG("\til2cpp_domain_get = (Il2CppDomain *(*)()) ( soAddr + "+Module.findExportByName(soName,'il2cpp_domain_get').sub(soAddr)+");",LogColor.C36)
-    LOG("\til2cpp_domain_get_assemblies = (Il2CppAssembly **(*)(const Il2CppDomain *,size_t *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_domain_get_assemblies').sub(soAddr)+");",LogColor.C36)
-    LOG("\til2cpp_assembly_get_image = (Il2CppImage *(*)(const Il2CppAssembly *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_assembly_get_image').sub(soAddr)+");",LogColor.C36)
-    LOG("\til2cpp_image_get_class_count = (size_t (*)(const Il2CppImage *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_image_get_class_count').sub(soAddr)+");",LogColor.C36)
-    LOG("\til2cpp_image_get_class = (Il2CppClass *(*)(const Il2CppImage *,size_t)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_image_get_class').sub(soAddr)+");",LogColor.C36)
-    LOG("\til2cpp_class_get_methods = (MethodInfo *(*)(Il2CppClass *,void **)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_class_get_methods').sub(soAddr)+");",LogColor.C36)
-    LOG("\til2cpp_class_from_type = (Il2CppClass *(*)(const Il2CppType *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_class_from_type').sub(soAddr)+");",LogColor.C36)
-    LOG("\til2cpp_class_get_type = (Il2CppType *(*)(Il2CppClass *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_class_get_type').sub(soAddr)+");",LogColor.C36)
-    LOG("\til2cpp_class_from_system_type = (Il2CppClass *(*)(Il2CppReflectionType *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_class_from_system_type').sub(soAddr)+");",LogColor.C36)
-    LOG("\til2cpp_class_from_name = (Il2CppClass *(*)(const Il2CppImage *, const char *,const char *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_class_from_name').sub(soAddr)+");",LogColor.C36)
-    LOG("\til2cpp_class_get_method_from_name = (MethodInfo *(*)(Il2CppClass *,const char *,int)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_class_get_method_from_name').sub(soAddr)+");",LogColor.C36)
-    LOG("\til2cpp_string_new = (MonoString *(*)(const char *))  ( soAddr + "+Module.findExportByName(soName,'il2cpp_string_new').sub(soAddr)+");",LogColor.C36)
-    LOG("\til2cpp_type_get_name = (char *(*)(const Il2CppType *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_type_get_name').sub(soAddr)+");",LogColor.C36)
-    LOG("\til2cpp_type_get_class_or_element_class = (Il2CppClass *(*)(const Il2CppType *)) ( soAddr + "+Module.findExportByName(soName,'il2cpp_type_get_class_or_element_class').sub(soAddr)+");\n",LogColor.C36)
+
+    LOG("\n\til2cpp_get_corlib = (Il2CppImage *(*)()) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_get_corlib').sub(soAddr) + ");", LogColor.C36)
+    LOG("\til2cpp_domain_get = (Il2CppDomain *(*)()) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_domain_get').sub(soAddr) + ");", LogColor.C36)
+    LOG("\til2cpp_domain_get_assemblies = (Il2CppAssembly **(*)(const Il2CppDomain *,size_t *)) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_domain_get_assemblies').sub(soAddr) + ");", LogColor.C36)
+    LOG("\til2cpp_assembly_get_image = (Il2CppImage *(*)(const Il2CppAssembly *)) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_assembly_get_image').sub(soAddr) + ");", LogColor.C36)
+    LOG("\til2cpp_image_get_class_count = (size_t (*)(const Il2CppImage *)) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_image_get_class_count').sub(soAddr) + ");", LogColor.C36)
+    LOG("\til2cpp_image_get_class = (Il2CppClass *(*)(const Il2CppImage *,size_t)) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_image_get_class').sub(soAddr) + ");", LogColor.C36)
+    LOG("\til2cpp_class_get_methods = (MethodInfo *(*)(Il2CppClass *,void **)) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_class_get_methods').sub(soAddr) + ");", LogColor.C36)
+    LOG("\til2cpp_class_from_type = (Il2CppClass *(*)(const Il2CppType *)) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_class_from_type').sub(soAddr) + ");", LogColor.C36)
+    LOG("\til2cpp_class_get_type = (Il2CppType *(*)(Il2CppClass *)) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_class_get_type').sub(soAddr) + ");", LogColor.C36)
+    LOG("\til2cpp_class_from_system_type = (Il2CppClass *(*)(Il2CppReflectionType *)) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_class_from_system_type').sub(soAddr) + ");", LogColor.C36)
+    LOG("\til2cpp_class_from_name = (Il2CppClass *(*)(const Il2CppImage *, const char *,const char *)) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_class_from_name').sub(soAddr) + ");", LogColor.C36)
+    LOG("\til2cpp_class_get_method_from_name = (MethodInfo *(*)(Il2CppClass *,const char *,int)) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_class_get_method_from_name').sub(soAddr) + ");", LogColor.C36)
+    LOG("\til2cpp_string_new = (MonoString *(*)(const char *))  ( soAddr + " + Module.findExportByName(soName, 'il2cpp_string_new').sub(soAddr) + ");", LogColor.C36)
+    LOG("\til2cpp_type_get_name = (char *(*)(const Il2CppType *)) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_type_get_name').sub(soAddr) + ");", LogColor.C36)
+    LOG("\til2cpp_type_get_class_or_element_class = (Il2CppClass *(*)(const Il2CppType *)) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_type_get_class_or_element_class').sub(soAddr) + ");\n", LogColor.C36)
 }
 
-function getClassAddrFromMethodInfo(methodInfo) {    
+function getClassAddrFromMethodInfo(methodInfo) {
     return ptr(methodInfo).add(p_size * 3).readPointer()
 }
 
-function getClassNameFromMethodInfo(methodInfo) {    
-    return getClassName(getClassAddrFromMethodInfo(methodInfo))    
+function getClassNameFromMethodInfo(methodInfo) {
+    return getClassName(getClassAddrFromMethodInfo(methodInfo))
 }
 
 /**
@@ -1835,9 +1967,9 @@ function getClassNameFromMethodInfo(methodInfo) {
  * @param {Pointer} methodInfo 
  * @returns 
  */
-function listMethodsFromMethodInfo(methodInfo) {    
-    if (methodInfo == null || methodInfo == undefined) return    
-    var Pcls = ptr(methodInfo).add(p_size * 3).readPointer()    
+function listMethodsFromMethodInfo(methodInfo) {
+    if (methodInfo == null || methodInfo == undefined) return
+    var Pcls = ptr(methodInfo).add(p_size * 3).readPointer()
     showMethodInfo(methodInfo)
     if (Pcls != null) m(Pcls)
 }
@@ -1845,34 +1977,34 @@ function listMethodsFromMethodInfo(methodInfo) {
 function showMethodInfo(methodInfo) {
 
     var methodName = getMethodName(methodInfo)
-    var methodPointer = ptr(methodInfo).add(p_size * 0).readPointer()    
-    var methodPointerR = methodPointer.sub(soAddr)    
-    var Il2CppClass = ptr(methodInfo).add(p_size * 3).readPointer()    
-    var clsName = getClassName(Il2CppClass)    
-    var clsNamespaze = ptr(Il2CppClass).add(p_size * 3).readPointer().readCString()    
+    var methodPointer = ptr(methodInfo).add(p_size * 0).readPointer()
+    var methodPointerR = methodPointer.sub(soAddr)
+    var Il2CppClass = ptr(methodInfo).add(p_size * 3).readPointer()
+    var clsName = getClassName(Il2CppClass)
+    var clsNamespaze = ptr(Il2CppClass).add(p_size * 3).readPointer().readCString()
     var Il2CppImage = Il2CppClass.readPointer()
     var imgName = getImgName(Il2CppImage)
-    var Il2CppAssembly = ptr(Il2CppImage).add(p_size * 2)    
+    var Il2CppAssembly = ptr(Il2CppImage).add(p_size * 2)
 
     LOG("\nCurrent Function " + methodName + "\t" + getMethodParametersCount(methodInfo) + "\t0x" + Number(methodInfo).toString(16) + " ---> " + methodPointer + " ---> " + methodPointerR + "\n", LogColor.C96)
     LOG(methodName + " ---> " + clsName + "(" + Il2CppClass + ") ---> " + (String(clsNamespaze).length == 0 ? " - " : clsNamespaze) + " ---> " + imgName + "(" + Il2CppImage + ") ---> Il2CppAssembly(" + Il2CppAssembly + ")", LogColor.C96)
 }
 
-function listFieldsFromMethodInfo(methodInfo, instance) {    
-    if (methodInfo == null || methodInfo == undefined) return    
+function listFieldsFromMethodInfo(methodInfo, instance) {
+    if (methodInfo == null || methodInfo == undefined) return
     var Pcls = ptr(methodInfo).add(p_size * 3).readPointer()
     showMethodInfo(methodInfo)
-    if (Pcls != null) listFieldsFromCls(Pcls, instance)    
+    if (Pcls != null) listFieldsFromCls(Pcls, instance)
 }
 
-function listFieldsFromCls(klass,instance){
+function listFieldsFromCls(klass, instance) {
     if (klass == undefined || klass == null) return
     klass = ptr(klass)
-    if (instance !=undefined) instance = ptr(instance)
+    if (instance != undefined) instance = ptr(instance)
     var fieldsCount = getFieldsCount(klass)
-    if(fieldsCount <= 0) return
+    if (fieldsCount <= 0) return
     var is_enum = class_is_enum(klass)
-    if (arguments[2] == undefined)        
+    if (arguments[2] == undefined)
         LOG("\nFound " + fieldsCount + " Fields" + (is_enum == 0x1 ? "(enum)" : "") + " in class: " + getClassName(klass) + " (" + klass + ")", LogColor.C96)
     // ...\Data\il2cpp\libil2cpp\il2cpp-class-internals.h
     var iter = Memory.alloc(p_size)
@@ -1884,7 +2016,7 @@ function listFieldsFromCls(klass,instance){
         if (field == 0x0) break
         var fieldName = field.readPointer().readCString()
         var filedType = field.add(p_size).readPointer()
-        var filedOffset = "0x" + field.add(3 * p_size).readInt().toString(16)        
+        var filedOffset = "0x" + field.add(3 * p_size).readInt().toString(16)
         var field_class = il2cpp_class_from_type(filedType)
         var fieldClassName = getClassName(field_class)
         var accessStr = fuckAccess(filedType)
@@ -1892,9 +2024,9 @@ function listFieldsFromCls(klass,instance){
         var enumStr = (is_enum && (String(field_class) == String(klass))) ? (enumIndex++ + "\t") : " "
         var retStr = filedOffset + "\t" + accessStr + "\t" + fieldClassName + "\t" + field_class + "\t" + fieldName + "\t" + enumStr
         arrStr.push(retStr)
-        maxlength = retStr.length < maxlength ? maxlength : retStr.length        
+        maxlength = retStr.length < maxlength ? maxlength : retStr.length
     }
-    LOG("\n" + getLine(maxlength + 5), LogColor.C33)    
+    LOG("\n" + getLine(maxlength + 5), LogColor.C33)
 
     /**
      * mStr[0] offset
@@ -1908,26 +2040,26 @@ function listFieldsFromCls(klass,instance){
     }).forEach((str, index) => {
         // 静态变量
         // if (str.indexOf("static") != -1) str = str.replace("0x0", "---")
-        var mStr = str.split("\t")        
+        var mStr = str.split("\t")
         // 值解析          
         var mName = mStr[2]
-        var indexStr = String("[" + index + "]")            
-        var indexSP = indexStr.length == 3 ? " " : ""            
-        var enumStr = String(mStr[5]).length == 1 ? String(mStr[5] + " ") : String(mStr[5])            
+        var indexStr = String("[" + index + "]")
+        var indexSP = indexStr.length == 3 ? " " : ""
+        var enumStr = String(mStr[5]).length == 1 ? String(mStr[5] + " ") : String(mStr[5])
         LOG(indexStr + indexSP + " " + mStr[0] + " " + mStr[1] + " " + mStr[2] + "(" + mStr[3] + ") " + enumStr + " " + mStr[4], LogColor.C36)
-        if (instance != undefined && str.indexOf("static") == -1){
+        if (instance != undefined && str.indexOf("static") == -1) {
             var mPtr = ptr(instance).add(mStr[0])
             var realP = mPtr.readPointer()
             var fRet = FuckKnownType(mName, realP, mStr[3])
             // 当它是boolean的时候只保留 最后两位显示
             if (mName == "Boolean") {
-                var header = String(realP).substr(0, 2)                    
-                var endstr = String(realP).substr(String(realP).length - 2, String(realP).length).replace("x", "0")                    
+                var header = String(realP).substr(0, 2)
+                var endstr = String(realP).substr(String(realP).length - 2, String(realP).length).replace("x", "0")
                 var middle = getPoint((Process.arch == "arm" ? 10 : 14) - 2 - 2)
                 realP = header + middle + endstr
             }
-            fRet = fRet == "UnKnown" ? (mPtr + " ---> " + realP) : (mPtr + " ---> " + realP + " ---> " + fRet)                
-            LOG("\t" + fRet + "\n", LogColor.C90)                
+            fRet = fRet == "UnKnown" ? (mPtr + " ---> " + realP) : (mPtr + " ---> " + realP + " ---> " + fRet)
+            LOG("\t" + fRet + "\n", LogColor.C90)
         } else if (str.indexOf("static") != -1) {
             // console.warn(+ptr(mStr[3])+allocStr(mStr[4])+"\t"+mStr[4])
             var field = il2cpp_class_get_field_from_name(ptr(mStr[3]), allocStr(mStr[4]))
@@ -1935,14 +2067,14 @@ function listFieldsFromCls(klass,instance){
                 var addrOut = Memory.alloc(p_size)
                 il2cpp_field_static_get_value(field, addrOut)
                 var realP = addrOut.readPointer()
-                LOG("\t" + addrOut + " ---> " + realP+ " ---> " + FuckKnownType(mName, realP, mStr[3]), LogColor.C90)
+                LOG("\t" + addrOut + " ---> " + realP + " ---> " + FuckKnownType(mName, realP, mStr[3]), LogColor.C90)
             }
             LOG("\n")
         }
     })
-    LOG(getLine(maxlength+5),LogColor.C33)
+    LOG(getLine(maxlength + 5), LogColor.C33)
 
-    function fuckAccess(m_type){
+    function fuckAccess(m_type) {
         var attrs = m_type.add(p_size).readPointer()
         var outPut = ""
         var access = attrs & FieldAccess.FIELD_ATTRIBUTE_FIELD_ACCESS_MASK
@@ -1994,7 +2126,7 @@ function readStatic(imageName, className, fieldName) {
     const addrOut = Memory.alloc(Process.pointerSize)
     il2cpp_field_static_get_value(field, addrOut)
     return addrOut.readPointer()
- }
+}
 
 /**
  * 根据 imgName 和 clsName 来查找cls pointer
@@ -2008,13 +2140,13 @@ function findClass(imageName, className) {
     if (arguments[1] == undefined) {
         // 只填写一个参数的情况 (这里的imageName视作className)
         var cache = map_find_class_cache.get(arguments[0])
-        if (cache != null) return ptr(cache)        
+        if (cache != null) return ptr(cache)
         var ret = func1(arguments[0])
-        map_find_class_cache.set(arguments[0], ret)        
+        map_find_class_cache.set(arguments[0], ret)
         return ret
     } else {
         // 填写完整参数的情况
-        return func2(arguments[0],arguments[1])
+        return func2(arguments[0], arguments[1])
     }
 
     // 这是早期的缓存，不好用，直接加一个map来存就行了
@@ -2031,11 +2163,11 @@ function findClass(imageName, className) {
         return retPointer
     }
 
-    function func2(imageName, className, useCache){
+    function func2(imageName, className, useCache) {
         var currentlib = 0
         if (imageName == "") imageName = "Assembly-CSharp"
-        arr_img_names.forEach(function(name,index){
-            if (name == imageName){
+        arr_img_names.forEach(function (name, index) {
+            if (name == imageName) {
                 currentlib = arr_img_addr[index]
             }
         })
@@ -2055,7 +2187,7 @@ function findClass(imageName, className) {
         // 如果第一次遍历没有完全，那么第二次查找到第一次已经遍历到了的还挺快，如果超出范围又得重新走一遍遍历，所以默认还是让它第一次遍历所有
         var forAll = true
         // 正常遍历
-        for (var j = 0; j < il2cpp_image_get_class_count(imgPtr).toInt32(); j++){
+        for (var j = 0; j < il2cpp_image_get_class_count(imgPtr).toInt32(); j++) {
             var il2CppClass = il2cpp_image_get_class(imgPtr, j)
             var clsNameC = getClassName(il2CppClass)
             // cache 中没有的话，就把该条clsptr添加进 findClassCache
@@ -2080,7 +2212,7 @@ function findClass(imageName, className) {
 /**
  * 获取Unity的一些基本信息
  */
-function getUnityInfo(){
+function getUnityInfo() {
 
     var line20 = getLine(20)
     var retStr = undefined
@@ -2090,12 +2222,12 @@ function getUnityInfo(){
     Time()
     Environment()
 
-    LOG(getLine(60),LogColor.RED)
-    
+    LOG(getLine(60), LogColor.RED)
+
     function Application() {
-        
+
         LOG("------------------- Application -------------------", LogColor.RED)
-        
+
         // public static string cloudProjectId()
         retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "Application", "get_cloudProjectId", 0)))
         if (retStr != undefined) LOG("[*] cloudProjectId \t\t: " + retStr + "\n" + line20, LogColor.C36)
@@ -2103,7 +2235,7 @@ function getUnityInfo(){
         // public static string get_productName()
         retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "Application", "get_productName", 0)))
         if (retStr != undefined) LOG("[*] productName \t\t: " + retStr + "\n" + line20, LogColor.C36)
-    
+
         // public static extern string get_identifier()
         retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "Application", "get_identifier", 0)))
         if (retStr != undefined) LOG("[*] identifier \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
@@ -2119,15 +2251,15 @@ function getUnityInfo(){
         // public static extern RuntimePlatform get_platform()
         retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Application", "get_platform", 0)), findClass("UnityEngine.CoreModule", "RuntimePlatform"))
         if (retStr != undefined) LOG("[*] platform \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
-    
+
         // public static string dataPath()
         retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "Application", "get_dataPath", 0)))
         if (retStr != undefined) LOG("[*] dataPath \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
-    
+
         // public static string streamingAssetsPath()
         retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "Application", "get_streamingAssetsPath", 0)))
         if (retStr != undefined) LOG("[*] streamingAssetsPath \t: " + retStr + "\n" + line20, LogColor.C36)
-    
+
         // public static string persistentDataPath
         retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "Application", "get_persistentDataPath", 0)))
         if (retStr != undefined) LOG("[*] persistentDataPath \t\t: " + retStr + "\n" + line20, LogColor.C36)
@@ -2137,35 +2269,35 @@ function getUnityInfo(){
         if (retStr != undefined) LOG("[*] internetReachability \t: " + retStr + "\n" + line20, LogColor.C36)
 
         // public static bool get_isMobilePlatform()
-        retStr = callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isMobilePlatform",0))
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "Application", "get_isMobilePlatform", 0))
         if (retStr != undefined) LOG("[*] isMobilePlatform \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         // public static bool get_isConsolePlatform()
-        retStr = callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isConsolePlatform"))
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "Application", "get_isConsolePlatform"))
         if (retStr != undefined) LOG("[*] isConsolePlatform \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         // public static bool get_isEditor()
-        retStr = callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isEditor",0))
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "Application", "get_isEditor", 0))
         if (retStr != undefined) LOG("[*] isEditor \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         // public static extern bool get_isPlaying()
-        retStr = callFunctionRB(find_method("UnityEngine.CoreModule","Application","get_isPlaying",0))
+        retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "Application", "get_isPlaying", 0))
         if (retStr != undefined) LOG("[*] isPlaying \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
-        
+
         // public static float dpi() 
         // retStr = callFunctionRI(find_method("UnityEngine.CoreModule","Screen","get_dpi",0))
         // if (retStr != undefined) LOG("[*] Dpi \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
-    
+
         // public static extern int get_height()
         // public static extern int get_width()
         var height = callFunction(find_method("UnityEngine.CoreModule", "Screen", "get_height", 0)).toInt32()
         var width = callFunction(find_method("UnityEngine.CoreModule", "Screen", "get_width", 0)).toInt32()
         if (height != 0 && width != 0) LOG("[*] height*width \t\t: " + height + " × " + width + "\n" + line20, LogColor.C36)
-        
+
         // public static extern FullScreenMode get_fullScreenMode()
         retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Screen", "get_fullScreenMode", 0)), findClass("UnityEngine.CoreModule", "FullScreenMode"))
         if (retStr != undefined) LOG("[*] FullScreenMode \t\t: " + retStr + "\n" + line20, LogColor.C36)
-    
+
         // public static ScreenOrientation get_orientation()
         retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Screen", "get_orientation", 0)), findClass("UnityEngine.CoreModule", "ScreenOrientation"))
         if (retStr != undefined) LOG("[*] ScreenOrientation \t\t: " + retStr + "\n" + line20, LogColor.C36)
@@ -2173,19 +2305,19 @@ function getUnityInfo(){
         // public static extern SystemLanguage get_systemLanguage()
         retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Application", "get_systemLanguage", 0)), findClass("UnityEngine.CoreModule", "SystemLanguage"))
         if (retStr != undefined) LOG("[*] SystemLanguage \t\t: " + retStr + "\n" + line20, LogColor.C36)
-        
+
     }
-    
+
     function SystemInfo() {
-        
+
         LOG("------------------- SystemInfo -------------------", LogColor.RED)
 
-        retStr = FuckKnownType("1",callFunction(find_method("UnityEngine.CoreModule","SystemInfo","get_copyTextureSupport",0)),findClass("UnityEngine.CoreModule","CopyTextureSupport"))
+        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_copyTextureSupport", 0)), findClass("UnityEngine.CoreModule", "CopyTextureSupport"))
         if (retStr != undefined && retStr != "") LOG("[*] copyTextureSupport \t\t: " + retStr + "\n" + line20, LogColor.C36)
-        
+
         retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_deviceModel", 0)))
-        if (retStr != undefined && retStr !=  "") LOG("[*] deviceModel \t\t: " + retStr + "\n" + line20, LogColor.C36)
-        
+        if (retStr != undefined && retStr != "") LOG("[*] deviceModel \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
         retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_deviceName", 0)))
         if (retStr != undefined && retStr != "") LOG("[*] deviceName \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
 
@@ -2194,19 +2326,19 @@ function getUnityInfo(){
 
         retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsUVStartsAtTop", 0))
         if (retStr != undefined) LOG("[*] graphicsUVStartsAtTop \t: " + retStr + "\n" + line20, LogColor.C36)
-        
+
         retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_hasHiddenSurfaceRemovalOnGPU ", 0))
         if (retStr != undefined) LOG("[*] HiddenSurfaceRemovalOnGPU \t: " + retStr + "\n" + line20, LogColor.C36)
-        
+
         // retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsDeviceType", 0)), findClass("UnityEngine.CoreModule", "GraphicsDeviceType"))
         // if (retStr != undefined && retStr != "") LOG("[*] graphicsDeviceType \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
-        retStr = FuckKnownType("1",callFunction(find_method("UnityEngine.CoreModule","SystemInfo","get_deviceType",0)),findClass("UnityEngine.CoreModule","DeviceType"))
-        if (retStr != undefined && retStr != "") LOG("[*] deviceType \t\t\t: " + retStr + "\n" + line20, LogColor.C36) 
+        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_deviceType", 0)), findClass("UnityEngine.CoreModule", "DeviceType"))
+        if (retStr != undefined && retStr != "") LOG("[*] deviceType \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_deviceUniqueIdentifier", 0)))
         if (retStr != undefined && retStr != "") LOG("[*] deviceUniqueIdentifier \t: " + retStr + "\n" + line20, LogColor.C36)
-                
+
         retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsDeviceID", 0)))
         if (retStr != undefined && retStr != "") LOG("[*] graphicsDeviceID \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
@@ -2218,40 +2350,40 @@ function getUnityInfo(){
 
         retStr = callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsShaderLevel", 0)).toInt32()
         if (retStr != undefined && retStr != "") LOG("[*] graphicsShaderLevel \t: " + retStr + "\n" + line20, LogColor.C36)
-        
+
         retStr = callFunctionRI(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsMemorySize", 0))
         if (retStr != undefined && retStr != "") LOG("[*] graphicsMemorySize \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         retStr = callFunctionRI(find_method("UnityEngine.CoreModule", "SystemInfo", "get_maxTextureSize", 0))
         if (retStr != undefined && retStr != "") LOG("[*] maxTextureSize \t\t: " + retStr + "\n" + line20, LogColor.C36)
-            
+
         retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_operatingSystem", 0)))
         if (retStr != undefined && retStr != "") LOG("[*] operatingSystem \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_processorType", 0)))
-        if (retStr != undefined && retStr != "") LOG("[*] processorType \t\t: " + retStr + "\n" + line20, LogColor.C36) 
+        if (retStr != undefined && retStr != "") LOG("[*] processorType \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         retStr = callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_systemMemorySize", 0)).toInt32() + " MB"
-        if (retStr != undefined && retStr != "") LOG("[*] systemMemorySize \t\t: " + retStr + "\n" + line20, LogColor.C36) 
-        
-        retStr = FuckKnownType("1",callFunction(find_method("UnityEngine.CoreModule","SystemInfo","get_operatingSystemFamily",0)),findClass("UnityEngine.CoreModule","OperatingSystemFamily"))
+        if (retStr != undefined && retStr != "") LOG("[*] systemMemorySize \t\t: " + retStr + "\n" + line20, LogColor.C36)
+
+        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_operatingSystemFamily", 0)), findClass("UnityEngine.CoreModule", "OperatingSystemFamily"))
         if (retStr != undefined && retStr != "") LOG("[*] operatingSystemFamily \t: " + retStr + "\n" + line20, LogColor.C36)
-               
+
         retStr = callFunctionRI(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportedRenderTargetCount", 0))
         if (retStr != undefined && retStr != "") LOG("[*] supportedRenderTargetCount \t\t: " + retStr + "\n" + line20, LogColor.C36)
-        
+
         retStr = callFunctionRI(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportsMultisampledTextures", 0))
         if (retStr != undefined && retStr != "") LOG("[*] supportsMultisampledTextures \t: " + retStr + "\n" + line20, LogColor.C36)
-        
+
         retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportsGraphicsFence", 0))
         if (retStr != undefined && retStr != "") LOG("[*] supportsGraphicsFence \t\t: " + retStr + "\n" + line20, LogColor.C36)
-        
+
         retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportsMultisampleAutoResolve", 0))
         if (retStr != undefined && retStr != "") LOG("[*] supportsMultisampleAutoResolve \t: " + retStr + "\n" + line20, LogColor.C36)
-        
+
         retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportsMultisampledTextures", 0))
         if (retStr != undefined && retStr != "") LOG("[*] supportsMultisampledTextures \t: " + retStr + "\n" + line20, LogColor.C36)
-        
+
         retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportsMultiview", 0))
         if (retStr != undefined && retStr != "") LOG("[*] supportsMultiview \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
 
@@ -2263,23 +2395,23 @@ function getUnityInfo(){
 
         retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_usesReversedZBuffer", 0))
         if (retStr != undefined && retStr != "") LOG("[*] usesReversedZBuffer \t\t: " + retStr + "\n" + line20, LogColor.C36)
-        
+
         retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportsRenderTargetArrayIndexFromVertexShader", 0))
         if (retStr != undefined && retStr != "") LOG("[*] supportsRenderTargetArrayIndexFromVertexShader \t: " + retStr + "\n" + line20, LogColor.C36)
-    } 
+    }
 
     function Time() {
 
         console.error("------------------- TIME -------------------")
-    
+
         // public static extern float get_time()
         retStr = callFunctionRS(find_method("UnityEngine.CoreModule", "Time", "get_time", 0))
         if (retStr != undefined && retStr != 0x0) LOG("[*] get_time \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
-    
+
         // public static extern float deltaTime()
         retStr = callFunctionRS(find_method("UnityEngine.CoreModule", "Time", "get_deltaTime", 0))
         if (retStr != undefined && retStr != 0x0) LOG("[*] deltaTime \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
-        
+
         // public static extern float get_fixedDeltaTime()
         retStr = callFunctionRS(find_method("UnityEngine.CoreModule", "Time", "get_fixedDeltaTime", 0))
         if (retStr != undefined && retStr != 0x0) LOG("[*] fixedDeltaTime \t\t: " + retStr + "\n" + line20, LogColor.C36)
@@ -2299,7 +2431,7 @@ function getUnityInfo(){
         // get_timeSinceLevelLoad() : Single
         retStr = callFunctionRS(find_method("UnityEngine.CoreModule", "Time", "get_timeSinceLevelLoad", 0))
         if (retStr != undefined && retStr != 0x0) LOG("[*] timeSinceLevelLoad \t\t: " + retStr + "\n" + line20, LogColor.C36)
-        
+
         // get_unscaledDeltaTime() : Single
         retStr = callFunctionRS(find_method("UnityEngine.CoreModule", "Time", "get_unscaledDeltaTime", 0))
         if (retStr != undefined && retStr != 0x0) LOG("[*] unscaledDeltaTime \t\t: " + retStr + "\n" + line20, LogColor.C36)
@@ -2323,20 +2455,20 @@ function getUnityInfo(){
         // public static extern float realtimeSinceStartup()
         retStr = callFunction(find_method("UnityEngine.CoreModule", "Time", "realtimeSinceStartup", 0))
         if (retStr != undefined && retStr != 0x0) LOG("[*] realtimeSinceStartup \t: " + retStr + "\n" + line20, LogColor.C36)
-    
+
         // public static extern float get_renderedFrameCount()
         retStr = callFunction(find_method("UnityEngine.CoreModule", "Time", "get_renderedFrameCount", 0))
         if (retStr != undefined && retStr != 0x0) LOG("[*] renderedFrameCount \t\t: " + retStr + "\n" + line20, LogColor.C36)
-    
+
         // public static float smoothDeltaTime()
         retStr = callFunction(find_method("UnityEngine.CoreModule", "Time", "smoothDeltaTime", 0))
         if (retStr != undefined && retStr != 0x0) LOG("[*] smoothDeltaTime \t\t: " + retStr + "\n" + line20, LogColor.C36)
     }
 
     function Environment() {
-        
+
         LOG("------------------- Environment -------------------", LogColor.RED)
-        
+
         // retStr = callFunction(find_method("mscorlib", "Environment", "get_CurrentManagedThreadId", 0)).toInt32()
         // if (retStr != undefined) LOG("[*] CurrentManagedThreadId \t: " + retStr + "\n" + line20, LogColor.C36)
 
@@ -2384,54 +2516,54 @@ function getUnityInfo(){
 /**
  * 获取APK的一些基本信息
  */
-function getApkInfo(){
-    Java.perform(function(){
+function getApkInfo() {
+    Java.perform(function () {
 
-        LOG(getLine(100),LogColor.C33)
+        LOG(getLine(100), LogColor.C33)
 
         var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
         var pkgInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0)
         // var appInfo = context.getApplicationInfo()
         var appInfo = pkgInfo.applicationInfo.value
-        
+
         var labelRes = appInfo.labelRes.value
         var strName = context.getResources().getString(labelRes)
-        LOG("[*]AppName\t\t"+strName + " (UID:"+appInfo.uid.value + ")\t ID:0x"+(appInfo.labelRes.value).toString(16),LogColor.C36)
+        LOG("[*]AppName\t\t" + strName + " (UID:" + appInfo.uid.value + ")\t ID:0x" + (appInfo.labelRes.value).toString(16), LogColor.C36)
         var flags = appInfo.flags.value
-        LOG("\t\t\tBackupable -> " + ((flags & 32768) != 0) + "\t"+"Debugable -> " + ((flags & 2) != 0), LogColor.C36)
-        
+        LOG("\t\t\tBackupable -> " + ((flags & 32768) != 0) + "\t" + "Debugable -> " + ((flags & 2) != 0), LogColor.C36)
+
         var str_pkgName = context.getPackageName()
-        LOG("\n[*]PkgName\t\t"+str_pkgName,LogColor.C36)
+        LOG("\n[*]PkgName\t\t" + str_pkgName, LogColor.C36)
 
         var verName = pkgInfo.versionName.value
         var targetSdkVersion = pkgInfo.applicationInfo.value.targetSdkVersion.value
-        LOG("\n[*]Verison\t\t"+verName + " (targetSdkVersion:"+targetSdkVersion+")",LogColor.C36)
+        LOG("\n[*]Verison\t\t" + verName + " (targetSdkVersion:" + targetSdkVersion + ")", LogColor.C36)
 
         var appSize = Java.use("java.io.File").$new(appInfo.sourceDir.value).length()
-        LOG("\n[*]AppSize\t\t"+appSize +"\t("+(appSize/1024/1024).toFixed(2)+" MB)",LogColor.C36)
+        LOG("\n[*]AppSize\t\t" + appSize + "\t(" + (appSize / 1024 / 1024).toFixed(2) + " MB)", LogColor.C36)
 
-        LOG("\n[*]Time\t\t\tInstallTime\t" + new Date(pkgInfo.firstInstallTime.value).toLocaleString(),LogColor.C36)
-        LOG("\t\t\tUpdateTime\t" + new Date(pkgInfo.lastUpdateTime.value).toLocaleString(),LogColor.C36)
+        LOG("\n[*]Time\t\t\tInstallTime\t" + new Date(pkgInfo.firstInstallTime.value).toLocaleString(), LogColor.C36)
+        LOG("\t\t\tUpdateTime\t" + new Date(pkgInfo.lastUpdateTime.value).toLocaleString(), LogColor.C36)
 
         var ApkLocation = appInfo.sourceDir.value
         var TempFile = appInfo.dataDir.value
-        LOG("\n[*]Location\t\t"+ApkLocation+"\n\t\t\t"+getLibPath()+"\n\t\t\t"+TempFile,LogColor.C36)
+        LOG("\n[*]Location\t\t" + ApkLocation + "\n\t\t\t" + getLibPath() + "\n\t\t\t" + TempFile, LogColor.C36)
 
         // PackageManager.GET_SIGNATURES == 0x00000040
         var pis = context.getPackageManager().getPackageInfo(str_pkgName, 0x00000040)
         var hexDigist = (pis.signatures.value)[0].toByteArray()
-        LOG("\n[*]Signatures\t\tMD5\t "+hexdigest(hexDigist,'MD5')
-            +"\n\t\t\tSHA-1\t "+hexdigest(hexDigist,'SHA-1')
-            +"\n\t\t\tSHA-256\t "+hexdigest(hexDigist,'SHA-256'),LogColor.C36)
-        
-        LOG(getLine(100),LogColor.C33)
+        LOG("\n[*]Signatures\t\tMD5\t " + hexdigest(hexDigist, 'MD5') +
+            "\n\t\t\tSHA-1\t " + hexdigest(hexDigist, 'SHA-1') +
+            "\n\t\t\tSHA-256\t " + hexdigest(hexDigist, 'SHA-256'), LogColor.C36)
+
+        LOG(getLine(100), LogColor.C33)
 
         // LOG(getMetaData('unity.build-id'))
-        function getMetaData(key){
+        function getMetaData(key) {
             // public static final int GET_META_DATA = 0x00000080
             var appInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), 0x00000080)
             var metaData = appInfo.metaData.value
-            if(null != metaData) {
+            if (null != metaData) {
                 // var metaDataB = Java.cast(metaData,Java.use("android.os.BaseBundle"))
                 // LOG(metaDataB.mMap.value)
                 return metaData.getString(key)
@@ -2444,27 +2576,27 @@ function getApkInfo(){
          * @param {*} paramArrayOfByte byte 字节
          * @param {*} algorithm 算法 MD5 / SHA-1 / SHA-256
          */
-        function hexdigest(paramArrayOfByte, algorithm) {            
-            var hexDigits = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 97, 98, 99, 100, 101, 102]            
-            var localMessageDigest = Java.use("java.security.MessageDigest").getInstance(algorithm)            
-            localMessageDigest.update(paramArrayOfByte)            
+        function hexdigest(paramArrayOfByte, algorithm) {
+            var hexDigits = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 97, 98, 99, 100, 101, 102]
+            var localMessageDigest = Java.use("java.security.MessageDigest").getInstance(algorithm)
+            localMessageDigest.update(paramArrayOfByte)
             var arrayOfByte = localMessageDigest.digest()
             var arrayOfChar = []
-            for (var i = 0, j = 0; ; i++, j++){                
-                var strLenth = algorithm == "MD5" ? 16 : (algorithm == "SHA-1" ? 20 : 32)                
-                if (i >= strLenth) return Java.use("java.lang.String").$new(arrayOfChar)                
+            for (var i = 0, j = 0;; i++, j++) {
+                var strLenth = algorithm == "MD5" ? 16 : (algorithm == "SHA-1" ? 20 : 32)
+                if (i >= strLenth) return Java.use("java.lang.String").$new(arrayOfChar)
                 var k = arrayOfByte[i]
-                arrayOfChar[j] = hexDigits[(0xF & k >>> 4)]                
-                arrayOfChar[++j] = hexDigits[(k & 0xF)]                
+                arrayOfChar[j] = hexDigits[(0xF & k >>> 4)]
+                arrayOfChar[++j] = hexDigits[(k & 0xF)]
             }
         }
 
-        function getLibPath(name) {            
+        function getLibPath(name) {
             var retStr = ""
-            Java.perform(function () {                
-                var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()                
-                var libPath = context.getApplicationInfo().nativeLibraryDir.value                
-                retStr = libPath + "/" + (name == undefined ? "" : name)                
+            Java.perform(function () {
+                var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
+                var libPath = context.getApplicationInfo().nativeLibraryDir.value
+                retStr = libPath + "/" + (name == undefined ? "" : name)
             })
             return retStr
         }
@@ -2475,8 +2607,8 @@ function getApkInfo(){
  * 用包名启动 APK
  * @param {String}} pkgName 
  */
-function launchApp(pkgName) {    
-    Java.perform(function(){
+function launchApp(pkgName) {
+    Java.perform(function () {
         var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
         context.startActivity(Java.use("android.content.Intent").$new(context.getPackageManager().getLaunchIntentForPackage(pkgName)));
     })
@@ -2487,8 +2619,8 @@ function launchApp(pkgName) {
  * @param {Number} mPtr c#字符串指针}
  */
 function readU16(mPtr) {
-    if (mPtr == 0) return undefined
-    return ptr(mPtr).add(p_size*2+4).readUtf16String()
+    if (mPtr == 0) return ""
+    return ptr(mPtr).add(p_size * 2 + 4).readUtf16String()
 }
 
 /**
@@ -2496,7 +2628,7 @@ function readU16(mPtr) {
  * @param {String} str 字符串
  * @param {*} type 随意填写 填写了就是C#String 不填写就是CString
  */
-function allocStr(str,type){
+function allocStr(str, type) {
     return type == undefined ? Memory.allocUtf8String(str) : il2cpp_string_new(Memory.allocUtf8String(str))
 }
 
@@ -2508,33 +2640,39 @@ function allocStr(str,type){
  * @param {Number} z 
  * @param {Number} w 
  */
-function allocVector(x,y,z,w){
+function allocVector(x, y, z, w) {
     var defaultV = 0
     var args = 2
-    if (z != undefined){
+    if (z != undefined) {
         args = 3
-        if (w !=undefined) 
+        if (w != undefined)
             args = 4
     }
-    var temp_vector = Memory.alloc(p_size*args)
-    temp_vector.writeFloat(x==undefined?defaultV:x)
-    temp_vector.add(p_size).writeFloat(y==undefined?defaultV:y)
-    if (args >= 3)temp_vector.add(p_size*2).writeFloat(z)
-    if (args == 4)temp_vector.add(p_size*3).writeFloat(w)
+    var temp_vector = Memory.alloc(p_size * args)
+    temp_vector.writeFloat(x == undefined ? defaultV : x)
+    temp_vector.add(p_size).writeFloat(y == undefined ? defaultV : y)
+    if (args >= 3) temp_vector.add(p_size * 2).writeFloat(z)
+    if (args == 4) temp_vector.add(p_size * 3).writeFloat(w)
     return temp_vector
 }
 
 function seeHex() {
     if (arguments[0] == undefined || arguments[0] == 0x0) return
-    LOG(hexdump(checkPointer(arguments[0]),{length:length}))
+    LOG(hexdump(checkPointer(arguments[0]), {
+        length: length
+    }))
 }
 
-function seeHexR(addr, length, color) {    
-    LOG(hexdump(ptr(soAddr.add(addr).readPointer()),{length:length}), color == undefined ? LogColor.WHITE : color)
+function seeHexR(addr, length, color) {
+    LOG(hexdump(ptr(soAddr.add(addr).readPointer()), {
+        length: length
+    }), color == undefined ? LogColor.WHITE : color)
 }
 
-function seeHexA(addr, length, color) {    
-    LOG(hexdump(ptr(addr), { length: length }), color == undefined ? LogColor.WHITE : color)
+function seeHexA(addr, length, color) {
+    LOG(hexdump(ptr(addr), {
+        length: length
+    }), color == undefined ? LogColor.WHITE : color)
 }
 
 /**
@@ -2543,13 +2681,14 @@ function seeHexA(addr, length, color) {
  * @returns 
  */
 var mdMap = null
+
 function checkPointer(mPtr) {
     if (mPtr == undefined || mPtr == null || soAddr == null || soAddr == 0) return ptr(0)
     mPtr = ptr(Number(mPtr))
     if (mdMap == null) {
         var mdMap = new ModuleMap((md) => {
             // 如果是一下so的地址就直接返回，如不是就给它加上一个soAddr
-            if (md.name = soName || md.name == "libart.so"|| md.name == "libc.so") return true
+            if (md.name = soName || md.name == "libart.so" || md.name == "libc.so") return true
         })
     }
     if (mdMap.has(mPtr)) return mPtr
@@ -2565,60 +2704,68 @@ function checkPointer(mPtr) {
 function printCtx(pointer, range, sign, redLine) {
     //简陋... 建议还是使用 capstone 和 keystone 来做这些事情
     if (Process.arch != "arm") return
-    if (sign != undefined){
-        for (var i = 0; i < range; i++){            
+    if (sign != undefined) {
+        for (var i = 0; i < range; i++) {
             printLOG(pointer)
         }
         return
     }
-    var max = range == undefined ? 5 : (range % 2 == 1 ? (range + 1) : range) / 2    
-    var min = range == undefined ? -4 : max - range    
-    for (var i = min; i < max; i++){        
-        printLOG(pointer)        
+    var max = range == undefined ? 5 : (range % 2 == 1 ? (range + 1) : range) / 2
+    var min = range == undefined ? -4 : max - range
+    for (var i = min; i < max; i++) {
+        printLOG(pointer)
     }
 
-    function printLOG(pointer) {        
-        var cur_p = ptr(pointer).add(p_size * i)        
+    function printLOG(pointer) {
+        var cur_p = ptr(pointer).add(p_size * i)
         var cur_value = cur_p.readPointer().toString()
         var cur_tmp = Array.from(cur_value.toUpperCase())
-        var cur_str = (cur_tmp.length == 10) ? cur_value : ""        
-        if (sign == 1){
+        var cur_str = (cur_tmp.length == 10) ? cur_value : ""
+        if (sign == 1) {
             cur_str = cur_tmp[2] + cur_tmp[3] + ' ' + cur_tmp[4] + cur_tmp[5] + ' ' + cur_tmp[6] + cur_tmp[7] + ' ' + cur_tmp[8] + cur_tmp[9]
         } else if (sign == 2) {
             cur_str = cur_tmp[8] + cur_tmp[9] + ' ' + cur_tmp[6] + cur_tmp[7] + ' ' + cur_tmp[4] + cur_tmp[5] + ' ' + cur_tmp[2] + cur_tmp[3]
         }
-        LOG(cur_p + "\t" + cur_str + "\t" + Instruction.parse(cur_p),            
-            (redLine == undefined ? i == 0 : i == redLine) ?                
-            LogColor.RED : LogColor.WHITE)        
+        LOG(cur_p + "\t" + cur_str + "\t" + Instruction.parse(cur_p),
+            (redLine == undefined ? i == 0 : i == redLine) ?
+            LogColor.RED : LogColor.WHITE)
     }
 }
 
-function LOG(str,type){
-    if(!LogFlag) return
+function LOG(str, type) {
+    if (!LogFlag) return
     if (type == undefined) {
         console.log(str)
         return
     }
-    switch(type){
-        case LogColor.WHITE     : console.log(str);                             break
-        case LogColor.RED       : console.error(str);                           break
-        case LogColor.YELLOW    : console.warn(str);                            break
-        default: console.log("\x1b[" + type + "m" + str + "\x1b[0m");           break
+    switch (type) {
+        case LogColor.WHITE:
+            console.log(str);
+            break
+        case LogColor.RED:
+            console.error(str);
+            break
+        case LogColor.YELLOW:
+            console.warn(str);
+            break
+        default:
+            console.log("\x1b[" + type + "m" + str + "\x1b[0m");
+            break
     }
 }
 
-function getLine(length) {    
-    var retStr = ""    
-    for (var i = 0; i < length; i++) {        
-        retStr += "-"        
+function getLine(length) {
+    var retStr = ""
+    for (var i = 0; i < length; i++) {
+        retStr += "-"
     }
     return retStr
 }
 
-function Toast(msg){
-    Java.scheduleOnMainThread(function(){
+function Toast(msg) {
+    Java.scheduleOnMainThread(function () {
         var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
-        Java.use("android.widget.Toast").makeText(context,Java.use("java.lang.String").$new(msg),1).show()
+        Java.use("android.widget.Toast").makeText(context, Java.use("java.lang.String").$new(msg), 1).show()
     })
 }
 
@@ -2627,17 +2774,17 @@ function Toast(msg){
  * @param {Int} x 模拟点击的x位置
  * @param {Int} y 模拟点击的y位置
  */
-function setClick(x,y){
+function setClick(x, y) {
     if (x == undefined || y == undefined) return
-    Java.perform(function(){
+    Java.perform(function () {
         var Instrumentation = Java.use("android.app.Instrumentation")
         var SystemClock = Java.use("android.os.SystemClock")
         var MotionEvent = Java.use("android.view.MotionEvent")
         var inst = Instrumentation.$new()
         var downTime = SystemClock.uptimeMillis()
-        var downEvent = MotionEvent.obtain(downTime,downTime,0,x,y,0)
+        var downEvent = MotionEvent.obtain(downTime, downTime, 0, x, y, 0)
         var upTime = SystemClock.uptimeMillis()
-        var upEvent = MotionEvent.obtain(upTime,upTime,1,x,y,0)
+        var upEvent = MotionEvent.obtain(upTime, upTime, 1, x, y, 0)
         inst.sendPointerSync(downEvent)
         inst.sendPointerSync(upEvent)
     })
@@ -2648,19 +2795,19 @@ function setClick(x,y){
  * 启动游戏的时候进行模拟点击，配合HookOnPointerClick()即可确定gameobj，通过修改transform即可实现动态的隐藏一些按钮
  * 这里是针对一些bundle资源的u3d游戏，我们不能方便的去静态修改gameobj可见性,或者是一些其他原因我们不能修改，即可用这个动态修改的思路
  */
-function HookMotionEvent(){
-    Java.perform(function(){
-        Java.use("android.view.View").onTouchEvent.implementation = function(event){
+function HookMotionEvent() {
+    Java.perform(function () {
+        Java.use("android.view.View").onTouchEvent.implementation = function (event) {
             var ret = this.onTouchEvent(event)
-            LOG("\n"+getLine(25)+" onTouchEvent "+getLine(25),LogColor.YELLOW)
-            LOG(ret+"\t"+event,LogColor.C36)
+            LOG("\n" + getLine(25) + " onTouchEvent " + getLine(25), LogColor.YELLOW)
+            LOG(ret + "\t" + event, LogColor.C36)
             return ret
         }
 
-        Java.use("android.app.Activity").dispatchTouchEvent.implementation = function(event){
+        Java.use("android.app.Activity").dispatchTouchEvent.implementation = function (event) {
             var ret = this.dispatchTouchEvent(event)
-            LOG("\n"+getLine(25)+" dispatchTouchEvent "+getLine(25),LogColor.YELLOW)
-            LOG(ret+"\t"+event,LogColor.C36)
+            LOG("\n" + getLine(25) + " dispatchTouchEvent " + getLine(25), LogColor.YELLOW)
+            LOG(ret + "\t" + event, LogColor.C36)
             return ret
         }
     })
@@ -2672,13 +2819,13 @@ function HookMotionEvent(){
  * @param {*} x 
  * @param {*} y 
  */
-function HideClickedObj(x,y){
-    var m_ptr = find_method("UnityEngine.UI","Button","OnPointerClick",1)
-    var srcFunc = new NativeFunction(m_ptr,'void',['pointer','pointer','pointer','pointer'])
+function HideClickedObj(x, y) {
+    var m_ptr = find_method("UnityEngine.UI", "Button", "OnPointerClick", 1)
+    var srcFunc = new NativeFunction(m_ptr, 'void', ['pointer', 'pointer', 'pointer', 'pointer'])
     Interceptor.revert(m_ptr)
-    Interceptor.replace(m_ptr,new NativeCallback(function(arg0,pointerEventData,arg2,arg3){
-        srcFunc(arg0,pointerEventData,arg2,arg3)
-        if (pointerEventData == 0) return 
+    Interceptor.replace(m_ptr, new NativeCallback(function (arg0, pointerEventData, arg2, arg3) {
+        srcFunc(arg0, pointerEventData, arg2, arg3)
+        if (pointerEventData == 0) return
         var gameObj = f_get_pointerEnter(pointerEventData)
         // 判断名字后使用这三种方式都可以去掉该对象
         if (getObjName(gameObj) == "Settings Button") {
@@ -2687,28 +2834,28 @@ function HideClickedObj(x,y){
             // SetLocalScale(m_transform,0,0,0)
             destroyObj(gameObj)
         }
-    },'void',['pointer','pointer','pointer','pointer']))
+    }, 'void', ['pointer', 'pointer', 'pointer', 'pointer']))
 
-    setClick(x,y)
+    setClick(x, y)
     // B 去断点找到点击事件的处理函数并nop掉
     // 循环调用，出现时destory掉这个gameObj
 }
 
 // 打印java堆栈
-function PrintStackTrace(){
-    console.log("\x1b[36m"+
+function PrintStackTrace() {
+    console.log("\x1b[36m" +
         Java.use("android.util.Log")
-            .getStackTraceString(Java.use("java.lang.Throwable")
-            .$new())+"\x1b[0m")
+        .getStackTraceString(Java.use("java.lang.Throwable")
+            .$new()) + "\x1b[0m")
 }
 
 // 打印native堆栈
-function PrintStackTraceN(ctx){
-    console.log("\x1b[36m Called from:\n"+
-            Thread.backtrace(ctx,Backtracer.FUZZY)
-            .slice(0,6)
-            // .reverse()
-            .map(DebugSymbol.fromAddress).join("\n")+"\x1b[0m")
+function PrintStackTraceN(ctx) {
+    console.log("\x1b[36m Called from:\n" +
+        Thread.backtrace(ctx, Backtracer.FUZZY)
+        .slice(0, 6)
+        // .reverse()
+        .map(DebugSymbol.fromAddress).join("\n") + "\x1b[0m")
 }
 
 function SetInt(key, value) {
@@ -2724,42 +2871,42 @@ function SetInt(key, value) {
     callFunction(find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetInt", 2, true), (allocStr(key, ""), value))
 }
 
-function SetFloat(key,value){
+function SetFloat(key, value) {
     callFunction(find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetFloat", 2, true), allocStr(key, ""), value)
 }
 
-function SetString(key,value){
+function SetString(key, value) {
     callFunction(find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetString", 2, true), allocStr(key, ""), allocStr(value, ""))
 }
 
-function GetInt(key){
+function GetInt(key) {
     var ret = callFunctionRI(find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetInt", 2, true, allocStr(key, ""), 0))
-    LOG("\n[*] GetInt('"+key+"')\t--->\t"+ret.toInt32()+"\n",LogColor.C95)
+    LOG("\n[*] GetInt('" + key + "')\t--->\t" + ret.toInt32() + "\n", LogColor.C95)
 }
 
-function GetFloat(key){
-    var ret = new NativeFunction(find_method("UnityEngine.CoreModule","PlayerPrefs","GetFloat",2,true),'pointer',['pointer','float'])(allocStr(key,""),0)
-    LOG("\n[*] GetFloat('"+key+"')\t--->\t"+ret.toInt32()+"\n",LogColor.C95)
+function GetFloat(key) {
+    var ret = new NativeFunction(find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetFloat", 2, true), 'pointer', ['pointer', 'float'])(allocStr(key, ""), 0)
+    LOG("\n[*] GetFloat('" + key + "')\t--->\t" + ret.toInt32() + "\n", LogColor.C95)
 }
 
-function GetString(key){
+function GetString(key) {
     var ret = callFunction(find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetString", 1), allocStr(key, ""))
-    LOG("\n[*] GetString('"+key+"')\t--->\t"+readU16(ret)+"\n",LogColor.C95)
+    LOG("\n[*] GetString('" + key + "')\t--->\t" + readU16(ret) + "\n", LogColor.C95)
 }
 
-function SetLocalScale(mTransform,x,y,z){
+function SetLocalScale(mTransform, x, y, z) {
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "set_localScale_Injected", 1), ptr(mTransform), allocVector(x, y, z))
 }
 
-function SetLocalPosition(mTransform,x,y,z){
+function SetLocalPosition(mTransform, x, y, z) {
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "set_localPosition_Injected", 1), ptr(mTransform), allocVector(x, y, z))
 }
 
-function SetPosition(mTransform,x,y,z){
+function SetPosition(mTransform, x, y, z) {
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "set_Position_Injected", 1), ptr(mTransform), allocVector(x, y, z))
 }
 
-function SetLocalRotation(mTransform,x,y,z,w){
+function SetLocalRotation(mTransform, x, y, z, w) {
     // var set_Rotation_Injected = find_method("UnityEngine.CoreModule","Transform","set_Rotation_Injected",1,true)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "set_localRotation_Injected", 1), ptr(mTransform), allocVector(x, y, z, w))
 }
@@ -2768,7 +2915,7 @@ function SetLocalRotation(mTransform,x,y,z,w){
  * GameObject/Transform
  * @param {Pointer}  
  */
- function getObjName(gameObj){
+function getObjName(gameObj) {
     return readU16(f_getName(ptr(gameObj)))
 }
 
@@ -2784,8 +2931,8 @@ function transformToGameObj(gameObj) {
  * getGameObject     transform -> GameObject
  * @param {Pointer}  transform
  */
- function getGameObject(transform){
-     return callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), ptr(transform))
+function getGameObject(transform) {
+    return callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), ptr(transform))
 }
 
 function class_is_enum(Pcls) {
@@ -2812,51 +2959,53 @@ function GetComponent(obj, type) {
     return callFunction(find_method('UnityEngine.CoreModule', 'Component', 'GetComponent', 1), ptr(obj), ptr(type))
 }
 
-function GetComponentG(obj,type){
+function GetComponentG(obj, type) {
     return callFunction(find_method('UnityEngine.CoreModule', 'GameObject', 'GetComponent', 1), ptr(obj), ptr(type))
 }
 
-function GetTypeFromHandle(obj){
+function GetTypeFromHandle(obj) {
     return callFunction(find_method('mscorlib', 'Type', 'GetTypeFromHandle', 1), ptr(obj), 0)
 }
 
-function HookComponent(){
+function HookComponent() {
 
     HookAddComponent()
 
-    function HookAddComponent(){
-        Interceptor.attach(find_method('UnityEngine.CoreModule','GameObject','AddComponent',1),{
-            onEnter:function(args){
+    function HookAddComponent() {
+        Interceptor.attach(find_method('UnityEngine.CoreModule', 'GameObject', 'AddComponent', 1), {
+            onEnter: function (args) {
                 this.arg0 = args[0]
                 this.arg1 = args[1]
             },
-            onLeave:function(ret){
+            onLeave: function (ret) {
                 newLine()
-                LOG(" [*] AddComponent ---> G:"+this.arg0 + " T:"+f_getTransform(ptr(this.arg0)) +"("+getObjName(this.arg0)+")"+
-                    "\t\t\t("+this.arg1+")"+FuckKnownType('Type',this.arg1),LogColor.C36)
+                LOG(" [*] AddComponent ---> G:" + this.arg0 + " T:" + f_getTransform(ptr(this.arg0)) + "(" + getObjName(this.arg0) + ")" +
+                    "\t\t\t(" + this.arg1 + ")" + FuckKnownType('Type', this.arg1), LogColor.C36)
             }
         })
     }
 
-    function HookGetComponent(){
-        Interceptor.attach(find_method('UnityEngine.CoreModule','GameObject','GetComponent',1),{
-            onEnter:function(args){
+    function HookGetComponent() {
+        Interceptor.attach(find_method('UnityEngine.CoreModule', 'GameObject', 'GetComponent', 1), {
+            onEnter: function (args) {
                 this.arg0 = args[0]
                 this.arg1 = args[1]
             },
-            onLeave:function(ret){
+            onLeave: function (ret) {
                 newLine()
-                LOG(" [*] AddComponent ---> G:"+this.arg0 + " T:"+getTransform(ptr(this.arg0)) +"("+getObjName(this.arg0)+")"+
-                    "\t\t\t("+this.arg1+")"+FuckKnownType('Type',this.arg1),LogColor.C36)
+                LOG(" [*] AddComponent ---> G:" + this.arg0 + " T:" + getTransform(ptr(this.arg0)) + "(" + getObjName(this.arg0) + ")" +
+                    "\t\t\t(" + this.arg1 + ")" + FuckKnownType('Type', this.arg1), LogColor.C36)
             }
         })
     }
 
     // 间隔时间大于一秒,就用新的一行展示
-    function newLine(){
+    function newLine() {
         var current = 0
-        Java.perform(()=>{current = Java.use('java.lang.System').currentTimeMillis()})
-        if (current - lastTime > 1000){
+        Java.perform(() => {
+            current = Java.use('java.lang.System').currentTimeMillis()
+        })
+        if (current - lastTime > 1000) {
             console.log("\n")
             lastTime = current
         }
@@ -2864,10 +3013,10 @@ function HookComponent(){
 }
 
 function SendMessage(str0, str1, str2) {
-    
+
     // Java 
-    Java.perform(function(){
-        Java.use("com.unity3d.player.UnityPlayer").UnitySendMessage(str0,str1,str2)
+    Java.perform(function () {
+        Java.use("com.unity3d.player.UnityPlayer").UnitySendMessage(str0, str1, str2)
     })
 
     // Native 好像有点问题,不太行
@@ -2879,27 +3028,27 @@ function SendMessageImpl(platform) {
     switch (platform) {
         case "IronSource":
             IronSourceEvents()
-        break
+            break
         case "MaxSdkCallbacks":
             MaxSdkCallbacks()
-        break
+            break
         case "MoPubManager":
             MoPubManager()
-        break
+            break
         case "TPluginsGameObject":
             TPluginsGameObject()
-        break
+            break
         default:
             IronSourceEvents()
             MaxSdkCallbacks()
             MoPubManager()
             TTPluginsGameObject()
-        break
+            break
     }
-    
 
-    SendMessage('GameAnalytics','OnCommandCenterUpdated','')
-    SendMessage('GameAnalytics','OnRemoteConfigsUpdated','')
+
+    SendMessage('GameAnalytics', 'OnCommandCenterUpdated', '')
+    SendMessage('GameAnalytics', 'OnRemoteConfigsUpdated', '')
     SendMessage('UnityFacebookSDKPlugin', 'OnInitComplete', '{"key_hash":"0eWmEB4CY7TpepNbZdxCOaz2Crs=\n"}')
 
     function IronSourceEvents() {
@@ -2916,10 +3065,10 @@ function SendMessageImpl(platform) {
     function MaxSdkCallbacks() {
 
 
-        SendMessage('MaxSdkCallbacks','ForwardEvent','networkName=AppLovin\nname=OnRewardedAdRevenuePaidEvent\nrevenue=0.014579974174499511\nplacement=\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\n')
-        SendMessage('MaxSdkCallbacks','ForwardEvent','networkName=AppLovin\nname=OnRewardedAdDisplayedEvent\nrevenue=0.014579974174499511\nplacement=\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\n')
-        SendMessage('MaxSdkCallbacks','ForwardEvent','revenue=0.014579974174499511\nnetworkName=AppLovin\nname=OnRewardedAdReceivedRewardEvent\nplacement=\nrewardAmount=0\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\nrewardLabel=\n')
-        SendMessage('MaxSdkCallbacks','ForwardEvent','networkName=AppLovin\nname=OnRewardedAdHiddenEvent\nrevenue=0.014579974174499511\nplacement=\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\n')
+        SendMessage('MaxSdkCallbacks', 'ForwardEvent', 'networkName=AppLovin\nname=OnRewardedAdRevenuePaidEvent\nrevenue=0.014579974174499511\nplacement=\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\n')
+        SendMessage('MaxSdkCallbacks', 'ForwardEvent', 'networkName=AppLovin\nname=OnRewardedAdDisplayedEvent\nrevenue=0.014579974174499511\nplacement=\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\n')
+        SendMessage('MaxSdkCallbacks', 'ForwardEvent', 'revenue=0.014579974174499511\nnetworkName=AppLovin\nname=OnRewardedAdReceivedRewardEvent\nplacement=\nrewardAmount=0\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\nrewardLabel=\n')
+        SendMessage('MaxSdkCallbacks', 'ForwardEvent', 'networkName=AppLovin\nname=OnRewardedAdHiddenEvent\nrevenue=0.014579974174499511\nplacement=\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\n')
 
 
         // SendMessage('MaxSdkCallbacks','ForwardEvent','name=OnSdkInitializedEvent\nconsentDialogState=2\ncountryCode=SG\n')
@@ -2953,17 +3102,17 @@ function SendMessageImpl(platform) {
         SendMessage("MoPubManager", "EmitInterstitialLoadedEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
         SendMessage('MoPubManager', 'EmitAdLoadedEvent', '["f7a8241fad1041bda59f303eae75be2d","320","50"]')
         SendMessage("MoPubManager", "EmitRewardedVideoLoadedEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
-        
+
         SendMessage("MoPubManager", "EmitRewardedVideoShownEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
         // SendMessage("MoPubManager", "EmitRewardedVideoReceivedRewardEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
-        SendMessage('MoPubManager','EmitRewardedVideoReceivedRewardEvent','["a44632b619174dfa98c46420592a3756","","0"]')
+        SendMessage('MoPubManager', 'EmitRewardedVideoReceivedRewardEvent', '["a44632b619174dfa98c46420592a3756","","0"]')
         SendMessage("MoPubManager", "EmitRewardedVideoClosedEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
     }
 
     function TTPluginsGameObject() {
-        SendMessage("TTPluginsGameObject","OnRewardedAdsShown","")
-        SendMessage("TTPluginsGameObject","OnRewardedAdsClosed","{\"shouldReward\":true,\"network\":\"admob-unityads\",\"revenue\":0.00138,\"currency\":\"USD\",\"precision\":\"ESTIMATED\"}")
-        SendMessage("TTPluginsGameObject","OnRewardedAdsReady","{\"loaded\":true}")
+        SendMessage("TTPluginsGameObject", "OnRewardedAdsShown", "")
+        SendMessage("TTPluginsGameObject", "OnRewardedAdsClosed", "{\"shouldReward\":true,\"network\":\"admob-unityads\",\"revenue\":0.00138,\"currency\":\"USD\",\"precision\":\"ESTIMATED\"}")
+        SendMessage("TTPluginsGameObject", "OnRewardedAdsReady", "{\"loaded\":true}")
     }
 }
 
@@ -2974,13 +3123,13 @@ function JNI() {
     // UnityEngine.AndroidJNIModule.AndroidJNI public static IntPtr CallObjectMethod (IntPtr obj,IntPtr methodID,jvalue[] args)
     find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "CallObjectMethod", 3, false)
     // UnityEngine.AndroidJNIModule.AndroidJNI public static IntPtr NewStringUTF (String bytes)
-    find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "NewStringUTF", 1, false)   //c#String to jstring
-    
+    find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "NewStringUTF", 1, false) //c#String to jstring
+
     // UnityEngine.AndroidJNIModule.AndroidJNIHelper   public static IntPtr GetMethodID (IntPtr javaClass,String methodName,String signature)
     find_method("UnityEngine.AndroidJNIModule", "AndroidJNIHelper", "GetMethodID", 3, false)
     // UnityEngine.AndroidJNIModule.AndroidJNIHelper   public static String GetSignature (Object obj)
     find_method("UnityEngine.AndroidJNIModule", "AndroidJNIHelper", "GetSignature", 1, false)
-     
+
     // UnityEngine.AndroidJNIModule.AndroidJNISafe     public static IntPtr CallStaticObjectMethod (IntPtr clazz,IntPtr methodID,jvalue[] args)
     find_method("UnityEngine.AndroidJNIModule", "AndroidJNISafe", "CallStaticObjectMethod", 3, false)
     // UnityEngine.AndroidJNIModule.AndroidJNISafe     public static Boolean CallBooleanMethod (IntPtr obj,IntPtr methodID,jvalue[] args)
@@ -3003,7 +3152,7 @@ function ADS() {
     // public static void ShowRewardedAd(string adUnitIdentifier, string placement)
     // public static void ShowInterstitial(string adUnitIdentifier, string placement)
     a(findClass("MaxSdk.Scripts", "MaxSdkAndroid"))
-    
+
     /**
      *  IronSource
      * 
@@ -3050,30 +3199,30 @@ function ADS() {
     find_method("Assembly-CSharp", "MoPub", "ShowInterstitialAd", 1, false)
     // Assembly-CSharp.MoPub   public static Boolean HasRewardedVideo (String adUnitId)
     find_method("Assembly-CSharp", "MoPub", "HasRewardedVideo", 1, false)
-    
+
     // Assembly-CSharp.VoodooSauce     public static Void ShowRewardedVideo (Action`1 onComplete,String tag)
     find_method("Assembly-CSharp", "VoodooSauce", "ShowRewardedVideo", 2, false)
     // Assembly-CSharp.VoodooSauce     public static Void ShowInterstitial (Action onComplete,Boolean ignoreConditions,String tag)
     find_method("Assembly-CSharp", "VoodooSauce", "ShowInterstitial", 3, false)
     // Assembly-CSharp.VoodooSauce     public static Boolean IsRewardedVideoAvailable ()
     find_method("Assembly-CSharp", "VoodooSauce", "IsRewardedVideoAvailable", 0, false)
-    
+
     // Assembly-CSharp.AndroidTenjin   public override Void SendEvent (String eventName)
     find_method("Assembly-CSharp", "AndroidTenjin", "SendEvent", 1, false)
 }
 
-function Pay(){
+function Pay() {
     // todo google支付相关
-    find_method("Assembly-CSharp","Purchaser","BuyProductID",1,false)
+    find_method("Assembly-CSharp", "Purchaser", "BuyProductID", 1, false)
 }
 
-function Update(){
+function Update() {
     // todo 更新相关
-    find_method("UnityEngine.UI","CanvasScaler","Update",0,false)
+    find_method("UnityEngine.UI", "CanvasScaler", "Update", 0, false)
 }
 
 function Text() {
-    
+
     //用作查找拼接后的字符串
     // find_method("mscorlib","String","Format",3)
     // a(findClass("String")) 
@@ -3083,61 +3232,62 @@ function Text() {
     HookTrackText()
     // HookGetSetText()
 
-    function HookTrackText(){
+    function HookTrackText() {
         /**
          * 或者使用 find_method('UnityEngine.UI','FontUpdateTracker','TrackText',1,false) 找到 MethodInfo
          * 再使用 b(...) 自动解析参数
          */
 
-        var f_set_text = new NativeFunction(find_method("UnityEngine.UI",'Text','set_text',1),'void',['pointer','pointer'])
-        var f_get_text = new NativeFunction(find_method("UnityEngine.UI",'Text','get_text',0),'pointer',['pointer'])
-        var TrackText = find_method('UnityEngine.UI','FontUpdateTracker','TrackText',1)
+        var f_set_text = new NativeFunction(find_method("UnityEngine.UI", 'Text', 'set_text', 1), 'void', ['pointer', 'pointer'])
+        var f_get_text = new NativeFunction(find_method("UnityEngine.UI", 'Text', 'get_text', 0), 'pointer', ['pointer'])
+        var TrackText = find_method('UnityEngine.UI', 'FontUpdateTracker', 'TrackText', 1)
         // var UntrackText = find_method('UnityEngine.UI','FontUpdateTracker','UntrackText',1)
 
         A(find_method('UnityEngine.UI', 'FontUpdateTracker', 'TrackText', 1), (args) => {
-            LOG("TrackText : " + args[0] + "\t" +f_get_text(args[0]) +"\t"+ readU16(f_get_text(args[0])))
+            LOG("TrackText : " + args[0] + "\t" + f_get_text(args[0]) + "\t" + readU16(f_get_text(args[0])))
         })
     }
 
-    function HookGetSetText(){
+    function HookGetSetText() {
 
         hookGet()
         hookSet()
-    
+
         // 动态替换文字
-        var arr_src_str = ['Hold To Run','8082','免费获得','+400','暂停','HEADSHOT']
-        var arr_rep_str = ['FuckMusic','-99','','-200²','pause','击中头部']
-        
+        var arr_src_str = ['Hold To Run', '8082', '免费获得', '+400', '暂停', 'HEADSHOT']
+        var arr_rep_str = ['FuckMusic', '-99', '', '-200²', 'pause', '击中头部']
+
         function hookSet() {
             A(find_method("UnityEngine.UI", 'Text', 'set_text', 1), (args) => {
-                LOG("\n"+"called set_text("+args[1]+")\n["+ReadLength(args[1])+"]\t"+readU16(args[1]),LogColor.C33)
+                LOG("\n" + "called set_text(" + args[1] + ")\n[" + ReadLength(args[1]) + "]\t" + readU16(args[1]), LogColor.C33)
                 var newP = strReplace(args[1])
                 if (newP != 0) args[1] = newP
             })
         }
-    
+
         function hookGet() {
-            A(find_method("UnityEngine.UI", 'Text', 'get_text', 0), (args) => { }, (ret) => {
-                LOG("\n"+"called "+ret+" = get_text()\n["+ReadLength(ret)+"]\t"+readU16(ret),LogColor.C32)
+            A(find_method("UnityEngine.UI", 'Text', 'get_text', 0), (args) => {}, (ret) => {
+                LOG("\n" + "called " + ret + " = get_text()\n[" + ReadLength(ret) + "]\t" + readU16(ret), LogColor.C32)
                 var newP = strReplace(ret)
                 if (newP != 0) ret.replace(newP)
             })
         }
-    
-        var memcmp = Module.findExportByName("libc.so", "memcmp")        
-        if (memcmp != 0) memcmp = new NativeFunction(memcmp, 'pointer', ['pointer', 'pointer', 'int'])        
-        function strReplace(mPtr) {            
-            if (mPtr == 0 || memcmp == 0 || arr_src_str.length == 0 || arr_rep_str.length != arr_src_str.length) return ptr(0)            
-            for (var i = 0; i < arr_src_str.length; i++){                
+
+        var memcmp = Module.findExportByName("libc.so", "memcmp")
+        if (memcmp != 0) memcmp = new NativeFunction(memcmp, 'pointer', ['pointer', 'pointer', 'int'])
+
+        function strReplace(mPtr) {
+            if (mPtr == 0 || memcmp == 0 || arr_src_str.length == 0 || arr_rep_str.length != arr_src_str.length) return ptr(0)
+            for (var i = 0; i < arr_src_str.length; i++) {
                 if (memcmp(mPtr.add(p_size * 2 + 4), allocStr(arr_src_str[i], "").add(p_size * 2 + 4), ReadLength(mPtr) * 2) == 0) return allocStr(arr_rep_str[i], "")
             }
-            return ptr(0)            
+            return ptr(0)
         }
-    
-        function ReadLength(mPtr) {            
-            return ptr(mPtr).add(Process.pointerSize * 2).readPointer().toInt32()            
+
+        function ReadLength(mPtr) {
+            return ptr(mPtr).add(Process.pointerSize * 2).readPointer().toInt32()
         }
-    
+
         // called : 0x792adc (0xaaf1d4d0)  --->    public Boolean get_hasBorder ()
         // called : 0x787e10 (0xb61477b0)  --->    public Int32 get_fontSize ()
         // called : 0x787e80 (0xb6147a18)  --->    public Boolean get_richText ()
@@ -3158,10 +3308,10 @@ function runOnMain(UpDatePtr, Callback) {
     if (Callback == undefined || UpDatePtr == undefined) return
     A(UpDatePtr, () => {
         if (Callback != undefined && Callback != null) {
-            try{
+            try {
                 Callback()
-            }catch(e){
-                LOG(e,LogColor.RED)
+            } catch (e) {
+                LOG(e, LogColor.RED)
             }
             Callback = null
         }
@@ -3171,110 +3321,110 @@ function runOnMain(UpDatePtr, Callback) {
 /**
  * TODO Unity 事件相关的hook
  */
-function hookEvents(){
+function hookEvents() {
     // 事件构造
     A(find_method('UnityEngine.CoreModule', 'UnityAction', '.ctor', 2), (args) => {
-        LOG(" [*] .ctor ---> "+ptr(args[2])+"\t--->"+ptr(args[2]).sub(soAddr))
+        LOG(" [*] .ctor ---> " + ptr(args[2]) + "\t--->" + ptr(args[2]).sub(soAddr))
     })
     // 事件系统
 
 }
 
 function showGameObject(gameObj) {
-    
+
     if (gameObj == undefined) return
     gameObj = ptr(gameObj)
-    LOG("--------- GameObject ---------",LogColor.C33)
-    LOG("gameObj\t\t--->\t"+gameObj,LogColor.C36)
+    LOG("--------- GameObject ---------", LogColor.C33)
+    LOG("gameObj\t\t--->\t" + gameObj, LogColor.C36)
     if (gameObj == 0) return
-    LOG("getName\t\t--->\t"+getObjName(gameObj),LogColor.C36)
-    LOG("getLayer\t--->\t"+f_getLayer(gameObj),LogColor.C36)           
+    LOG("getName\t\t--->\t" + getObjName(gameObj), LogColor.C36)
+    LOG("getLayer\t--->\t" + f_getLayer(gameObj), LogColor.C36)
     var m_transform = f_getTransform(gameObj)
-    LOG("getTransform\t--->\t"+m_transform,LogColor.C36)
+    LOG("getTransform\t--->\t" + m_transform, LogColor.C36)
     // LOG("getTag\t\t--->\t"+f_getTag(gameObj).add(p_size*3).readUtf16String(),LogColor.C36)
     var debug = true
     var layerNames = ""
-    for (var i = 0; i < 10; i++){        
-        var spl = layerNames == "" ? "" : " <--- "        
-        layerNames = layerNames + spl + readU16(f_getName(m_transform)) + (debug ? "(" + m_transform + ")" : "")        
+    for (var i = 0; i < 10; i++) {
+        var spl = layerNames == "" ? "" : " <--- "
+        layerNames = layerNames + spl + readU16(f_getName(m_transform)) + (debug ? "(" + m_transform + ")" : "")
         m_transform = f_getParent(m_transform)
         if (m_transform == 0) break
     }
-    LOG("hierarchy\t--->\t" + layerNames, LogColor.C36)    
+    LOG("hierarchy\t--->\t" + layerNames, LogColor.C36)
 }
 
-function showTransform(transform) {    
-    LOG("--------- Transform ---------", LogColor.C33)    
+function showTransform(transform) {
+    LOG("--------- Transform ---------", LogColor.C33)
 
     transform = ptr(transform)
 
     // 保留小数位数
     var toFixedNum = 2
 
-    if (p_getChildCount != 0){
+    if (p_getChildCount != 0) {
         var childCount = f_getChildCount(transform)
-        LOG("childCount\t--->\t" + childCount + "\t(" + getObjName(transform) + ")", LogColor.C36)        
-        PrintHierarchy(transform,1,true)
+        LOG("childCount\t--->\t" + childCount + "\t(" + getObjName(transform) + ")", LogColor.C36)
+        PrintHierarchy(transform, 1, true)
     }
 
-    var eulerAngles_vector3 = allocVector(0,0,0)
+    var eulerAngles_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_eulerAngles", 0), eulerAngles_vector3, transform)
     LOG("eulerAngles\t(" + eulerAngles_vector3 + ")\t--->\t" + eulerAngles_vector3.readFloat().toFixed(toFixedNum) + "\t" + eulerAngles_vector3.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + eulerAngles_vector3.add(p_size * 2).readFloat().toFixed(toFixedNum), LogColor.C36)
 
-    var forward_vector3 = allocVector(0,0,0)
+    var forward_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_forward", 0), forward_vector3, transform)
     LOG("forward\t\t(" + forward_vector3 + ")\t--->\t" + forward_vector3.readFloat().toFixed(toFixedNum) + "\t" + forward_vector3.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + forward_vector3.add(p_size * 2).readFloat().toFixed(toFixedNum), LogColor.C36)
 
-    var Position_vector3 = allocVector(0,0,0)
+    var Position_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_position", 0), Position_vector3, transform)
     LOG("position\t(" + Position_vector3 + ")\t--->\t" + Position_vector3.readFloat().toFixed(toFixedNum) + "\t" + Position_vector3.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + Position_vector3.add(p_size * 2).readFloat().toFixed(toFixedNum), LogColor.C36)
-    
-    var localPosition_vector3 = allocVector(0,0,0)
+
+    var localPosition_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_localPosition", 0), localPosition_vector3, transform)
     LOG("localPosition\t(" + localPosition_vector3 + ")\t--->\t" + localPosition_vector3.readFloat().toFixed(toFixedNum) + "\t" + localPosition_vector3.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + localPosition_vector3.add(p_size * 2).readFloat().toFixed(toFixedNum), LogColor.C36)
-    
-    var localRotation_Quaternion = allocVector(0,0,0,0)
+
+    var localRotation_Quaternion = allocVector(0, 0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_localRotation", 0), localRotation_Quaternion, transform)
     LOG("localRotation\t(" + localRotation_Quaternion + ")\t--->\t" + localRotation_Quaternion.readFloat().toFixed(toFixedNum) + "\t" + localRotation_Quaternion.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + localRotation_Quaternion.add(p_size * 2).readFloat().toFixed(toFixedNum) + "\t" + localRotation_Quaternion.add(p_size * 3).readFloat().toFixed(toFixedNum), LogColor.C36)
-    
-    var localScale_vector3 = allocVector(0,0,0)
+
+    var localScale_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_localScale", 0), localScale_vector3, transform)
     LOG("localScale\t(" + localScale_vector3 + ")\t--->\t" + localScale_vector3.readFloat().toFixed(toFixedNum) + "\t" + localScale_vector3.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + localScale_vector3.add(p_size * 2).readFloat().toFixed(toFixedNum), LogColor.C36)
 
-    var lossyScale_vector3 = allocVector(0,0,0)
+    var lossyScale_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_lossyScale", 0), lossyScale_vector3, transform)
     LOG("lossyScale\t(" + lossyScale_vector3 + ")\t--->\t" + lossyScale_vector3.readFloat().toFixed(toFixedNum) + "\t" + lossyScale_vector3.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + lossyScale_vector3.add(p_size * 2).readFloat().toFixed(toFixedNum), LogColor.C36)
 
-    var right_vector3 = allocVector(0,0,0)
+    var right_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_right", 0), right_vector3, transform)
     LOG("right\t\t(" + right_vector3 + ")\t--->\t" + right_vector3.readFloat().toFixed(toFixedNum) + "\t" + right_vector3.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + right_vector3.add(p_size * 2).readFloat().toFixed(toFixedNum), LogColor.C36)
 
-    var up_vector3 = allocVector(0,0,0)
+    var up_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_up", 0), up_vector3, transform)
     LOG("up\t\t(" + up_vector3 + ")\t--->\t" + up_vector3.readFloat() + "\t" + up_vector3.add(p_size).readFloat() + "\t" + up_vector3.add(p_size * 2).readFloat(), LogColor.C36)
-    
-    var rotation_Quaternion = allocVector(0,0,0,0)
+
+    var rotation_Quaternion = allocVector(0, 0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_rotation", 0, true), rotation_Quaternion, transform)
     LOG("rotation\t(" + rotation_Quaternion + ")\t--->\t" + rotation_Quaternion.readFloat() + "\t" + rotation_Quaternion.add(p_size).readFloat() + "\t" + rotation_Quaternion.add(p_size * 2).readFloat() + "\t" + rotation_Quaternion.add(p_size * 3).readFloat(), LogColor.C36)
 }
 
-function showEventData(eventData){
+function showEventData(eventData) {
     LOG("--------- EventData ---------", LogColor.C33)
-    
+
     eventData = ptr(eventData)
-    
+
     var click_vector2 = allocVector()
     callFunction(find_method("UnityEngine.UI", "PointerEventData", "get_position", 0), click_vector2, eventData)
-    LOG("ClickPositon\t--->\t"+click_vector2.readFloat()+"\t"+click_vector2.add(p_size).readFloat(),LogColor.C36)
-    
+    LOG("ClickPositon\t--->\t" + click_vector2.readFloat() + "\t" + click_vector2.add(p_size).readFloat(), LogColor.C36)
+
     var f_get_clickTime = new NativeFunction(find_method("UnityEngine.UI", "PointerEventData", "get_clickTime", 0, true), 'float', ['pointer'])
-    LOG("clickTime\t--->\t"+f_get_clickTime(eventData),LogColor.C36)
+    LOG("clickTime\t--->\t" + f_get_clickTime(eventData), LogColor.C36)
 
     LOG("clickCount\t--->\t" + callFunction(find_method("UnityEngine.UI", "PointerEventData", "get_clickCount", 0), eventData), LogColor.C36)
-    
+
     var delta_vector2 = allocVector()
-    callFunction(find_method("UnityEngine.UI","PointerEventData","get_delta",0),allocVector(),eventData)
-    LOG("delta\t\t--->\t"+delta_vector2.readFloat()+"\t"+delta_vector2.add(p_size).readFloat(),LogColor.C36)
+    callFunction(find_method("UnityEngine.UI", "PointerEventData", "get_delta", 0), allocVector(), eventData)
+    LOG("delta\t\t--->\t" + delta_vector2.readFloat() + "\t" + delta_vector2.add(p_size).readFloat(), LogColor.C36)
 }
 
 /**
@@ -3285,8 +3435,8 @@ function showEventData(eventData){
  * 很多导出函数的地址第一条都是一个跳转指令，这里的计算以便后面使用InlineHook用到
  * 列举一些我们常用的就是了，其他的也可以自行计算
  */
-function getRealAddr(){
-    
+function getRealAddr() {
+
     getLogByExport('il2cpp_string_new')
     getLogByExport('il2cpp_get_corlib')
     getLogByExport('il2cpp_domain_get')
@@ -3299,46 +3449,46 @@ function getRealAddr(){
     getLogByExport('il2cpp_class_from_name')
     getLogByExport('il2cpp_class_get_method_from_name')
 
-    function getLogByExport(exp){
+    function getLogByExport(exp) {
 
         var realAddr = 0
-        var aimAddr = ptr(Module.findExportByName(soName,exp))
-    
+        var aimAddr = ptr(Module.findExportByName(soName, exp))
+
         // 使用手动计算偏移加源地址得到目的地址
         // realAddr = aimAddr.add((aimAddr.readPointer() << 8 >> 8)*4 + 8)
         // 使用frida的api Instruction
         realAddr = ptr(Instruction.parse(aimAddr).opStr.split('#')[1])
-    
-        LOG(getLine(20)+'\n'+exp+' \n\t' 
-            + aimAddr +' ('+aimAddr.sub(soAddr)+')\t--->\t' 
-            + realAddr +' ('+realAddr.sub(soAddr)+')',LogColor.C96)
+
+        LOG(getLine(20) + '\n' + exp + ' \n\t' +
+            aimAddr + ' (' + aimAddr.sub(soAddr) + ')\t--->\t' +
+            realAddr + ' (' + realAddr.sub(soAddr) + ')', LogColor.C96)
     }
 }
 
-function GotoScene(str){
+function GotoScene(str) {
     callFunction(find_method("UnityEngine.CoreModule", "SceneManager", "LoadScene", 2), il2cpp_string_new(allocStr(str)))
-} 
+}
 
-function setActive(gameObj,visible){
+function setActive(gameObj, visible) {
     callFunction(find_method("UnityEngine.CoreModule", "GameObject", "SetActive", 1), ptr(gameObj), visible ? 0x1 : 0x0)
 }
 
-function destroyObj(gameObj){
+function destroyObj(gameObj) {
     callFunction(find_method("UnityEngine.CoreModule", "Object", "Destroy", 1), ptr(gameObj))
 }
 
 /**
  * @param {int} defaltActive 0 setActive(false) 1 setActive(true) 2 all
  */
-function HookSetActive(defaltActive) {    
+function HookSetActive(defaltActive) {
     if (defaltActive == undefined) defaltActive = 1
-    A(find_method("UnityEngine", "GameObject", "SetActive", 1), (args) => {        
+    A(find_method("UnityEngine", "GameObject", "SetActive", 1), (args) => {
         // 过滤反复出现的obj
-        if (filterDuplicateOBJ(readU16(f_getName(ptr(args[0])))) == -1) return        
+        if (filterDuplicateOBJ(readU16(f_getName(ptr(args[0])))) == -1) return
         if (defaltActive == 2 || args[1].toInt32() == defaltActive) {
-            LOG("\n"+getLine(38),LogColor.YELLOW)
-            LOG("public extern void SetActive( " + (args[1].toInt32() == 0 ? "false" : "true") + " );", LogColor.C36)            
-            LOG(getLine(20),LogColor.C33)
+            LOG("\n" + getLine(38), LogColor.YELLOW)
+            LOG("public extern void SetActive( " + (args[1].toInt32() == 0 ? "false" : "true") + " );", LogColor.C36)
+            LOG(getLine(20), LogColor.C33)
             showGameObject(args[0])
         }
     })
@@ -3358,27 +3508,27 @@ function filterDuplicateOBJ(objstr, maxCount) {
     }
     var count = Number(outFilterMap.get(objstr)) + 1
     outFilterMap.set(objstr, count)
-    return (count >= (maxCount == undefined ? 10 : maxCount)) ? -1 : count   
+    return (count >= (maxCount == undefined ? 10 : maxCount)) ? -1 : count
 }
 
 function HookOnPointerClick() {
-    
+
     A(find_method("UnityEngine.UI", "Button", "OnPointerClick", 1), (args) => {
-        LOG("\n"+getLine(38),LogColor.YELLOW)
-        LOG("public void OnPointerClick( " + args[0] +" , "+ args[1] + " );", LogColor.C36)
+        LOG("\n" + getLine(38), LogColor.YELLOW)
+        LOG("public void OnPointerClick( " + args[0] + " , " + args[1] + " );", LogColor.C36)
         var pointerEventData = args[1]
-        if (pointerEventData == 0) return 
+        if (pointerEventData == 0) return
         var gameObj = f_get_pointerEnter(pointerEventData)
 
         showGameObject(gameObj)
         // showTransform(f_getTransform(gameObj))
         // showEventData(pointerEventData)
     })
-   
+
     // HookOthers()
 
     // 其他时机点
-    function HookOthers(){
+    function HookOthers() {
 
         HookHandlePointerExitAndEnter()
         move()
@@ -3386,47 +3536,47 @@ function HookOnPointerClick() {
         set_pointerPress()
         GetPointerData()
 
-        
+
         function move() {
             A(find_method("UnityEngine.UI", "PointerInputModule", "ProcessMove", 1), (args) => {
-                LOG("\n"+getLine(38),LogColor.YELLOW)
-                LOG("protected virtual Void ProcessMove( " + (args[1]) + " );", LogColor.C36)                
+                LOG("\n" + getLine(38), LogColor.YELLOW)
+                LOG("protected virtual Void ProcessMove( " + (args[1]) + " );", LogColor.C36)
                 var pointerEventData = args[1]
                 var gameObj = f_get_pointerEnter(pointerEventData)
                 showGameObject(gameObj)
             })
         }
-    
+
         function drag() {
             A(find_method("UnityEngine.UI", "PointerInputModule", "ProcessDrag", 1), (args) => {
-                LOG("\n" + getLine(38), LogColor.YELLOW)                
-                LOG("protected virtual Void ProcessDrag( " + (args[1]) + " );", LogColor.C36)                
+                LOG("\n" + getLine(38), LogColor.YELLOW)
+                LOG("protected virtual Void ProcessDrag( " + (args[1]) + " );", LogColor.C36)
                 var pointerEventData = args[1]
                 var gameObj = f_get_pointerEnter(pointerEventData)
                 showGameObject(gameObj)
             })
         }
-    
+
         function HookHandlePointerExitAndEnter() {
             A(find_method("UnityEngine.UI", "BaseInputModule", "HandlePointerExitAndEnter", 2), (args) => {
                 LOG("\n" + getLine(38), LogColor.YELLOW)
-                LOG("protected virtual Void HandlePointerExitAndEnter( " + (args[1]) + " , " + (args[2]) + ")", LogColor.C36)                
-                var pointerEventData = args[1]                
-                var gameObj = f_get_pointerEnter(pointerEventData)                
-                showGameObject(args[2])                
-                showEventData(pointerEventData)                        
+                LOG("protected virtual Void HandlePointerExitAndEnter( " + (args[1]) + " , " + (args[2]) + ")", LogColor.C36)
+                var pointerEventData = args[1]
+                var gameObj = f_get_pointerEnter(pointerEventData)
+                showGameObject(args[2])
+                showEventData(pointerEventData)
             })
         }
-    
+
         function set_pointerPress() {
             A(find_method("UnityEngine.UI", "PointerEventData", "set_pointerPress", 1), (args) => {
                 LOG("\n" + getLine(38), LogColor.YELLOW)
-                LOG("protected virtual Void set_pointerPress( " + (args[1]) + " );", LogColor.C36)                
-                showGameObject(args[1])                
+                LOG("protected virtual Void set_pointerPress( " + (args[1]) + " );", LogColor.C36)
+                showGameObject(args[1])
             })
         }
-    
-        function GetPointerData(){
+
+        function GetPointerData() {
             A(find_method("UnityEngine.UI", "PointerInputModule", "GetPointerData", 3), (args) => {
                 LOG("\n" + getLine(38), LogColor.YELLOW)
                 LOG("protected virtual Void set_pointerPress( " + (args[2]) + " );", LogColor.C36)
@@ -3443,99 +3593,99 @@ function HookPlayerPrefs() {
     InterceptorGetFunctions()
     InterceptorSetFunctions()
 
-    function InterceptorGetFunctions(){
+    function InterceptorGetFunctions() {
 
         //public static extern float GetFloat(string key, float defaultValue)
         var Addr_GetFloat = find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetFloat", 2, true)
-        if (Addr_GetFloat != 0) {        
-            Interceptor.attach(Addr_GetFloat, {                
-                onEnter: function (args) {                    
-                    this.arg0 = args[0]
-                    this.arg1 = args[1]                    
-                },
-                onLeave: function (ret) {                    
-                    LOG("\n[*] '" + ret + "' = GetFloat('" + readU16(this.arg0) + "'," + this.arg1 + ")", LogColor.C36)
-                    if (isShowPrintStack) PrintStackTraceN(this.context)                    
-                }
-            })
-        }
- 
-        //public static extern int GetInt(string key, int defaultValue)
-        var Addr_GetInt = find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetInt", 2, true)        
-        if (Addr_GetInt != 0) {            
-            Interceptor.attach(Addr_GetInt, {                
-                onEnter: function (args) {                    
+        if (Addr_GetFloat != 0) {
+            Interceptor.attach(Addr_GetFloat, {
+                onEnter: function (args) {
                     this.arg0 = args[0]
                     this.arg1 = args[1]
                 },
                 onLeave: function (ret) {
-                    var s_arg0 = readU16(this.arg0)                    
-                    var i_arg1 = this.arg1
-                    LOG("\n[*] '" + ret.toInt32() + "' = GetInt('" + s_arg0 + "'," + i_arg1 + ")", LogColor.C36)                    
-                    if (isShowPrintStack) PrintStackTraceN(this.context)                    
-                    if (s_arg0.indexOf("SaleBoughted") != -1) ret.replace(ptr(0x1))                    
+                    LOG("\n[*] '" + ret + "' = GetFloat('" + readU16(this.arg0) + "'," + this.arg1 + ")", LogColor.C36)
+                    if (isShowPrintStack) PrintStackTraceN(this.context)
                 }
             })
         }
-        
-        //public static string GetString(string key)
-        var Addr_GetString = find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetString", 1, true)        
-        if (Addr_GetString != 0) {            
-            Interceptor.attach(Addr_GetString, {                
-                onEnter: function (args) {                    
-                    this.arg0 = args[0]                    
+
+        //public static extern int GetInt(string key, int defaultValue)
+        var Addr_GetInt = find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetInt", 2, true)
+        if (Addr_GetInt != 0) {
+            Interceptor.attach(Addr_GetInt, {
+                onEnter: function (args) {
+                    this.arg0 = args[0]
+                    this.arg1 = args[1]
                 },
-                onLeave: function (ret) {                    
-                    LOG("\n[*] '" + readU16(ret) + "' = GetString('" + readU16(this.arg0) + "')", LogColor.C36)                    
-                    if (isShowPrintStack) PrintStackTraceN(this.context)                    
+                onLeave: function (ret) {
+                    var s_arg0 = readU16(this.arg0)
+                    var i_arg1 = this.arg1
+                    LOG("\n[*] '" + ret.toInt32() + "' = GetInt('" + s_arg0 + "'," + i_arg1 + ")", LogColor.C36)
+                    if (isShowPrintStack) PrintStackTraceN(this.context)
+                    if (s_arg0.indexOf("SaleBoughted") != -1) ret.replace(ptr(0x1))
+                }
+            })
+        }
+
+        //public static string GetString(string key)
+        var Addr_GetString = find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetString", 1, true)
+        if (Addr_GetString != 0) {
+            Interceptor.attach(Addr_GetString, {
+                onEnter: function (args) {
+                    this.arg0 = args[0]
+                },
+                onLeave: function (ret) {
+                    LOG("\n[*] '" + readU16(ret) + "' = GetString('" + readU16(this.arg0) + "')", LogColor.C36)
+                    if (isShowPrintStack) PrintStackTraceN(this.context)
                 }
             })
         }
     }
 
-    function InterceptorSetFunctions(){
+    function InterceptorSetFunctions() {
 
         //public static extern float GetFloat(string key, float defaultValue)
-        var Addr_SetFloat = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetFloat", 2, true)        
-        if (Addr_SetFloat != 0) {            
-            Interceptor.attach(Addr_SetFloat, {                
-                onEnter: function (args) {                    
-                    this.arg0 = readU16(args[0])                    
-                    this.arg1 = (args[1] == 0 ? 0 : args[1].readFloat())                    
+        var Addr_SetFloat = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetFloat", 2, true)
+        if (Addr_SetFloat != 0) {
+            Interceptor.attach(Addr_SetFloat, {
+                onEnter: function (args) {
+                    this.arg0 = readU16(args[0])
+                    this.arg1 = (args[1] == 0 ? 0 : args[1].readFloat())
                 },
-                onLeave: function (ret) {                    
-                    LOG("\n[*] SetFloat('" + this.arg0 + "'," + this.arg1 + ")", LogColor.C36)                    
-                    if (isShowPrintStack) PrintStackTraceN(this.context)                    
+                onLeave: function (ret) {
+                    LOG("\n[*] SetFloat('" + this.arg0 + "'," + this.arg1 + ")", LogColor.C36)
+                    if (isShowPrintStack) PrintStackTraceN(this.context)
                 }
             })
         }
-        
+
         //public static extern int GetInt(string key, int defaultValue)
-        var Addr_SetInt = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetInt", 2, true)        
-        if (Addr_SetInt != 0) {            
-            Interceptor.attach(Addr_SetInt, {                
+        var Addr_SetInt = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetInt", 2, true)
+        if (Addr_SetInt != 0) {
+            Interceptor.attach(Addr_SetInt, {
                 onEnter: function (args) {
-                    this.arg0 = readU16(args[0])                    
-                    this.arg1 = args[1]                    
+                    this.arg0 = readU16(args[0])
+                    this.arg1 = args[1]
                 },
-                onLeave: function (ret) {                    
-                    LOG("\n[*] SetInt('" + this.arg0 + "'," + this.arg1 + ")", LogColor.C36)                    
-                    if (isShowPrintStack) PrintStackTraceN(this.context)                    
+                onLeave: function (ret) {
+                    LOG("\n[*] SetInt('" + this.arg0 + "'," + this.arg1 + ")", LogColor.C36)
+                    if (isShowPrintStack) PrintStackTraceN(this.context)
                 }
             })
         }
 
         //public static string GetString(string key)
-        var Addr_SetString = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetString", 2, true)        
-        if (Addr_SetString != 0) {            
-            Interceptor.attach(Addr_SetString, {                
-                onEnter: function (args) {                    
+        var Addr_SetString = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetString", 2, true)
+        if (Addr_SetString != 0) {
+            Interceptor.attach(Addr_SetString, {
+                onEnter: function (args) {
                     this.arg0 = readU16(args[0])
                     this.arg1 = readU16(args[1])
                 },
-                onLeave: function (ret) {                    
-                    LOG("\n[*] SetString('" + this.arg0 + "','" + this.arg1 + "')", LogColor.C36)                    
-                    if (isShowPrintStack) PrintStackTraceN(this.context)                    
+                onLeave: function (ret) {
+                    LOG("\n[*] SetString('" + this.arg0 + "','" + this.arg1 + "')", LogColor.C36)
+                    if (isShowPrintStack) PrintStackTraceN(this.context)
                 }
             })
         }
@@ -3543,29 +3693,29 @@ function HookPlayerPrefs() {
 }
 
 function HookDebugLog() {
-    A(find_method("UnityEngine.CoreModule","Debug","Log",1,true), (args) => {
-        LOG("\n[*] Debug.LOG('"+readU16(args[0])+"')",LogColor.C36)
+    A(find_method("UnityEngine.CoreModule", "Debug", "Log", 1, true), (args) => {
+        LOG("\n[*] Debug.LOG('" + readU16(args[0]) + "')", LogColor.C36)
     })
 
-    A(find_method("UnityEngine.CoreModule","Logger","Log",1,true), (args) => {
-        LOG("\n[*] Logger.LOG('"+readU16(args[0])+"')",LogColor.C32)
+    A(find_method("UnityEngine.CoreModule", "Logger", "Log", 1, true), (args) => {
+        LOG("\n[*] Logger.LOG('" + readU16(args[0]) + "')", LogColor.C32)
     })
 }
 
 function HookLoadScene() {
     //B("Scene") 其他程序自定义的点
-    var GetActiveScene = find_method("UnityEngine.CoreModule","SceneManager","GetActiveScene",0)
-    if (current_scene != 0){
-        var current_scene = new NativeFunction(GetActiveScene,'pointer',[])()
-        var get_name = new NativeFunction(find_method("UnityEngine.CoreModule","Scene","GetNameInternal",1),'pointer',['int'])
-        LOG("\nCurrentScene   --->   "+readU16(get_name(current_scene.toInt32()))+"\n",LogColor.C36)
+    var GetActiveScene = find_method("UnityEngine.CoreModule", "SceneManager", "GetActiveScene", 0)
+    if (current_scene != 0) {
+        var current_scene = new NativeFunction(GetActiveScene, 'pointer', [])()
+        var get_name = new NativeFunction(find_method("UnityEngine.CoreModule", "Scene", "GetNameInternal", 1), 'pointer', ['int'])
+        LOG("\nCurrentScene   --->   " + readU16(get_name(current_scene.toInt32())) + "\n", LogColor.C36)
     }
 
     A(find_method("UnityEngine.CoreModule", "SceneManager", "LoadScene", 2), (args) => {
-        LOG("\nCalled public static Scene LoadScene (String sceneName,LoadSceneParameters parameters)",LogColor.C36)
-        LOG(" arg0  --->\t"+args[0]+"\t"+readU16(args[0]),LogColor.C36)
+        LOG("\nCalled public static Scene LoadScene (String sceneName,LoadSceneParameters parameters)", LogColor.C36)
+        LOG(" arg0  --->\t" + args[0] + "\t" + readU16(args[0]), LogColor.C36)
     }, (ret) => {
-        LOG(" ret  --->\t"+ret,LogColor.C36)
+        LOG(" ret  --->\t" + ret, LogColor.C36)
     })
 }
 
@@ -3583,6 +3733,12 @@ function HookUnityExit() {
     // })
 }
 
+function HookInstantiate() {
+    b(find_method("UnityEngine.CoreModule", "Object", "Instantiate", 1, false, 1))
+    b(find_method("UnityEngine.CoreModule", "Object", "Instantiate", 3, false, 1))
+    b(find_method("UnityEngine.CoreModule", "Object", "Instantiate", 4, false, 1))
+}
+
 /**
  * 打印transform往下的层级
  * ps:不建议打印底层的层级，展现一大篇出来毫无重点
@@ -3590,49 +3746,49 @@ function HookUnityExit() {
  * @param {Number} level 最大显示层级
  * @param {Boolean} inCall 内部调用，去掉LOG的相关判断
  */
-function PrintHierarchy(mPtr, level, inCall) {    
+function PrintHierarchy(mPtr, level, inCall) {
     LogFlag = true
     if (mPtr == 0 || mPtr == undefined) return
 
-    if (level == undefined) level = 10    
+    if (level == undefined) level = 10
     var transform = ptr(mPtr)
-    
-    if (level == 10) LOG(getLine(73) + "\n", LogColor.C33)    
+
+    if (level == 10) LOG(getLine(73) + "\n", LogColor.C33)
     // 当前level作为第一级
     var baseLevel = getLevel(transform)
-    LOG((inCall != undefined ? "\t" : "") + getSpace(0) + transform + " : " + getObjName(transform), LogColor.C36)    
+    LOG((inCall != undefined ? "\t" : "") + getSpace(0) + transform + " : " + getObjName(transform), LogColor.C36)
     getChild(transform)
 
-    if (level == 10) LOG("\n" + getLine(73), LogColor.C33)    
-    
+    if (level == 10) LOG("\n" + getLine(73), LogColor.C33)
+
     // 递归调用下层信息
-    function getChild(p1){
+    function getChild(p1) {
         var childCount = f_getChildCount(p1)
-        for (var i = 0; i < childCount; i++){            
-            var c_transform = f_getChild(p1, i)            
-            var levelC = getLevel(c_transform) - baseLevel            
+        for (var i = 0; i < childCount; i++) {
+            var c_transform = f_getChild(p1, i)
+            var levelC = getLevel(c_transform) - baseLevel
             if (levelC <= level) LOG((inCall != undefined ? "\t" : "") + getSpace(levelC) + c_transform + " : " + readU16(f_getName(c_transform)), LogColor.C36)
             getChild(c_transform)
         }
     }
 
     // 判断当前transform的层级
-    function getLevel(transform) {        
-        for (var i = 0; i < 10; i++){            
-            try{
+    function getLevel(transform) {
+        for (var i = 0; i < 10; i++) {
+            try {
                 transform = f_getParent(transform)
-                if (transform ==0) return i
-            }catch(e){
+                if (transform == 0) return i
+            } catch (e) {
                 return 0
             }
         }
-        return 0 
+        return 0
     }
 
     // 根据层级进行首行缩进
-    function getSpace(length) {        
+    function getSpace(length) {
         var retStr = ''
-        for (var i = 0; i < length; i++){            
+        for (var i = 0; i < length; i++) {
             retStr += '\t'
         }
         return retStr
@@ -3644,25 +3800,25 @@ function PrintHierarchy(mPtr, level, inCall) {
  * 配合SetLocalScale()和HookSetActive()使用来动态的去掉页面上的view
  * 有时候可能会遇到同名，只需要多查找一层，判断子transform名称，并通过f_getParent即可找到特定父级
  */
-function findTransform(mPtr, level, filter) {    
+function findTransform(mPtr, level, filter) {
     if (mPtr == 0 || mPtr == undefined) return
-    if (level ==undefined) level = 10
+    if (level == undefined) level = 10
     var transform = ptr(mPtr)
     var retStr = ""
-    
+
     var baseLevel = getLevel(transform)
-    
+
     getChild(transform)
 
-    function getChild(p1) {        
+    function getChild(p1) {
         var childCount = f_getChildCount(p1)
-        for (var i = 0; i < childCount; i++){            
-            var c_transform = f_getChild(p1, i)            
-            var levelC = getLevel(c_transform) - baseLevel            
-            if (levelC <= level) {                
-                var name = readU16(f_getName(c_transform))                
+        for (var i = 0; i < childCount; i++) {
+            var c_transform = f_getChild(p1, i)
+            var levelC = getLevel(c_transform) - baseLevel
+            if (levelC <= level) {
+                var name = readU16(f_getName(c_transform))
                 // LOG(c_transform+" ---> "+name)
-                if (filter == name){
+                if (filter == name) {
                     retStr = c_transform
                 }
             }
@@ -3671,15 +3827,15 @@ function findTransform(mPtr, level, filter) {
     }
 
     function getLevel(transform) {
-        for (var i = 0; i < 10; i++){
-            try{
+        for (var i = 0; i < 10; i++) {
+            try {
                 transform = f_getParent(transform)
-                if (transform ==0) return i
-            }catch(e){
+                if (transform == 0) return i
+            } catch (e) {
                 return 0
             }
         }
-        return 0 
+        return 0
     }
     return retStr
 }
@@ -3690,7 +3846,7 @@ function findTransform(mPtr, level, filter) {
  * @param {int} Type 0 true/false | 1 int | 2 Pointer | 3 sub(soAddr)
  * @returns 
  */
-function canUseInlineHook(mPtr,Type){
+function canUseInlineHook(mPtr, Type) {
     mPtr = checkPointer(mPtr)
     if (Type == undefined) Type = 0
 
@@ -3699,7 +3855,7 @@ function canUseInlineHook(mPtr,Type){
     if (Type == 2) return ptr(recommandInlineHook(mPtr))
     if (Type == 3) return ptr(recommandInlineHook(mPtr)).sub(soAddr)
 
-    function getNextB(mPtr){
+    function getNextB(mPtr) {
         mPtr = ptr(mPtr)
         var count = 0
         do {
@@ -3710,9 +3866,9 @@ function canUseInlineHook(mPtr,Type){
         return count
     }
 
-    function recommandInlineHook(mPtr){
+    function recommandInlineHook(mPtr) {
         var index = getNextB(ptr(mPtr))
-        return index > 3 ? mPtr : ptr(Instruction.parse(mPtr.add(p_size*(index-1))).opStr.split("#")[1]).sub(soAddr)
+        return index > 3 ? mPtr : ptr(Instruction.parse(mPtr.add(p_size * (index - 1))).opStr.split("#")[1]).sub(soAddr)
     }
 }
 
@@ -3722,29 +3878,29 @@ class MemoryUtil {
     /**
      * 指定mPtr开始,保存长度为size的大小到本地文件
      */
-    static Save(mPtr,size,fileName){
-        var soAddr = Module.findBaseAddress(soName) 
-        var path = readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Application","get_persistentDataPath",0),'pointer',[])())+"/"+ (fileName==undefined?"lzy.dat":fileName)
-        var fopen = new NativeFunction(Module.findExportByName(null,'fopen'),'pointer',['pointer','pointer'])
-        var fwrite = new NativeFunction(Module.findExportByName(null,'fwrite'),'pointer',['pointer','int','int','pointer'])
-        var fclose = new NativeFunction(Module.findExportByName(null,'fclose'),'int',['pointer'])
-        var stream = fopen(allocStr(path),allocStr("w"))
-        Memory.protect(ptr(mPtr),size,'rwx')
-        fwrite(ptr(mPtr),1,size,ptr(stream))
+    static Save(mPtr, size, fileName) {
+        var soAddr = Module.findBaseAddress(soName)
+        var path = readU16(new NativeFunction(find_method("UnityEngine.CoreModule", "Application", "get_persistentDataPath", 0), 'pointer', [])()) + "/" + (fileName == undefined ? "lzy.dat" : fileName)
+        var fopen = new NativeFunction(Module.findExportByName(null, 'fopen'), 'pointer', ['pointer', 'pointer'])
+        var fwrite = new NativeFunction(Module.findExportByName(null, 'fwrite'), 'pointer', ['pointer', 'int', 'int', 'pointer'])
+        var fclose = new NativeFunction(Module.findExportByName(null, 'fclose'), 'int', ['pointer'])
+        var stream = fopen(allocStr(path), allocStr("w"))
+        Memory.protect(ptr(mPtr), size, 'rwx')
+        fwrite(ptr(mPtr), 1, size, ptr(stream))
         fclose(stream)
     }
     /**
      * 从指定文件,加载长度为size的大小到mPtr
      */
-    static Load(mPtr,size,fileName){
+    static Load(mPtr, size, fileName) {
         var soAddr = Module.findBaseAddress(soName)
-        var path = readU16(new NativeFunction(find_method("UnityEngine.CoreModule","Application","get_persistentDataPath",0),'pointer',[])())+"/"+ (fileName==undefined?"lzy.dat":fileName)
-        var fopen = new NativeFunction(Module.findExportByName(null,'fopen'),'pointer',['pointer','pointer'])
-        var fread = new NativeFunction(Module.findExportByName(null,'fread'),'pointer',['pointer','int','int','pointer'])
-        var fclose = new NativeFunction(Module.findExportByName(null,'fclose'),'int',['pointer'])
-        var stream = fopen(allocStr(path),allocStr("r"))
-        Memory.protect(ptr(mPtr),size,'rwx')
-        fread(ptr(mPtr),1,size,ptr(stream))
+        var path = readU16(new NativeFunction(find_method("UnityEngine.CoreModule", "Application", "get_persistentDataPath", 0), 'pointer', [])()) + "/" + (fileName == undefined ? "lzy.dat" : fileName)
+        var fopen = new NativeFunction(Module.findExportByName(null, 'fopen'), 'pointer', ['pointer', 'pointer'])
+        var fread = new NativeFunction(Module.findExportByName(null, 'fread'), 'pointer', ['pointer', 'int', 'int', 'pointer'])
+        var fclose = new NativeFunction(Module.findExportByName(null, 'fclose'), 'int', ['pointer'])
+        var stream = fopen(allocStr(path), allocStr("r"))
+        Memory.protect(ptr(mPtr), size, 'rwx')
+        fread(ptr(mPtr), 1, size, ptr(stream))
         fclose(stream)
     }
 }
@@ -3755,30 +3911,30 @@ class MemoryUtil {
  */
 function fuckSVC() {
     var LIBC = "libc.so"
-    var syscall = Module.findExportByName(LIBC,"syscall")
-    LOG("\nsyscall addr = " + syscall + "\n",LogColor.C92)
+    var syscall = Module.findExportByName(LIBC, "syscall")
+    LOG("\nsyscall addr = " + syscall + "\n", LogColor.C92)
     var endFuncOff = 0x0
     var svcOff = 0x0
-    for (var p = 0; p < 20; p++){
-        if (Instruction.parse(syscall.add(p_size * p)).mnemonic == "svc") svcOff = p 
+    for (var p = 0; p < 20; p++) {
+        if (Instruction.parse(syscall.add(p_size * p)).mnemonic == "svc") svcOff = p
         if (Instruction.parse(syscall.add(p_size * p)).mnemonic == "b") {
             endFuncOff = p + 1
             break
         }
     }
     printCtx(syscall, endFuncOff, 2, svcOff)
-    
+
     var svcAddr = syscall.add(svcOff * p_size)
     LOG("\nsvc addr = " + syscall.add(svcOff * p_size) + "\n", LogColor.C92)
-    
+
     var arr_context = new Array()
     A(svcAddr, (args) => {
-        if (filterDuplicateOBJ(String(this.context.r7), 10 ,false) != -1) {
-            LOG("\n---------------------------------------------",LogColor.YELLOW)
+        if (filterDuplicateOBJ(String(this.context.r7), 10, false) != -1) {
+            LOG("\n---------------------------------------------", LogColor.YELLOW)
             arr_context.length = 0
             // R7 中断号 参考 unistd-common.h 
-            LOG("R7:" + this.context.r7,LogColor.C94)
-            LOG("sp:" + this.context.sp+ "\t" + "pc:" + this.context.pc,LogColor.C94)
+            LOG("R7:" + this.context.r7, LogColor.C94)
+            LOG("sp:" + this.context.sp + "\t" + "pc:" + this.context.pc, LogColor.C94)
             LOG("R0:" + this.context.r0)
             LOG("R1:" + this.context.r1)
             LOG("R2:" + this.context.r2)
@@ -3792,7 +3948,7 @@ function fuckSVC() {
     })
 }
 
-var newThreadCallBack = () => { }
+var newThreadCallBack = () => {}
 var newThreadDelay = 0
 var LshowLOG = false
 var newThreadSrcCallBack = new NativeCallback(() => {
@@ -3811,7 +3967,7 @@ function RunOnNewThread(callback, delay, showLOG) {
     LshowLOG = showLOG
     if (delay != undefined) newThreadDelay = delay
     if (p_pthread_create == null || p_gettid == null || p_getpid == null) {
-        LOG("Fail to init thread",LogColor.RED)
+        LOG("Fail to init thread", LogColor.RED)
         return
     }
     callFunction(p_pthread_create, Memory.alloc(p_size), ptr(0), newThreadSrcCallBack, ptr(0))
@@ -3831,7 +3987,7 @@ function getJclassName(jclsName, ShouldRet, delaySec) {
     var pVoid = callFunction(DecodeJObject, ArtCurrent, jclsName)
     var k_class = callFunction(GetDescriptor, pVoid, Memory.alloc(p_size))
     if (ShouldRet) return String(ptr(k_class).readCString())
-    LOG("\n" + String(ptr(k_class).readCString())+"\n", LogColor.C36)
+    LOG("\n" + String(ptr(k_class).readCString()) + "\n", LogColor.C36)
 }
 
 /**
@@ -3847,12 +4003,28 @@ function getJNIFunction(index) {
     return frida_env.handle.readPointer().add(index * p_size).readPointer()
 }
 
-//frida 的patchCode p小写
-function PatchCode(mPtr, mList) {
-    if (mList == undefined) mList = [0x00,0xF0,0x20,0xE3]
+var saveIndexCode = [
+    [],
+    [],
+    []
+]
+
+function patchCode(mPtr, mList, saveIndex) {
+    if (mList == undefined) mList = [0x00, 0xF0, 0x20, 0xE3]
+    if (mList == "MOV R0,#1") mList = [0x01, 0x00, 0xA0, 0xE3]
+    if (mList == "MOV R0,#0") mList = [0x00, 0x00, 0xA0, 0xE3]
     mPtr = checkPointer(mPtr)
-    Memory.protect(mPtr,100,"rwx")
+    Memory.protect(mPtr, 100, "rwx")
+    if (saveIndex != undefined) {
+        saveIndexCode[i] = mPtr.readByteArray(4)
+    }
     mPtr.writeByteArray(mList)
+}
+
+function restoreCode(mPtr, saveIndex) {
+    Memory.protect(mPtr, 100, "rwx")
+    if (saveIndex[saveIndex] == undefined) return
+    checkPointer(mPtr).writeByteArray(saveIndexCode[saveIndex])
 }
 
 function findInMemory(typeStr) {
@@ -3860,30 +4032,30 @@ function findInMemory(typeStr) {
     switch (typeStr) {
         case "Dex1":
             find("54 61 70 20 54 6F 20 53 74 61 72 74", (pattern, address, size) => {
-                LOG('Found ' + pattern + " Address: " + address.toString() + "\n",LogColor.C36)
+                LOG('Found ' + pattern + " Address: " + address.toString() + "\n", LogColor.C36)
             })
             break
         case "Dex":
             find("64 65 78 0a 30 33 35 00", (pattern, address, size) => {
                 // TODO
-                LOG('Found ' + pattern + " Address: " + address.toString() + "\n",LogColor.C36)
+                LOG('Found ' + pattern + " Address: " + address.toString() + "\n", LogColor.C36)
             })
             break
         case "global-metadata.dat":
             find("AF 1B B1 FA 18", (pattern, address, size) => {
-                LOG("\n"+getLine("80"),LogColor.RED)
-                LOG('Found ' + pattern + " Address: " + address.toString() + "\n",LogColor.C36)
+                LOG("\n" + getLine("80"), LogColor.RED)
+                LOG('Found ' + pattern + " Address: " + address.toString() + "\n", LogColor.C36)
                 seeHexA(address, 64, LogColor.C33)
 
                 var DefinitionsOffset = parseInt(address, 16) + 0x108;
-				var DefinitionsOffset_size = Memory.readInt(ptr(DefinitionsOffset))
-					
-				var DefinitionsCount = parseInt(address, 16) + 0x10C;
-				var DefinitionsCount_size = Memory.readInt(ptr(DefinitionsCount))
-					
-				// 根据两个偏移得出global-metadata大小
-				var global_metadata_size = DefinitionsOffset_size + DefinitionsCount_size
-                LOG("\nFile size\t===>\t" + global_metadata_size + "B (" + (global_metadata_size / 1024 / 1024).toFixed(2) + "MB)", LogColor.C36)                
+                var DefinitionsOffset_size = Memory.readInt(ptr(DefinitionsOffset))
+
+                var DefinitionsCount = parseInt(address, 16) + 0x10C;
+                var DefinitionsCount_size = Memory.readInt(ptr(DefinitionsCount))
+
+                // 根据两个偏移得出global-metadata大小
+                var global_metadata_size = DefinitionsOffset_size + DefinitionsCount_size
+                LOG("\nFile size\t===>\t" + global_metadata_size + "B (" + (global_metadata_size / 1024 / 1024).toFixed(2) + "MB)", LogColor.C36)
                 // 只保留大于两兆的文件
                 if (global_metadata_size > 1024 * 1024 * 2) {
                     var path = "/data/data/" + getPkgName() + "/global-metadata.dat"
@@ -3893,23 +4065,23 @@ function findInMemory(typeStr) {
                     file.close()
                     LOG('Save to\t\t===>\t' + path, LogColor.C36)
                 }
-                LOG(getLine("80"),LogColor.RED)
+                LOG(getLine("80"), LogColor.RED)
             })
             break
     }
 
-    function find(pattern,callback) {
+    function find(pattern, callback) {
         LOG("Start Find Pattern '" + pattern + "'\nWatting ......", LogColor.C96)
         // 代码都是位于只读段
         var addrArray = Process.enumerateRanges("r--");
         addrArray.forEach((item) => {
-            Memory.scan(item.base, item.size, pattern, {              
-                onMatch: function (address, size) {                    
+            Memory.scan(item.base, item.size, pattern, {
+                onMatch: function (address, size) {
                     callback(pattern, address, size)
-				},
+                },
                 onComplete: function () {}
-			}
-		)})
+            })
+        })
     }
 
     function getPkgName() {
@@ -3917,7 +4089,7 @@ function findInMemory(typeStr) {
         Java.perform(() => {
             retStr = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext().getPackageName()
         })
-        return retStr 
+        return retStr
     }
 }
 
@@ -3930,14 +4102,14 @@ function findGameObject(path, transform) {
         if (transform == undefined) {
             // GameObject.find（静态方法）得到GameObject,路径查找
             showGameObject(callFunction(find_method("UnityEngine.CoreModule", "GameObject", "Find", 1), allocStr(path, "")))
-        } else if (getType(transform, 1).indexOf("Transform") != -1) {            
+        } else if (getType(transform, 1).indexOf("Transform") != -1) {
             // Transform.find(非静态方法) 得到的也是transform，指定查找起始点，可以查找隐藏对象
             showGameObject(getGameObject(callFunction(find_method("UnityEngine.CoreModule", "Transform", "Find", 1), transform, allocStr(path, ""))))
         } else {
             LOG("\narguments[1] Need a Transform Ptr\n", LogColor.RED)
         }
     } catch (error) {
-        LOG("\nNot Found ...\n", LogColor.RED)        
+        LOG("\nNot Found ...\n", LogColor.RED)
     }
 }
 
@@ -3956,7 +4128,15 @@ function findGameObject(path, transform) {
         0xc2d56cc0 ---> 开始
         0xc2d60d48 ---> 每日任务
         0xc2d60bb0 ---> Lv0
+        0xc2d603b8 ---> 分享
+        0xc2d75908 ---> 购买 ($2)
+        0xc2d75770 ---> 回馈
+        0xc2d75660 ---> 你玩游戏所获得的经验值为两倍,
+        这效果可以和其他加成叠加
         0xc2d75110 ---> 装备
+        0xc2d75088 ---> 物品
+        0xc2b94bb0 ---> 已拥有
+        0xc2b94b28 ---> 金币: <Color=#ffc000>0 G</Color>
         0xc2b946e8 ---> 关闭
         0xc2b945d8 ---> 购买 ($2)
         0xc2b944c8 ---> 现金: <Color=#1ed300>0 $</Color>
@@ -3990,17 +4170,18 @@ function FindObjectsOfTypeOld(typeVar, initFuc, index, typeStr) {
     var mInstances = callFunction(find_method("UnityEngine.CoreModule", "Object", "FindObjectsOfType", 1), mType, 1)
     var arrLenth = ptr(mInstances).add(p_size * 3).readInt()
     LOG("\n")
-    seeHexA(mInstances, p_size * (arrLenth + 4), LogColor.C33)    
+    seeHexA(mInstances, p_size * (arrLenth + 4), LogColor.C33)
     var Titile = "Found '" + typeStr + "' instances       size: " + arrLenth
-    LOG("\n" + getLine(Titile.length), LogColor.C94)    
+    LOG("\n" + getLine(Titile.length), LogColor.C94)
     LOG(Titile, LogColor.C94)
-    LOG(getLine(Titile.length) + "\n", LogColor.C94)    
-    for (var i = 0; i < arrLenth; i++){
+    LOG(getLine(Titile.length) + "\n", LogColor.C94)
+    for (var i = 0; i < arrLenth; i++) {
         var current = ptr(mInstances).add(p_size * (4 + i)).readPointer()
         LOG(current + " ---> " + FuckKnownType(typeStr, current, findClass(typeStr)), LogColor.C36)
     }
     LOG("\n")
 }
+
 
 function FindObjectsOfType(RuntimeType, typeStr) {
     listObj(callFunction(find_method("UnityEngine.CoreModule", "Object", "FindObjectsOfType", 1).sub(soAddr), RuntimeType, 0), typeStr)
@@ -4009,14 +4190,14 @@ function FindObjectsOfType(RuntimeType, typeStr) {
         if (typeStr == undefined) typeStr = "OBJ"
         var arrLenth = ptr(arrPtr).add(p_size * 3).readInt()
         LOG("\n")
-        for (var i = 0; i < arrLenth; i++){
+        for (var i = 0; i < arrLenth; i++) {
             var current = ptr(arrPtr).add(p_size * (4 + i)).readPointer()
             var arrRet = FuckKnownType(typeStr, current, 0x1)
             if (i == 0) {
                 LOG(arrRet[1] + "(" + arrRet[2] + ")", LogColor.C91)
                 LOG("---> Count:" + arrLenth + "\n", LogColor.C31)
             }
-            LOG("[*] " + current + " ---> " + arrRet[0], LogColor.C36)            
+            LOG("[*] " + current + " ---> " + arrRet[0], LogColor.C36)
         }
         LOG("\n")
     }
@@ -4031,7 +4212,7 @@ function FindObjectsOfType(RuntimeType, typeStr) {
  */
 function GetComponents(GameObject, RuntimeType, TYPE) {
     TYPE = TYPE == undefined ? 0x1 : TYPE
-    var ComponentsFucAddr = 0x0 
+    var ComponentsFucAddr = 0x0
     if (TYPE == 0x0) {
         var G_GetComponents = find_method("UnityEngine.CoreModule", "GameObject", "GetComponents", 1)
         ComponentsFucAddr = G_GetComponents == 0x0 ? find_method("UnityEngine.CoreModule", "Component", "GetComponents", 1) : G_GetComponents
@@ -4044,10 +4225,10 @@ function GetComponents(GameObject, RuntimeType, TYPE) {
     }
 
     var arrPtr = callFunction(ComponentsFucAddr, GameObject, RuntimeType)
-    
+
     // 并不是所有游戏都有GetComponentsInParent
     if (ComponentsFucAddr == 0x0 || arrPtr == 0x0) {
-        LOG("ComponentsFucAddr = "+ComponentsFucAddr + "  arrPtr = "+arrPtr)
+        LOG("ComponentsFucAddr = " + ComponentsFucAddr + "  arrPtr = " + arrPtr)
         throw new Error("ComponentsFucAddr Not Found Or RetArr Error")
     }
     listObj(arrPtr)
@@ -4057,14 +4238,14 @@ function GetComponents(GameObject, RuntimeType, TYPE) {
         var arrLenth = ptr(arrPtr).add(p_size * 3).readInt()
         LOG("\n")
         var lastName = ""
-        for (var i = 0; i < arrLenth; i++){
+        for (var i = 0; i < arrLenth; i++) {
             var current = ptr(arrPtr).add(p_size * (4 + i)).readPointer()
             var arrRet = FuckKnownType(typeStr, current, 0x1)
             if (lastName == "" || lastName != arrRet[0]) {
-                LOG((i == 0 ? "" : "\n") + "[*] " + arrRet[0], LogColor.C36)                
+                LOG((i == 0 ? "" : "\n") + "[*] " + arrRet[0], LogColor.C36)
                 lastName = arrRet[0]
-            }    
-            LOG("\t" + current + " ---> " + arrRet[1] + "("+arrRet[2]+")", LogColor.C36)            
+            }
+            LOG("\t" + current + " ---> " + arrRet[1] + "(" + arrRet[2] + ")", LogColor.C36)
         }
         LOG("\n")
     }
