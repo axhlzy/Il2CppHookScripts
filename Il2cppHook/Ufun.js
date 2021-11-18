@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/11/11 12:52
+ * @UpdateTime  2021/11/18 14:47
  * @Des         frida hook u3d functions script
  */
 
@@ -569,6 +569,7 @@ function B_ToString() {
 }
 
 //public static Void TrackText (Text t)
+//a(findClass("TextMesh")) 
 function B_Text(TYPE) {
     try {
         LOG("Unity.TextMeshPro.TMP_Text.get_transform ===> " + find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0).sub(soAddr))
@@ -904,7 +905,11 @@ function find_method(imageName, className, functionName, argsCount, isRealAddr) 
     if (klass == 0) return ptr(0)
     var method = il2cpp_class_get_method_from_name(klass, allocStr(functionName), argsCount)
     if (method == 0) return ptr(0)
-    if (arguments[5] != undefined) return method
+    if (arguments[5] != undefined && arguments[5] != 2) {
+        return method
+    } else if (arguments[5] != undefined && arguments[5] == 2) {
+        return method.readPointer().sub(soAddr)
+    }
     //缓存
     map_find_method_cache.set(tmpKey, method.readPointer())
 
@@ -1394,7 +1399,7 @@ function FuckKnownType(strType, mPtr, tPtr) {
             case "Action`1":
             case "Action`2":
                 if (mPtr == 0x0) return "0x0"
-                return ptr(mPtr).add(0x14).readPointer().readPointer().sub(soAddr)
+                return ptr(mPtr).add(p_size == 4 ? 0x14 : 0x10).readPointer().readPointer().sub(soAddr)
             case "Delegate":
                 if (mPtr == 0x0) return "0x0"
                 var tmp_ptr = ptr(mPtr).add(0x8).readPointer()
@@ -1923,16 +1928,37 @@ function printInfo() {
         var SetString = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetString", 2)
         LOG("\tunsigned long p_SetString    = base + " + (SetString == 0 ? "0x0" : SetString.sub(soAddr)) + ";")
 
-        LOG('ins.recordSymbols({"il2cpp_string_new": ' + Module.findExportByName(soName, 'il2cpp_string_new').sub(soAddr) +
+        LOG('\n\tins.recordSymbols({"il2cpp_string_new": ' + Module.findExportByName(soName, 'il2cpp_string_new').sub(soAddr) +
             ', "FindClass": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "FindClass", 1).sub(soAddr) +
             ', "GetStaticMethodID": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "GetStaticMethodID", 3).sub(soAddr) +
             ',"CallStaticVoidMethod": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "CallStaticVoidMethod", 3).sub(soAddr) +
             '})')
     } catch (e) {
-
+        LOG(e, LogColor.RED)
     }
 
     LOG("\n")
+}
+
+function printU3dExp() {
+    LOG("\n\told_func_OnPointerClick = reinterpret_cast<void *(*)(void *, void *)>(soAddr + " + find_method("UnityEngine.UI", "Button", "OnPointerClick", 1, false, 2) + ");", LogColor.C96)
+    LOG("\told_get_pointerEnter = reinterpret_cast<GameObject *(*)(void *)>(soAddr + " + find_method("UnityEngine.UI", "PointerEventData", "get_pointerEnter", 0, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_SetActive = reinterpret_cast<void *(*)(void *, bool)>(soAddr + " + find_method("UnityEngine.CoreModule", "GameObject", "SetActive", 1, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_getTransform = reinterpret_cast<Transform *(*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "GameObject", "get_transform", 0, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_GetName = reinterpret_cast<MonoString *(*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Object", "GetName", 1, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_GetParent = reinterpret_cast<Transform *(*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "GetParent", 0, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_get_childCount = reinterpret_cast<int (*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "get_childCount", 0, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_GetChild = reinterpret_cast<Transform *(*)(void *, int)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "GetChild", 1, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_set_localScale_Injected = reinterpret_cast<void *(*)(void *, void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "set_localScale_Injected", 1, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_set_LocalPosition = reinterpret_cast<void *(*)(void *, void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "set_localPosition_Injected", 1, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_get_gameObject = reinterpret_cast<GameObject *(*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0, false, 2) + ");", LogColor.C96)
+    LOG("\told_get_text = reinterpret_cast<MonoString *(*)(void *)>(soAddr + " + find_method("UnityEngine.UI", "Text", "get_text", 0, false, 2) + ");", LogColor.C96)
+    LOG("\told_set_text = reinterpret_cast<void *(*)(void *, MonoString *)>(soAddr + " + find_method("UnityEngine.UI", "Text", "set_text", 1, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_SetInt = reinterpret_cast<void *(*)(MonoString *, int)>(soAddr + " + find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetInt", 2, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_GetInt = reinterpret_cast<int (*)(MonoString *, int)>(soAddr + " + find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetInt", 2, false, 2) + ");", LogColor.C96)
+    LOG("\ttransform_find = reinterpret_cast<Transform *(*)(Transform *, MonoString *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "Find", 1, false, 2) + ");", LogColor.C96)
+    LOG("\tgameObj_find = reinterpret_cast<GameObject *(*)(MonoString *)>(soAddr + " + find_method("UnityEngine.CoreModule", "GameObject", "Find", 1, false, 2) + ");\n", LogColor.C96)
+
 }
 
 function printExp() {
@@ -3971,6 +3997,21 @@ function RunOnNewThread(callback, delay, showLOG) {
         return
     }
     callFunction(p_pthread_create, Memory.alloc(p_size), ptr(0), newThreadSrcCallBack, ptr(0))
+}
+
+function TMP_Info() {
+    var get_Ins = find_method("Unity.TextMeshPro", "TMP_Settings", "get_instance", 0)
+    if (get_Ins == 0x0) return
+    var INS = 0x0
+    A(get_Ins, () => {}, (ret) => {
+        INS = ret
+        d(get_Ins)
+        LOG("[*] TMPro.TMP_Settings ---> " + ret)
+        var TMP_FontAsset = callFunction(find_method("Unity.TextMeshPro", "TMP_Settings", "get_defaultFontAsset", 0), INS)
+        lffc(findClass("TMP_FontAsset"), TMP_FontAsset)
+        var faceInfo = callFunction(find_method("Unity.TextMeshPro", "TMP_FontAsset", "get_fontInfo", 0), TMP_FontAsset)
+        lffc(findClass("FaceInfo_Legacy"), faceInfo)
+    })
 }
 
 /**
