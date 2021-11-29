@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/11/18 14:47
+ * @UpdateTime  2021/11/29 10:14
  * @Des         frida hook u3d functions script
  */
 
@@ -414,7 +414,6 @@ function C(ImgOrPtr) {
     // public static Assembly Load(string assemblyString)
     var func_load = new NativeFunction(assemblyLoad.readPointer(), 'pointer', ['pointer', 'pointer'])
     // var func_load = new NativeFunction(assemblyLoad.readPointer(),'pointer',['pointer','pointer','pointer'])
-
     // public virtual Type[] GetTypes();
     var func_getTypes = new NativeFunction(assemblyGetTypes.readPointer(), 'pointer', ['pointer', 'pointer'])
 
@@ -459,10 +458,10 @@ function A(mPtr, mOnEnter, mOnLeave) {
     mPtr = checkPointer(ptr(mPtr))
     var Listener = Interceptor.attach(mPtr, {
         onEnter: function (args) {
-            if (mOnEnter != undefined) mOnEnter(args)
+            if (mOnEnter != undefined) mOnEnter(args, this.context)
         },
         onLeave: function (ret) {
-            if (mOnLeave != undefined) mOnLeave(ret)
+            if (mOnLeave != undefined) mOnLeave(ret, this.context)
         }
     })
 
@@ -566,83 +565,6 @@ function B_ToString() {
     A(find_method("mscorlib", "StringBuilder", "ToString", 0), () => {}, (ret) => {
         LOG(readU16(ret))
     })
-}
-
-//public static Void TrackText (Text t)
-//a(findClass("TextMesh")) 
-function B_Text(TYPE) {
-    try {
-        LOG("Unity.TextMeshPro.TMP_Text.get_transform ===> " + find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0).sub(soAddr))
-        TextMeshPro()
-    } catch (e) {
-        LOG("DO NOT USE TMP_Text", LogColor.RED)
-    }
-
-    try {
-        LOG("UnityEngine.UI.Text.get_text ===> " + find_method("UnityEngine.UI", "Text", "get_text", 0).sub(soAddr))
-        LOG("UnityEngine.UI.Text.set_text ===> " + find_method("UnityEngine.UI", "Text", "set_text", 1).sub(soAddr))
-        UnityEngine_UI_Text()
-    } catch (e) {
-        LOG("DO NOT USE UnityEngine_UI_Text", LogColor.RED)
-    }
-
-    function TMP_Text() {
-        D()
-        A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {
-            var strName = readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0]))
-            if (strName.indexOf(":") == -1) {
-                if (!strName.startsWith("-")) {
-                    LOG("\nCalled TMP_Text.get_transform INS:" + args[0], LogColor.C36)
-                    LOG("\t----> |" + strName + "|", LogColor.C96)
-                }
-            }
-            if (strName == "设置") {
-                TmpSetTo(args[0], "设置1")
-                // runOnMain(0x19dc41c, () => {
-                //     TmpSetTo(args[0], "设置1")
-                //     callFunction(0xF728D4, args[0], 1, 1)
-                // })
-            }
-        })
-
-        function TmpSetTo(ins, str) {
-            callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "set_text", 1), ins, allocStr(str, ""))
-        }
-    }
-
-    function TextMeshPro() {
-        D()
-        A(find_method("Unity.TextMeshPro", "TextMeshPro", "get_transform", 0), (args) => {
-            var strName = readU16(callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "get_text", 0), args[0]))
-            if (strName.indexOf(":") == -1) {
-                if (!strName.startsWith("-")) {
-                    LOG("\nCalled TextMeshPro.get_transform INS:" + args[0], LogColor.C36)
-                    LOG("\t----> |" + strName + "|", LogColor.C96)
-                }
-            }
-            if (strName == "设置") {
-                TmpSetTo(args[0], "设置1")
-            }
-        })
-
-        function TmpSetTo(ins, str) {
-            callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "set_text", 1), ins, allocStr(str, ""))
-        }
-    }
-
-    function UnityEngine_UI_Text() {
-        A(find_method("UnityEngine.UI", "Text", "get_text", 0), undefined, (ret) => {
-            var tmp = readU16(ret)
-            if (tmp.indexOf("00:") != 0) LOG("get ---> " + tmp, LogColor.C36)
-        })
-
-        A(find_method("UnityEngine.UI", "Text", "set_text", 1), (args) => {
-            var tmp = readU16(args[1])
-            if (tmp.indexOf("00:") != 0) LOG("set ---> " + tmp, LogColor.C36)
-        })
-    }
-
-
 }
 
 function B_UnityJNI() {
@@ -852,14 +774,16 @@ function list_Methods(klass, TYPE) {
     }
 }
 
-
-// 解析cls指针下的函数名,返回匹配的函数地址
-function getFunctionAddrFromName(clsptr, str) {
+function getFunctionAddrFromCls(clsptr, funcName) {
     var retArray = list_Methods(clsptr, 2)
     for (var i = 0; i < retArray[0].length; i++) {
-        if (retArray[0][i].indexOf(str) != -1) return retArray[1][i]
+        if (retArray[0][i].indexOf(funcName) != -1) return retArray[1][i]
     }
     return -1
+}
+
+function getFieldOffFromCls(clsptr, fieldName) {
+    return listFieldsFromCls(clsptr, undefined, 1, fieldName)
 }
 
 /**
@@ -879,7 +803,6 @@ function find_method(imageName, className, functionName, argsCount, isRealAddr) 
     // var corlib = il2cpp_get_corlib()
     if (isRealAddr == undefined) isRealAddr = true
 
-    //真实地址才使用缓存
     if (isRealAddr) {
         var tmpKey = imageName + "." + className + "." + functionName + "." + argsCount
         var cache = map_find_method_cache.get(tmpKey)
@@ -1301,26 +1224,26 @@ function readUInt64(value) {
  * 自定义参数解析模板
  * 将mPtr指向的位置以 strType 类型解析并返回 String 
  * 拓展解析一些常用的类，用b断某个方法的时候就可以很方便的打印出参数
- * @param {String}  strType  类型字符串
- * @param {Pointer} mPtr     内存指针cls
- * @param {Pointer} tPtr     类指针（非必选）
+ * @param {String}  typeStr  类型字符串
+ * @param {Pointer} insPtr     内存指针cls
+ * @param {Pointer} clsPtr     类指针（非必选）
  * @returns {String}         简写字符串描述
  */
-function FuckKnownType(strType, mPtr, tPtr) {
-    if (mPtr == 0x0 && strType != "Boolean") return "NULL"
-    if (tPtr == undefined) tPtr == 0
+function FuckKnownType(typeStr, insPtr, clsPtr) {
+    if (insPtr == 0x0 && typeStr != "Boolean") return "NULL"
+    if (clsPtr == undefined) clsPtr == findClass(typeStr)
     try {
-        mPtr = ptr(mPtr)
-        tPtr = ptr(tPtr)
+        insPtr = ptr(insPtr)
+        clsPtr = ptr(clsPtr)
 
         // 数组类型的数据解析
-        if (tPtr != 0 && strType.endsWith("[]")) {
-            var addr_getCount = getFunctionAddrFromName(tPtr, "get_Count")
-            var addr_get_Item = getFunctionAddrFromName(tPtr, "get_Item")
+        if (clsPtr != 0 && typeStr.endsWith("[]")) {
+            var addr_getCount = getFunctionAddrFromCls(clsPtr, "get_Count")
+            var addr_get_Item = getFunctionAddrFromCls(clsPtr, "get_Item")
             var arr_retStr = new Array()
-            for (var index = 0; index < callFunction(addr_getCount, mPtr); index++) {
-                var item = callFunction(addr_get_Item, mPtr, index)
-                var type = String(strType).split("[]")[0]
+            for (var index = 0; index < callFunction(addr_getCount, insPtr); index++) {
+                var item = callFunction(addr_get_Item, insPtr, index)
+                var type = String(typeStr).split("[]")[0]
                 // LOG("--->" + mPtr + " " + type + " " + addr_get_Item, LogColor.RED)
                 if (type.indexOf("Int") != -1) {
                     // int数组转回int该有的显示类型
@@ -1336,120 +1259,120 @@ function FuckKnownType(strType, mPtr, tPtr) {
         }
 
         // Dictionary 数据解析
-        if (tPtr != 0 && strType.startsWith("Dictionary")) {
-            var addr_getCount = getFunctionAddrFromName(tPtr, "get_Count")
-            var count = callFunction(addr_getCount, mPtr)
-            return count + "\t" + FuckKnownType("-1", mPtr, 0x0)
+        if (clsPtr != 0 && typeStr.startsWith("Dictionary")) {
+            var addr_getCount = getFunctionAddrFromCls(clsPtr, "get_Count")
+            var count = callFunction(addr_getCount, insPtr)
+            return count + "\t" + FuckKnownType("-1", insPtr, 0x0)
         }
 
         // 枚举解析
-        if (tPtr != 0 && class_is_enum(tPtr)) {
+        if (clsPtr != 0 && class_is_enum(clsPtr)) {
             var iter = Memory.alloc(p_size)
             var field
             var enumIndex = 0
-            while (field = il2cpp_class_get_fields(tPtr, iter)) {
+            while (field = il2cpp_class_get_fields(clsPtr, iter)) {
                 if (field == 0x0) break
                 var fieldName = field.readPointer().readCString()
                 var filedType = field.add(p_size).readPointer()
                 var field_class = il2cpp_class_from_type(filedType)
-                if (String(field_class) != String(tPtr)) continue
-                if (Number(mPtr) == Number(enumIndex++)) return (strType != "1" ? "Eunm -> " : "") + fieldName
+                if (String(field_class) != String(clsPtr)) continue
+                if (Number(insPtr) == Number(enumIndex++)) return (typeStr != "1" ? "Eunm -> " : "") + fieldName
             }
         }
 
-        switch (strType) {
+        switch (typeStr) {
             case "Void":
                 return ""
             case "String":
-                return readU16(mPtr)
+                return readU16(insPtr)
             case "Boolean":
-                return readBoolean(mPtr) ? "True" : "False"
+                return readBoolean(insPtr) ? "True" : "False"
             case "Int32":
-                return readInt(mPtr)
+                return readInt(insPtr)
             case "UInt32":
-                return readUInt(mPtr)
+                return readUInt(insPtr)
             case "Int64":
-                return readUInt64(mPtr)
+                return readUInt64(insPtr)
             case "Single":
-                return readSingle(mPtr)
+                return readSingle(insPtr)
             case "Object":
             case "Transform":
             case "GameObject":
-                return SeeTypeToString(mPtr, false)
+                return SeeTypeToString(insPtr, false)
             case "Texture":
-                var w = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "GetDataWidth", 0), mPtr)
-                var h = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "GetDataHeight", 0), mPtr)
-                var r = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "get_isReadable", 0), mPtr)
-                var m = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "get_wrapMode", 0), mPtr)
+                var w = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "GetDataWidth", 0), insPtr)
+                var h = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "GetDataHeight", 0), insPtr)
+                var r = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "get_isReadable", 0), insPtr)
+                var m = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "get_wrapMode", 0), insPtr)
                 r = r == 0 ? "False" : "True"
                 m = m == 0 ? "Repeat" : (m == 1 ? "Clamp" : (m == 2 ? "Mirror" : "MirrorOnce"))
                 return JSON.stringify([m, w, h, r])
             case "Component":
-                if (mPtr == 0x0) return ""
-                var mTransform = callFunction(find_method("UnityEngine.CoreModule", "Component", "get_transform", 0), mPtr)
-                var mGameObject = callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), mPtr)
+                if (insPtr == 0x0) return ""
+                var mTransform = callFunction(find_method("UnityEngine.CoreModule", "Component", "get_transform", 0), insPtr)
+                var mGameObject = callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), insPtr)
                 var gName = getObjName(mGameObject)
                 return gName + "\tG:" + mGameObject + " T:" + mTransform + ""
             case "IntPtr":
-                if (mPtr == 0x0) return "0x0"
-                return readU16(callFunction(find_method('mscorlib', 'IntPtr', 'ToString', 0), mPtr))
+                if (insPtr == 0x0) return "0x0"
+                return readU16(callFunction(find_method('mscorlib', 'IntPtr', 'ToString', 0), insPtr))
             case "Block":
             case "Block`1":
             case "Action":
             case "Action`1":
             case "Action`2":
-                if (mPtr == 0x0) return "0x0"
-                return ptr(mPtr).add(p_size == 4 ? 0x14 : 0x10).readPointer().readPointer().sub(soAddr)
+                if (insPtr == 0x0) return "0x0"
+                return ptr(insPtr).add(p_size == 4 ? 0x14 : 0x10).readPointer().readPointer().sub(soAddr)
             case "Delegate":
-                if (mPtr == 0x0) return "0x0"
-                var tmp_ptr = ptr(mPtr).add(0x8).readPointer()
-                var temp_m_target = ptr(mPtr).add(0x10).readPointer()
-                return tmp_ptr + "(" + tmp_ptr.sub(soAddr) + ")  m_target:" + temp_m_target + "  virtual:" + (ptr(mPtr).add(0x30).readInt() == 0x0 ? "false" : "true")
+                if (insPtr == 0x0) return "0x0"
+                var tmp_ptr = ptr(insPtr).add(0x8).readPointer()
+                var temp_m_target = ptr(insPtr).add(0x10).readPointer()
+                return tmp_ptr + "(" + tmp_ptr.sub(soAddr) + ")  m_target:" + temp_m_target + "  virtual:" + (ptr(insPtr).add(0x30).readInt() == 0x0 ? "false" : "true")
             case "Char":
-                return mPtr.readCString()
+                return insPtr.readCString()
             case "JObject":
-                return getJclassName(mPtr, true)
+                return getJclassName(insPtr, true)
             case "OBJ":
-                var objName = getObjName(mPtr)
-                var tmp_type_Ptr = callFunction(find_method("mscorlib", "Object", "GetType", 0), mPtr)
-                var tmp_str_Ptr = callFunction(find_method("mscorlib", "Object", "ToString", 0), mPtr)
-                if (tPtr == 0x1) return [objName, readU16(tmp_str_Ptr), tmp_type_Ptr]
+                var objName = getObjName(insPtr)
+                var tmp_type_Ptr = callFunction(find_method("mscorlib", "Object", "GetType", 0), insPtr)
+                var tmp_str_Ptr = callFunction(find_method("mscorlib", "Object", "ToString", 0), insPtr)
+                if (clsPtr == 0x1) return [objName, readU16(tmp_str_Ptr), tmp_type_Ptr]
                 return objName + "\t\t" + readU16(tmp_str_Ptr) + " (" + tmp_type_Ptr + ")"
             case "Text":
-                return readU16(callFunction(find_method("UnityEngine.UI", "Text", "get_text", 0), mPtr))
+                return readU16(callFunction(find_method("UnityEngine.UI", "Text", "get_text", 0), insPtr))
             case "Vector2":
-                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Vector2", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Vector2", "ToString", 0), insPtr))
             case "Vector3":
-                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Vector3", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Vector3", "ToString", 0), insPtr))
             case "Vector4":
-                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Vector4", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Vector4", "ToString", 0), insPtr))
             case "Color":
-                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Color", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Color", "ToString", 0), insPtr))
             case "Color32":
-                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Color32", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Color32", "ToString", 0), insPtr))
             case "Event":
-                return readU16(callFunction(find_method("UnityEngine.IMGUIModule", "Event", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("UnityEngine.IMGUIModule", "Event", "ToString", 0), insPtr))
             case "Bounds":
-                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Bounds", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Bounds", "ToString", 0), insPtr))
             case "TextAsset":
-                return readU16(callFunction(find_method("UnityEngine.CoreModule", "TextAsset", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "TextAsset", "ToString", 0), insPtr))
             case "Rect":
-                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Rect", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Rect", "ToString", 0), insPtr))
             case "Ray":
-                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Ray", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Ray", "ToString", 0), insPtr))
             case "Quaternion":
-                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Quaternion", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Quaternion", "ToString", 0), insPtr))
             case "Pose":
-                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Pose", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Pose", "ToString", 0), insPtr))
             case "Plane":
-                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Plane", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("UnityEngine.CoreModule", "Plane", "ToString", 0), insPtr))
             case "Type":
-                return readU16(callFunction(find_method("mscorlib", "Type", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("mscorlib", "Type", "ToString", 0), insPtr))
             case "TextMeshPro":
             case "TextMeshProUGUI":
-                return readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "GetParsedText", 0), mPtr))
+                return readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "GetParsedText", 0), insPtr))
             default:
-                return readU16(callFunction(find_method("mscorlib", "Object", "ToString", 0), mPtr))
+                return readU16(callFunction(find_method("mscorlib", "Object", "ToString", 0), insPtr))
         }
     } catch (e) {
         // LOG(e)
@@ -1515,9 +1438,9 @@ function FuckRuntimeType(strType, mPtr) {
  */
 function ShowList(listPtr, valuePtr, type) {
     if (type = undefined) lffc(listPtr, valuePtr)
-    var a_get_Count = getFunctionAddrFromName(listPtr, "get_Count")
-    var a_get_Capacity = getFunctionAddrFromName(listPtr, "get_Capacity")
-    var a_get_Item = getFunctionAddrFromName(listPtr, "get_Item")
+    var a_get_Count = getFunctionAddrFromCls(listPtr, "get_Count")
+    var a_get_Capacity = getFunctionAddrFromCls(listPtr, "get_Capacity")
+    var a_get_Item = getFunctionAddrFromCls(listPtr, "get_Item")
 
     var Count = callFunction(a_get_Count, valuePtr).toInt32()
     var Capacity = callFunction(a_get_Capacity, valuePtr).toInt32()
@@ -1777,7 +1700,7 @@ function setFunctionValue(mPtr, value, index) {
  * @param {Pointer} mPtr 
  * @returns 
  */
-function callFunction(mPtr) {
+function callFunction(mPtr, ...args) {
     if (mPtr == undefined || mPtr == null || mPtr == 0x0) return ptr(0x0)
     for (var i = 1; i <= (arguments.length < 5 ? 5 : arguments.length) - 1; i++)
         arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))
@@ -1785,98 +1708,54 @@ function callFunction(mPtr) {
         (arguments[1], arguments[2], arguments[3], arguments[4])
 }
 
-function callFunctionRB(mPtr) {
-    return callFunctionRI(mPtr) == 1
+function callFunctionRB(mPtr, ...args) {
+    return callFunctionRI(mPtr, args) == 1
 }
 
-function callFunctionRI(mPtr) {
-    return callFunction(mPtr).toInt32()
+function callFunctionRI(mPtr, ...args) {
+    return callFunction(mPtr, args).toInt32()
 }
 
-function callFunctionRS(mPtr) {
-    return readSingle(callFunction(mPtr))
+function callFunctionRS(mPtr, ...args) {
+    return readSingle(callFunction(mPtr, args))
 }
 
-function callFunctionRF(mPtr) {
-    return callFunction(mPtr).readFloat()
+function callFunctionRF(mPtr, ...args) {
+    return callFunction(mPtr, args).readFloat()
+}
+
+function callFunctionRUS(mPtr, ...args) {
+    return readU16(callFunction(mPtr, args))
+}
+
+function callFunctionRCS(mPtr, ...args) {
+    return callFunction(mPtr, args).readCString()
 }
 
 function breakWithArgs(mPtr, argCount) {
     mPtr = checkPointer(mPtr)
-    if (argCount == undefined) argCount = 4
-    A(mPtr, (args) => {
-        LOG("\nCalled from " + String(mPtr).toString(16) + " ---> " + String(mPtr.sub(soAddr)).toString(16), LogColor.C36)
-        switch (argCount) {
-            case 1:
-                LOG(args[0], LogColor.C36);
-                break
-            case 2:
-                LOG(args[0] + "\t" + args[1], LogColor.C36);
-                break
-            case 3:
-                LOG(args[0] + "\t" + args[1] + "\t" + args[2], LogColor.C36);
-                break
-            case 4:
-                LOG(args[0] + "\t" + args[1] + "\t" + args[2] + "\t" + args[3], LogColor.C36);
-                break
-        }
+    A(mPtr, (args, ctx) => {
+        LOG("\n" + getLine(65), LogColor.C33)
+        LOG("Called from " + ptr(mPtr) + " ---> " + ptr(mPtr).sub(soAddr) + "\t|  LR : " + ptr(ctx.lr).sub(soAddr) + "\n", LogColor.C96)
+        var tStr = String(args[0])
+        for (var t = 1; t < (argCount == undefined ? 4 : argCount); t++) tStr += "\t" + args[t]
+        LOG(tStr, LogColor.C36)
     }, (ret) => {
-        LOG("End Function return " + ret, LogColor.C36)
+        LOG("End Function return ---> " + ret, LogColor.C36)
     })
 }
 
 function breakInline(mPtr, filterRigster, maxCount) {
     if (maxCount == undefined) maxCount = 10
     mPtr = checkPointer(mPtr)
-    Interceptor.attach(mPtr, {
-        onEnter: function (args) {
-            if (Process.arch != "arm" && filterRigster != undefined &&
-                filterDuplicateOBJ(String(filterReg(filterRigster, this.context)), maxCount) == -1) return
-            LOG("\n---------------------------------------------\n\n" +
-                "Called function at " + mPtr + "\n" +
-                JSON.stringify(this.context), LogColor.C36)
-        },
-        onLeave: function (ret) {}
+    A(mPtr, (args, ctx) => {
+        LOG("\n" + getLine(65), LogColor.C33)
+        if (Process.arch != "arm" && filterRigster != undefined && filterDuplicateOBJ(String(filterReg(filterRigster, ctx)), maxCount) == -1) return
+        LOG("Called from " + ptr(mPtr) + " ---> " + ptr(mPtr).sub(soAddr) + "\n", LogColor.C96)
+        LOG(JSON.stringify(ctx), LogColor.C36)
     })
-
-    function filterReg(ft, context) {
-        switch (ft) {
-            case "r0":
-                return context.r0
-            case "r1":
-                return context.r1
-            case "r2":
-                return context.r2
-            case "r3":
-                return context.r3
-            case "r4":
-                return context.r4
-            case "r5":
-                return context.r5
-            case "r6":
-                return context.r6
-            case "r7":
-                return context.r7
-            case "r8":
-                return context.r8
-            case "r9":
-                return context.r9
-            case "r10":
-                return context.r10
-            case "r11":
-                return context.r11
-            case "r12":
-                return context.r12
-            case "lr":
-                return context.lr
-        }
-    }
 }
 
-/**
- * 快速的打印出我们使用inlinehook操作ui需要hook的函数定义,暂时先这么用着
- * (TODO:后续看搞一个inlinehook版本的find_method(),让inlinehook对unity的hook更方便友好)
- */
 function printInfo() {
 
     try {
@@ -1940,27 +1819,9 @@ function printInfo() {
     LOG("\n")
 }
 
-function printU3dExp() {
-    LOG("\n\told_func_OnPointerClick = reinterpret_cast<void *(*)(void *, void *)>(soAddr + " + find_method("UnityEngine.UI", "Button", "OnPointerClick", 1, false, 2) + ");", LogColor.C96)
-    LOG("\told_get_pointerEnter = reinterpret_cast<GameObject *(*)(void *)>(soAddr + " + find_method("UnityEngine.UI", "PointerEventData", "get_pointerEnter", 0, false, 2) + ");", LogColor.C96)
-    LOG("\told_func_SetActive = reinterpret_cast<void *(*)(void *, bool)>(soAddr + " + find_method("UnityEngine.CoreModule", "GameObject", "SetActive", 1, false, 2) + ");", LogColor.C96)
-    LOG("\told_func_getTransform = reinterpret_cast<Transform *(*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "GameObject", "get_transform", 0, false, 2) + ");", LogColor.C96)
-    LOG("\told_func_GetName = reinterpret_cast<MonoString *(*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Object", "GetName", 1, false, 2) + ");", LogColor.C96)
-    LOG("\told_func_GetParent = reinterpret_cast<Transform *(*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "GetParent", 0, false, 2) + ");", LogColor.C96)
-    LOG("\told_func_get_childCount = reinterpret_cast<int (*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "get_childCount", 0, false, 2) + ");", LogColor.C96)
-    LOG("\told_func_GetChild = reinterpret_cast<Transform *(*)(void *, int)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "GetChild", 1, false, 2) + ");", LogColor.C96)
-    LOG("\told_func_set_localScale_Injected = reinterpret_cast<void *(*)(void *, void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "set_localScale_Injected", 1, false, 2) + ");", LogColor.C96)
-    LOG("\told_func_set_LocalPosition = reinterpret_cast<void *(*)(void *, void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "set_localPosition_Injected", 1, false, 2) + ");", LogColor.C96)
-    LOG("\told_func_get_gameObject = reinterpret_cast<GameObject *(*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0, false, 2) + ");", LogColor.C96)
-    LOG("\told_get_text = reinterpret_cast<MonoString *(*)(void *)>(soAddr + " + find_method("UnityEngine.UI", "Text", "get_text", 0, false, 2) + ");", LogColor.C96)
-    LOG("\told_set_text = reinterpret_cast<void *(*)(void *, MonoString *)>(soAddr + " + find_method("UnityEngine.UI", "Text", "set_text", 1, false, 2) + ");", LogColor.C96)
-    LOG("\told_func_SetInt = reinterpret_cast<void *(*)(MonoString *, int)>(soAddr + " + find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetInt", 2, false, 2) + ");", LogColor.C96)
-    LOG("\told_func_GetInt = reinterpret_cast<int (*)(MonoString *, int)>(soAddr + " + find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetInt", 2, false, 2) + ");", LogColor.C96)
-    LOG("\ttransform_find = reinterpret_cast<Transform *(*)(Transform *, MonoString *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "Find", 1, false, 2) + ");", LogColor.C96)
-    LOG("\tgameObj_find = reinterpret_cast<GameObject *(*)(MonoString *)>(soAddr + " + find_method("UnityEngine.CoreModule", "GameObject", "Find", 1, false, 2) + ");\n", LogColor.C96)
-
-}
-
+/**
+ * 用作inlinehook中不指定使用动态查找功能，手动配置一些常用的基础参数
+ */
 function printExp() {
 
     LOG("\n\til2cpp_get_corlib = (Il2CppImage *(*)()) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_get_corlib').sub(soAddr) + ");", LogColor.C36)
@@ -1978,6 +1839,35 @@ function printExp() {
     LOG("\til2cpp_string_new = (MonoString *(*)(const char *))  ( soAddr + " + Module.findExportByName(soName, 'il2cpp_string_new').sub(soAddr) + ");", LogColor.C36)
     LOG("\til2cpp_type_get_name = (char *(*)(const Il2CppType *)) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_type_get_name').sub(soAddr) + ");", LogColor.C36)
     LOG("\til2cpp_type_get_class_or_element_class = (Il2CppClass *(*)(const Il2CppType *)) ( soAddr + " + Module.findExportByName(soName, 'il2cpp_type_get_class_or_element_class').sub(soAddr) + ");\n", LogColor.C36)
+
+    LOG("\n\told_func_OnPointerClick = reinterpret_cast<void *(*)(void *, void *)>(soAddr + " + find_method("UnityEngine.UI", "Button", "OnPointerClick", 1, false, 2) + ");", LogColor.C96)
+    LOG("\told_get_pointerEnter = reinterpret_cast<GameObject *(*)(void *)>(soAddr + " + find_method("UnityEngine.UI", "PointerEventData", "get_pointerEnter", 0, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_SetActive = reinterpret_cast<void *(*)(void *, bool)>(soAddr + " + find_method("UnityEngine.CoreModule", "GameObject", "SetActive", 1, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_getTransform = reinterpret_cast<Transform *(*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "GameObject", "get_transform", 0, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_GetName = reinterpret_cast<MonoString *(*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Object", "GetName", 1, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_GetParent = reinterpret_cast<Transform *(*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "GetParent", 0, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_get_childCount = reinterpret_cast<int (*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "get_childCount", 0, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_GetChild = reinterpret_cast<Transform *(*)(void *, int)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "GetChild", 1, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_set_localScale_Injected = reinterpret_cast<void *(*)(void *, void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "set_localScale_Injected", 1, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_set_LocalPosition = reinterpret_cast<void *(*)(void *, void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "set_localPosition_Injected", 1, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_get_gameObject = reinterpret_cast<GameObject *(*)(void *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0, false, 2) + ");", LogColor.C96)
+    LOG("\told_get_text = reinterpret_cast<MonoString *(*)(void *)>(soAddr + " + find_method("UnityEngine.UI", "Text", "get_text", 0, false, 2) + ");", LogColor.C96)
+    LOG("\told_set_text = reinterpret_cast<void *(*)(void *, MonoString *)>(soAddr + " + find_method("UnityEngine.UI", "Text", "set_text", 1, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_SetInt = reinterpret_cast<void *(*)(MonoString *, int)>(soAddr + " + find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetInt", 2, false, 2) + ");", LogColor.C96)
+    LOG("\told_func_GetInt = reinterpret_cast<int (*)(MonoString *, int)>(soAddr + " + find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetInt", 2, false, 2) + ");", LogColor.C96)
+    LOG("\ttransform_find = reinterpret_cast<Transform *(*)(Transform *, MonoString *)>(soAddr + " + find_method("UnityEngine.CoreModule", "Transform", "Find", 1, false, 2) + ");", LogColor.C96)
+    LOG("\tgameObj_find = reinterpret_cast<GameObject *(*)(MonoString *)>(soAddr + " + find_method("UnityEngine.CoreModule", "GameObject", "Find", 1, false, 2) + ");", LogColor.C96)
+    try {
+        LOG("\tTMPText_GetTransform = reinterpret_cast<Transform *(*)(void *)>(soAddr + " + find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0, false, 2) + ");", LogColor.C96)
+        LOG("\tTMPText_getText = reinterpret_cast<MonoString *(*)(void *)>(soAddr + " + find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0, false, 2) + ");", LogColor.C96)
+        LOG("\tTMPText_setText = reinterpret_cast<void (*)(void *, MonoString *)>(soAddr + " + find_method("Unity.TextMeshPro", "TMP_Text", "set_text", 1, false, 2) + ");", LogColor.C96)
+    } catch (e) {}
+    try {
+        LOG("\tTextMeshPro_GetTransform = reinterpret_cast<Transform *(*)(void *)>(soAddr + " + find_method("Unity.TextMeshPro", "TextMeshPro", "get_transform", 0, false, 2) + ");", LogColor.C96)
+        LOG("\tTextMeshPro_getText = reinterpret_cast<MonoString *(*)(void *)>(soAddr + " + find_method("Unity.TextMeshPro", "TextMeshPro", "get_text", 0, false, 2) + ");", LogColor.C96)
+        LOG("\tTextMeshPro_setText = reinterpret_cast<void (*)(void *, MonoString *)>(soAddr + " + find_method("Unity.TextMeshPro", "TextMeshPro", "set_text", 1, false, 2) + ");\n", LogColor.C96)
+
+    } catch (e) {}
 }
 
 function getClassAddrFromMethodInfo(methodInfo) {
@@ -2049,9 +1939,12 @@ function listFieldsFromCls(klass, instance) {
         accessStr = accessStr.substring(0, accessStr.length - 1)
         var enumStr = (is_enum && (String(field_class) == String(klass))) ? (enumIndex++ + "\t") : " "
         var retStr = filedOffset + "\t" + accessStr + "\t" + fieldClassName + "\t" + field_class + "\t" + fieldName + "\t" + enumStr
+        if (arguments[2] != undefined && fieldName == arguments[3]) return ptr(filedOffset)
         arrStr.push(retStr)
         maxlength = retStr.length < maxlength ? maxlength : retStr.length
     }
+    if (arguments[2] != undefined && fieldName == arguments[3]) return ptr(0)
+
     LOG("\n" + getLine(maxlength + 5), LogColor.C33)
 
     /**
@@ -2780,10 +2673,10 @@ function LOG(str, type) {
     }
 }
 
-function getLine(length) {
+function getLine(length, fillStr) {
     var retStr = ""
     for (var i = 0; i < length; i++) {
-        retStr += "-"
+        retStr += (fillStr == undefined ? "-" : fillStr)
     }
     return retStr
 }
@@ -2972,7 +2865,8 @@ function class_is_enum(Pcls) {
 function getType(mPtr, TYPE) {
     var p_type = callFunction(find_method('mscorlib', 'Object', 'GetType', 0), ptr(mPtr))
     var p_name = readU16(callFunction(find_method("mscorlib", "Type", "ToString", 0), ptr(p_type)))
-    if (TYPE != undefined) return p_name + "(" + p_type + ")"
+    if (TYPE == 1) return p_name + "(" + p_type + ")"
+    if (TYPE == 2) return [String(p_name).split(": ")[1], p_type]
     LOG("\nType === > " + p_type + "\n" + "Name === > " + p_name + "\n", LogColor.C36)
 }
 
@@ -3247,82 +3141,6 @@ function Update() {
     find_method("UnityEngine.UI", "CanvasScaler", "Update", 0, false)
 }
 
-function Text() {
-
-    //用作查找拼接后的字符串
-    // find_method("mscorlib","String","Format",3)
-    // a(findClass("String")) 
-    // find_method("UnityEngine.UI","Text","get_text",0,false)
-
-    // Text 相关
-    HookTrackText()
-    // HookGetSetText()
-
-    function HookTrackText() {
-        /**
-         * 或者使用 find_method('UnityEngine.UI','FontUpdateTracker','TrackText',1,false) 找到 MethodInfo
-         * 再使用 b(...) 自动解析参数
-         */
-
-        var f_set_text = new NativeFunction(find_method("UnityEngine.UI", 'Text', 'set_text', 1), 'void', ['pointer', 'pointer'])
-        var f_get_text = new NativeFunction(find_method("UnityEngine.UI", 'Text', 'get_text', 0), 'pointer', ['pointer'])
-        var TrackText = find_method('UnityEngine.UI', 'FontUpdateTracker', 'TrackText', 1)
-        // var UntrackText = find_method('UnityEngine.UI','FontUpdateTracker','UntrackText',1)
-
-        A(find_method('UnityEngine.UI', 'FontUpdateTracker', 'TrackText', 1), (args) => {
-            LOG("TrackText : " + args[0] + "\t" + f_get_text(args[0]) + "\t" + readU16(f_get_text(args[0])))
-        })
-    }
-
-    function HookGetSetText() {
-
-        hookGet()
-        hookSet()
-
-        // 动态替换文字
-        var arr_src_str = ['Hold To Run', '8082', '免费获得', '+400', '暂停', 'HEADSHOT']
-        var arr_rep_str = ['FuckMusic', '-99', '', '-200²', 'pause', '击中头部']
-
-        function hookSet() {
-            A(find_method("UnityEngine.UI", 'Text', 'set_text', 1), (args) => {
-                LOG("\n" + "called set_text(" + args[1] + ")\n[" + ReadLength(args[1]) + "]\t" + readU16(args[1]), LogColor.C33)
-                var newP = strReplace(args[1])
-                if (newP != 0) args[1] = newP
-            })
-        }
-
-        function hookGet() {
-            A(find_method("UnityEngine.UI", 'Text', 'get_text', 0), (args) => {}, (ret) => {
-                LOG("\n" + "called " + ret + " = get_text()\n[" + ReadLength(ret) + "]\t" + readU16(ret), LogColor.C32)
-                var newP = strReplace(ret)
-                if (newP != 0) ret.replace(newP)
-            })
-        }
-
-        var memcmp = Module.findExportByName("libc.so", "memcmp")
-        if (memcmp != 0) memcmp = new NativeFunction(memcmp, 'pointer', ['pointer', 'pointer', 'int'])
-
-        function strReplace(mPtr) {
-            if (mPtr == 0 || memcmp == 0 || arr_src_str.length == 0 || arr_rep_str.length != arr_src_str.length) return ptr(0)
-            for (var i = 0; i < arr_src_str.length; i++) {
-                if (memcmp(mPtr.add(p_size * 2 + 4), allocStr(arr_src_str[i], "").add(p_size * 2 + 4), ReadLength(mPtr) * 2) == 0) return allocStr(arr_rep_str[i], "")
-            }
-            return ptr(0)
-        }
-
-        function ReadLength(mPtr) {
-            return ptr(mPtr).add(Process.pointerSize * 2).readPointer().toInt32()
-        }
-
-        // called : 0x792adc (0xaaf1d4d0)  --->    public Boolean get_hasBorder ()
-        // called : 0x787e10 (0xb61477b0)  --->    public Int32 get_fontSize ()
-        // called : 0x787e80 (0xb6147a18)  --->    public Boolean get_richText ()
-        // called : 0x787eb0 (0xb6147b20)  --->    public Single get_lineSpacing ()
-        // called : 0x787e20 (0xb6147808)  --->    public FontStyle get_fontStyle ()
-    }
-
-}
-
 /**
  * runOnMain函数名描述的可能不太恰当，但是初衷是让传入的函数再updata中被调用一次
  * 涉及到UI操作的函数调用在frida里是必然调用失败的 0x8
@@ -3507,7 +3325,7 @@ function destroyObj(gameObj) {
  * @param {int} defaltActive 0 setActive(false) 1 setActive(true) 2 all
  */
 function HookSetActive(defaltActive) {
-    if (defaltActive == undefined) defaltActive = 1
+    defaltActive = defaltActive == undefined ? 1 : defaltActive
     A(find_method("UnityEngine", "GameObject", "SetActive", 1), (args) => {
         // 过滤反复出现的obj
         if (filterDuplicateOBJ(readU16(f_getName(ptr(args[0])))) == -1) return
@@ -3517,6 +3335,18 @@ function HookSetActive(defaltActive) {
             LOG(getLine(20), LogColor.C33)
             showGameObject(args[0])
         }
+    })
+}
+
+function HookActive(tBool, tArray) {
+    if (tArray == undefined || tBool == undefined || "object" != typeof (tArray) || tArray.length == 0) return
+    A(find_method("UnityEngine", "GameObject", "SetActive", 1), (args) => {
+        tArray.forEach((item) => {
+            if (readU16(f_getName(ptr(args[0]))) == item) {
+                args[1] = ptr(tBool)
+                return
+            }
+        })
     })
 }
 
@@ -3719,23 +3549,30 @@ function HookPlayerPrefs() {
 }
 
 function HookDebugLog() {
-    A(find_method("UnityEngine.CoreModule", "Debug", "Log", 1, true), (args) => {
-        LOG("\n[*] Debug.LOG('" + readU16(args[0]) + "')", LogColor.C36)
+    // public static void Log(object message)
+    // A(find_method("UnityEngine.CoreModule", "Debug", "Log", 1, true), (args) => {
+    //     LOG("\n[*] Debug.LOG('" + readU16(args[0]) + "')", LogColor.C36)
+    // })
+
+    // public void Log(LogType logType, object message)
+    var addr_Log = find_method("UnityEngine.CoreModule", "Logger", "Log", 2, false, 2)
+    LOG("[*] Hook : UnityEngine.CoreModule.Logger.Log : " + addr_Log)
+    A(addr_Log, (args) => {
+        LOG("\n[*] Logger.LOG('" + args[1] + "\t" + readU16(args[2]) + "')", LogColor.C32)
     })
 
-    A(find_method("UnityEngine.CoreModule", "Logger", "Log", 1, true), (args) => {
-        LOG("\n[*] Logger.LOG('" + readU16(args[0]) + "')", LogColor.C32)
+    // public static void LogException(Exception exception)
+    var addr_LogException = find_method("UnityEngine.CoreModule", "Debug", "LogException", 1, false, 2)
+    LOG("[*] Hook : UnityEngine.CoreModule.Debug.LogException : " + addr_LogException)
+    A(addr_LogException, (args) => {
+        var retStr = callFunction(find_method("mscorlib", "Exception", "ToString", 0, true), args[0])
+        LOG("\n[*] Logger.LOG('" + readU16(retStr) + "')", LogColor.C36)
     })
 }
 
 function HookLoadScene() {
-    //B("Scene") 其他程序自定义的点
-    var GetActiveScene = find_method("UnityEngine.CoreModule", "SceneManager", "GetActiveScene", 0)
-    if (current_scene != 0) {
-        var current_scene = new NativeFunction(GetActiveScene, 'pointer', [])()
-        var get_name = new NativeFunction(find_method("UnityEngine.CoreModule", "Scene", "GetNameInternal", 1), 'pointer', ['int'])
-        LOG("\nCurrentScene   --->   " + readU16(get_name(current_scene.toInt32())) + "\n", LogColor.C36)
-    }
+
+    getCurrent()
 
     A(find_method("UnityEngine.CoreModule", "SceneManager", "LoadScene", 2), (args) => {
         LOG("\nCalled public static Scene LoadScene (String sceneName,LoadSceneParameters parameters)", LogColor.C36)
@@ -3743,6 +3580,16 @@ function HookLoadScene() {
     }, (ret) => {
         LOG(" ret  --->\t" + ret, LogColor.C36)
     })
+
+    function getCurrent() {
+        //B("Scene") 其他程序自定义的点
+        var GetActiveScene = find_method("UnityEngine.CoreModule", "SceneManager", "GetActiveScene", 0)
+        if (GetActiveScene != 0) {
+            LOG("\nCurrentScene   --->   " +
+                readU16(callFunction(find_method("UnityEngine.CoreModule", "Scene", "GetNameInternal", 1),
+                    callFunction(GetActiveScene))) + "\n", LogColor.C36)
+        }
+    }
 }
 
 function HookUnityExit() {
@@ -3997,21 +3844,6 @@ function RunOnNewThread(callback, delay, showLOG) {
         return
     }
     callFunction(p_pthread_create, Memory.alloc(p_size), ptr(0), newThreadSrcCallBack, ptr(0))
-}
-
-function TMP_Info() {
-    var get_Ins = find_method("Unity.TextMeshPro", "TMP_Settings", "get_instance", 0)
-    if (get_Ins == 0x0) return
-    var INS = 0x0
-    A(get_Ins, () => {}, (ret) => {
-        INS = ret
-        d(get_Ins)
-        LOG("[*] TMPro.TMP_Settings ---> " + ret)
-        var TMP_FontAsset = callFunction(find_method("Unity.TextMeshPro", "TMP_Settings", "get_defaultFontAsset", 0), INS)
-        lffc(findClass("TMP_FontAsset"), TMP_FontAsset)
-        var faceInfo = callFunction(find_method("Unity.TextMeshPro", "TMP_FontAsset", "get_fontInfo", 0), TMP_FontAsset)
-        lffc(findClass("FaceInfo_Legacy"), faceInfo)
-    })
 }
 
 /**
@@ -4310,3 +4142,260 @@ function getRuntimeTypeFromBssOrData(bssPtr, initFuc, index) {
     var runtimeType = callFunction(find_method("mscorlib", "Type", "GetTypeFromHandle", 1), handle)
     return runtimeType
 }
+
+// UI.LocalizedTextMeshPro
+function HookLocalized() {
+    A(find_method("Assembly-CSharp", "LocalizedTextMeshPro", "SetText", 0, true), (args) => {
+        var value = readU16(callFunction(find_method("Assembly-CSharp", "TextMeshProAttachment", "get_text", 0, true), args[0]))
+        var key = readU16(ptr(args[0]).add(getFieldOffFromCls(findClass("LocalizedTextMeshPro"), "key")).readPointer())
+        LOG("[0] " + String(String(key).length < 20 ? String(key).padEnd(20, " ") : String(key)) + "\t--->\t\t" + value, LogColor.C36)
+    })
+
+    A(find_method("Assembly-CSharp", "LocalizedText", "SetText", 0, true), (args) => {
+        var value = readU16(callFunction(find_method("Assembly-CSharp", "TextAttachment", "get_text", 0, true), args[0]))
+        var key = readU16(ptr(args[0]).add(getFieldOffFromCls(findClass("LocalizedText"), "key")).readPointer())
+        LOG("[1] " + String(String(key).length < 20 ? String(key).padEnd(20, " ") : String(key)) + "\t--->\t\t" + value, LogColor.C36)
+    })
+}
+
+function Text() {
+
+    //用作查找拼接后的字符串
+    // find_method("mscorlib","String","Format",3)
+    // a(findClass("String")) 
+    // find_method("UnityEngine.UI","Text","get_text",0,false)
+
+    // Text 相关
+    HookTrackText()
+    // HookGetSetText()
+
+
+
+    function HookGetSetText() {
+
+        hookGet()
+        hookSet()
+
+        // 动态替换文字
+        var arr_src_str = ['Hold To Run', '8082', '免费获得', '+400', '暂停', 'HEADSHOT']
+        var arr_rep_str = ['FuckMusic', '-99', '', '-200²', 'pause', '击中头部']
+
+        function hookSet() {
+            A(find_method("UnityEngine.UI", 'Text', 'set_text', 1), (args) => {
+                LOG("\n" + "called set_text(" + args[1] + ")\n[" + ReadLength(args[1]) + "]\t" + readU16(args[1]), LogColor.C33)
+                var newP = strReplace(args[1])
+                if (newP != 0) args[1] = newP
+            })
+        }
+
+        function hookGet() {
+            A(find_method("UnityEngine.UI", 'Text', 'get_text', 0), (args) => {}, (ret) => {
+                LOG("\n" + "called " + ret + " = get_text()\n[" + ReadLength(ret) + "]\t" + readU16(ret), LogColor.C32)
+                var newP = strReplace(ret)
+                if (newP != 0) ret.replace(newP)
+            })
+        }
+
+        var memcmp = Module.findExportByName("libc.so", "memcmp")
+        if (memcmp != 0) memcmp = new NativeFunction(memcmp, 'pointer', ['pointer', 'pointer', 'int'])
+
+        function strReplace(mPtr) {
+            if (mPtr == 0 || memcmp == 0 || arr_src_str.length == 0 || arr_rep_str.length != arr_src_str.length) return ptr(0)
+            for (var i = 0; i < arr_src_str.length; i++) {
+                if (memcmp(mPtr.add(p_size * 2 + 4), allocStr(arr_src_str[i], "").add(p_size * 2 + 4), ReadLength(mPtr) * 2) == 0) return allocStr(arr_rep_str[i], "")
+            }
+            return ptr(0)
+        }
+
+        function ReadLength(mPtr) {
+            return ptr(mPtr).add(Process.pointerSize * 2).readPointer().toInt32()
+        }
+
+        // called : 0x792adc (0xaaf1d4d0)  --->    public Boolean get_hasBorder ()
+        // called : 0x787e10 (0xb61477b0)  --->    public Int32 get_fontSize ()
+        // called : 0x787e80 (0xb6147a18)  --->    public Boolean get_richText ()
+        // called : 0x787eb0 (0xb6147b20)  --->    public Single get_lineSpacing ()
+        // called : 0x787e20 (0xb6147808)  --->    public FontStyle get_fontStyle ()
+    }
+
+}
+
+//public static Void TrackText (Text t)
+//a(findClass("TextMesh")) 
+function B_Text() {
+    const strMap = new Map()
+    strMap.set("SETTINGS", "字体")
+
+    try {
+        LOG("Enable TMP_Text Hook".padEnd(30, " ") + "| class : " + findClass("TMP_Text"), LogColor.C36)
+        TMP_Text()
+    } catch {
+        LOG("Unity.TextMeshPro.TMP_Text.get_transform NOT FOUND !", LogColor.RED)
+    }
+
+    try {
+        LOG("Enable TextMeshPro Hook".padEnd(30, " ") + "| class : " + findClass("TextMeshPro"), LogColor.C36)
+        TextMeshPro()
+    } catch {
+        LOG("Unity.TextMeshPro.TextMeshPro.get_transform NOT FOUND !", LogColor.RED)
+    }
+
+    try {
+        LOG("Enable Text Hook".padEnd(30, " ") + "| class : " + findClass("Text"), LogColor.C36)
+        UnityEngine_UI_Text()
+    } catch {
+        LOG("UnityEngine.UI.Text.get_text/set_text NOT FOUND!", LogColor.RED)
+    }
+
+    try {
+        LOG("Enable TrackText Hook".padEnd(30, " ") + "| class : " + findClass("FontUpdateTracker"), LogColor.C36)
+        HookTrackText()
+    } catch {
+        LOG("UnityEngine.UI.FontUpdateTracker.TrackText NOT FOUND !", LogColor.RED)
+    }
+
+    function TMP_Text() {
+        A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {
+            var aimStr = readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0]))
+            LOG("\n[TMP_Text]  " + args[0] + "\t" + aimStr, LogColor.C36)
+            if (strMap.size != 0) {
+                var repStr = strMap.get(aimStr)
+                if (repStr != undefined) {
+                    callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "set_text", 1), args[0], allocStr(repStr, ""))
+                    LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
+                }
+            }
+        })
+    }
+
+    function TextMeshPro() {
+        A(find_method("Unity.TextMeshPro", "TextMeshPro", "get_transform", 0), (args) => {
+            var aimStr = readU16(callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "get_text", 0), args[0]))
+            LOG("\n[TextMeshPro]  " + args[0] + "\t" + aimStr, LogColor.C35)
+            if (strMap.size != 0) {
+                var repStr = strMap.get(aimStr)
+                if (repStr != undefined) {
+                    callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "set_text", 1), args[0], allocStr(repStr, ""))
+                    LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
+                }
+            }
+        })
+    }
+
+    function UnityEngine_UI_Text() {
+        A(find_method("UnityEngine.UI", "Text", "get_text", 0), undefined, (ret, ctx) => {
+            var aimStr = readU16(ret)
+            LOG("\n[Text_Get]  " + (p_size == 4 ? ctx.r0 : ctx.x0) + "\t" + aimStr, LogColor.C32)
+            if (strMap.size != 0) {
+                var repStr = strMap.get(aimStr)
+                if (repStr != undefined) {
+                    ret.replace(allocStr(repStr, ""))
+                    // callFunction(find_method("UnityEngine.UI", 'Text', 'set_text', 1), p_size == 4 ? ctx.r0 : ctx.x0, allocStr(repStr, ""))
+                    LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
+                }
+            }
+        })
+
+        A(find_method("UnityEngine.UI", "Text", "set_text", 1), (args, ctx) => {
+            LOG("" + args[0] + " " + args[1])
+            var aimStr = readU16(args[1])
+            LOG("\n[Text_Set]  " + args[0] + "\t" + aimStr, LogColor.C33)
+            if (strMap.size != 0) {
+                var repStr = strMap.get(aimStr)
+                if (repStr != undefined) {
+                    args[1] = allocStr(repStr, "")
+                    LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
+                }
+            }
+        })
+    }
+
+    function HookTrackText() {
+        A(find_method('UnityEngine.UI', 'FontUpdateTracker', 'TrackText', 1), (args) => {
+            var aimStr = callFunctionRUS(find_method("UnityEngine.UI", 'Text', 'get_text', 0), args[0])
+            LOG("\n[FontUpdateTracker]  " + args[0] + "\t" + aimStr, LogColor.C36)
+            if (strMap.size != 0) {
+                var repStr = strMap.get(aimStr)
+                if (repStr != undefined) {
+                    args[1] = allocStr(repStr, "")
+                    LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
+                }
+            }
+        })
+    }
+
+    function TMP() {
+        var get_Ins = find_method("Unity.TextMeshPro", "TMP_Settings", "get_instance", 0)
+        if (get_Ins == 0x0) return
+        var INS = 0x0
+        A(get_Ins, () => {}, (ret) => {
+            INS = ret
+            d(get_Ins)
+            LOG("[*] TMPro.TMP_Settings ---> " + ret)
+            var TMP_FontAsset = callFunction(find_method("Unity.TextMeshPro", "TMP_Settings", "get_defaultFontAsset", 0), INS)
+            lffc(findClass("TMP_FontAsset"), TMP_FontAsset)
+            var faceInfo = callFunction(find_method("Unity.TextMeshPro", "TMP_FontAsset", "get_fontInfo", 0), TMP_FontAsset)
+            lffc(findClass("FaceInfo_Legacy"), faceInfo)
+        })
+    }
+}
+
+function TMP_Template() {
+
+    try {
+        LOG(getLine(80) + "\n[*] Hook Resources.Load\n" + getLine(30), LogColor.C96)
+        var Template_Resources_Load =
+            'R(' + find_method("UnityEngine.CoreModule", "Resources", "Load", 2, false, 2) + ', (srcFunc, arg0, arg1, arg2, arg3) => {\n' +
+            '    var ret = srcFunc(arg0, arg1, arg2, arg3)\n' +
+            '    var p_type = callFunction(' + find_method("mscorlib", "Object", "GetType", 0, false, 2) + ', ret)\n' +
+            '    var p_name = callFunction(' + find_method("mscorlib", "Type", "ToString", 0, false, 2) + ', p_type)\n' +
+            '    LOG(ret + "\t" + readU16(arg0) + "\\t" + readU16(p_name))\n' +
+            '    return ret\n' +
+            '})\n'
+        LOG(Template_Resources_Load, LogColor.C36)
+    } catch {
+        LOG("NOT FOUND ---> public static Object[] LoadAll(string path, Type systemTypeInstance)\n", LogColor.RED)
+    }
+
+    try {
+        LOG(getLine(80) + "\n[*] Hook AssetBundle\n" + getLine(30), LogColor.C96)
+        var Template_LoadFromFileAsync =
+            '\nR(' + find_method("UnityEngine.AssetBundleModule", "AssetBundle", "LoadFromFileAsync", 2, false, 2) + ', (srcFunc, arg0, arg1, arg2, arg3) => {\n' +
+            '    LOG("[*] LoadFromFileAsync(\'" + readU16(arg0) + "\' , " + arg1 + ")")\n' +
+            '    return srcFunc(arg0, arg1, arg2, arg3)\n' +
+            '})\n'
+        LOG(Template_LoadFromFileAsync, LogColor.C36)
+    } catch {
+        LOG("NOT FOUND ---> public static AssetBundleCreateRequest LoadFromFileAsync(string path, uint crc)\n", LogColor.RED)
+    }
+
+    try {
+        LOG(getLine(80) + "\n[*] Hook LanguageSourceData\n" + getLine(30), LogColor.C96)
+        var Template_GetTermData =
+            'R(0x557578, (srcFunc, arg0, arg1, arg2, arg3) => {\n' +
+            '    var ret = srcFunc(arg0, arg1, arg2, arg3)\n' +
+            '    LOG(ret + " = GetTermData(string " + readU16(arg1) + " , bool allowCategoryMistmatch = " + (arg2 == 0x0 ? false : true) + ") ")\n' +
+            '    if (ret == 0x0) return ret\n' +
+            '    var strArr = ptr(ret).add(' + getFieldOffFromCls(findClass("TermData"), "Languages") + ').readPointer()\n' +
+            '    var size = ptr(strArr).add(' + p_size + ' * 3).readUInt()\n' +
+            '    console.error("\tSize  -> " + size)\n' +
+            '    var tmpArr = []\n' +
+            '    for (var i = 1; i <= size; i++) tmpArr.push(readU16(ptr(strArr).add(' + p_size + ' * (3 + i)).readPointer()))\n' +
+            '    console.error("\tDate  -> " + JSON.stringify(tmpArr))\n' +
+            '    return ret\n' +
+            '})\n'
+        LOG(Template_GetTermData, LogColor.C36)
+    } catch {
+        LOG("NOT FOUND ---> public TermData GetTermData(string term, bool allowCategoryMistmatch = false)\n", LogColor.RED)
+    }
+
+
+
+
+
+}
+
+// TODO
+// 场景加载的更多方法hook
+// 从场景为出发点，确定当前场景下的所有组件
+// 通用化的文本修改，从界面出发
