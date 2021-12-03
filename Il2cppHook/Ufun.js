@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/11/29 10:14
+ * @UpdateTime  2021/12/03 16:23
  * @Des         frida hook u3d functions script
  */
 
@@ -4228,7 +4228,7 @@ function B_Text() {
 
     try {
         LOG("Enable TMP_Text Hook".padEnd(30, " ") + "| class : " + findClass("TMP_Text"), LogColor.C36)
-        TMP_Text()
+        TMP_Text(false)
     } catch {
         LOG("Unity.TextMeshPro.TMP_Text.get_transform NOT FOUND !", LogColor.RED)
     }
@@ -4254,7 +4254,7 @@ function B_Text() {
         LOG("UnityEngine.UI.FontUpdateTracker.TrackText NOT FOUND !", LogColor.RED)
     }
 
-    function TMP_Text() {
+    function TMP_Text(showGobj) {
         A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {
             var aimStr = readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0]))
             LOG("\n[TMP_Text]  " + args[0] + "\t" + aimStr, LogColor.C36)
@@ -4263,6 +4263,9 @@ function B_Text() {
                 if (repStr != undefined) {
                     callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "set_text", 1), args[0], allocStr(repStr, ""))
                     LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
+                }
+                if (showGobj != undefined && showGobj == true) {
+                    showGameObject(getGameObject(args[0]))
                 }
             }
         })
