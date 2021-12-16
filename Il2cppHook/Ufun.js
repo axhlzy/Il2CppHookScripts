@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/12/03 16:23
+ * @UpdateTime  2021/12/16 11:46
  * @Des         frida hook u3d functions script
  */
 
@@ -94,10 +94,6 @@ var arrayName = []
  * HookLoadScene()
  * HookGetSetText()
  * PrintHierarchy()
- * ......  
- * --------------------------------------------------------------------------------------------
- * 其他方法
- * ---------------------
  * getUnityInfo()
  * getApkInfo()
  * GotoScene(str)
@@ -556,8 +552,10 @@ function showMap(map) {
 }
 
 function D() {
-    r()
-    nnn()
+    try {
+        r()
+        nnn()
+    } catch (e) {}
 }
 
 //System.Text.StringBuilder
