@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/12/16 11:46
+ * @UpdateTime  2021/01/04 11:50
  * @Des         frida hook u3d functions script
  */
 
@@ -480,7 +480,7 @@ function R(mPtr, callBack) {
     // 原函数的引用也可以再replace中调用findTransform
     var srcFunc = new NativeFunction(mPtr, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
     Interceptor.replace(mPtr, new NativeCallback(function (arg0, arg1, arg2, arg3) {
-        LOG("\nCalled " + (TYPENOP ? "Replaced" : "Nop") + " function ---> " + mPtr + " (" + src_ptr + ")", LogColor.YELLOW)
+        LOG("\nCalled " + (TYPENOP ? "Replaced" : "Nop") + " function ---> " + mPtr + " (" + ptr(src_ptr).sub(soAddr) + ")", LogColor.YELLOW)
         var ret = callBack(srcFunc, arg0, arg1, arg2, arg3)
         return ret == null ? ptr(0) : ret
     }, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer']))
@@ -1001,9 +1001,9 @@ function breakPoint(mPtr, index, name) {
     // LOG(method_addr.sub(soAddr))
     A(method_addr, (args) => {
         // if(index!=undefined && ++count_method_times[index] > maxCallTime) return
-        LOG("\n-----------------------------------------------------------", LogColor.C33)
+        LOG("\n" + getLine(60), LogColor.C33)
         LOG(titleStr, LogColor.C96)
-        LOG("----------------------", LogColor.C33)
+        LOG(getLine(22), LogColor.C33)
         var isStatic = funcName.indexOf("static") == -1
         if (isStatic) {
             var insDes = ""
@@ -1032,7 +1032,7 @@ function breakPoint(mPtr, index, name) {
             (String(ret).length < 9 ? "\t" : "") + "\t" +
             strType + methodStr + "\t" +
             result, LogColor.C36)
-        LOG("-----------------------------------------------------------", LogColor.C33)
+        LOG("\n" + getLine(60), LogColor.C33)
     })
 
     function IsJNIFunction(functionDesc, typeStr) {
@@ -1075,7 +1075,7 @@ function breakPoints(filter, isAnalyticParameter) {
             return soAddr.add(temp)
         })
         .forEach(function (value, index) {
-            LOG("-------------------------", LogColor.C90)
+            LOG(getLine(24), LogColor.C90)
             LOG('currentAddr:' + value + "\t" + t_arrayName[index], LogColor.C32)
             // var a1 = isAnalyticParameter ? arrayMethod[index] : value
             // var a2 = isAnalyticParameter ? undefined : index
@@ -1093,9 +1093,9 @@ function breakPoints(filter, isAnalyticParameter) {
             }
             LOG("\t\t---->" + index + "\t" + value.sub(soAddr) + " is prepared ", LogColor.C33)
         })
-    LOG("------------------------------------------", LogColor.C33)
+    LOG(getLine(42), LogColor.C33)
     LOG("  Added " + t_arrayAddr.length + " BreakPoints    |    All " + arrayAddr.length, LogColor.RED)
-    LOG("-------------------------------------------------------------------------------------", LogColor.C33)
+    LOG(getLine(85), LogColor.C33)
 
     function funcTmp(currentAddr, index, arrayName) {
         try {
@@ -1863,9 +1863,11 @@ function printExp() {
     try {
         LOG("\tTextMeshPro_GetTransform = reinterpret_cast<Transform *(*)(void *)>(soAddr + " + find_method("Unity.TextMeshPro", "TextMeshPro", "get_transform", 0, false, 2) + ");", LogColor.C96)
         LOG("\tTextMeshPro_getText = reinterpret_cast<MonoString *(*)(void *)>(soAddr + " + find_method("Unity.TextMeshPro", "TextMeshPro", "get_text", 0, false, 2) + ");", LogColor.C96)
-        LOG("\tTextMeshPro_setText = reinterpret_cast<void (*)(void *, MonoString *)>(soAddr + " + find_method("Unity.TextMeshPro", "TextMeshPro", "set_text", 1, false, 2) + ");\n", LogColor.C96)
-
+        LOG("\tTextMeshPro_setText = reinterpret_cast<void (*)(void *, MonoString *)>(soAddr + " + find_method("Unity.TextMeshPro", "TextMeshPro", "set_text", 1, false, 2) + ");", LogColor.C96)
     } catch (e) {}
+    try {
+        LOG("\tTMPText_ParseInputText = reinterpret_cast < void * ( * )(void * ) > (soAddr +" + find_method("Unity.TextMeshPro", "TMP_Text", "ParseInputText", 0, false, 2) + ");\n", LogColor.C96)
+    } catch {}
 }
 
 function getClassAddrFromMethodInfo(methodInfo) {
@@ -2532,12 +2534,21 @@ function launchApp(pkgName) {
 }
 
 /**
- * 读取c#字符串
+ * 读取 c# 字符串
  * @param {Number} mPtr c#字符串指针}
  */
 function readU16(mPtr) {
-    if (mPtr == 0) return ""
+    if (mPtr == undefined || mPtr == 0) return ""
     return ptr(mPtr).add(p_size * 2 + 4).readUtf16String()
+}
+
+/**
+ * 读取 TMP_TEXT 字符串
+ * @param {Number} mPtr TMP_TEXT INSTANCE
+ */
+function readTMPText(mPtr) {
+    if (mPtr == undefined || mPtr == 0) return ""
+    return callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), ptr(mPtr))
 }
 
 /**
@@ -3203,11 +3214,13 @@ function showTransform(transform) {
     // 保留小数位数
     var toFixedNum = 2
 
-    if (p_getChildCount != 0) {
-        var childCount = f_getChildCount(transform)
-        LOG("childCount\t--->\t" + childCount + "\t(" + getObjName(transform) + ")", LogColor.C36)
-        PrintHierarchy(transform, 1, true)
-    }
+    try {
+        if (p_getChildCount != 0) {
+            var childCount = f_getChildCount(transform)
+            LOG("childCount\t--->\t" + childCount + "\t(" + getObjName(transform) + ")", LogColor.C36)
+            PrintHierarchy(transform, 1, true)
+        }
+    } catch {}
 
     var eulerAngles_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_eulerAngles", 0), eulerAngles_vector3, transform)
@@ -3602,6 +3615,17 @@ function HookUnityExit() {
     //     LOG("SrcPackageName ===> " + readU16(srcCall()))
     //     return packageName == "" ? srcCall() : allocStr(packageName)
     // })
+
+    Java.perform(function () {
+        Java.use("android.app.Activity").finish.overload().implementation = function () {
+            console.log("called Finish ~ ")
+            PrintStackTrace()
+        }
+        Java.use("java.lang.System").exit.implementation = function (code) {
+            console.log("called exit(" + code + ") ~ ")
+            PrintStackTrace()
+        }
+    })
 }
 
 function HookInstantiate() {
@@ -3971,11 +3995,21 @@ function findInMemory(typeStr) {
 function findGameObject(path, transform) {
     try {
         if (transform == undefined) {
-            // GameObject.find（静态方法）得到GameObject,路径查找
-            showGameObject(callFunction(find_method("UnityEngine.CoreModule", "GameObject", "Find", 1), allocStr(path, "")))
+            if (arguments[2] != undefined) {
+                // 返回 gameobject
+                return callFunction(find_method("UnityEngine.CoreModule", "GameObject", "Find", 1), allocStr(path, ""))
+            } else {
+                // GameObject.find（静态方法）得到GameObject,路径查找
+                showGameObject(callFunction(find_method("UnityEngine.CoreModule", "GameObject", "Find", 1), allocStr(path, "")))
+            }
         } else if (getType(transform, 1).indexOf("Transform") != -1) {
-            // Transform.find(非静态方法) 得到的也是transform，指定查找起始点，可以查找隐藏对象
-            showGameObject(getGameObject(callFunction(find_method("UnityEngine.CoreModule", "Transform", "Find", 1), transform, allocStr(path, ""))))
+            if (arguments[2] != undefined) {
+                // 返回 transform
+                return callFunction(find_method("UnityEngine.CoreModule", "Transform", "Find", 1), transform, allocStr(path, ""))
+            } else {
+                // Transform.find(非静态方法) 得到的也是transform，指定查找起始点，可以查找隐藏对象
+                showGameObject(getGameObject(callFunction(find_method("UnityEngine.CoreModule", "Transform", "Find", 1), transform, allocStr(path, ""))))
+            }
         } else {
             LOG("\narguments[1] Need a Transform Ptr\n", LogColor.RED)
         }
@@ -4156,6 +4190,113 @@ function HookLocalized() {
     })
 }
 
+function B_GameObject(type) {
+    switch (type) {
+        case 0:
+            ctor_0()
+            break
+        case 1:
+            ctor_1()
+            break
+        case 2:
+            ctor_2()
+            break
+        case 3:
+            sendMessage_1()
+            break
+        case 4:
+            sendMessage_2()
+            break
+        case 5:
+            sendMessage_3()
+            break
+        case 6:
+            GetComponentFastPath_2()
+            break
+        default:
+            ctor_0()
+            ctor_1()
+            ctor_2()
+            sendMessage_1()
+            sendMessage_2()
+            sendMessage_3()
+            GetComponentFastPath_2()
+            break
+    }
+
+    function ctor_0() {
+        try {
+            b(find_method("UnityEngine.CoreModule", "GameObject", ".ctor", 0, false, 1))
+            var a_ctor = find_method("UnityEngine.CoreModule", "GameObject", ".ctor", 0)
+            LOG("Add breakpoint " + a_ctor + "(" + a_ctor.sub(soAddr) + ")" + " | public Void .ctor ()")
+        } catch (e) {
+            LOD("NOT FOUND : public Void .ctor ()", LogColor.RED)
+        }
+    }
+
+    function ctor_1() {
+        try {
+            b(find_method("UnityEngine.CoreModule", "GameObject", ".ctor", 1, false, 1))
+            var a_ctor = find_method("UnityEngine.CoreModule", "GameObject", ".ctor", 1)
+            LOG("Add breakpoint " + a_ctor + "(" + a_ctor.sub(soAddr) + ")" + " | public Void .ctor (String name)")
+        } catch (e) {
+            LOD("NOT FOUND : public Void public Void .ctor (String name)", LogColor.RED)
+        }
+    }
+
+    function ctor_2() {
+        try {
+            b(find_method("UnityEngine.CoreModule", "GameObject", ".ctor", 2, false, 1))
+            var a_ctor = find_method("UnityEngine.CoreModule", "GameObject", ".ctor", 2)
+            LOG("Add breakpoint " + a_ctor + "(" + a_ctor.sub(soAddr) + ")" + " | public Void .ctor (String name,Type[] components)")
+        } catch (e) {
+            LOD("NOT FOUND : public Void .ctor (String name,Type[] components)", LogColor.RED)
+        }
+    }
+
+    function sendMessage_1() {
+        try {
+            b(find_method("UnityEngine.CoreModule", "GameObject", "SendMessage", 1, false, 1))
+            var a_sendMessage = find_method("UnityEngine.CoreModule", "GameObject", "SendMessage", 1)
+            LOG("Add breakpoint " + a_sendMessage + "(" + a_sendMessage.sub(soAddr) + ")" + " | public Void SendMessage (String methodName)")
+        } catch (e) {
+            LOD("NOT FOUND : public Void SendMessage (String methodName)", LogColor.RED)
+        }
+    }
+
+    function sendMessage_2() {
+        try {
+            b(find_method("UnityEngine.CoreModule", "GameObject", "SendMessage", 2, false, 1))
+            var a_sendMessage = find_method("UnityEngine.CoreModule", "GameObject", "SendMessage", 2)
+            LOG("Add breakpoint " + a_sendMessage + "(" + a_sendMessage.sub(soAddr) + ")" + " | public Void SendMessage (String methodName,Object value)")
+        } catch (e) {
+            LOD("NOT FOUND : public Void SendMessage (String methodName,Object value)", LogColor.RED)
+        }
+    }
+
+    function sendMessage_3() {
+        try {
+            b(find_method("UnityEngine.CoreModule", "GameObject", "SendMessage", 3, false, 1))
+            var a_sendMessage = find_method("UnityEngine.CoreModule", "GameObject", "SendMessage", 3)
+            LOG("Add breakpoint " + a_sendMessage + "(" + a_sendMessage.sub(soAddr) + ")" + " | public Void SendMessage (String methodName,Object value,SendMessageOptions options)")
+        } catch (e) {
+            LOD("NOT FOUND : public Void SendMessage (String methodName,Object value,SendMessageOptions options)", LogColor.RED)
+        }
+    }
+
+    function GetComponentFastPath_2() {
+        try {
+            b(find_method("UnityEngine.CoreModule", "GameObject", "GetComponentFastPath", 2, false, 1))
+            var a_component = find_method("UnityEngine.CoreModule", "GameObject", "GetComponentFastPath", 2)
+            LOG("Add breakpoint " + a_component + "(" + a_component.sub(soAddr) + ")" + " | internal Void GetComponentFastPath (Type type,IntPtr oneFurtherThanResultValue)")
+        } catch (e) {
+            LOD("NOT FOUND : internal Void GetComponentFastPath (Type type,IntPtr oneFurtherThanResultValue)", LogColor.RED)
+        }
+    }
+
+
+}
+
 function Text() {
 
     //用作查找拼接后的字符串
@@ -4166,8 +4307,6 @@ function Text() {
     // Text 相关
     HookTrackText()
     // HookGetSetText()
-
-
 
     function HookGetSetText() {
 
@@ -4223,6 +4362,9 @@ function Text() {
 function B_Text() {
     const strMap = new Map()
     strMap.set("SETTINGS", "字体")
+    strMap.set("Loading...", "加载中...")
+    strMap.set("Medic", "医生")
+    strMap.set("Survivor", "幸存者")
 
     try {
         LOG("Enable TMP_Text Hook".padEnd(30, " ") + "| class : " + findClass("TMP_Text"), LogColor.C36)
@@ -4254,7 +4396,7 @@ function B_Text() {
 
     function TMP_Text(showGobj) {
         A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {
-            var aimStr = readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0]))
+            var aimStr = "|" + readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0])) + "|"
             LOG("\n[TMP_Text]  " + args[0] + "\t" + aimStr, LogColor.C36)
             if (strMap.size != 0) {
                 var repStr = strMap.get(aimStr)
@@ -4271,7 +4413,7 @@ function B_Text() {
 
     function TextMeshPro() {
         A(find_method("Unity.TextMeshPro", "TextMeshPro", "get_transform", 0), (args) => {
-            var aimStr = readU16(callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "get_text", 0), args[0]))
+            var aimStr = "|" + readU16(callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "get_text", 0), args[0])) + "|"
             LOG("\n[TextMeshPro]  " + args[0] + "\t" + aimStr, LogColor.C35)
             if (strMap.size != 0) {
                 var repStr = strMap.get(aimStr)
@@ -4285,7 +4427,7 @@ function B_Text() {
 
     function UnityEngine_UI_Text() {
         A(find_method("UnityEngine.UI", "Text", "get_text", 0), undefined, (ret, ctx) => {
-            var aimStr = readU16(ret)
+            var aimStr = "|" + readU16(ret) + "|"
             LOG("\n[Text_Get]  " + (p_size == 4 ? ctx.r0 : ctx.x0) + "\t" + aimStr, LogColor.C32)
             if (strMap.size != 0) {
                 var repStr = strMap.get(aimStr)
@@ -4299,7 +4441,7 @@ function B_Text() {
 
         A(find_method("UnityEngine.UI", "Text", "set_text", 1), (args, ctx) => {
             LOG("" + args[0] + " " + args[1])
-            var aimStr = readU16(args[1])
+            var aimStr = "|" + readU16(args[1]) + "|"
             LOG("\n[Text_Set]  " + args[0] + "\t" + aimStr, LogColor.C33)
             if (strMap.size != 0) {
                 var repStr = strMap.get(aimStr)
@@ -4313,7 +4455,7 @@ function B_Text() {
 
     function HookTrackText() {
         A(find_method('UnityEngine.UI', 'FontUpdateTracker', 'TrackText', 1), (args) => {
-            var aimStr = callFunctionRUS(find_method("UnityEngine.UI", 'Text', 'get_text', 0), args[0])
+            var aimStr = "|" + callFunctionRUS(find_method("UnityEngine.UI", 'Text', 'get_text', 0), args[0]) + "|"
             LOG("\n[FontUpdateTracker]  " + args[0] + "\t" + aimStr, LogColor.C36)
             if (strMap.size != 0) {
                 var repStr = strMap.get(aimStr)
@@ -4359,6 +4501,7 @@ function TMP_Template() {
     }
 
     try {
+        if (find_method("UnityEngine.AssetBundleModule", "AssetBundle", "LoadFromFileAsync", 2, false, 2) == 0) throw new Error()
         LOG(getLine(80) + "\n[*] Hook AssetBundle\n" + getLine(30), LogColor.C96)
         var Template_LoadFromFileAsync =
             '\nR(' + find_method("UnityEngine.AssetBundleModule", "AssetBundle", "LoadFromFileAsync", 2, false, 2) + ', (srcFunc, arg0, arg1, arg2, arg3) => {\n' +
@@ -4389,11 +4532,6 @@ function TMP_Template() {
     } catch {
         LOG("NOT FOUND ---> public TermData GetTermData(string term, bool allowCategoryMistmatch = false)\n", LogColor.RED)
     }
-
-
-
-
-
 }
 
 // TODO
