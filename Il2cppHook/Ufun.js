@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/01/10 11:11
+ * @UpdateTime  2022/01/10 11:23
  * @Des         frida hook u3d functions script
  */
 
@@ -1389,7 +1389,7 @@ function FuckRuntimeType(strType, mPtr) {
     if (strType == undefined || mPtr == undefined)
         switch (strType) {
             case "UnityEngine.RectTransform":
-
+                //TODO
                 break
             case "UnityEngine.CanvasRenderer":
 
@@ -1534,23 +1534,16 @@ function get_method_modifier(method_ptr) {
  */
 function printLogColors() {
     var str = "123456789"
-    console.log("----------------  listLogColors  ----------------")
-    for (var i = 30; i <= 37; i++) {
-        console.log("\t\t\x1b[" + i + "m" + i + "\t" + str + "\x1b[0m")
-    }
-    console.log("----------------------------------------------")
-    for (var i = 40; i <= 47; i++) {
-        console.log("\t\t\x1b[" + i + "m" + i + "\t" + str + "\x1b[0m")
-    }
-    console.log("----------------------------------------------")
-    for (var i = 90; i <= 97; i++) {
-        console.log("\t\t\x1b[" + i + "m" + i + "\t" + str + "\x1b[0m")
-    }
-    console.log("----------------------------------------------")
-    for (var i = 100; i <= 107; i++) {
-        console.log("\t\t\x1b[" + i + "m" + i + "\t" + str + "\x1b[0m")
-    }
-    console.log("----------------------------------------------")
+    LOG("----------------  listLogColors  ----------------")
+    for (var i = 30; i <= 37; i++) console.log("\t\t\x1b[" + i + "mC" + i + "\t" + str + "\x1b[0m")
+    var line = getLine(50)
+    LOG(line)
+    for (var i = 40; i <= 47; i++) console.log("\t\t\x1b[" + i + "mC" + i + "\t" + str + "\x1b[0m")
+    LOG(line)
+    for (var i = 90; i <= 97; i++) console.log("\t\t\x1b[" + i + "mC" + i + "\t" + str + "\x1b[0m")
+    LOG(line)
+    for (var i = 100; i <= 107; i++) console.log("\t\t\x1b[" + i + "mC" + i + "\t" + str + "\x1b[0m")
+    LOG(line)
 }
 
 var il2cppTabledefs = {
@@ -4406,7 +4399,8 @@ function B_Text() {
     function TMP_Text(showGobj) {
         A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {
             var aimStr = "|" + readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0])) + "|"
-            LOG("\n[TMP_Text]  " + args[0] + "\t" + aimStr, LogColor.C36)
+            if (filterDuplicateOBJ(String(args[0]), 30) == -1) return
+            LOG("\n[TMP_Text]  " + +"\t" + aimStr, LogColor.C36)
             if (strMap.size != 0) {
                 var repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
@@ -4423,6 +4417,7 @@ function B_Text() {
     function TextMeshPro() {
         A(find_method("Unity.TextMeshPro", "TextMeshPro", "get_transform", 0), (args) => {
             var aimStr = "|" + readU16(callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "get_text", 0), args[0])) + "|"
+            if (filterDuplicateOBJ(String(args[0])) == -1) return
             LOG("\n[TextMeshPro]  " + args[0] + "\t" + aimStr, LogColor.C35)
             if (strMap.size != 0) {
                 var repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
@@ -4437,6 +4432,7 @@ function B_Text() {
     function UnityEngine_UI_Text() {
         A(find_method("UnityEngine.UI", "Text", "get_text", 0), undefined, (ret, ctx) => {
             var aimStr = "|" + readU16(ret) + "|"
+            if (filterDuplicateOBJ(String(ret)) == -1) return
             LOG("\n[Text_Get]  " + (p_size == 4 ? ctx.r0 : ctx.x0) + "\t" + aimStr, LogColor.C32)
             if (strMap.size != 0) {
                 var repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
@@ -4450,6 +4446,7 @@ function B_Text() {
 
         A(find_method("UnityEngine.UI", "Text", "set_text", 1), (args, ctx) => {
             LOG("" + args[0] + " " + args[1])
+            if (filterDuplicateOBJ(String(args[1])) == -1) return
             var aimStr = "|" + readU16(args[1]) + "|"
             LOG("\n[Text_Set]  " + args[0] + "\t" + aimStr, LogColor.C33)
             if (strMap.size != 0) {
@@ -4465,6 +4462,7 @@ function B_Text() {
     function HookTrackText() {
         A(find_method('UnityEngine.UI', 'FontUpdateTracker', 'TrackText', 1), (args) => {
             var aimStr = "|" + callFunctionRUS(find_method("UnityEngine.UI", 'Text', 'get_text', 0), args[0]) + "|"
+            if (filterDuplicateOBJ(String(callFunctionRUS(find_method("UnityEngine.UI", 'Text', 'get_text', 0))) == -1)) return
             LOG("\n[FontUpdateTracker]  " + args[0] + "\t" + aimStr, LogColor.C36)
             if (strMap.size != 0) {
                 var repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
