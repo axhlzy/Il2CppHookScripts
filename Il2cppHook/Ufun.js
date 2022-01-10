@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2021/01/04 11:50
+ * @UpdateTime  2022/01/10 11:11
  * @Des         frida hook u3d functions script
  */
 
@@ -445,10 +445,10 @@ function C(ImgOrPtr) {
     LOG(getLine(85), LogColor.C33)
 }
 
-// attach A(0xabcd,(args)=>{},(ret)=>{})
+// attach A(0xabcd,(args,ctx)=>{},(ret)=>{})
 function A(mPtr, mOnEnter, mOnLeave) {
     if (mPtr == null || mPtr == 0) {
-        LOG("Can't attach nullptr")
+        LOG("Can't attach nullptr", LogColor.RED)
         return
     }
     mPtr = checkPointer(ptr(mPtr))
@@ -460,9 +460,8 @@ function A(mPtr, mOnEnter, mOnLeave) {
             if (mOnLeave != undefined) mOnLeave(ret, this.context)
         }
     })
-
-    // 记录已经被Attach的函数地址以及listner,默认添加listener记录
-    if (arguments[3] == undefined || arguments[3] == true) map_attach_listener.set(String(mPtr), Listener)
+    // 记录已经被Attach的函数地址以及listner,默认添加listener记录 (只有填写false的时候不记录)
+    if (arguments[3] != false) map_attach_listener.set(String(mPtr), Listener)
 }
 
 // R(0xabcd,(srcFunc,arg0,arg1,arg2,arg3)=>{......})
@@ -1048,6 +1047,7 @@ function breakPoint(mPtr, index, name) {
  */
 function breakPoints(filter, isAnalyticParameter) {
     // Interceptor.detachAll()
+    var breakPointsCount = 0
     t_arrayAddr = new Array()
     var t_arrayName = new Array()
     var t_arrayMethod = new Array()
@@ -1102,6 +1102,8 @@ function breakPoints(filter, isAnalyticParameter) {
             A(currentAddr, () => {
                 if (++count_method_times[index] < maxCallTime) {
                     // 之前是单独添加了一个字段来控制，后面这里改成这样进行筛选判断简洁点
+                    ++breakPointsCount
+                    var TmpCountStr = "[" + String(breakPointsCount) + "]"
                     if (filterClass.length != 0) {
                         var temp = getClassNameFromMethodInfo(t_arrayMethod[index])
                         for (var i = 0; i < filterClass.length; i++) {
@@ -1110,11 +1112,11 @@ function breakPoints(filter, isAnalyticParameter) {
                         var retStr = getFunctionDesStr(t_arrayMethod, index, maxLength)
                         filterClass.forEach((value) => {
                             if (temp.indexOf(value) != -1 && temp.length == value.length) {
-                                LOG("called : " + currentAddr.sub(soAddr) + retStr + " --->\t" + arrayName[index] + "\n", LogColor.C36)
+                                LOG(TmpCountStr + " called : " + currentAddr.sub(soAddr) + retStr + " --->\t" + arrayName[index] + "\n", LogColor.C36)
                             }
                         })
                     } else {
-                        LOG("\ncalled : " + currentAddr.sub(soAddr) + getFunctionDesStr(t_arrayMethod, index, 13) + " --->\t" + arrayName[index], LogColor.C36)
+                        LOG("\n" + TmpCountStr + " called : " + currentAddr.sub(soAddr) + getFunctionDesStr(t_arrayMethod, index, 13) + " --->\t" + arrayName[index], LogColor.C36)
                     }
                 }
             }, () => {}, false)
@@ -1740,6 +1742,16 @@ function breakWithArgs(mPtr, argCount) {
         LOG(tStr, LogColor.C36)
     }, (ret) => {
         LOG("End Function return ---> " + ret, LogColor.C36)
+    })
+}
+
+function breakWithStack(mPtr) {
+    mPtr = checkPointer(mPtr)
+    A(mPtr, (args, ctx) => {
+        LOG("\n" + getLine(65), LogColor.C33)
+        LOG("Called from " + ptr(mPtr) + " ---> " + ptr(mPtr).sub(soAddr) + "\t|  LR : " + ptr(ctx.lr).sub(soAddr) + "\n", LogColor.C96)
+        PrintStackTraceN(ctx)
+        LOG("\n" + getLine(65), LogColor.C33)
     })
 }
 
@@ -2779,11 +2791,10 @@ function PrintStackTrace() {
 
 // 打印native堆栈
 function PrintStackTraceN(ctx) {
-    console.log("\x1b[36m Called from:\n" +
-        Thread.backtrace(ctx, Backtracer.FUZZY)
+    LOG(Thread.backtrace(ctx, Backtracer.FUZZY)
         .slice(0, 6)
         // .reverse()
-        .map(DebugSymbol.fromAddress).join("\n") + "\x1b[0m")
+        .map(DebugSymbol.fromAddress).join("\n"), LogColor.C36)
 }
 
 function SetInt(key, value) {
@@ -4230,7 +4241,7 @@ function B_GameObject(type) {
             var a_ctor = find_method("UnityEngine.CoreModule", "GameObject", ".ctor", 0)
             LOG("Add breakpoint " + a_ctor + "(" + a_ctor.sub(soAddr) + ")" + " | public Void .ctor ()")
         } catch (e) {
-            LOD("NOT FOUND : public Void .ctor ()", LogColor.RED)
+            LOG("NOT FOUND : public Void .ctor ()", LogColor.RED)
         }
     }
 
@@ -4240,7 +4251,7 @@ function B_GameObject(type) {
             var a_ctor = find_method("UnityEngine.CoreModule", "GameObject", ".ctor", 1)
             LOG("Add breakpoint " + a_ctor + "(" + a_ctor.sub(soAddr) + ")" + " | public Void .ctor (String name)")
         } catch (e) {
-            LOD("NOT FOUND : public Void public Void .ctor (String name)", LogColor.RED)
+            LOG("NOT FOUND : public Void public Void .ctor (String name)", LogColor.RED)
         }
     }
 
@@ -4250,7 +4261,7 @@ function B_GameObject(type) {
             var a_ctor = find_method("UnityEngine.CoreModule", "GameObject", ".ctor", 2)
             LOG("Add breakpoint " + a_ctor + "(" + a_ctor.sub(soAddr) + ")" + " | public Void .ctor (String name,Type[] components)")
         } catch (e) {
-            LOD("NOT FOUND : public Void .ctor (String name,Type[] components)", LogColor.RED)
+            LOG("NOT FOUND : public Void .ctor (String name,Type[] components)", LogColor.RED)
         }
     }
 
@@ -4260,7 +4271,7 @@ function B_GameObject(type) {
             var a_sendMessage = find_method("UnityEngine.CoreModule", "GameObject", "SendMessage", 1)
             LOG("Add breakpoint " + a_sendMessage + "(" + a_sendMessage.sub(soAddr) + ")" + " | public Void SendMessage (String methodName)")
         } catch (e) {
-            LOD("NOT FOUND : public Void SendMessage (String methodName)", LogColor.RED)
+            LOG("NOT FOUND : public Void SendMessage (String methodName)", LogColor.RED)
         }
     }
 
@@ -4270,7 +4281,7 @@ function B_GameObject(type) {
             var a_sendMessage = find_method("UnityEngine.CoreModule", "GameObject", "SendMessage", 2)
             LOG("Add breakpoint " + a_sendMessage + "(" + a_sendMessage.sub(soAddr) + ")" + " | public Void SendMessage (String methodName,Object value)")
         } catch (e) {
-            LOD("NOT FOUND : public Void SendMessage (String methodName,Object value)", LogColor.RED)
+            LOG("NOT FOUND : public Void SendMessage (String methodName,Object value)", LogColor.RED)
         }
     }
 
@@ -4280,7 +4291,7 @@ function B_GameObject(type) {
             var a_sendMessage = find_method("UnityEngine.CoreModule", "GameObject", "SendMessage", 3)
             LOG("Add breakpoint " + a_sendMessage + "(" + a_sendMessage.sub(soAddr) + ")" + " | public Void SendMessage (String methodName,Object value,SendMessageOptions options)")
         } catch (e) {
-            LOD("NOT FOUND : public Void SendMessage (String methodName,Object value,SendMessageOptions options)", LogColor.RED)
+            LOG("NOT FOUND : public Void SendMessage (String methodName,Object value,SendMessageOptions options)", LogColor.RED)
         }
     }
 
@@ -4290,7 +4301,7 @@ function B_GameObject(type) {
             var a_component = find_method("UnityEngine.CoreModule", "GameObject", "GetComponentFastPath", 2)
             LOG("Add breakpoint " + a_component + "(" + a_component.sub(soAddr) + ")" + " | internal Void GetComponentFastPath (Type type,IntPtr oneFurtherThanResultValue)")
         } catch (e) {
-            LOD("NOT FOUND : internal Void GetComponentFastPath (Type type,IntPtr oneFurtherThanResultValue)", LogColor.RED)
+            LOG("NOT FOUND : internal Void GetComponentFastPath (Type type,IntPtr oneFurtherThanResultValue)", LogColor.RED)
         }
     }
 
@@ -4345,7 +4356,7 @@ function Text() {
         }
 
         function ReadLength(mPtr) {
-            return ptr(mPtr).add(Process.pointerSize * 2).readPointer().toInt32()
+            return ptr(mPtr).add(p_size * 2).readPointer().toInt32()
         }
 
         // called : 0x792adc (0xaaf1d4d0)  --->    public Boolean get_hasBorder ()
@@ -4354,7 +4365,6 @@ function Text() {
         // called : 0x787eb0 (0xb6147b20)  --->    public Single get_lineSpacing ()
         // called : 0x787e20 (0xb6147808)  --->    public FontStyle get_fontStyle ()
     }
-
 }
 
 //public static Void TrackText (Text t)
@@ -4363,8 +4373,7 @@ function B_Text() {
     const strMap = new Map()
     strMap.set("SETTINGS", "字体")
     strMap.set("Loading...", "加载中...")
-    strMap.set("Medic", "医生")
-    strMap.set("Survivor", "幸存者")
+    strMap.set("More games", "更多游戏")
 
     try {
         LOG("Enable TMP_Text Hook".padEnd(30, " ") + "| class : " + findClass("TMP_Text"), LogColor.C36)
@@ -4399,7 +4408,7 @@ function B_Text() {
             var aimStr = "|" + readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0])) + "|"
             LOG("\n[TMP_Text]  " + args[0] + "\t" + aimStr, LogColor.C36)
             if (strMap.size != 0) {
-                var repStr = strMap.get(aimStr)
+                var repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
                     callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "set_text", 1), args[0], allocStr(repStr, ""))
                     LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
@@ -4416,7 +4425,7 @@ function B_Text() {
             var aimStr = "|" + readU16(callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "get_text", 0), args[0])) + "|"
             LOG("\n[TextMeshPro]  " + args[0] + "\t" + aimStr, LogColor.C35)
             if (strMap.size != 0) {
-                var repStr = strMap.get(aimStr)
+                var repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
                     callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "set_text", 1), args[0], allocStr(repStr, ""))
                     LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
@@ -4430,7 +4439,7 @@ function B_Text() {
             var aimStr = "|" + readU16(ret) + "|"
             LOG("\n[Text_Get]  " + (p_size == 4 ? ctx.r0 : ctx.x0) + "\t" + aimStr, LogColor.C32)
             if (strMap.size != 0) {
-                var repStr = strMap.get(aimStr)
+                var repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
                     ret.replace(allocStr(repStr, ""))
                     // callFunction(find_method("UnityEngine.UI", 'Text', 'set_text', 1), p_size == 4 ? ctx.r0 : ctx.x0, allocStr(repStr, ""))
@@ -4444,7 +4453,7 @@ function B_Text() {
             var aimStr = "|" + readU16(args[1]) + "|"
             LOG("\n[Text_Set]  " + args[0] + "\t" + aimStr, LogColor.C33)
             if (strMap.size != 0) {
-                var repStr = strMap.get(aimStr)
+                var repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
                     args[1] = allocStr(repStr, "")
                     LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
@@ -4458,7 +4467,7 @@ function B_Text() {
             var aimStr = "|" + callFunctionRUS(find_method("UnityEngine.UI", 'Text', 'get_text', 0), args[0]) + "|"
             LOG("\n[FontUpdateTracker]  " + args[0] + "\t" + aimStr, LogColor.C36)
             if (strMap.size != 0) {
-                var repStr = strMap.get(aimStr)
+                var repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
                     args[1] = allocStr(repStr, "")
                     LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
