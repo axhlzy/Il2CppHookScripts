@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/01/10 11:23
+ * @UpdateTime  2022/01/26 14:17
  * @Des         frida hook u3d functions script
  */
 
@@ -22,7 +22,7 @@ var il2cpp_get_corlib, il2cpp_domain_get, il2cpp_domain_get_assemblies, il2cpp_a
 var f_getName, f_getLayer, f_getTransform, f_getParent, f_getChildCount, f_getChild, f_get_pointerEnter, f_pthread_create, f_getpid, f_gettid, f_sleep
 var p_getName, p_getLayer, p_getTransform, p_getParent, p_getChildCount, p_getChild, p_get_pointerEnter, p_pthread_create, p_getpid, p_gettid, p_sleep
 
-// libart.so中的函数初始化
+// libart.so 中的函数初始化
 var DecodeJObject, GetDescriptor, ArtCurrent
 
 // 格式化展示使用到
@@ -66,7 +66,7 @@ var arrayName = []
 
 /**
  * --------------------------------------------------------------------------------------------
- * 快捷方法
+ * 常用
  * ---------------------
  * i()      list_Images()
  * c()      list_Classes(image,isShowClass) // 遍历调用
@@ -77,9 +77,9 @@ var arrayName = []
  * n()      nopfunction(ptr)
  * nn()     cancel nopfunction(ptr)
  * nnn()    cancel all nop/replace function
- * d()      Interceptor.detachAll()
+ * d()      Interceptor.detachAll() / d(mPtr) detach mPtr
  * a()      addBreakPoints(imgOrCls)
- * b()      breakPoint(ptr)
+ * b()      breakPoint(mPtr)
  * P()      printCtx(pointer,range)
  * B()      breakPoints(filter)
  * D()      detachAll and reset arrays
@@ -97,18 +97,19 @@ var arrayName = []
  * getUnityInfo()
  * getApkInfo()
  * GotoScene(str)
- * CallStatic(mPtr,arg0,arg1,arg2,arg3)
+ * callFunction(mPtr,arg0,arg1,arg2,arg3)
  * SeeTypeToString(obj)
  * FuckKnownType(strType,mPtr)
  * Toast(msg)
  * getLibPath()
+ * print_deserted_methods()
  * 
  * --- 用作动态Hook去掉指定gameObj
  * setClick()
  * HideClickedObj()
  * HookMotionEvent()
  * 
- * --- 查看一些对象
+ * --- 查看对象
  * showEventData(eventData)
  * showTransform(transform)
  * showEventData(eventData)
@@ -116,18 +117,18 @@ var arrayName = []
  * --- 修改属性
  * destroyObj(gameObj)
  * setActive(gameObj,visible)
- * SetPosition(mTransform,x,y,z)
- * SetLocalScale(mTransform,x,y,z)
- * SetLocalPosition(mTransform,x,y,z)
- * SetLocalRotation(mTransform,x,y,z,w)
+ * setPosition(mTransform,x,y,z)
+ * setLocalScale(mTransform,x,y,z)
+ * setLocalPosition(mTransform,x,y,z)
+ * setLocalRotation(mTransform,x,y,z,w)
  * ----------------------------------------------------------------------
  * SharedPrefs                                                          |
  * ---------------------------------------------------------------------|
  * SetInt(key,value)    | SetFloat(key,value)   | SetString(key,value)  |
  * GetInt(key)          | GetFloat(key)         | GetString(key)        |
  * ----------------------------------------------------------------------
- * PS:  分清楚何时传的MethodInfo,Transform,GameObject指针 ... 调用函数的时候不要瞎传参数
- *      如果使用了gadgat,使用-FU跑一个空脚本先把程序跑起来在进行注入，整个脚本对spawn方式启动的兼容性都不是很好
+ * PS:  分清楚 MethodInfo,Transform,GameObject 指针类型, 调用函数的时候不要瞎传参数
+ *      如果使用了gadgat,使用-FU先把应用跑起来再进行注入该脚本, 整个脚本对spawn方式启动的兼容性不好
  * --------------------------------------------------------------------------------------------
  */
 setImmediate(main)
@@ -780,7 +781,13 @@ function getFunctionAddrFromCls(clsptr, funcName) {
 }
 
 function getFieldOffFromCls(clsptr, fieldName) {
-    return listFieldsFromCls(clsptr, undefined, 1, fieldName)
+    if (arguments[2] == undefined) return listFieldsFromCls(clsptr, 0, 2, fieldName)
+    return listFieldsFromCls(clsptr, ptr(arguments[2]), 1, fieldName)
+}
+
+function getFieldInfoFromCls(clsptr, fieldName) {
+    if (arguments[2] == undefined) return listFieldsFromCls(clsptr, 0, 2, fieldName)
+    return listFieldsFromCls(clsptr, ptr(arguments[2]), 2, fieldName)
 }
 
 /**
@@ -1702,23 +1709,23 @@ function callFunction(mPtr, ...args) {
 }
 
 function callFunctionRB(mPtr, ...args) {
-    return callFunctionRI(mPtr, args) == 1
+    return callFunctionRI(mPtr, ...args) == 1
 }
 
 function callFunctionRI(mPtr, ...args) {
-    return callFunction(mPtr, args).toInt32()
+    return callFunction(mPtr, ...args).toInt32()
 }
 
 function callFunctionRS(mPtr, ...args) {
-    return readSingle(callFunction(mPtr, args))
+    return readSingle(callFunction(mPtr, ...args))
 }
 
 function callFunctionRF(mPtr, ...args) {
-    return callFunction(mPtr, args).readFloat()
+    return callFunction(mPtr, ...args).readFloat()
 }
 
 function callFunctionRUS(mPtr, ...args) {
-    return readU16(callFunction(mPtr, args))
+    return readU16(callFunction(mPtr, ...args))
 }
 
 function callFunctionRCS(mPtr, ...args) {
@@ -1871,7 +1878,12 @@ function printExp() {
         LOG("\tTextMeshPro_setText = reinterpret_cast<void (*)(void *, MonoString *)>(soAddr + " + find_method("Unity.TextMeshPro", "TextMeshPro", "set_text", 1, false, 2) + ");", LogColor.C96)
     } catch (e) {}
     try {
-        LOG("\tTMPText_ParseInputText = reinterpret_cast < void * ( * )(void * ) > (soAddr +" + find_method("Unity.TextMeshPro", "TMP_Text", "ParseInputText", 0, false, 2) + ");\n", LogColor.C96)
+        LOG("\tTMPText_ParseInputText = reinterpret_cast < void * ( * )(void * ) > (soAddr +" + find_method("Unity.TextMeshPro", "TMP_Text", "ParseInputText", 0, false, 2) + ");", LogColor.C96)
+    } catch {}
+    try {
+        LOG("\tGetKeyDown = reinterpret_cast<bool (*)(void *)>(soAddr + " + find_method("UnityEngine.InputLegacyModule", "Input", "GetKeyDown", 1, false, 2) + ");", LogColor.C96)
+        LOG("\tQuit_0 = reinterpret_cast<bool (*)()>(soAddr + " + find_method("UnityEngine.CoreModule", "Application", "Quit", 0, false, 2) + ");", LogColor.C96)
+        LOG("\tQuit_1 = reinterpret_cast<bool (*)(int)>(soAddr + " + find_method("UnityEngine.CoreModule", "Application", "Quit", 1, false, 2) + ");\n", LogColor.C96)
     } catch {}
 }
 
@@ -1944,7 +1956,12 @@ function listFieldsFromCls(klass, instance) {
         accessStr = accessStr.substring(0, accessStr.length - 1)
         var enumStr = (is_enum && (String(field_class) == String(klass))) ? (enumIndex++ + "\t") : " "
         var retStr = filedOffset + "\t" + accessStr + "\t" + fieldClassName + "\t" + field_class + "\t" + fieldName + "\t" + enumStr
-        if (arguments[2] != undefined && fieldName == arguments[3]) return ptr(filedOffset)
+        if (arguments[2] == "1" && fieldName == arguments[3]) return ptr(filedOffset)
+        if (arguments[2] == "2" && fieldName == arguments[3]) {
+            var tmpValue = instance != 0 ? ptr(instance).add(ptr(filedOffset)) : ptr(0)
+            var tmpValueR = instance != 0 ? ptr(instance).add(ptr(filedOffset)).readPointer() : ptr(0)
+            return [fieldName, filedOffset, field_class, fieldClassName, tmpValue, tmpValueR]
+        }
         arrStr.push(retStr)
         maxlength = retStr.length < maxlength ? maxlength : retStr.length
     }
@@ -2826,19 +2843,19 @@ function GetString(key) {
     LOG("\n[*] GetString('" + key + "')\t--->\t" + readU16(ret) + "\n", LogColor.C95)
 }
 
-function SetLocalScale(mTransform, x, y, z) {
+function setLocalScale(mTransform, x, y, z) {
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "set_localScale_Injected", 1), ptr(mTransform), allocVector(x, y, z))
 }
 
-function SetLocalPosition(mTransform, x, y, z) {
+function setLocalPosition(mTransform, x, y, z) {
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "set_localPosition_Injected", 1), ptr(mTransform), allocVector(x, y, z))
 }
 
-function SetPosition(mTransform, x, y, z) {
+function setPosition(mTransform, x, y, z) {
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "set_Position_Injected", 1), ptr(mTransform), allocVector(x, y, z))
 }
 
-function SetLocalRotation(mTransform, x, y, z, w) {
+function setLocalRotation(mTransform, x, y, z, w) {
     // var set_Rotation_Injected = find_method("UnityEngine.CoreModule","Transform","set_Rotation_Injected",1,true)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "set_localRotation_Injected", 1), ptr(mTransform), allocVector(x, y, z, w))
 }
@@ -2863,8 +2880,12 @@ function transformToGameObj(gameObj) {
  * getGameObject     transform -> GameObject
  * @param {Pointer}  transform
  */
-function getGameObject(transform) {
-    return callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), ptr(transform))
+function getGameObject(mPtr) {
+    return callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), ptr(mPtr))
+}
+
+function getGameObjectG(mPtr) {
+    return callFunction(find_method("UnityEngine.CoreModule", "GameObject", "get_gameObject", 0), ptr(mPtr))
 }
 
 function class_is_enum(Pcls) {
@@ -3913,7 +3934,7 @@ function patchCode(mPtr, mList, saveIndex) {
     if (mList == "MOV R0,#1") mList = [0x01, 0x00, 0xA0, 0xE3]
     if (mList == "MOV R0,#0") mList = [0x00, 0x00, 0xA0, 0xE3]
     mPtr = checkPointer(mPtr)
-    Memory.protect(mPtr, 100, "rwx")
+    Memory.protect(mPtr, 0x1000, "rwx")
     if (saveIndex != undefined) {
         saveIndexCode[i] = mPtr.readByteArray(4)
     }
@@ -3942,7 +3963,7 @@ function findInMemory(typeStr) {
             break
         case "global-metadata.dat":
             find("AF 1B B1 FA 18", (pattern, address, size) => {
-                LOG("\n" + getLine("80"), LogColor.RED)
+                LOG("\n" + getLine(80), LogColor.RED)
                 LOG('Found ' + pattern + " Address: " + address.toString() + "\n", LogColor.C36)
                 seeHexA(address, 64, LogColor.C33)
 
@@ -3964,7 +3985,7 @@ function findInMemory(typeStr) {
                     file.close()
                     LOG('Save to\t\t===>\t' + path, LogColor.C36)
                 }
-                LOG(getLine("80"), LogColor.RED)
+                LOG(getLine(80), LogColor.RED)
             })
             break
     }
@@ -4036,12 +4057,6 @@ function findGameObject(path, transform) {
     [Pixel XL::Stick Warfare: Blood Strike]-> FindObjectsOfType(0xE2A9E0,0x2A9D90,0xDEC,"Text")
         0xc2d56cc0 ---> 开始
         0xc2d60d48 ---> 每日任务
-        0xc2d60bb0 ---> Lv0
-        0xc2d603b8 ---> 分享
-        0xc2d75908 ---> 购买 ($2)
-        0xc2d75770 ---> 回馈
-        0xc2d75660 ---> 你玩游戏所获得的经验值为两倍,
-        这效果可以和其他加成叠加
         0xc2d75110 ---> 装备
         0xc2d75088 ---> 物品
         0xc2b94bb0 ---> 已拥有
@@ -4301,70 +4316,25 @@ function B_GameObject(type) {
 
 }
 
-function Text() {
-
-    //用作查找拼接后的字符串
-    // find_method("mscorlib","String","Format",3)
-    // a(findClass("String")) 
-    // find_method("UnityEngine.UI","Text","get_text",0,false)
-
-    // Text 相关
-    HookTrackText()
-    // HookGetSetText()
-
-    function HookGetSetText() {
-
-        hookGet()
-        hookSet()
-
-        // 动态替换文字
-        var arr_src_str = ['Hold To Run', '8082', '免费获得', '+400', '暂停', 'HEADSHOT']
-        var arr_rep_str = ['FuckMusic', '-99', '', '-200²', 'pause', '击中头部']
-
-        function hookSet() {
-            A(find_method("UnityEngine.UI", 'Text', 'set_text', 1), (args) => {
-                LOG("\n" + "called set_text(" + args[1] + ")\n[" + ReadLength(args[1]) + "]\t" + readU16(args[1]), LogColor.C33)
-                var newP = strReplace(args[1])
-                if (newP != 0) args[1] = newP
-            })
-        }
-
-        function hookGet() {
-            A(find_method("UnityEngine.UI", 'Text', 'get_text', 0), (args) => {}, (ret) => {
-                LOG("\n" + "called " + ret + " = get_text()\n[" + ReadLength(ret) + "]\t" + readU16(ret), LogColor.C32)
-                var newP = strReplace(ret)
-                if (newP != 0) ret.replace(newP)
-            })
-        }
-
-        var memcmp = Module.findExportByName("libc.so", "memcmp")
-        if (memcmp != 0) memcmp = new NativeFunction(memcmp, 'pointer', ['pointer', 'pointer', 'int'])
-
-        function strReplace(mPtr) {
-            if (mPtr == 0 || memcmp == 0 || arr_src_str.length == 0 || arr_rep_str.length != arr_src_str.length) return ptr(0)
-            for (var i = 0; i < arr_src_str.length; i++) {
-                if (memcmp(mPtr.add(p_size * 2 + 4), allocStr(arr_src_str[i], "").add(p_size * 2 + 4), ReadLength(mPtr) * 2) == 0) return allocStr(arr_rep_str[i], "")
-            }
-            return ptr(0)
-        }
-
-        function ReadLength(mPtr) {
-            return ptr(mPtr).add(p_size * 2).readPointer().toInt32()
-        }
-
-        // called : 0x792adc (0xaaf1d4d0)  --->    public Boolean get_hasBorder ()
-        // called : 0x787e10 (0xb61477b0)  --->    public Int32 get_fontSize ()
-        // called : 0x787e80 (0xb6147a18)  --->    public Boolean get_richText ()
-        // called : 0x787eb0 (0xb6147b20)  --->    public Single get_lineSpacing ()
-        // called : 0x787e20 (0xb6147808)  --->    public FontStyle get_fontStyle ()
-    }
+function B_InputField() {
+    D()
+    // UnityEngine.UI.InputField
+    a(findClass("InputField"))
+    B()
+    // public Void ActivateInputField ()
+    // n(find_method("UnityEngine.UI", "InputField", "ActivateInputField", 0))
 }
 
 //public static Void TrackText (Text t)
 //a(findClass("TextMesh")) 
+//用作查找拼接后的字符串
+// find_method("mscorlib","String","Format",3)
+// a(findClass("String")) 
+// find_method("UnityEngine.UI","Text","get_text",0,false)
 function B_Text() {
     const strMap = new Map()
-    strMap.set("SETTINGS", "字体")
+    strMap.set("SETTINGS", "设置")
+    strMap.set("ON", "开")
     strMap.set("Loading...", "加载中...")
     strMap.set("More games", "更多游戏")
 
@@ -4384,7 +4354,7 @@ function B_Text() {
 
     try {
         LOG("Enable Text Hook".padEnd(30, " ") + "| class : " + findClass("Text"), LogColor.C36)
-        UnityEngine_UI_Text()
+        UnityEngine_UI_Text(false)
     } catch {
         LOG("UnityEngine.UI.Text.get_text/set_text NOT FOUND!", LogColor.RED)
     }
@@ -4400,7 +4370,7 @@ function B_Text() {
         A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {
             var aimStr = "|" + readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0])) + "|"
             if (filterDuplicateOBJ(String(args[0]), 30) == -1) return
-            LOG("\n[TMP_Text]  " + +"\t" + aimStr, LogColor.C36)
+            LOG("\n[TMP_Text]  " + args[0] + "\t" + aimStr, LogColor.C36)
             if (strMap.size != 0) {
                 var repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
@@ -4429,8 +4399,13 @@ function B_Text() {
         })
     }
 
-    function UnityEngine_UI_Text() {
-        A(find_method("UnityEngine.UI", "Text", "get_text", 0), undefined, (ret, ctx) => {
+    function UnityEngine_UI_Text(showGameObj) {
+        if (showGameObj == undefined) showGameObj = false;
+        A(find_method("UnityEngine.UI", "Text", "get_text", 0), (args) => {
+            if (showGameObj) {
+                showGameObject(callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), args[0]))
+            }
+        }, (ret, ctx) => {
             var aimStr = "|" + readU16(ret) + "|"
             if (filterDuplicateOBJ(String(ret)) == -1) return
             LOG("\n[Text_Get]  " + (p_size == 4 ? ctx.r0 : ctx.x0) + "\t" + aimStr, LogColor.C32)
@@ -4454,6 +4429,9 @@ function B_Text() {
                 if (repStr != undefined) {
                     args[1] = allocStr(repStr, "")
                     LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
+                }
+                if (showGameObj) {
+                    showGameObject(callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), args[0]))
                 }
             }
         })
@@ -4540,6 +4518,51 @@ function TMP_Template() {
         LOG("NOT FOUND ---> public TermData GetTermData(string term, bool allowCategoryMistmatch = false)\n", LogColor.RED)
     }
 }
+
+// 针对于使用到 unity I2.Localization 的情况（mPtr 来自于 resource load ---> TMP_Template）
+// b(find_method("I2.Localization","GoogleLanguages","LanguageMatchesFilter",2,false,1))
+// b(find_method("I2.Localization","GoogleLanguages","GetLanguageName",3,false,1))
+function getTextFromLanguageSourceAsset(mPtr) {
+    // mPtr (type:LanguageSourceAsset)
+    if (mPtr == undefined || mPtr == 0) return
+    var LanguageSourceData = callFunction(find_method("I2.Localization", "LanguageSourceAsset", "get_SourceData", 0), mPtr)
+    // lffc(findClass("LanguageSourceData"), LanguageSourceData)
+    var clsLSD = findClass("LanguageSourceData")
+    var Type_list = getFieldInfoFromCls(clsLSD, "mTerms", LanguageSourceData)[2]
+    var value_Terms = getFieldInfoFromCls(clsLSD, "mTerms", LanguageSourceData)[5]
+    // public Int32 get_Count ()
+    var addr_get_Count = getFunctionAddrFromCls(Type_list, "get_Count")
+    // public TermData get_Item (Int32 index)
+    var addr_get_Item = getFunctionAddrFromCls(Type_list, "get_Item")
+    var count = callFunctionRI(addr_get_Count, value_Terms)
+
+    LOG("\nFound " + count + " Items\n", LogColor.RED)
+    var strArrCls = undefined
+    var strArrStr = undefined
+    var arrAddr_getItem = undefined
+    var line_30 = getLine(30)
+    var resultStr = []
+    for (let index = 0; index < count; index++) {
+        var termData = callFunction(addr_get_Item, value_Terms, index)
+        if (strArrCls == undefined) {
+            var tmp = getFieldInfoFromCls(findClass("TermData"), "Languages")
+            strArrCls = tmp[2]
+            strArrStr = tmp[3]
+            arrAddr_getItem = getFunctionAddrFromCls(strArrCls, "get_Item")
+        }
+        // lffc(findClass("TermData"), termData)
+        var currentStr = readU16(getFieldInfoFromCls(findClass("TermData"), "Term", termData)[5])
+        var currentLanguages = getFieldInfoFromCls(findClass("TermData"), "Languages", termData)[5]
+        var LanguagesArr = FuckKnownType(strArrStr, currentLanguages, strArrCls)
+        LOG(line_30)
+        LOG(currentStr + "\n" + LanguagesArr, LogColor.C36)
+
+        var indexValue = callFunctionRUS(arrAddr_getItem, currentLanguages, 0)
+        resultStr.push(indexValue)
+    }
+    LOG("\n" + JSON.stringify(resultStr) + "\n", LogColor.C92)
+}
+
 
 // TODO
 // 场景加载的更多方法hook
