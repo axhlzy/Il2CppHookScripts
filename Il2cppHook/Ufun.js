@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/01/26 14:17
+ * @UpdateTime  2022/01/26 16:57
  * @Des         frida hook u3d functions script
  */
 
@@ -3948,23 +3948,72 @@ function restoreCode(mPtr, saveIndex) {
 }
 
 function findInMemory(typeStr) {
-
     switch (typeStr) {
         case "Dex1":
             find("54 61 70 20 54 6F 20 53 74 61 72 74", (pattern, address, size) => {
-                LOG('Found ' + pattern + " Address: " + address.toString() + "\n", LogColor.C36)
+                LOG('Found "DEX ' + pattern + " Address: " + address.toString() + "\n", LogColor.C36)
             })
             break
         case "Dex":
             find("64 65 78 0a 30 33 35 00", (pattern, address, size) => {
                 // TODO
-                LOG('Found ' + pattern + " Address: " + address.toString() + "\n", LogColor.C36)
+                LOG('Found "DEX"' + pattern + " Address: " + address.toString() + "\n", LogColor.C36)
+            })
+            break
+        case "PNG":
+            Process.enumerateRanges("r--").forEach((item) => {
+                new Promise((onFound) => {
+                    Memory.scan(item.base, item.size, "89 50 4E 47 0D 0A 1A 0A", {
+                        onMatch: function (addressStart) {
+                            onFound(ptr(addressStart))
+                        },
+                        onComplete: function () {}
+                    })
+                }).then(addressStart => {
+                    // 同步方式效率太低
+                    // let tmpResult = Memory.scanSync(ptr(addressStart), 8 * 1024, "00 00 00 00 49 45 4E 44 AE 42 60 82") 
+                    new Promise((onFound) => {
+                        Memory.scan(item.base, item.size, "00 00 00 00 49 45 4E 44 AE 42 60 82", {
+                            onMatch: function (addressEnd) {
+                                onFound(addressEnd)
+                                return "stop"
+                            },
+                            onComplete: function () {}
+                        })
+                    }).then(value => {
+                        return [addressStart, value]
+                    }).then(result => {
+                        let off = ptr(result[1]).sub(ptr(result[0]))
+                        result[3] = off
+                        LOG("\n" + getLine(60) + "\n[*] Found PNG From " + result[0] + " To " + result[1] + "  size : " + off + "(" + off.toInt32() + ")", LogColor.C36)
+                        // arm 是小端模式 所以这里是字节顺序是大端 （Object下拓展了一个函数用来倒序 toInt32Big）
+                        let x = toInt32Big(ptr(result[0]).add(p_size * 4).readPointer()).toInt32()
+                        let y = toInt32Big(ptr(result[0]).add(p_size * 5).readPointer()).toInt32()
+                        let dep = ptr(result[0]).add(p_size * 6).readU8()
+                        let type = ptr(result[0]).add(p_size * 6 + 1).readU8()
+                        let sig = toInt32Big(ptr(ptr(result[0]).add(p_size * 7 + 1).readPointer()))
+                        LOG("\t (" + x + " X " + y + ") \t" + dep + " " + type + "\t" + sig, LogColor.C36)
+                        return result
+                    }).then(result => {
+                        let length = ptr(result[3]).add(12).toInt32()
+                        if (length <= 0) return
+                        Memory.protect(result[0], 0xFFFF, "rwx")
+                        let path = "/data/data/" + getPkgName() + "/" + result[0] + "_" + result[1] + ".png"
+                        let file = new File(path, "wb")
+                        file.write(Memory.readByteArray(result[0], length))
+                        file.flush()
+                        file.close()
+                        LOG('\tSave to\t\t===>\t' + path, LogColor.C36)
+                    }).catch(err => {
+                        LOG(err)
+                    })
+                })
             })
             break
         case "global-metadata.dat":
             find("AF 1B B1 FA 18", (pattern, address, size) => {
                 LOG("\n" + getLine(80), LogColor.RED)
-                LOG('Found ' + pattern + " Address: " + address.toString() + "\n", LogColor.C36)
+                LOG('Found "global-metadata.dat"' + pattern + " Address: " + address.toString() + "\n", LogColor.C36)
                 seeHexA(address, 64, LogColor.C33)
 
                 var DefinitionsOffset = parseInt(address, 16) + 0x108;
@@ -4563,6 +4612,15 @@ function getTextFromLanguageSourceAsset(mPtr) {
     LOG("\n" + JSON.stringify(resultStr) + "\n", LogColor.C92)
 }
 
+Object.prototype.toInt32Big = (mPtr) => {
+    var resultStr = '';
+    if (mPtr == undefined) mPtr = ptr(this)
+    var aimStr = String(mPtr).split("0x")[1]
+    for (var i = aimStr.length - 1; i >= 0; i--) {
+        resultStr += aimStr.charAt(i);
+    }
+    return ptr("0x" + resultStr)
+}
 
 // TODO
 // 场景加载的更多方法hook
