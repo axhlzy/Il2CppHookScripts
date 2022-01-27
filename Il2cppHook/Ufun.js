@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/01/26 16:57
+ * @UpdateTime  2022/01/27 16:33
  * @Des         frida hook u3d functions script
  */
 
@@ -4568,55 +4568,90 @@ function TMP_Template() {
     }
 }
 
-// 针对于使用到 unity I2.Localization 的情况（mPtr 来自于 resource load ---> TMP_Template）
-// b(find_method("I2.Localization","GoogleLanguages","LanguageMatchesFilter",2,false,1))
-// b(find_method("I2.Localization","GoogleLanguages","GetLanguageName",3,false,1))
-function getTextFromLanguageSourceAsset(mPtr) {
+function getTextFromAsset(type, mPtr) {
     // mPtr (type:LanguageSourceAsset)
-    if (mPtr == undefined || mPtr == 0) return
-    var LanguageSourceData = callFunction(find_method("I2.Localization", "LanguageSourceAsset", "get_SourceData", 0), mPtr)
-    // lffc(findClass("LanguageSourceData"), LanguageSourceData)
-    var clsLSD = findClass("LanguageSourceData")
-    var Type_list = getFieldInfoFromCls(clsLSD, "mTerms", LanguageSourceData)[2]
-    var value_Terms = getFieldInfoFromCls(clsLSD, "mTerms", LanguageSourceData)[5]
-    // public Int32 get_Count ()
-    var addr_get_Count = getFunctionAddrFromCls(Type_list, "get_Count")
-    // public TermData get_Item (Int32 index)
-    var addr_get_Item = getFunctionAddrFromCls(Type_list, "get_Item")
-    var count = callFunctionRI(addr_get_Count, value_Terms)
+    if (mPtr == undefined || mPtr == 0 || type == undefined) return
+    mPtr = ptr(mPtr)
 
-    LOG("\nFound " + count + " Items\n", LogColor.RED)
-    var strArrCls = undefined
-    var strArrStr = undefined
-    var arrAddr_getItem = undefined
-    var line_30 = getLine(30)
-    var resultStr = []
-    for (let index = 0; index < count; index++) {
-        var termData = callFunction(addr_get_Item, value_Terms, index)
-        if (strArrCls == undefined) {
-            var tmp = getFieldInfoFromCls(findClass("TermData"), "Languages")
-            strArrCls = tmp[2]
-            strArrStr = tmp[3]
-            arrAddr_getItem = getFunctionAddrFromCls(strArrCls, "get_Item")
-        }
-        // lffc(findClass("TermData"), termData)
-        var currentStr = readU16(getFieldInfoFromCls(findClass("TermData"), "Term", termData)[5])
-        var currentLanguages = getFieldInfoFromCls(findClass("TermData"), "Languages", termData)[5]
-        var LanguagesArr = FuckKnownType(strArrStr, currentLanguages, strArrCls)
-        LOG(line_30)
-        LOG(currentStr + "\n" + LanguagesArr, LogColor.C36)
-
-        var indexValue = callFunctionRUS(arrAddr_getItem, currentLanguages, 0)
-        resultStr.push(indexValue)
+    switch (type) {
+        // 针对于使用到 unity I2.Localization 的情况（mPtr 来自于 resource load ---> TMP_Template）
+        // b(find_method("I2.Localization","GoogleLanguages","LanguageMatchesFilter",2,false,1))
+        // b(find_method("I2.Localization","GoogleLanguages","GetLanguageName",3,false,1))
+        case "LanguageSourceAsset":
+            do_LanguageSourceAsset()
+            break
+        case "VocabulariesAsset":
+            do_VocabulariesAsset()
+            break
+        default:
+            break
     }
-    LOG("\n" + JSON.stringify(resultStr) + "\n", LogColor.C92)
+
+    function do_LanguageSourceAsset() {
+        let LanguageSourceData = callFunction(find_method("I2.Localization", "LanguageSourceAsset", "get_SourceData", 0), mPtr)
+        // lffc(findClass("LanguageSourceData"), LanguageSourceData)
+        let clsLSD = findClass("LanguageSourceData")
+        let Type_list = getFieldInfoFromCls(clsLSD, "mTerms", LanguageSourceData)[2]
+        let value_Terms = getFieldInfoFromCls(clsLSD, "mTerms", LanguageSourceData)[5]
+        // public Int32 get_Count ()
+        let addr_get_Count = getFunctionAddrFromCls(Type_list, "get_Count")
+        // public TermData get_Item (Int32 index)
+        let addr_get_Item = getFunctionAddrFromCls(Type_list, "get_Item")
+        let count = callFunctionRI(addr_get_Count, value_Terms)
+
+        LOG("\nFound " + count + " Items\n", LogColor.RED)
+        let strArrCls = undefined
+        let strArrStr = undefined
+        let arrAddr_getItem = undefined
+        let line_30 = getLine(30)
+        let resultStr = []
+        for (let index = 0; index < count; index++) {
+            let termData = callFunction(addr_get_Item, value_Terms, index)
+            if (strArrCls == undefined) {
+                let tmp = getFieldInfoFromCls(findClass("TermData"), "Languages")
+                strArrCls = tmp[2]
+                strArrStr = tmp[3]
+                arrAddr_getItem = getFunctionAddrFromCls(strArrCls, "get_Item")
+            }
+            // lffc(findClass("TermData"), termData)
+            let currentStr = readU16(getFieldInfoFromCls(findClass("TermData"), "Term", termData)[5])
+            let currentLanguages = getFieldInfoFromCls(findClass("TermData"), "Languages", termData)[5]
+            let LanguagesArr = FuckKnownType(strArrStr, currentLanguages, strArrCls)
+            LOG(line_30)
+            LOG(currentStr + "\n" + LanguagesArr, LogColor.C36)
+
+            let indexValue = callFunctionRUS(arrAddr_getItem, currentLanguages, 0)
+            resultStr.push(indexValue)
+        }
+        LOG("\n" + JSON.stringify(resultStr) + "\n", LogColor.C92)
+    }
+
+    function do_VocabulariesAsset() {
+        let debug = true
+        let clsVoc = getFieldInfoFromCls(findClass("VocabulariesAsset"), "_vocabularyEntries", mPtr)
+        let items = getFieldInfoFromCls(clsVoc[2], "_items", clsVoc[5])
+        LOG("\n" + getLine(60), LogColor.YELLOW)
+        if (debug) LOG("items --->" + JSON.stringify(items))
+        let size = ptr(getFieldInfoFromCls(clsVoc[2], "_size", clsVoc[5])[5]).toInt32()
+        if (debug) LOG("size ---> " + size)
+        let clsEntryStrOff = ptr(getFieldInfoFromCls(findClass("VocabularyEntry"), "Language")[1]).toInt32()
+        if (debug) LOG("LanguageOffset --->" + clsEntryStrOff)
+        if (debug) LOG(getLine(30), LogColor.YELLOW)
+        for (let index = 0; index < size; index++) {
+            let tempPtr1 = ptr(items[5].add(p_size * 4).add(index * 0x18))
+            let tempPtr2 = tempPtr1.add(clsEntryStrOff)
+            let itemStr = readU16(tempPtr2.readPointer())
+            LOG((debug ? index + "\t--->\t" : "") + itemStr, LogColor.C36)
+        }
+        LOG(getLine(60), LogColor.YELLOW)
+    }
 }
 
 Object.prototype.toInt32Big = (mPtr) => {
     var resultStr = '';
     if (mPtr == undefined) mPtr = ptr(this)
     var aimStr = String(mPtr).split("0x")[1]
-    for (var i = aimStr.length - 1; i >= 0; i--) {
+    for (let i = aimStr.length - 1; i >= 0; i--) {
         resultStr += aimStr.charAt(i);
     }
     return ptr("0x" + resultStr)
