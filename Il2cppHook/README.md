@@ -85,4 +85,8 @@
    
 ![](../imgs/u3d_9.png)
 
+10. **FindObjectsOfType()**
+   
+![](../imgs/u3d_10.png)
+
 ....
