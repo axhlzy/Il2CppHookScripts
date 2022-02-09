@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/01/27 16:33
+ * @UpdateTime  2022/02/09 12:11
  * @Des         frida hook u3d functions script
  */
 
@@ -12,18 +12,18 @@ var soAddr = 0
 var frida_env = ptr(0)
 
 // 声明一些需要用到的导出函数
-var il2cpp_get_corlib, il2cpp_domain_get, il2cpp_domain_get_assemblies, il2cpp_assembly_get_image,
+let il2cpp_get_corlib, il2cpp_domain_get, il2cpp_domain_get_assemblies, il2cpp_assembly_get_image,
     il2cpp_image_get_class_count, il2cpp_image_get_class,
     il2cpp_class_get_methods, il2cpp_class_from_type, il2cpp_class_get_type, il2cpp_class_from_system_type, il2cpp_class_from_name, il2cpp_class_get_method_from_name,
     il2cpp_string_new, il2cpp_type_get_name, il2cpp_type_get_class_or_element_class, il2cpp_class_get_field_from_name,
     il2cpp_class_num_fields, il2cpp_class_get_fields, il2cpp_field_static_get_value, il2cpp_field_static_set_value
 
 // 统一使用 f_xxx 声明函数,使用 p_xxx 声明函数地址
-var f_getName, f_getLayer, f_getTransform, f_getParent, f_getChildCount, f_getChild, f_get_pointerEnter, f_pthread_create, f_getpid, f_gettid, f_sleep
-var p_getName, p_getLayer, p_getTransform, p_getParent, p_getChildCount, p_getChild, p_get_pointerEnter, p_pthread_create, p_getpid, p_gettid, p_sleep
+let f_getName, f_getLayer, f_getTransform, f_getParent, f_getChildCount, f_getChild, f_get_pointerEnter, f_pthread_create, f_getpid, f_gettid, f_sleep
+let p_getName, p_getLayer, p_getTransform, p_getParent, p_getChildCount, p_getChild, p_get_pointerEnter, p_pthread_create, p_getpid, p_gettid, p_sleep
 
 // libart.so 中的函数初始化
-var DecodeJObject, GetDescriptor, ArtCurrent
+let DecodeJObject, GetDescriptor, ArtCurrent
 
 // 格式化展示使用到
 var lastTime = 0
@@ -180,7 +180,7 @@ function main() {
         }
     }
 
-    // setInterval 这个函数巨坑！！！不建议使用
+    // setInterval 涉及js的单线程问题，有点坑，不建议使用
     function Wait_Interval() {
         var taskId = setInterval(() => {
             if (LshowLOG) LOG("\nWaitting load libil2cpp ...... ")
@@ -372,10 +372,18 @@ function P(mPtr, range) {
 function a(imgOrCls) {
     if (imgOrCls == undefined) {
         for (var i = 0; i < arr_img_names.length; i++) {
-            //这两个都是 非常 常用的程序集
+            //这两个都是 常用的程序集
             if (arr_img_names[i] == "Assembly-CSharp" || arr_img_names[i] == "MaxSdk.Scripts") {
                 imgOrCls = arr_img_addr[i]
             }
+            // 补充一些常用的 unity API ... 
+            a(findClass("GameObject"))
+            a(findClass("Component"))
+            a(findClass("Application"))
+            a(findClass("Object"))
+            a(findClass("Transform"))
+            a(findClass("Button"))
+            a(findClass("MonoBehaviour"))
         }
     } else if (imgOrCls == "ALL") {
         for (var i = 0; i < arr_img_names.length; i++) {
@@ -1238,13 +1246,13 @@ function readUInt64(value) {
  */
 function FuckKnownType(typeStr, insPtr, clsPtr) {
     if (insPtr == 0x0 && typeStr != "Boolean") return "NULL"
-    if (clsPtr == undefined) clsPtr == findClass(typeStr)
+    if (clsPtr == undefined) clsPtr = findClass(typeStr)
     try {
         insPtr = ptr(insPtr)
         clsPtr = ptr(clsPtr)
 
         // 数组类型的数据解析
-        if (clsPtr != 0 && typeStr.endsWith("[]")) {
+        if (clsPtr > 100 && typeStr.endsWith("[]")) {
             var addr_getCount = getFunctionAddrFromCls(clsPtr, "get_Count")
             var addr_get_Item = getFunctionAddrFromCls(clsPtr, "get_Item")
             var arr_retStr = new Array()
@@ -1266,14 +1274,14 @@ function FuckKnownType(typeStr, insPtr, clsPtr) {
         }
 
         // Dictionary 数据解析
-        if (clsPtr != 0 && typeStr.startsWith("Dictionary")) {
+        if (clsPtr > 100 && typeStr.startsWith("Dictionary")) {
             var addr_getCount = getFunctionAddrFromCls(clsPtr, "get_Count")
             var count = callFunction(addr_getCount, insPtr)
             return count + "\t" + FuckKnownType("-1", insPtr, 0x0)
         }
 
         // 枚举解析
-        if (clsPtr != 0 && class_is_enum(clsPtr)) {
+        if (clsPtr > 100 && class_is_enum(clsPtr)) {
             var iter = Memory.alloc(p_size)
             var field
             var enumIndex = 0
@@ -1325,6 +1333,7 @@ function FuckKnownType(typeStr, insPtr, clsPtr) {
                 return readU16(callFunction(find_method('mscorlib', 'IntPtr', 'ToString', 0), insPtr))
             case "Block":
             case "Block`1":
+            case "UnityAction":
             case "Action":
             case "Action`1":
             case "Action`2":
@@ -1382,7 +1391,7 @@ function FuckKnownType(typeStr, insPtr, clsPtr) {
                 return readU16(callFunction(find_method("mscorlib", "Object", "ToString", 0), insPtr))
         }
     } catch (e) {
-        // LOG(e)
+        LOG(e)
         return " ? "
     }
 }
@@ -4093,86 +4102,149 @@ function findGameObject(path, transform) {
 }
 
 /**
- *  1. Init UnityEngine.RectTransform_var   UnityEngine.UI.Text_var   
-    2. public static Type GetTypeFromHandle(RuntimeTypeHandle handle)       RuntimeTypeHandle ---> Type
-    3. public static extern Object[] FindObjectsOfType(Type type)           Type ---> Type[] instance
-    4. 返回的数组 size：add(0xC) / real : add(0xF)
-        c3bd6660  60 a3 60 cb 00 00 00 00 00 00 00 00 86 00 00 00  `.`.............
-        c3bd6670  80 f6 14 c4 30 f5 14 c4 70 f6 14 c4 30 f6 14 c4  ....0...p...0...
-        c3bd6680  f0 f5 14 c4 d0 f5 14 c4 00 fc 14 c4 a0 f5 14 c4  ................
-        c3bd6690  90 f5 14 c4 60 f5 14 c4 40 f5 14 c4 10 f5 14 c4  ....`...@.......
-        c3bd66a0  20 f6 14 c4 00 f5 14 c4 e0 f4 14 c4 70 f5 14 c4   ...........p...
-
-    [Pixel XL::Stick Warfare: Blood Strike]-> FindObjectsOfType(0xE2A9E0,0x2A9D90,0xDEC,"Text")
-        0xc2d56cc0 ---> 开始
-        0xc2d60d48 ---> 每日任务
-        0xc2d75110 ---> 装备
-        0xc2d75088 ---> 物品
-        0xc2b94bb0 ---> 已拥有
-        0xc2b94b28 ---> 金币: <Color=#ffc000>0 G</Color>
-        0xc2b946e8 ---> 关闭
-        0xc2b945d8 ---> 购买 ($2)
-        0xc2b944c8 ---> 现金: <Color=#1ed300>0 $</Color>
-        0xc2b94110 ---> 离开
-    ......
-
- * @param {*} typeVar   类型 目前还是手动去找一下，后续再看看源码搞个动态获取
-        （ps:但是还是有可能出现没有初始化的情况，所以还是得借助ida去查看出初始化函数以及index）
-        //在arm32的时候是以下样子
-            UnityEngine.RectTransform_var 
-            UnityEngine.UI.Text_var 
-            TMPro.TMP_SubMesh_var 
-            TMPro.TextMeshPro_var 等等
-        //在arm64的时候是以下样子 （script.json）
-            UnityEngine.Component$$GetComponents<Component>
-            UnityEngine.Component$$GetComponents<CanvasGroup>
-            UnityEngine.GameObject$$GetComponent<Button>
-            UnityEngine.GameObject$$GetComponent<Image>
-        //其实在arm64中使用到的上述函数只是对原GetComponents的一层封装，就是多做了一步 UnityEngine_Component__get_gameObject 拿到对应的gobj
-        // (***(Method$UnityEngine.Component.GetComponents<Component>() + 0x30))() 这一步懒得手动去转了，后续还是考虑处理解析到外层封装然后直接调用
-        // arm64 和 arm32 一样会有一个初始化函数，这一点目前来说可能还是需要手动查找IDA
-* @param {*} initFuc   初始化函数
- * @param {*} index     初始化函数的参数 index
- * @param {*} typeStr   用于FuckKnownType解析的参数类型
+ * File : script.json (目前只针对32位做了适配)
+ * 在arm32的时候是以下样子
+ *      UnityEngine.UI.Button_var
+ *      UnityEngine.RectTransform_var
+ *      UnityEngine.UI.Text_var
+ *      TMPro.TMP_SubMesh_var
+ *      TMPro.TextMeshPro_var ...
+ *  在arm64的时候是以下样子 
+ *      UnityEngine.Component$$GetComponents < Component >
+ *      UnityEngine.Component$$GetComponents < CanvasGroup >
+ *      UnityEngine.GameObject$$GetComponent < Button >
+ *      UnityEngine.GameObject$$GetComponent < Image >
+ *  在arm64中使用到的上述函数只是对原GetComponents的一层封装，就是多做了一步 UnityEngine_Component__get_gameObject 拿到对应的gobj
+ *      (***(Method$UnityEngine.Component.GetComponents<Component>() + 0x30))() 这一步懒得手动去转了，后续还是考虑处理解析到外层封装然后直接调用
+ * arm64 和 arm32 一样会有一个初始化函数，这一点目前来说可能还是需要手动查找IDA
+ * 通过 Il2CppDumper 静态解析出来的类型地址(bss中)， 获得运行时该类型指针（ 有可能类型未被初始化， 需要手动初始化）
+ * @param {*} bssPtr    bss 段的 UnityEngine.Component_var / UnityEngine.MonoBehaviour_var / UnityEngine.RectTransform_var / UnityEngine.UI.Text_var ......
+ * @param {*} initFuc   初始化函数地址 （三条LDR后面）
+ * @param {*} index     初始化index （第二条LDR指向的BSS的值）
+ * @returns 
  */
-function FindObjectsOfTypeOld(typeVar, initFuc, index, typeStr) {
-    typeVar = checkPointer(typeVar)
-    typeVar = ptr(typeVar).readPointer()
-    if (typeVar == 0x0) callFunction(initFuc, index)
-    var mType = callFunction(find_method("mscorlib", "Type", "GetTypeFromHandle", 1), typeVar)
-    var mInstances = callFunction(find_method("UnityEngine.CoreModule", "Object", "FindObjectsOfType", 1), mType, 1)
-    var arrLenth = ptr(mInstances).add(p_size * 3).readInt()
-    LOG("\n")
-    seeHexA(mInstances, p_size * (arrLenth + 4), LogColor.C33)
-    var Titile = "Found '" + typeStr + "' instances       size: " + arrLenth
-    LOG("\n" + getLine(Titile.length), LogColor.C94)
-    LOG(Titile, LogColor.C94)
-    LOG(getLine(Titile.length) + "\n", LogColor.C94)
-    for (var i = 0; i < arrLenth; i++) {
-        var current = ptr(mInstances).add(p_size * (4 + i)).readPointer()
-        LOG(current + " ---> " + FuckKnownType(typeStr, current, findClass(typeStr)), LogColor.C36)
+function getRuntimeTypeFromBssOrData(bssPtr, initFuc, index) {
+    var handle = ptr(soAddr.add(bssPtr)).readPointer()
+    if (handle == 0x0) {
+        // 可能出现没有初始化的情况， 所以还是得借助ida去查看出初始化函数以及index
+        if (initFuc != undefined && index != undefined) {
+            callFunction(initFuc, index)
+            LOG("called init / try call this function again", LogColor.RED)
+            setTimeout(() => {
+                getRuntimeTypeFromBssOrData(bssPtr, initFuc, index)
+            }, 1000);
+        } else {
+            LOG("且未填写初始化函数\n借助IDA查看初始化函数以及Index", LogColor.RED)
+            return
+        }
     }
-    LOG("\n")
+    return callFunction(find_method("mscorlib", "Type", "GetTypeFromHandle", 1), handle)
 }
 
+/**
+ *  1. Init UnityEngine.RectTransform_var UnityEngine.UI.Text_var
+    2. public static Type GetTypeFromHandle(RuntimeTypeHandle handle) RuntimeTypeHandle-- - > Type
+    3. public static extern Object[] FindObjectsOfType(Type type) Type-- - > Type[] instance
+    4. 返回的数组 size： add(0xC) / real: add(0xF)
+    c3bd6660 60 a3 60 cb 00 00 00 00 00 00 00 00 86 00 00 00 `.`.............
+    c3bd6670 80 f6 14 c4 30 f5 14 c4 70 f6 14 c4 30 f6 14 c4....0...p...0...
+    c3bd6680 f0 f5 14 c4 d0 f5 14 c4 00 fc 14 c4 a0 f5 14 c4................
+    c3bd6690 90 f5 14 c4 60 f5 14 c4 40 f5 14 c4 10 f5 14 c4....
+    `...@.......
+                c3bd66a0  20 f6 14 c4 00 f5 14 c4 e0 f4 14 c4 70 f5 14 c4   ...........p...
 
+            [Pixel XL::Stick Warfare: Blood Strike]-> FindObjectsOfType(0xE2A9E0,0x2A9D90,0xDEC,"Text")
+                0xc2d56cc0 ---> 开始
+                0xc2d60d48 ---> 每日任务
+                0xc2d75110 ---> 装备
+                0xc2d75088 ---> 物品
+                0xc2b94bb0 ---> 已拥有
+                0xc2b94b28 ---> 金币: <Color=#ffc000>0 G</Color>
+                0xc2b946e8 ---> 关闭
+                0xc2b945d8 ---> 购买 ($2)
+                0xc2b944c8 ---> 现金: <Color=#1ed300>0 $</Color>
+                0xc2b94110 ---> 离开
+            ......
+ * TIPS:
+ *  1.这个函数（ FindObjectsOfType） 也不是太好用，仅当setActive为true才能找到
+ *  2.Button上面默认没有挂上调用的函数地址，都是在第一次用到了才会被注册在按键上
+ * @param {ptr} RuntimeType 运行时类型 
+ * @param {String} typeStr fuckknowType的参数，解析为什么类型
+ */
 function FindObjectsOfType(RuntimeType, typeStr) {
     listObj(callFunction(find_method("UnityEngine.CoreModule", "Object", "FindObjectsOfType", 1).sub(soAddr), RuntimeType, 0), typeStr)
 
     function listObj(arrPtr, typeStr) {
         if (typeStr == undefined) typeStr = "OBJ"
-        var arrLenth = ptr(arrPtr).add(p_size * 3).readInt()
-        LOG("\n")
-        for (var i = 0; i < arrLenth; i++) {
-            var current = ptr(arrPtr).add(p_size * (4 + i)).readPointer()
-            var arrRet = FuckKnownType(typeStr, current, 0x1)
+        let arrLenth = ptr(arrPtr).add(p_size * 3).readInt()
+        for (let i = 0; i < arrLenth; i++) {
+            let current = ptr(arrPtr).add(p_size * (4 + i)).readPointer()
+            let arrRet = FuckKnownType(typeStr, current, 0x1)
             if (i == 0) {
+                LOG(getLine(60), LogColor.YELLOW)
                 LOG(arrRet[1] + "(" + arrRet[2] + ")", LogColor.C91)
                 LOG("---> Count:" + arrLenth + "\n", LogColor.C31)
             }
-            LOG("[*] " + current + " ---> " + arrRet[0], LogColor.C36)
+            let gObj = getGameObject(current)
+            let gtrs = f_getTransform(getGameObject(current))
+            var disPlayItemTitile = "[*] " + current + " ---> " + arrRet[0] + " { G:" + gObj + " | T:" + gtrs + " }"
+
+            if (arrRet[1] == "UnityEngine.UI.Text") {
+                LOG(disPlayItemTitile + "\t( " + FuckKnownType("Text", current, arrRet[2]) + " )", LogColor.C36)
+            } else if (arrRet[1] == "UnityEngine.UI.Button") {
+                LOG(disPlayItemTitile, LogColor.C96)
+
+                let ButtonClickedEvent = callFunction(find_method("UnityEngine.UI", "Button", "get_onClick", 0), current)
+                let ret_mCalls = getFieldInfoFromCls(findClass("UnityEventBase"), "m_Calls", ButtonClickedEvent)
+                LOG("    [-] " + ret_mCalls[3] + "(" + ret_mCalls[2] + ") " + ret_mCalls[0] + " " + ret_mCalls[5], LogColor.C33)
+
+                // 处理三个 list
+                ansItems(ret_mCalls, "m_PersistentCalls")
+                ansItems(ret_mCalls, "m_RuntimeCalls")
+                ansItems(ret_mCalls, "m_ExecutingCalls")
+            }
         }
-        LOG("\n")
+        LOG("\n" + getLine(60), LogColor.YELLOW)
+    }
+
+    function ansItems(ret_mCalls, itemStr) {
+        let ret_itemCalls = getFieldInfoFromCls(ret_mCalls[2], itemStr, ret_mCalls[5])
+        let m_size = getFieldInfoFromCls(ret_itemCalls[2], "_size", ret_itemCalls[5])[5]
+        if (m_size != 0) {
+            let item = getFieldInfoFromCls(ret_itemCalls[2], "_items", ret_itemCalls[5])
+            let arrAddr = []
+            for (let i = 0; i < m_size; ++i) {
+                let tmpType = "UnityAction"
+                let tmpValue = FuckKnownType(tmpType, ptr(item[5]).add(p_size * (4 + i)).readPointer().add(0x8).readPointer())
+                let functionName = mapNameToAddr(tmpValue)
+                tmpValue += (functionName == "" || functionName == undefined ? "" : (" | " + functionName))
+                arrAddr.push(tmpValue)
+            }
+            LOG("\t" + itemStr.substring(2, 3) + "_calls ( INS :" + item[5] + ")  [TYPE : " + ret_itemCalls[3] + " ( " + ret_itemCalls[2] + " ) | LEN : " + m_size +
+                "] \n\t\t" + JSON.stringify(arrAddr) + " <--- " + JSON.stringify(JSON.parse(FuckKnownType(item[3], item[5], item[2])).slice(0, m_size)), LogColor.C36)
+        }
+    }
+}
+
+/**
+ * 函数地址与函数名的映射关系
+ */
+function mapNameToAddr(addrOrName) {
+    if (arrayAddr.length == 0) {
+        // LOG("\nPlase call a() first\n", LogColor.RED)
+        return
+    }
+    // true => String | false => Number
+    if (isNaN(addrOrName)) {
+        for (let index = 0; index < arrayAddr.length; index++) {
+            LOG(String(arrayName[index]) + " \t " + String(addrOrName))
+            if (String(addrOrName).indexOf(String(arrayName[index])) != -1) return arrayAddr[index]
+        }
+        return ptr(0)
+    } else {
+        for (let index = 0; index < arrayAddr.length; index++)
+            if (Number(arrayAddr[index]) == Number(addrOrName)) return arrayName[index]
+        return ""
     }
 }
 
@@ -4222,25 +4294,6 @@ function GetComponents(GameObject, RuntimeType, TYPE) {
         }
         LOG("\n")
     }
-}
-
-/**
- * 
- * @param {*} bssPtr    bss 段的 UnityEngine.Component_var / UnityEngine.MonoBehaviour_var / UnityEngine.RectTransform_var / UnityEngine.UI.Text_var ......
- * @param {*} initFuc   初始化函数地址（非必填）
- * @param {*} index     初始化index（非必填）
- * @returns 
- */
-function getRuntimeTypeFromBssOrData(bssPtr, initFuc, index) {
-    var handle = ptr(soAddr.add(bssPtr)).readPointer()
-    if (handle == 0x0) {
-        if (initFuc == undefined || index == undefined) {
-            throw new Error("bss or data 未初始化，且未填写初始化函数\n借助IDA查看初始化函数以及Index")
-        }
-        callFunction(initFuc, index)
-    }
-    var runtimeType = callFunction(find_method("mscorlib", "Type", "GetTypeFromHandle", 1), handle)
-    return runtimeType
 }
 
 // UI.LocalizedTextMeshPro
@@ -4627,7 +4680,7 @@ function getTextFromAsset(type, mPtr) {
     }
 
     function do_VocabulariesAsset() {
-        let debug = true
+        let debug = false
         let clsVoc = getFieldInfoFromCls(findClass("VocabulariesAsset"), "_vocabularyEntries", mPtr)
         let items = getFieldInfoFromCls(clsVoc[2], "_items", clsVoc[5])
         LOG("\n" + getLine(60), LogColor.YELLOW)
