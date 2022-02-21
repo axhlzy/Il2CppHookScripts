@@ -25,24 +25,75 @@
 方法添加完成后建议使用print_list_result()列出当前方法，然后手动替换掉开始部分的arrayAddr和arrayName
 
 ---
-
-### API (简单的列了一下)
-
-##### 基础方法
-- list_Images()
-- list_Classes(image,isShowClass)
-- list_Methods(klass,isShowMore)
-- find_method(ImageName,ClassName,functionName,ArgsCount,isRealAddr)
-- addBP(imgOrCls)
-- breakPoints(filter)
-- breakPoint(ptr)
-##### 拓展方法
-- Info()
-- HookOnPointerClick()
-- HookSetActive()
-- HookDebugLog()
-- HookPlayerPrefs()
----
+<pre>
+/**
+ * --------------------------------------------------------------------------------------------
+ * 常用
+ * ---------------------
+ * i()      list_Images()
+ * c()      list_Classes(image,isShowClass) // 遍历调用
+ * C()      list_Classes(imgOrPtr)          // 反射调用
+ * m()      list_Methods(klass,isShowMore)
+ * f()      listFieldsFromCls(klass)
+ * F()      find_method(ImageName,ClassName,functionName,ArgsCount,isRealAddr)
+ * n()      nopfunction(ptr)
+ * nn()     cancel nopfunction(ptr)
+ * nnn()    cancel all nop/replace function
+ * d()      Interceptor.detachAll() / d(mPtr) detach mPtr
+ * a()      addBreakPoints(imgOrCls)
+ * b()      breakPoint(mPtr)
+ * P()      printCtx(pointer,range)
+ * B()      breakPoints(filter)
+ * D()      detachAll and reset arrays
+ * p()      print_list_result(filter)
+ * --------------------------------------------------------------------------------------------
+ * 拓展方法
+ * ---------------------
+ * HookSetActive()
+ * HookOnPointerClick()
+ * HookPlayerPrefs()
+ * HookDebugLog()
+ * HookLoadScene()
+ * HookGetSetText()
+ * PrintHierarchy()
+ * getUnityInfo()
+ * getApkInfo()
+ * GotoScene(str)
+ * callFunction(mPtr,arg0,arg1,arg2,arg3)
+ * SeeTypeToString(obj)
+ * FuckKnownType(strType,mPtr)
+ * Toast(msg)
+ * getLibPath()
+ * print_deserted_methods()
+ * 
+ * --- 用作动态Hook去掉指定gameObj
+ * setClick()
+ * HideClickedObj()
+ * HookMotionEvent()
+ * 
+ * --- 查看对象
+ * showEventData(eventData)
+ * showTransform(transform)
+ * showEventData(eventData)
+ * 
+ * --- 修改属性
+ * destroyObj(gameObj)
+ * setActive(gameObj,visible)
+ * setPosition(mTransform,x,y,z)
+ * setLocalScale(mTransform,x,y,z)
+ * setLocalPosition(mTransform,x,y,z)
+ * setLocalRotation(mTransform,x,y,z,w)
+ * ----------------------------------------------------------------------
+ * SharedPrefs                                                          |
+ * ---------------------------------------------------------------------|
+ * SetInt(key,value)    | SetFloat(key,value)   | SetString(key,value)  |
+ * GetInt(key)          | GetFloat(key)         | GetString(key)        |
+ * ----------------------------------------------------------------------
+ * PS:  分清楚 MethodInfo,Transform,GameObject 指针类型, 调用函数的时候不要瞎传参数
+ *      如果使用了gadgat,使用-FU先把应用跑起来再进行注入该脚本, 整个脚本对spawn方式启动的兼容性不好
+ * --------------------------------------------------------------------------------------------
+ */
+</pre>
 
 ### 用例
 1. **list_Images()   ===   i()**
