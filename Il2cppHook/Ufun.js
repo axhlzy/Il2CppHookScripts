@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/03/03 19:10
+ * @UpdateTime  2022/03/07 19:16
  * @Des         frida hook u3d functions script
  */
 
@@ -281,9 +281,8 @@ function a(imgOrCls) {
     if (imgOrCls == undefined) {
         for (let i = 0; i < arr_img_names.length; i++) {
             // 默认就用Assembly-CSharp 和 MaxSdk.Scripts
-            if (arr_img_names[i] == "Assembly-CSharp" || arr_img_names[i] == "MaxSdk.Scripts") {
+            if (arr_img_names[i] == "Assembly-CSharp" || arr_img_names[i] == "MaxSdk.Scripts")
                 addBreakPoints(arr_img_addr[i])
-            }
         }
         // 补充一些常用的 unity API ...
         // a(findClass("GameObject"))
@@ -614,7 +613,7 @@ var list_Images = filter => {
     arr_img_addr.splice(0, arr_img_addr.length)
 
     const domain = il2cpp_domain_get()
-    const size_t = Memory.alloc(p_size)
+    const size_t = alloc()
     const assemblies = il2cpp_domain_get_assemblies(domain, size_t)
     let count_assemblies = 0
     let count_assemblies_all = 0
@@ -684,7 +683,7 @@ var list_Methods = (klass, TYPE) => {
     let AretAddr = new Array()
 
     klass = ptr(klass)
-    let iter = Memory.alloc(p_size)
+    let iter = alloc()
     let method = NULL
     let count_methods = 0
     if (TYPE == 1) LOG("\n" + getLine(85), LogColor.C33)
@@ -854,7 +853,7 @@ let addBreakPoints = imgOrCls => {
     LOG(getLine(85), LogColor.C33)
 
     function addFunctions(cls) {
-        let iter = Memory.alloc(p_size)
+        let iter = alloc()
         let method = NULL
         try {
             while (method = il2cpp_class_get_methods(cls, iter)) {
@@ -1169,15 +1168,15 @@ var SeeTypeToString = (obj, b) => {
 }
 
 // 读取浮点数 ptr().readFloat() === readSingle(ptr().readPointer())
-var readSingle = value => Memory.alloc(p_size * 2).writePointer(value).readFloat()
+var readSingle = value => alloc(2).writePointer(value).readFloat()
 
-var readBoolean = value => Memory.alloc(1).writePointer(value).readU8() == 0x1
+var readBoolean = value => alloc(0.25).writePointer(value).readU8() == 0x1
 
-var readInt = value => Memory.alloc(p_size).writePointer(value).readInt()
+var readInt = value => alloc().writePointer(value).readInt()
 
-var readUInt = value => Memory.alloc(p_size).writePointer(value).readUInt()
+var readUInt = value => alloc(1).writePointer(value).readUInt()
 
-var readUInt64 = value => Memory.alloc(p_size * 2).writePointer(value).readU64()
+var readUInt64 = value => alloc(2).writePointer(value).readU64()
 
 /**
  * 自定义参数解析模板
@@ -1226,7 +1225,7 @@ var FuckKnownType = (typeStr, insPtr, clsPtr) => {
 
         // 枚举解析
         if (clsPtr > 100 && class_is_enum(clsPtr)) {
-            let iter = Memory.alloc(p_size)
+            let iter = alloc()
             let field
             let enumIndex = 0
             while (field = il2cpp_class_get_fields(clsPtr, iter)) {
@@ -1612,7 +1611,7 @@ var callFunctionRI = (mPtr, ...args) => callFunction(mPtr, ...args).toInt32()
 var callFunctionRS = (mPtr, ...args) => readSingle(callFunction(mPtr, ...args))
 
 // readFloat
-var callFunctionRF = (mPtr, ...args) => Memory.alloc(p_size * 2).writePointer(ptr(callFunction(mPtr, ...args))).readFloat()
+var callFunctionRF = (mPtr, ...args) => alloc(p_size * 2).writePointer(ptr(callFunction(mPtr, ...args))).readFloat()
 
 // 返回值为 Unity String
 var callFunctionRUS = (mPtr, ...args) => readU16(callFunction(mPtr, ...args))
@@ -1841,7 +1840,7 @@ function listFieldsFromCls(klass, instance) {
     if (arguments[2] == undefined)
         LOG("\nFound " + fieldsCount + " Fields" + (is_enum == 0x1 ? "(enum)" : "") + " in class: " + getClassName(klass) + " (" + klass + ")", LogColor.C96)
     // ...\Data\il2cpp\libil2cpp\il2cpp-class-internals.h
-    let iter = Memory.alloc(p_size)
+    let iter = alloc()
     let field = null
     let maxlength = 0
     let arrStr = new Array()
@@ -1906,7 +1905,7 @@ function listFieldsFromCls(klass, instance) {
             // console.warn(+ptr(mStr[3])+allocStr(mStr[4])+"\t"+mStr[4])
             let field = il2cpp_class_get_field_from_name(ptr(mStr[3]), allocStr(mStr[4]))
             if (!field.isNull()) {
-                let addrOut = Memory.alloc(p_size)
+                let addrOut = alloc()
                 il2cpp_field_static_get_value(field, addrOut)
                 let realP = addrOut.readPointer()
                 LOG("\t" + addrOut + " ---> " + realP + " ---> " + FuckKnownType(mName, realP, mStr[3]), LogColor.C90)
@@ -1957,7 +1956,7 @@ let readStatic = (imageName, className, fieldName) => {
     if (pCls == null) return ptr(-1)
     const field = il2cpp_class_get_field_from_name(pCls, allocStr(fieldName))
     if (field.isNull()) return ptr(-2)
-    const addrOut = Memory.alloc(Process.pointerSize)
+    const addrOut = alloc()
     il2cpp_field_static_get_value(field, addrOut)
     return addrOut.readPointer()
 }
@@ -2052,7 +2051,7 @@ function findClass() {
             }
         })
         // 第一种使用 导出函数(il2cpp_class_from_name) 查找
-        let klass = il2cpp_class_from_name(currentlib, Memory.allocUtf8String(imageName), Memory.allocUtf8String(className))
+        let klass = il2cpp_class_from_name(currentlib, allocCStr(imageName), allocCStr(className))
         // 第二种遍历查找
         if (klass == 0 || klass == undefined) klass = findClsInner(currentlib, className, useCache)
         // 只填写一个className的情况有时候也会找不到，填两个参数就行了
@@ -2533,7 +2532,7 @@ var alloc = size => Memory.alloc((size == undefined ? 1 : size) * p_size)
 function allocVector(x, y, z, w) {
     let argsLength = arguments.length
     argsLength = argsLength == 0 ? 3 : argsLength
-    let temp_vector = Memory.alloc(p_size * (argsLength + 1))
+    let temp_vector = alloc(argsLength + 1)
     for (let index = 0; index < argsLength; ++index)
         temp_vector.add(p_size * index).writeFloat(arguments[index] == undefined ? 0 : arguments[index])
     temp_vector.add(p_size * argsLength).writeInt(0)
@@ -2756,7 +2755,7 @@ var PrintStackTraceN = ctx => {
 }
 
 var SetInt = (key, value) => {
-    // ↓ 记录一下之前的做法多蠢 -.-|| ↓
+    // ↓ 记录一下之前最蠢的做法 -.-|| ↓
     // var temp_size = 100
     // var header_size = Process.pointerSize*3
     // var str_header = new NativeFunction(cloudProjectIdAddr,'pointer',[])()
@@ -2813,19 +2812,16 @@ var getGameObjectG = mPtr => callFunction(find_method("UnityEngine.CoreModule", 
 
 // public Component[] GetComponents(Type type) [UnityEngine.CoreModule UnityEngine.GameObject]
 var GetComponents = (insPtr, mType) => {
-    try {
-        if (getType(insPtr, 2)[0] == "GameObject") {
-            callFunctionRA(find_method("UnityEngine.CoreModule", "GameObject", "GetComponents", 1), insPtr, mType)
-        } else {
-            // public Component[] GetComponents(Type type) 
-            callFunctionRA(find_method("UnityEngine.CoreModule", "Component", "GetComponents", 1), insPtr, mType)
-            // public void GetComponents(Type type, List<Component> results)  ---> 这里有一个 list 解析的问题
-            // let tempMem = Memory.alloc(0x100)
-            // callFunction(find_method("UnityEngine.CoreModule", "Component", "GetComponents", 2), insPtr, mType,tempMem)
-        }
-    } catch (e) {
-        LOG("ERROR :" + e)
-    }
+    // if (getType(insPtr, 2)[0] == "GameObject") {
+    //     callFunctionRA(find_method("UnityEngine.CoreModule", "GameObject", "GetComponents", 1), insPtr, mType)
+    // }
+    // public void GetComponents(Type type, List<Component> results)  ---> 这里有一个 list 解析的问题 
+    // list {offset 0x8 .readPointer() / offset 0xc .readInt() 数组长度 / offset 0x10 .readInt() list版本号}
+    let tempMem = alloc(8)
+    if (mType == undefined) mType = getRuntimeType("MonoBehaviour") //make sure getRuntimeType return not null
+    if (getType(insPtr, 2)[0] == "GameObject") insPtr = f_getTransform(ptr(insPtr))
+    callFunction(find_method("UnityEngine.CoreModule", "Component", "GetComponents", 2), insPtr, mType, tempMem)
+    seeHexA(tempMem, 8 * p_size)
 }
 
 // public Component[] GetComponentsInChildren(Type type, bool includeInactive) [UnityEngine.CoreModule UnityEngine.GameObject]
@@ -2879,11 +2875,40 @@ var InstantiatePR = (original, position, rotation) => {
  */
 var getType = (mPtr, TYPE) => {
     let p_type = callFunction(find_method('mscorlib', 'Object', 'GetType', 0), ptr(mPtr))
-    let p_name = callFunctionRUS(find_method("mscorlib", "Type", "ToString", 0), ptr(p_type))
+    let p_name = typeDes(p_type)
     if (TYPE == 1) return p_name + "(" + p_type + ")"
     if (TYPE == 2) return [String(p_name).split(": ")[1], p_type]
-    LOG("\nType === > " + p_type + "\n" + "Name === > " + p_name + "\n", LogColor.C36)
+    let p_level = typeExtends(p_type)
+    LOG(`\nType ===> ${p_type}\nName ===> ${p_name}\n\n${p_level}\n`, LogColor.C36)
 }
+
+var getBaseType = (mPtr, level) => {
+    if (mPtr == undefined || mPtr == null) return
+    for (let i = 0; i < (level == undefined ? 1 : level); ++i)
+        mPtr = callFunction(checkPointer(["mscorlib", "RuntimeType", "get_BaseType", 0]), mPtr)
+    return ptr(mPtr)
+}
+
+let typeExtends = mPtr => {
+    var displayStr = ""
+    let currentType = 0
+    try {
+        for (let index = 0; index < 100; ++index) {
+            currentType = getBaseType(mPtr, index)
+            if (currentType == 0x0) {
+                displayStr = displayStr.substring(0, displayStr.length - 6)
+                break
+            }
+            addRuntimeType(currentType, 1)
+            displayStr += `${typeDes(currentType).split("Type: ")[1]}(${currentType})  <---  `
+        }
+    } catch (e) {
+        return ""
+    }
+    return displayStr
+}
+
+var typeDes = mPtr => callFunctionRUS(find_method("mscorlib", "Type", "ToString", 0), mPtr)
 
 /**
  * TODO 考虑使用 frida 去去获取 GetComponents 等等操作，便于定位obj上面的脚本名称，后续继续完善
@@ -2900,60 +2925,6 @@ var GetComponentG = (obj, type) => {
 
 var GetTypeFromHandle = (obj) => {
     return callFunction(find_method('mscorlib', 'Type', 'GetTypeFromHandle', 1), ptr(obj), 0)
-}
-
-var HookComponent = () => {
-
-    HookAddComponent()
-
-    function HookAddComponent() {
-        A(find_method('UnityEngine.CoreModule', 'GameObject', 'AddComponent', 1), (args, ctx, pass) => {
-            pass.set("arg0", ptr(args[0]))
-            pass.set("arg1", ptr(args[1]))
-        }, () => {
-            newLine()
-            LOG(" [*] AddComponent ---> G:" + pass.get("arg0") + " T:" + f_getTransform(ptr(pass.get("arg0"))) + "(" + getObjName(this.arg0) + ")" +
-                "\t\t\t(" + pass.get("arg1") + ")" + FuckKnownType('Type', pass.get("arg1")), LogColor.C36)
-        })
-
-        // Interceptor.attach(find_method('UnityEngine.CoreModule', 'GameObject', 'AddComponent', 1), {
-        //     onEnter: function (args) {
-        //         this.arg0 = args[0]
-        //         this.arg1 = args[1]
-        //     },
-        //     onLeave: function (ret) {
-        //         newLine()
-        //         LOG(" [*] AddComponent ---> G:" + this.arg0 + " T:" + f_getTransform(ptr(this.arg0)) + "(" + getObjName(this.arg0) + ")" +
-        //             "\t\t\t(" + this.arg1 + ")" + FuckKnownType('Type', this.arg1), LogColor.C36)
-        //     }
-        // })
-    }
-
-    function HookGetComponent() {
-        Interceptor.attach(find_method('UnityEngine.CoreModule', 'GameObject', 'GetComponent', 1), {
-            onEnter: function (args) {
-                this.arg0 = args[0]
-                this.arg1 = args[1]
-            },
-            onLeave: function (ret) {
-                newLine()
-                LOG(" [*] AddComponent ---> G:" + this.arg0 + " T:" + getTransform(ptr(this.arg0)) + "(" + getObjName(this.arg0) + ")" +
-                    "\t\t\t(" + this.arg1 + ")" + FuckKnownType('Type', this.arg1), LogColor.C36)
-            }
-        })
-    }
-
-    // 间隔时间大于一秒,就用新的一行展示
-    function newLine() {
-        var current = 0
-        Java.perform(() => {
-            current = Java.use('java.lang.System').currentTimeMillis()
-        })
-        if (current - lastTime > 1000) {
-            console.log("\n")
-            lastTime = current
-        }
-    }
 }
 
 var SendMessage = (str0, str1, str2) => {
@@ -3190,7 +3161,7 @@ var runOnMain = (UpDatePtr, Callback) => {
 /**
  * TODO Unity 事件相关的hook
  */
-var hookEvents = () => {
+var HookEvents = () => {
     // 事件构造
     A(find_method('UnityEngine.CoreModule', 'UnityAction', '.ctor', 2), (args) => {
         LOG(" [*] .ctor ---> " + ptr(args[2]) + "\t--->" + ptr(args[2]).sub(soAddr))
@@ -3854,7 +3825,7 @@ var RunOnNewThread = (callback, delay, showLOG) => {
         LOG("Fail to init thread", LogColor.RED)
         return
     }
-    callFunction(p_pthread_create, Memory.alloc(p_size), ptr(0), newThreadSrcCallBack, ptr(0))
+    callFunction(p_pthread_create, alloc(), ptr(0), newThreadSrcCallBack, ptr(0))
 }
 
 /**
@@ -3869,7 +3840,7 @@ var RunOnNewThread = (callback, delay, showLOG) => {
 let getJclassName = (jclsName, ShouldRet) => {
     ShouldRet == undefined ? false : true
     let pVoid = callFunction(DecodeJObject, ArtCurrent, jclsName)
-    let k_class = callFunction(GetDescriptor, pVoid, Memory.alloc(p_size))
+    let k_class = callFunction(GetDescriptor, pVoid, alloc())
     if (ShouldRet) return String(ptr(k_class).readCString())
     LOG("\n" + String(ptr(k_class).readCString()) + "\n", LogColor.C36)
 }
@@ -4349,6 +4320,60 @@ var mapNameToAddr = addrOrName => {
     }
 }
 
+var B_Component = () => {
+
+    HookAddComponent()
+
+    function HookAddComponent() {
+        A(find_method('UnityEngine.CoreModule', 'GameObject', 'AddComponent', 1), (args, ctx, pass) => {
+            pass.set("arg0", ptr(args[0]))
+            pass.set("arg1", ptr(args[1]))
+        }, () => {
+            newLine()
+            LOG(" [*] AddComponent ---> G:" + pass.get("arg0") + " T:" + f_getTransform(ptr(pass.get("arg0"))) + "(" + getObjName(this.arg0) + ")" +
+                "\t\t\t(" + pass.get("arg1") + ")" + FuckKnownType('Type', pass.get("arg1")), LogColor.C36)
+        })
+
+        // Interceptor.attach(find_method('UnityEngine.CoreModule', 'GameObject', 'AddComponent', 1), {
+        //     onEnter: function (args) {
+        //         this.arg0 = args[0]
+        //         this.arg1 = args[1]
+        //     },
+        //     onLeave: function (ret) {
+        //         newLine()
+        //         LOG(" [*] AddComponent ---> G:" + this.arg0 + " T:" + f_getTransform(ptr(this.arg0)) + "(" + getObjName(this.arg0) + ")" +
+        //             "\t\t\t(" + this.arg1 + ")" + FuckKnownType('Type', this.arg1), LogColor.C36)
+        //     }
+        // })
+    }
+
+    function HookGetComponent() {
+        Interceptor.attach(find_method('UnityEngine.CoreModule', 'GameObject', 'GetComponent', 1), {
+            onEnter: function (args) {
+                this.arg0 = args[0]
+                this.arg1 = args[1]
+            },
+            onLeave: function (ret) {
+                newLine()
+                LOG(" [*] AddComponent ---> G:" + this.arg0 + " T:" + getTransform(ptr(this.arg0)) + "(" + getObjName(this.arg0) + ")" +
+                    "\t\t\t(" + this.arg1 + ")" + FuckKnownType('Type', this.arg1), LogColor.C36)
+            }
+        })
+    }
+
+    // 间隔时间大于一秒,就用新的一行展示
+    function newLine() {
+        var current = 0
+        Java.perform(() => {
+            current = Java.use('java.lang.System').currentTimeMillis()
+        })
+        if (current - lastTime > 1000) {
+            console.log("\n")
+            lastTime = current
+        }
+    }
+}
+
 /**
  * 通过按键的点击事件确定点击事件对应的函数 （函数并不是一开始就绑定在按钮上的,需要时加载）
  */
@@ -4581,7 +4606,8 @@ var B_LocalizationManager = () => {
 // find_method("UnityEngine.UI","Text","get_text",0,false)
 // FindObjectsOfType("TextMeshProUGUI")
 var B_Text = () => {
-    const strMap = new Map()
+    let mapRecord = new Map()
+    let strMap = new Map()
     strMap.set("SETTINGS", "设置")
     strMap.set("ON", "开")
     strMap.set("Loading...", "加载中...")
@@ -4619,6 +4645,7 @@ var B_Text = () => {
         A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {
             let aimStr = "|" + readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0])) + "|"
             if (filterDuplicateOBJ(String(args[0]), 30) == -1) return
+            recordTxtFirst(args[0], "TMP_Text")
             LOG("\n[TMP_Text]  " + args[0] + "\t" + aimStr, LogColor.C36)
             if (strMap.size != 0) {
                 let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
@@ -4637,6 +4664,7 @@ var B_Text = () => {
         A(find_method("Unity.TextMeshPro", "TextMeshPro", "get_transform", 0), (args) => {
             let aimStr = "|" + readU16(callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "get_text", 0), args[0])) + "|"
             if (filterDuplicateOBJ(String(args[0])) == -1) return
+            recordTxtFirst(args[0], "TextMeshPro")
             LOG("\n[TextMeshPro]  " + args[0] + "\t" + aimStr, LogColor.C35)
             if (strMap.size != 0) {
                 let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
@@ -4651,6 +4679,7 @@ var B_Text = () => {
     function UnityEngine_UI_Text(showGameObj) {
         if (showGameObj == undefined) showGameObj = false;
         A(find_method("UnityEngine.UI", "Text", "get_text", 0), (args) => {
+            recordTxtFirst(args[0], "Text")
             if (showGameObj) {
                 showGameObject(callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), args[0]))
             }
@@ -4669,8 +4698,8 @@ var B_Text = () => {
         })
 
         A(find_method("UnityEngine.UI", "Text", "set_text", 1), (args, ctx) => {
-            LOG("" + args[0] + " " + args[1])
             if (filterDuplicateOBJ(String(args[1])) == -1) return
+            recordTxtFirst(args[0], "Text")
             let aimStr = "|" + readU16(args[1]) + "|"
             LOG("\n[Text_Set]  " + args[0] + "\t" + aimStr, LogColor.C33)
             if (strMap.size != 0) {
@@ -4692,6 +4721,7 @@ var B_Text = () => {
                 let aimStr = "|" + callFunctionRUS(find_method("UnityEngine.UI", 'Text', 'get_text', 0), args[0]) + "|"
                 if (filterDuplicateOBJ(String(callFunctionRUS(find_method("UnityEngine.UI", 'Text', 'get_text', 0))) == -1)) return
                 LOG("\n[FontUpdateTracker]  " + args[0] + "\t" + aimStr, LogColor.C36)
+                recordTxtFirst(args[0], "Text")
                 if (strMap.size != 0) {
                     let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                     if (repStr != undefined) {
@@ -4716,6 +4746,15 @@ var B_Text = () => {
             let faceInfo = callFunction(find_method("Unity.TextMeshPro", "TMP_FontAsset", "get_fontInfo", 0), TMP_FontAsset)
             lffc(findClass("FaceInfo_Legacy"), faceInfo)
         })
+    }
+
+    function recordTxtFirst(mPtr, mapStr) {
+        if (mapRecord.get(mapStr) == null) {
+            mapRecord.set(mapStr, 1)
+            LogFlag = false
+            getType(mPtr)
+            LogFlag = true
+        }
     }
 }
 
