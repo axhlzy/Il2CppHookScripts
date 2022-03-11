@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/03/07 19:16
+ * @UpdateTime  2022/03/11 09:09
  * @Des         frida hook u3d functions script
  */
 
@@ -148,49 +148,49 @@ function main() {
 
         function initExportFunctions() {
             // const Il2CppImage* il2cpp_get_corlib()
-            il2cpp_get_corlib = new NativeFunction(Module.findExportByName(soName, "il2cpp_get_corlib"), 'pointer', [])
+            il2cpp_get_corlib = new NativeFunction(checkPointer([soName, "il2cpp_get_corlib"]), 'pointer', [])
             // Il2CppDomain* il2cpp_domain_get()
-            il2cpp_domain_get = new NativeFunction(Module.findExportByName(soName, "il2cpp_domain_get"), 'pointer', [])
+            il2cpp_domain_get = new NativeFunction(checkPointer([soName, "il2cpp_domain_get"]), 'pointer', [])
             // const Il2CppAssembly** il2cpp_domain_get_assemblies(const Il2CppDomain* domain, size_t* size)
-            il2cpp_domain_get_assemblies = new NativeFunction(Module.findExportByName(soName, "il2cpp_domain_get_assemblies"), 'pointer', ['pointer', 'pointer'])
+            il2cpp_domain_get_assemblies = new NativeFunction(checkPointer([soName, "il2cpp_domain_get_assemblies"]), 'pointer', ['pointer', 'pointer'])
             // const Il2CppImage* il2cpp_assembly_get_image(const Il2CppAssembly *assembly)
-            il2cpp_assembly_get_image = new NativeFunction(Module.findExportByName(soName, "il2cpp_assembly_get_image"), 'pointer', ['pointer'])
+            il2cpp_assembly_get_image = new NativeFunction(checkPointer([soName, "il2cpp_assembly_get_image"]), 'pointer', ['pointer'])
 
             // size_t il2cpp_image_get_class_count(const Il2CppImage * image)
-            il2cpp_image_get_class_count = new NativeFunction(Module.findExportByName(soName, "il2cpp_image_get_class_count"), 'pointer', ['pointer'])
+            il2cpp_image_get_class_count = new NativeFunction(checkPointer([soName, "il2cpp_image_get_class_count"]), 'pointer', ['pointer'])
             // const Il2CppClass* il2cpp_image_get_class(const Il2CppImage * image, size_t index)
-            il2cpp_image_get_class = new NativeFunction(Module.findExportByName(soName, "il2cpp_image_get_class"), 'pointer', ['pointer', 'int'])
+            il2cpp_image_get_class = new NativeFunction(checkPointer([soName, "il2cpp_image_get_class"]), 'pointer', ['pointer', 'int'])
 
             // const MethodInfo* il2cpp_class_get_methods(Il2CppClass *klass, void* *iter)
-            il2cpp_class_get_methods = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_get_methods"), 'pointer', ["pointer", "pointer"])
+            il2cpp_class_get_methods = new NativeFunction(checkPointer([soName, "il2cpp_class_get_methods"]), 'pointer', ["pointer", "pointer"])
             // Il2CppClass* il2cpp_class_from_type(const Il2CppType *type)
-            il2cpp_class_from_type = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_from_type"), 'pointer', ["pointer"])
+            il2cpp_class_from_type = new NativeFunction(checkPointer([soName, "il2cpp_class_from_type"]), 'pointer', ["pointer"])
             // const Il2CppType* il2cpp_class_get_type(Il2CppClass *klass)
-            il2cpp_class_get_type = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_get_type"), 'pointer', ["pointer"])
+            il2cpp_class_get_type = new NativeFunction(checkPointer([soName, "il2cpp_class_get_type"]), 'pointer', ["pointer"])
             // Il2CppClass* il2cpp_class_from_system_type(Il2CppReflectionType *type)
-            il2cpp_class_from_system_type = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_from_system_type"), 'pointer', ["pointer"])
+            il2cpp_class_from_system_type = new NativeFunction(checkPointer([soName, "il2cpp_class_from_system_type"]), 'pointer', ["pointer"])
             // Il2CppClass* il2cpp_class_from_name(const Il2CppImage* image, const char* namespaze, const char *name)
-            il2cpp_class_from_name = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_from_name"), 'pointer', ["pointer", "pointer", "pointer"])
+            il2cpp_class_from_name = new NativeFunction(checkPointer([soName, "il2cpp_class_from_name"]), 'pointer', ["pointer", "pointer", "pointer"])
             // const MethodInfo* il2cpp_class_get_method_from_name(Il2CppClass *klass, const char* name, int argsCount)
-            il2cpp_class_get_method_from_name = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_get_method_from_name"), 'pointer', ["pointer", "pointer", "int"])
+            il2cpp_class_get_method_from_name = new NativeFunction(checkPointer([soName, "il2cpp_class_get_method_from_name"]), 'pointer', ["pointer", "pointer", "int"])
 
             // Il2CppString* il2cpp_string_new(const char* str)
-            il2cpp_string_new = new NativeFunction(Module.findExportByName(soName, "il2cpp_string_new"), 'pointer', ["pointer"])
+            il2cpp_string_new = new NativeFunction(checkPointer([soName, "il2cpp_string_new"]), 'pointer', ["pointer"])
             // char* il2cpp_type_get_name(const Il2CppType *type)
-            il2cpp_type_get_name = new NativeFunction(Module.findExportByName(soName, "il2cpp_type_get_name"), 'pointer', ["pointer"])
+            il2cpp_type_get_name = new NativeFunction(checkPointer([soName, "il2cpp_type_get_name"]), 'pointer', ["pointer"])
             // Il2CppClass* il2cpp_type_get_class_or_element_class(const Il2CppType *type)
-            il2cpp_type_get_class_or_element_class = new NativeFunction(Module.findExportByName(soName, "il2cpp_type_get_class_or_element_class"), 'pointer', ["pointer"])
+            il2cpp_type_get_class_or_element_class = new NativeFunction(checkPointer([soName, "il2cpp_type_get_class_or_element_class"]), 'pointer', ["pointer"])
 
             // size_t il2cpp_class_num_fields(const Il2CppClass* klass)
-            il2cpp_class_num_fields = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_num_fields"), 'int', ["pointer"])
+            il2cpp_class_num_fields = new NativeFunction(checkPointer([soName, "il2cpp_class_num_fields"]), 'int', ["pointer"])
             // FieldInfo* il2cpp_class_get_fields(Il2CppClass *klass, void* *iter)
-            il2cpp_class_get_fields = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_get_fields"), 'pointer', ["pointer", "pointer"])
+            il2cpp_class_get_fields = new NativeFunction(checkPointer([soName, "il2cpp_class_get_fields"]), 'pointer', ["pointer", "pointer"])
             // void il2cpp_field_static_get_value(FieldInfo *field, void *value)
-            il2cpp_field_static_get_value = new NativeFunction(Module.findExportByName(soName, "il2cpp_field_static_get_value"), 'pointer', ["pointer", "pointer"])
+            il2cpp_field_static_get_value = new NativeFunction(checkPointer([soName, "il2cpp_field_static_get_value"]), 'pointer', ["pointer", "pointer"])
             // void il2cpp_field_static_set_value(FieldInfo *field, void *value)
-            il2cpp_field_static_set_value = new NativeFunction(Module.findExportByName(soName, "il2cpp_field_static_set_value"), 'pointer', ["pointer", "pointer"])
+            il2cpp_field_static_set_value = new NativeFunction(checkPointer([soName, "il2cpp_field_static_set_value"]), 'pointer', ["pointer", "pointer"])
             // FieldInfo* il2cpp_class_get_field_from_name(Il2CppClass* klass, const char *name)
-            il2cpp_class_get_field_from_name = new NativeFunction(Module.findExportByName(soName, "il2cpp_class_get_field_from_name"), 'pointer', ["pointer", "pointer"])
+            il2cpp_class_get_field_from_name = new NativeFunction(checkPointer([soName, "il2cpp_class_get_field_from_name"]), 'pointer', ["pointer", "pointer"])
         }
 
         function initU3DFunctions() {
@@ -238,19 +238,19 @@ function main() {
     }
 }
 
-var i = filter => list_Images(filter)
+const i = filter => list_Images(filter)
 
-var c = (image, isShowClass) => list_Classes(image, isShowClass)
+const c = (image, isShowClass) => list_Classes(image, isShowClass)
 
-var m = klass => list_Methods(klass, 1)
+const m = klass => list_Methods(klass, 1)
 
-var f = klass => listFieldsFromCls(klass)
+const f = klass => listFieldsFromCls(klass)
 
 /**
  * 参数可以传递 绝对地址/相对地址/methodinfo指针（解析参数）
  * @param {Number} mPtr 
  */
-var b = mPtr => breakPoint(mPtr)
+const b = mPtr => breakPoint(mPtr)
 
 /**
  * 查找 Method 地址 == find_method()
@@ -259,14 +259,14 @@ var b = mPtr => breakPoint(mPtr)
  * @param {String} functionName 
  * @param {Number} ArgsCount 
  */
-var F = (ImageName, ClassName, functionName, ArgsCount) => find_method(ImageName, ClassName, functionName, ArgsCount, false)
+const F = (ImageName, ClassName, functionName, ArgsCount) => find_method(ImageName, ClassName, functionName, ArgsCount, false)
 
 /**
  * 用来查看地址 确定不是单独的一条B，以便于InlineHook的后续处理
  * @param {Number} mPtr 绝对地址相对地址都可以
  * @param {Number} 打印指令条数
  */
-var P = (mPtr, range) => printCtx(checkPointer(mPtr), (range == undefined ? 20 : range), 2)
+const P = (mPtr, range, type) => printCtx(mPtr, (range == undefined ? 20 : range), type)
 
 /**
  * 简写 a(findClass(mStr))
@@ -355,14 +355,14 @@ function C(ImgOrPtr) {
     LOG(getLine(85), LogColor.C33)
 }
 
-var attachJava = func => Java.perform(() => func())
+const attachJava = func => {
+    if (func == undefined) return
+    Java.perform(() => func())
+}
 
 // attach A(0xabcd,(args,ctx,pass)=>{},(ret)=>{})
 function A(mPtr, mOnEnter, mOnLeave) {
-    if (mPtr == null || mPtr == 0) {
-        LOG("Can't attach nullptr", LogColor.RED)
-        return
-    }
+    if (mPtr == null || mPtr == 0) throw new Error("Can't attach nullptr")
     var passValue = new Map()
     passValue.set("org", mPtr)
     passValue.set("src", mPtr)
@@ -558,8 +558,8 @@ function initRuntimeType() {
     // 仅这些 Assembly 将会遍历 type   "mscorlib", "UnityEngine.UI" "Assembly-CSharp" "UnityEngine.CoreModule"
     let FilterAssembly = arguments[0] == undefined ? ["UnityEngine.UI", "UnityEngine.CoreModule"] : []
     LOG(getLine(60), LogColor.YELLOW)
-    let appDomain = callFunction(find_method("mscorlib", "AppDomain", "get_CurrentDomain", 0))
-    let arrAssembiles = callFunction(find_method("mscorlib", "AppDomain", "GetAssemblies", 0), appDomain)
+    let appDomain = callFunction(["mscorlib", "AppDomain", "get_CurrentDomain", 0])
+    let arrAssembiles = callFunction(["mscorlib", "AppDomain", "GetAssemblies", 0], appDomain)
     if (arrAssembiles == 0x0) {
         let get_CurrentDomain = find_method("mscorlib", "AppDomain", "get_CurrentDomain", 0)
         let GetAssemblies = find_method("mscorlib", "AppDomain", "GetAssemblies", 0)
@@ -572,7 +572,7 @@ function initRuntimeType() {
         let assembly = ptr(arrAssembiles).add(p_size * (4 + i)).readPointer()
         // get_FullName 在该type未被初始化的时候会导致崩溃
         // let currentName = callFunctionRUS(find_method("mscorlib", "Assembly", "get_FullName", 0), assembly)
-        let currentName = callFunctionRUS(find_method("mscorlib", "Assembly", "ToString", 0), assembly)
+        let currentName = callFunctionRUS(["mscorlib", "Assembly", "ToString", 0], assembly)
         LOG(String("[" + i + "]").padEnd(5, " ") + assembly + " ---> " + currentName, LogColor.C36)
 
         if (FilterAssembly.length == 0) {
@@ -590,13 +590,13 @@ function initRuntimeType() {
 
     function forItems(assembly) {
         // 遍历指定 Assembly 下的所有类型（type）
-        let arrTypes = callFunction(find_method("mscorlib", "Assembly", "GetTypes", 0), assembly)
+        let arrTypes = callFunction(["mscorlib", "Assembly", "GetTypes", 0], assembly)
         for (let i = 0; i < ptr(arrTypes).add(p_size * 3).readInt(); ++i) {
             let mType = ptr(arrTypes).add(p_size * (4 + i)).readPointer()
             // LOG("-->" + mType + "  " + mType.readPointer())
             // 如果遇到崩溃就别打印 ToString 日志了 有可能是没有初始化
             // let currentName = callFunctionRUS(find_method("mscorlib", "Object", "ToString", 0), mType)
-            let currentName = callFunctionRUS(find_method("mscorlib", "Type", "ToString", 0), mType)
+            let currentName = callFunctionRUS(["mscorlib", "Type", "ToString", 0], mType)
             LOG(String("\t[" + i + "]").padEnd(6, " ") + " " + mType + " ---> " + currentName, LogColor.C36)
             countAll++
             addRuntimeType(mType, 1)
@@ -767,7 +767,8 @@ function getFieldInfoFromCls(clsptr, fieldName) {
  */
 function find_method(imageName, className, functionName, argsCount, isRealAddr) {
 
-    if (imageName == undefined || imageName == null || className == null || functionName == null || argsCount == null) return ptr(0)
+    if (imageName == undefined || className == undefined || functionName == undefined || argsCount == undefined) return ptr(0)
+
     // var corlib = il2cpp_get_corlib()
     if (isRealAddr == undefined) isRealAddr = true
     let tmpKey = imageName + "." + className + "." + functionName + "." + argsCount
@@ -837,7 +838,7 @@ let addBreakPoints = imgOrCls => {
     try {
         count = il2cpp_image_get_class_count(imgOrCls).toInt32()
     } catch (e) {
-        LOG("Error imgOrCls ", LogColor.RED)
+        LOGE("Error img Or Cls ")
         return
     }
     // 判断是image还是class
@@ -849,7 +850,7 @@ let addBreakPoints = imgOrCls => {
     }
 
     LOG(getLine(40), LogColor.C33)
-    LOG("  Added " + method_count + " Methods    |    All " + arrayAddr.length, LogColor.RED)
+    LOGE("  Added " + method_count + " Methods    |    All " + arrayAddr.length)
     LOG(getLine(85), LogColor.C33)
 
     function addFunctions(cls) {
@@ -861,7 +862,7 @@ let addBreakPoints = imgOrCls => {
                 let methodName = get_method_des(method)
                 let methodAddr = method.readPointer()
                 if (methodAddr == 0) continue
-                LOG("[*] " + method + " ---> " + methodAddr + " (" + methodAddr.sub(soAddr) + ")" + "\t|  " + methodName, LogColor.C36)
+                LOGD("[*] " + method + " ---> " + methodAddr + " (" + methodAddr.sub(soAddr) + ")" + "\t|  " + methodName)
                 if (arrayName.indexOf(methodName) != -1) continue
                 arrayName.push(methodName)
                 arrayAddr.push(methodAddr.sub(soAddr))
@@ -904,7 +905,7 @@ let get_method_des = (method, isArray) => {
     // 补空格对齐
     let maxlength = 0
     for (let i = 0; i < arr_args_n.length; i++) maxlength = maxlength > arr_args_n[i].length ? maxlength : arr_args_n[i].length
-    for (let i = 0; i < arr_args_n.length; i++) arr_args_n[i] += getSpace(maxlength - arr_args_n[i].length)
+    for (let i = 0; i < arr_args_n.length; i++) arr_args_n[i] += getLine(maxlength - arr_args_n[i].length, " ")
 
     let ret_str = permission + retName + " " + methodName + " (" + arr_args + ")"
 
@@ -915,18 +916,12 @@ let get_method_des = (method, isArray) => {
         a_ret.push(parameters_count) //参数个数
         a_ret.push(arr_args_t) //参数class列表
         a_ret.push(arr_args_n) //参数名称
-        a_ret.push(getSpace(maxlength)) //参数最大长度（补齐）
+        a_ret.push(getLine(maxlength, " ")) //参数最大长度（补齐）
         // LOG(JSON.stringify(a_ret))
         return a_ret
     }
 
     return ret_str
-
-    function getSpace(length) {
-        let retStr = ""
-        for (let i = 0; i < length; i++) retStr += " "
-        return retStr
-    }
 }
 
 /**
@@ -950,7 +945,7 @@ let breakPoint = (mPtr, index, name) => {
     //移除在 B 中添加的条目避免重复显示
     if (t_arrayAddr != undefined) {
         let t_method_addr = method_addr.sub(soAddr)
-        t_arrayAddr.forEach(function (value, index) {
+        t_arrayAddr.forEach((value, index) => {
             if (Number(value) == Number(t_method_addr)) count_method_times[index] = maxCallTime
         })
     }
@@ -1258,17 +1253,17 @@ var FuckKnownType = (typeStr, insPtr, clsPtr) => {
             case "GameObject":
                 return SeeTypeToString(insPtr, false)
             case "Texture":
-                let w = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "GetDataWidth", 0), insPtr)
-                let h = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "GetDataHeight", 0), insPtr)
-                let r = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "get_isReadable", 0), insPtr)
-                let m = callFunctionRI(find_method("UnityEngine.CoreModule", "Texture", "get_wrapMode", 0), insPtr)
+                let w = callFunctionRI(["UnityEngine.CoreModule", "Texture", "GetDataWidth", 0], insPtr)
+                let h = callFunctionRI(["UnityEngine.CoreModule", "Texture", "GetDataHeight", 0], insPtr)
+                let r = callFunctionRI(["UnityEngine.CoreModule", "Texture", "get_isReadable", 0], insPtr)
+                let m = callFunctionRI(["UnityEngine.CoreModule", "Texture", "get_wrapMode", 0], insPtr)
                 r = r == 0 ? "False" : "True"
                 m = m == 0 ? "Repeat" : (m == 1 ? "Clamp" : (m == 2 ? "Mirror" : "MirrorOnce"))
                 return JSON.stringify([m, w, h, r])
             case "Component":
                 if (insPtr == 0x0) return ""
-                let mTransform = callFunction(find_method("UnityEngine.CoreModule", "Component", "get_transform", 0), insPtr)
-                let mGameObject = callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), insPtr)
+                let mTransform = callFunction(["UnityEngine.CoreModule", "Component", "get_transform", 0], insPtr)
+                let mGameObject = callFunction(["UnityEngine.CoreModule", "Component", "get_gameObject", 0], insPtr)
                 let gName = getObjName(mGameObject)
                 return gName + "\tG:" + mGameObject + " T:" + mTransform + ""
             case "IntPtr":
@@ -1293,52 +1288,52 @@ var FuckKnownType = (typeStr, insPtr, clsPtr) => {
                 return getJclassName(insPtr, true)
             case "OBJ":
                 let objName = getObjName(insPtr)
-                let tmp_type_Ptr = callFunction(find_method("mscorlib", "Object", "GetType", 0), insPtr)
-                let tmp_str_Ptr = callFunction(find_method("mscorlib", "Object", "ToString", 0), insPtr)
+                let tmp_type_Ptr = callFunction(["mscorlib", "Object", "GetType", 0], insPtr)
+                let tmp_str_Ptr = callFunction(["mscorlib", "Object", "ToString", 0], insPtr)
                 if (clsPtr == 0x1) return [objName, readU16(tmp_str_Ptr), tmp_type_Ptr]
                 return objName + "\t\t" + readU16(tmp_str_Ptr) + " (" + tmp_type_Ptr + ")"
             case "Image":
                 let retStr = ""
-                retStr += ("Sprite : " + callFunction(find_method("UnityEngine.UI", "Image", "get_sprite", 0), insPtr) + " | ")
-                retStr += ("Type : " + FuckKnownType("Type", callFunctionRI(find_method("UnityEngine.UI", "Image", "get_type", 0), insPtr), findClass("UnityEngine.UI", "Type")) + " | ")
-                retStr += ("fillMethod : " + FuckKnownType("FillMethod", callFunctionRI(find_method("UnityEngine.UI", "Image", "get_fillMethod", 0), insPtr), findClass("UnityEngine.UI", "FillMethod")) + " ")
+                retStr += ("Sprite : " + callFunction(["UnityEngine.UI", "Image", "get_sprite", 0], insPtr) + " | ")
+                retStr += ("Type : " + FuckKnownType("Type", callFunctionRI(["UnityEngine.UI", "Image", "get_type", 0], insPtr), findClass("UnityEngine.UI", "Type")) + " | ")
+                retStr += ("fillMethod : " + FuckKnownType("FillMethod", callFunctionRI(["UnityEngine.UI", "Image", "get_fillMethod", 0], insPtr), findClass("UnityEngine.UI", "FillMethod")) + " ")
                 return retStr
             case "Text":
-                return callFunctionRUS(find_method("UnityEngine.UI", "Text", "get_text", 0), insPtr)
+                return callFunctionRUS(["UnityEngine.UI", "Text", "get_text", 0], insPtr)
             case "Vector2":
-                return callFunctionRUS(find_method("UnityEngine.CoreModule", "Vector2", "ToString", 0), insPtr)
+                return callFunctionRUS(["UnityEngine.CoreModule", "Vector2", "ToString", 0], insPtr)
             case "Vector3":
-                return callFunctionRUS(find_method("UnityEngine.CoreModule", "Vector3", "ToString", 0), insPtr)
+                return callFunctionRUS(["UnityEngine.CoreModule", "Vector3", "ToString", 0], insPtr)
             case "Vector4":
-                return callFunctionRUS(find_method("UnityEngine.CoreModule", "Vector4", "ToString", 0), insPtr)
+                return callFunctionRUS(["UnityEngine.CoreModule", "Vector4", "ToString", 0], insPtr)
             case "Color":
                 // RGBA {float,float,float,float}  这里有问题，暂时没空改
-                return callFunctionRUS(find_method("UnityEngine.CoreModule", "Color", "ToString", 0), insPtr)
+                return callFunctionRUS(["UnityEngine.CoreModule", "Color", "ToString", 0], insPtr)
             case "Color32":
-                return callFunctionRUS(find_method("UnityEngine.CoreModule", "Color32", "ToString", 0), insPtr)
+                return callFunctionRUS(["UnityEngine.CoreModule", "Color32", "ToString", 0], insPtr)
             case "Event":
-                return callFunctionRUS(find_method("UnityEngine.IMGUIModule", "Event", "ToString", 0), insPtr)
+                return callFunctionRUS(["UnityEngine.IMGUIModule", "Event", "ToString", 0], insPtr)
             case "Bounds":
-                return callFunctionRUS(find_method("UnityEngine.CoreModule", "Bounds", "ToString", 0), insPtr)
+                return callFunctionRUS(["UnityEngine.CoreModule", "Bounds", "ToString", 0], insPtr)
             case "TextAsset":
-                return callFunctionRUS(find_method("UnityEngine.CoreModule", "TextAsset", "ToString", 0), insPtr)
+                return callFunctionRUS(["UnityEngine.CoreModule", "TextAsset", "ToString", 0], insPtr)
             case "Rect":
-                return callFunctionRUS(find_method("UnityEngine.CoreModule", "Rect", "ToString", 0), insPtr)
+                return callFunctionRUS(["UnityEngine.CoreModule", "Rect", "ToString", 0], insPtr)
             case "Ray":
-                return callFunctionRUS(find_method("UnityEngine.CoreModule", "Ray", "ToString", 0), insPtr)
+                return callFunctionRUS(["UnityEngine.CoreModule", "Ray", "ToString", 0], insPtr)
             case "Quaternion":
-                return callFunctionRUS(find_method("UnityEngine.CoreModule", "Quaternion", "ToString", 0), insPtr)
+                return callFunctionRUS(["UnityEngine.CoreModule", "Quaternion", "ToString", 0], insPtr)
             case "Pose":
-                return callFunctionRUS(find_method("UnityEngine.CoreModule", "Pose", "ToString", 0), insPtr)
+                return callFunctionRUS(["UnityEngine.CoreModule", "Pose", "ToString", 0], insPtr)
             case "Plane":
-                return callFunctionRUS(find_method("UnityEngine.CoreModule", "Plane", "ToString", 0), insPtr)
+                return callFunctionRUS(["UnityEngine.CoreModule", "Plane", "ToString", 0], insPtr)
             case "Type":
-                return callFunctionRUS(find_method("mscorlib", "Type", "ToString", 0), insPtr)
+                return callFunctionRUS(["mscorlib", "Type", "ToString", 0], insPtr)
             case "TextMeshPro":
             case "TextMeshProUGUI":
-                return callFunctionRUS(find_method("Unity.TextMeshPro", "TMP_Text", "GetParsedText", 0), insPtr)
+                return callFunctionRUS(["Unity.TextMeshPro", "TMP_Text", "GetParsedText", 0], insPtr)
             default:
-                return callFunctionRUS(find_method("mscorlib", "Object", "ToString", 0), insPtr)
+                return callFunctionRUS(["mscorlib", "Object", "ToString", 0], insPtr)
         }
     } catch (e) {
         // LOG(e)
@@ -1379,14 +1374,12 @@ var HookSendMessage = () => {
     try {
         let UnityPlayer = Java.use("com.unity3d.player.UnityPlayer")
         UnityPlayer.UnitySendMessage.implementation = function (str0, str1, str2) {
-            console.warn(`\n${getLine(15)}\tCalled UnitySendMessage\t${getLine(15)}`)
+            LOG(`\n${getLine(15)}\tCalled UnitySendMessage\t${getLine(15)}`, LogColor.C36)
             console.log("UnityPlayer.UnitySendMessage(\x1b[96m'" + str0 + "','" + str1 + "','" + str2 + "'\x1b[0m)")
             this.UnitySendMessage(str0, str1, str2)
             PrintStackTrace()
         }
-    } catch (e) {
-        // LOG(e)
-    }
+    } catch (e) {}
 }
 
 /**
@@ -1627,14 +1620,14 @@ var showArray = mPtr => {
     let retPtr = ptr(mPtr)
     let arrLength = ptr(retPtr).add(p_size * 3).readUInt()
     LOG("\n[*] Array length : " + arrLength + "  |  RET => " + retPtr + "\n", LogColor.C36)
+    if (arrLength == 0) return
     seeHexA(ptr(retPtr).add(p_size * 4), (arrLength > 32 ? 32 : arrLength) * p_size, false, LogColor.C33)
     LOG("\n")
     for (let i = 0; i < arrLength; ++i) {
         let tmpPtr = ptr(retPtr).add(p_size * (4 + i))
-        let ObjToString = callFunctionRUS(find_method("mscorlib", "Object", "ToString", 0), tmpPtr.readPointer())
-        if (ObjToString == "UnityEngine.UI.Text") {
-            ObjToString += ("\t" + callFunctionRUS(find_method("UnityEngine.UI", "Text", "get_text", 0), tmpPtr.readPointer()))
-        }
+        let ObjToString = callFunctionRUS(["mscorlib", "Object", "ToString", 0], tmpPtr.readPointer())
+        if (ObjToString == "UnityEngine.UI.Text")
+            ObjToString += ("\t" + callFunctionRUS(["UnityEngine.UI", "Text", "get_text", 0], tmpPtr.readPointer()))
         LOG(String("[" + i + "]").padEnd(5, " ") + " " + tmpPtr + " ---> " + tmpPtr.readPointer() + "  |  " + ObjToString, LogColor.C36)
     }
     LOG("\n")
@@ -2432,14 +2425,14 @@ function getApkInfo() {
         LOG("\n[*]Signatures\t\tMD5\t " + hexdigest(hexDigist, 'MD5') +
             "\n\t\t\tSHA-1\t " + hexdigest(hexDigist, 'SHA-1') +
             "\n\t\t\tSHA-256\t " + hexdigest(hexDigist, 'SHA-256'), LogColor.C36)
-
+        LOG("\n[*]unity.build-id\t" + getMetaData('unity.build-id'), LogColor.C36)
         LOG(getLine(100), LogColor.C33)
 
-        // LOG(getMetaData('unity.build-id'))
     })
 
     function getMetaData(key) {
         // public static final int GET_META_DATA = 0x00000080
+        let context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
         let appInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), 0x00000080)
         let metaData = appInfo.metaData.value
         if (null != metaData) {
@@ -2447,7 +2440,7 @@ function getApkInfo() {
             // LOG(metaDataB.mMap.value)
             return metaData.getString(key)
         }
-        return null
+        return "..."
     }
 
     /**
@@ -2496,7 +2489,11 @@ var launchApp = pkgName => attachJava(() => {
  */
 var readU16 = mPtr => {
     if (mPtr == undefined || mPtr == 0) return ""
-    return ptr(mPtr).add(p_size * 2 + 4).readUtf16String()
+    try {
+        return ptr(mPtr).add(p_size * 2 + 4).readUtf16String()
+    } catch (e) {
+        return ""
+    }
 }
 
 /**
@@ -2563,7 +2560,7 @@ var seeHexA = (addr, length, header, color) => {
  * 判断mPtr是不是ilbil2cpp.so中的地址,自动加上基址
  * 只会自动添加上属于libil2cpp的基地址
  * @param {Pointer} value
- * @returns 
+ * @returns ptr
  */
 var checkPointer = (value, showLog) => {
     if (value == undefined || value == null || soAddr == null || soAddr == 0) return ptr(0)
@@ -2585,12 +2582,14 @@ var checkPointer = (value, showLog) => {
                 value = find_method(value[0], value[1], value[2], value[3])
                 break
             default:
-                return ptr(0)
+                value == 0
         }
     } else {
         // checkPointer("expName")
         value = Module.findExportByName(null, value)
+        if (value == 0) value = Module.findExportByName(soName, value[0])
     }
+    if (value == 0) return ptr(0)
     let retValue = Process.findModuleByAddress(value) == null ?
         ptr(Process.findModuleByAddress(soAddr.add(value)).base).add(value) : value
     if (showLog == undefined) return retValue
@@ -2602,23 +2601,26 @@ var checkPointer = (value, showLog) => {
 
 /**
  * 展示代码上下文
- * @param {Pointer} pointer 指针位置
+ * @param {Pointer} mPtr 指针位置
  * @param {Int} range 展示的范围
  * @param {Int} type 1:正向 2:反向(小端存储，同IDA)   不填写着以当前pointer为中心位置打印信息
  */
-var printCtx = (pointer, range, type, redLine) => {
-    if (Process.arch != "arm") return
+var printCtx = (mPtr, range, type, redLine) => {
+    if (Process.arch != "arm" || mPtr == undefined) return
+    mPtr = checkPointer(ptr(mPtr))
     if (type != undefined) {
-        for (let offset = 0; offset < range; offset++) printLOG(pointer, offset)
-        return
+        for (let offset = 0; offset < range; offset++) printLOG(mPtr, offset)
+    } else {
+        let max = range == undefined ? 5 : (range % 2 == 1 ? (range + 1) : range) / 2
+        let min = range == undefined ? -4 : max - range
+        for (let offset = min; offset < max; offset++) printLOG(mPtr, offset)
     }
-    let max = range == undefined ? 5 : (range % 2 == 1 ? (range + 1) : range) / 2
-    let min = range == undefined ? -4 : max - range
-    for (let offset = min; offset < max; offset++) printLOG(pointer, offset)
 
     function printLOG(pointer, offset) {
         let cur_p = ptr(pointer).add(p_size * offset)
-        let cur_value = cur_p.readPointer().toString()
+        let cur_value = String(cur_p.readPointer())
+        // fix 12 00 00 0A => 0x0A00012 少一个0的情况 
+        if (Process.arch == "arm" && cur_value.length != 10) cur_value = cur_value.replace("000", "0000")
         let cur_tmp = Array.from(cur_value.toUpperCase())
         let cur_str = (cur_tmp.length == 10) ? cur_value : ""
         if (type == 1) {
@@ -2632,14 +2634,13 @@ var printCtx = (pointer, range, type, redLine) => {
     }
 }
 
+var LOGW = str => LOG(str, LogColor.YELLOW)
+var LOGE = str => LOG(str, LogColor.RED)
+var LOGD = str => LOG(str, LogColor.C36)
 var LOG = (str, type) => {
     if (!LogFlag) return
-    if (type == undefined) {
-        console.log(str)
-        return
-    }
     switch (type) {
-        case LogColor.WHITE:
+        case LogColor.WHITE || undefined:
             console.log(str);
             break
         case LogColor.RED:
@@ -2654,7 +2655,7 @@ var LOG = (str, type) => {
     }
 }
 
-var linesMap = new Map()
+let linesMap = new Map()
 var getLine = (length, fillStr) => {
     fillStr = fillStr == undefined ? "-" : fillStr
     let key = length + "|" + fillStr
@@ -3199,53 +3200,53 @@ var showTransform = transform => {
     transform = ptr(transform)
 
     // 保留小数位数
-    var toFixedNum = 2
+    let toFixedNum = 2
 
     try {
         if (p_getChildCount != 0) {
-            var childCount = f_getChildCount(transform)
+            let childCount = f_getChildCount(transform)
             LOG("childCount\t--->\t" + childCount + "\t(" + getObjName(transform) + ")", LogColor.C36)
             PrintHierarchy(transform, 1, true)
         }
     } catch {}
 
-    var eulerAngles_vector3 = allocVector(0, 0, 0)
+    let eulerAngles_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_eulerAngles", 0), eulerAngles_vector3, transform)
     LOG("eulerAngles\t(" + eulerAngles_vector3 + ")\t--->\t" + eulerAngles_vector3.readFloat().toFixed(toFixedNum) + "\t" + eulerAngles_vector3.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + eulerAngles_vector3.add(p_size * 2).readFloat().toFixed(toFixedNum), LogColor.C36)
 
-    var forward_vector3 = allocVector(0, 0, 0)
+    let forward_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_forward", 0), forward_vector3, transform)
     LOG("forward\t\t(" + forward_vector3 + ")\t--->\t" + forward_vector3.readFloat().toFixed(toFixedNum) + "\t" + forward_vector3.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + forward_vector3.add(p_size * 2).readFloat().toFixed(toFixedNum), LogColor.C36)
 
-    var Position_vector3 = allocVector(0, 0, 0)
+    let Position_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_position", 0), Position_vector3, transform)
     LOG("position\t(" + Position_vector3 + ")\t--->\t" + Position_vector3.readFloat().toFixed(toFixedNum) + "\t" + Position_vector3.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + Position_vector3.add(p_size * 2).readFloat().toFixed(toFixedNum), LogColor.C36)
 
-    var localPosition_vector3 = allocVector(0, 0, 0)
+    let localPosition_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_localPosition", 0), localPosition_vector3, transform)
     LOG("localPosition\t(" + localPosition_vector3 + ")\t--->\t" + localPosition_vector3.readFloat().toFixed(toFixedNum) + "\t" + localPosition_vector3.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + localPosition_vector3.add(p_size * 2).readFloat().toFixed(toFixedNum), LogColor.C36)
 
-    var localRotation_Quaternion = allocVector(0, 0, 0, 0)
+    let localRotation_Quaternion = allocVector(0, 0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_localRotation", 0), localRotation_Quaternion, transform)
     LOG("localRotation\t(" + localRotation_Quaternion + ")\t--->\t" + localRotation_Quaternion.readFloat().toFixed(toFixedNum) + "\t" + localRotation_Quaternion.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + localRotation_Quaternion.add(p_size * 2).readFloat().toFixed(toFixedNum) + "\t" + localRotation_Quaternion.add(p_size * 3).readFloat().toFixed(toFixedNum), LogColor.C36)
 
-    var localScale_vector3 = allocVector(0, 0, 0)
+    let localScale_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_localScale", 0), localScale_vector3, transform)
     LOG("localScale\t(" + localScale_vector3 + ")\t--->\t" + localScale_vector3.readFloat().toFixed(toFixedNum) + "\t" + localScale_vector3.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + localScale_vector3.add(p_size * 2).readFloat().toFixed(toFixedNum), LogColor.C36)
 
-    var lossyScale_vector3 = allocVector(0, 0, 0)
+    let lossyScale_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_lossyScale", 0), lossyScale_vector3, transform)
     LOG("lossyScale\t(" + lossyScale_vector3 + ")\t--->\t" + lossyScale_vector3.readFloat().toFixed(toFixedNum) + "\t" + lossyScale_vector3.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + lossyScale_vector3.add(p_size * 2).readFloat().toFixed(toFixedNum), LogColor.C36)
 
-    var right_vector3 = allocVector(0, 0, 0)
+    let right_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_right", 0), right_vector3, transform)
     LOG("right\t\t(" + right_vector3 + ")\t--->\t" + right_vector3.readFloat().toFixed(toFixedNum) + "\t" + right_vector3.add(p_size).readFloat().toFixed(toFixedNum) + "\t" + right_vector3.add(p_size * 2).readFloat().toFixed(toFixedNum), LogColor.C36)
 
-    var up_vector3 = allocVector(0, 0, 0)
+    let up_vector3 = allocVector(0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_up", 0), up_vector3, transform)
     LOG("up\t\t(" + up_vector3 + ")\t--->\t" + up_vector3.readFloat() + "\t" + up_vector3.add(p_size).readFloat() + "\t" + up_vector3.add(p_size * 2).readFloat(), LogColor.C36)
 
-    var rotation_Quaternion = allocVector(0, 0, 0, 0)
+    let rotation_Quaternion = allocVector(0, 0, 0, 0)
     callFunction(find_method("UnityEngine.CoreModule", "Transform", "get_rotation", 0, true), rotation_Quaternion, transform)
     LOG("rotation\t(" + rotation_Quaternion + ")\t--->\t" + rotation_Quaternion.readFloat() + "\t" + rotation_Quaternion.add(p_size).readFloat() + "\t" + rotation_Quaternion.add(p_size * 2).readFloat() + "\t" + rotation_Quaternion.add(p_size * 3).readFloat(), LogColor.C36)
 }
@@ -3607,13 +3608,13 @@ var PrintHierarchy = (mPtr, level, inCall) => {
     if (level == undefined) level = 10
     let transform = ptr(mPtr)
 
-    if (level == 10) LOG(getLine(73) + "\n", LogColor.C33)
+    if (level == 10) LOG(getLine(75) + "\n", LogColor.C33)
     // 当前level作为第一级
     let baseLevel = getLevel(transform)
-    LOG((inCall != undefined ? "\t" : "") + getSpace(0) + transform + " : " + getObjName(transform), LogColor.C36)
+    LOG((inCall != undefined ? "\t" : "") + getLine(0, "\t") + transform + " : " + getObjName(transform), LogColor.C36)
     getChild(transform)
 
-    if (level == 10) LOG("\n" + getLine(73), LogColor.C33)
+    if (level == 10) LOG("\n" + getLine(75), LogColor.C33)
 
     // 递归调用下层信息
     function getChild(p1) {
@@ -3624,7 +3625,7 @@ var PrintHierarchy = (mPtr, level, inCall) => {
             // 这里可能出现 -1 -2 的情况，打出来一大片和当前transform无关的transform
             if (levelC > 0 && levelC <= level)
                 LOG((inCall != undefined ? "\t" : "") +
-                    getSpace(levelC) +
+                    getLine(levelC, "\t") +
                     c_transform + " : " +
                     readU16(f_getName(c_transform)), LogColor.C36)
             getChild(c_transform)
@@ -3642,13 +3643,6 @@ var PrintHierarchy = (mPtr, level, inCall) => {
             }
         }
         return 0
-    }
-
-    // 根据层级进行首行缩进
-    function getSpace(length) {
-        let retStr = ''
-        for (let i = 0; i < length; i++) retStr += '\t'
-        return retStr
     }
 }
 
@@ -3716,7 +3710,7 @@ var canUseInlineHook = (mPtr, Type) => {
         mPtr = ptr(mPtr)
         let count = 0
         do {
-            let str = Instruction.parse(mPtr).mnemonic
+            var str = Instruction.parse(mPtr).mnemonic
             mPtr = mPtr.add(p_size)
             count++
         } while (str != "b" && str != "bl" && str != "blx" && str != "ret")
@@ -4000,18 +3994,18 @@ function findGameObject(path, transform) {
         if (transform == undefined) {
             if (arguments[2] != undefined) {
                 // 返回 gameobject
-                return callFunction(find_method("UnityEngine.CoreModule", "GameObject", "Find", 1), allocStr(path, ""))
+                return callFunction(["UnityEngine.CoreModule", "GameObject", "Find", 1], allocStr(path, ""))
             } else {
                 // GameObject.find（静态方法）得到GameObject,路径查找
-                showGameObject(callFunction(find_method("UnityEngine.CoreModule", "GameObject", "Find", 1), allocStr(path, "")))
+                showGameObject(callFunction(["UnityEngine.CoreModule", "GameObject", "Find", 1], allocStr(path, "")))
             }
         } else if (getType(transform, 1).indexOf("Transform") != -1) {
             if (arguments[2] != undefined) {
                 // 返回 transform
-                return callFunction(find_method("UnityEngine.CoreModule", "Transform", "Find", 1), transform, allocStr(path, ""))
+                return callFunction(["UnityEngine.CoreModule", "Transform", "Find", 1], transform, allocStr(path, ""))
             } else {
                 // Transform.find(非静态方法) 得到的也是transform，指定查找起始点，可以查找隐藏对象
-                showGameObject(getGameObject(callFunction(find_method("UnityEngine.CoreModule", "Transform", "Find", 1), transform, allocStr(path, ""))))
+                showGameObject(getGameObject(callFunction(["UnityEngine.CoreModule", "Transform", "Find", 1], transform, allocStr(path, ""))))
             }
         } else {
             LOG("\narguments[1] Need a Transform Ptr\n", LogColor.RED)
@@ -4055,7 +4049,7 @@ var getRuntimeTypeFromBssOrData = (bssPtr, initFuc, index) => {
             return
         }
     }
-    return callFunction(find_method("mscorlib", "Type", "GetTypeFromHandle", 1), handle)
+    return callFunction(["mscorlib", "Type", "GetTypeFromHandle", 1], handle)
 }
 
 /**
@@ -4110,7 +4104,7 @@ function FindObjectsOfType(typePtr) {
         // 记录上次 对比不同就显示类型 反之不显示 （应对typePtr为Monobehavior的情况）
         let lastType = null
         let enableTypeShow = false
-        let runtimeTypeDes = callFunctionRUS(find_method("mscorlib", "Type", "ToString", 0), typePtr)
+        let runtimeTypeDes = callFunctionRUS(["mscorlib", "Type", "ToString", 0], typePtr)
         LOG(getLine(60), LogColor.YELLOW)
         for (let i = 0; i < arrLenth; i++) {
             let current = ptr(arrPtr).add(p_size * (4 + i)).readPointer()
@@ -4141,7 +4135,7 @@ function FindObjectsOfType(typePtr) {
                 LOG("\t[-] |" + FuckKnownType("Text", mPtr, arrRet[2]) + "|", LogColor.C36)
                 break
             case "UnityEngine.UI.Button":
-                let ButtonClickedEvent = callFunction(find_method("UnityEngine.UI", "Button", "get_onClick", 0), mPtr)
+                let ButtonClickedEvent = callFunction(["UnityEngine.UI", "Button", "get_onClick", 0], mPtr)
                 let ret_mCalls = getFieldInfoFromCls(findClass("UnityEventBase"), "m_Calls", ButtonClickedEvent)
                 LOG("    [-] " + ret_mCalls[3] + "(" + ret_mCalls[2] + ") " + ret_mCalls[0] + " " + ret_mCalls[5], LogColor.C33)
                 // 处理三个 list
@@ -4210,6 +4204,8 @@ function FindObjectsOfType(typePtr) {
     }
 }
 
+var FindObjectsOfTypeAll = typePtr => FindObjectsOfType(typePtr, 1)
+
 let saveCache = (key, value) => {
     if (CommonCache.get(String(key)) == undefined) CommonCache.set(String(key), new Array())
     let insArray = CommonCache.get(String(key))
@@ -4266,7 +4262,9 @@ function getRuntimeType(str) {
         if (arr_runtimeType.length != 0) {
             for (let item of arr_runtimeType) {
                 LOG(String("[" + count++ + "] ").padEnd(6, " ") + item[1] + " ---> " + item[0], LogColor.C36)
-                LOG("\tQualifiedName : " + callFunctionRUS(find_method("mscorlib", "RuntimeType", "get_AssemblyQualifiedName", 0), item[1]), LogColor.C33)
+                let addr = find_method("mscorlib", "RuntimeType", "get_AssemblyQualifiedName", 0)
+                addr = addr != 0 ? addr : find_method("mscorlib", "RuntimeType", "getFullName", 2)
+                LOG("\tQualifiedName : " + callFunctionRUS(addr, item[1], 1, 1), LogColor.C33)
             }
         } else {
             LOG("RuntimeType Array is null ....", LogColor.RED)
@@ -4381,7 +4379,7 @@ var B_Button = () => {
     A(find_method("UnityEngine.UI", "Button", "OnPointerClick", 1), (args) => {
         let current = args[0]
         addRuntimeType(current)
-        let ButtonClickedEvent = callFunction(find_method("UnityEngine.UI", "Button", "get_onClick", 0), current)
+        let ButtonClickedEvent = callFunction(["UnityEngine.UI", "Button", "get_onClick", 0], current)
         let ret_mCalls = getFieldInfoFromCls(findClass("UnityEventBase"), "m_Calls", ButtonClickedEvent)
         let gObj = getGameObject(current)
         let gtrs = f_getTransform(getGameObject(current))
@@ -4399,7 +4397,7 @@ let addRuntimeType = (instance, arg1) => {
     let tmpType = ptr(0)
     try {
         if (arg1 != undefined) {
-            tmpType = [callFunctionRUS(find_method("mscorlib", "Type", "ToString", 0), instance).split(": ")[1], instance]
+            tmpType = [callFunctionRUS(["mscorlib", "Type", "ToString", 0], instance).split(": ")[1], instance]
         } else {
             tmpType = getType(instance, 2)
         }
@@ -4462,17 +4460,26 @@ let GetComponentsOld = (GameObject, RuntimeType, TYPE) => {
 
 // UI.LocalizedTextMeshPro
 var HookLocalized = () => {
-    A(find_method("Assembly-CSharp", "LocalizedTextMeshPro", "SetText", 0, true), (args) => {
-        let value = readU16(callFunction(find_method("Assembly-CSharp", "TextMeshProAttachment", "get_text", 0, true), args[0]))
-        let key = readU16(ptr(args[0]).add(getFieldOffFromCls(findClass("LocalizedTextMeshPro"), "key")).readPointer())
-        LOG("[0] " + String(String(key).length < 20 ? String(key).padEnd(20, " ") : String(key)) + "\t--->\t\t" + value, LogColor.C36)
-    })
 
-    A(find_method("Assembly-CSharp", "LocalizedText", "SetText", 0, true), (args) => {
-        let value = readU16(callFunction(find_method("Assembly-CSharp", "TextAttachment", "get_text", 0, true), args[0]))
-        let key = readU16(ptr(args[0]).add(getFieldOffFromCls(findClass("LocalizedText"), "key")).readPointer())
-        LOG("[1] " + String(String(key).length < 20 ? String(key).padEnd(20, " ") : String(key)) + "\t--->\t\t" + value, LogColor.C36)
-    })
+    if (checkPointer(["Assembly-CSharp", "LocalizedTextMeshPro", "SetText", 0]) == 0) {
+        LOGE("NOT FOUND : Assembly-CSharp.LocalizedTextMeshPro.SetText")
+    } else {
+        A(find_method("Assembly-CSharp", "LocalizedTextMeshPro", "SetText", 0), (args) => {
+            let value = readU16(callFunction(find_method("Assembly-CSharp", "TextMeshProAttachment", "get_text", 0, true), args[0]))
+            let key = readU16(ptr(args[0]).add(getFieldOffFromCls(findClass("LocalizedTextMeshPro"), "key")).readPointer())
+            LOG("[0] " + String(String(key).length < 20 ? String(key).padEnd(20, " ") : String(key)) + "\t--->\t\t" + value, LogColor.C36)
+        })
+    }
+
+    if (checkPointer(["Assembly-CSharp", "LocalizedText", "SetText", 0]) == 0) {
+        LOGE("NOT FOUND : Assembly-CSharp.LocalizedText.SetText")
+    } else {
+        A(find_method("Assembly-CSharp", "LocalizedText", "SetText", 0), (args) => {
+            let value = readU16(callFunction(find_method("Assembly-CSharp", "TextAttachment", "get_text", 0, true), args[0]))
+            let key = readU16(ptr(args[0]).add(getFieldOffFromCls(findClass("LocalizedText"), "key")).readPointer())
+            LOG("[1] " + String(String(key).length < 20 ? String(key).padEnd(20, " ") : String(key)) + "\t--->\t\t" + value, LogColor.C36)
+        })
+    }
 }
 
 var B_GameObject = type => {
@@ -4643,14 +4650,14 @@ var B_Text = () => {
 
     function TMP_Text(showGobj) {
         A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {
-            let aimStr = "|" + readU16(callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), args[0])) + "|"
+            let aimStr = "|" + readU16(callFunction(["Unity.TextMeshPro", "TMP_Text", "get_text", 0], args[0])) + "|"
             if (filterDuplicateOBJ(String(args[0]), 30) == -1) return
             recordTxtFirst(args[0], "TMP_Text")
             LOG("\n[TMP_Text]  " + args[0] + "\t" + aimStr, LogColor.C36)
             if (strMap.size != 0) {
                 let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
-                    callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "set_text", 1), args[0], allocStr(repStr, ""))
+                    callFunction(["Unity.TextMeshPro", "TMP_Text", "set_text", 1], args[0], allocStr(repStr, ""))
                     LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
                 }
                 if (showGobj != undefined && showGobj == true) {
@@ -4662,7 +4669,7 @@ var B_Text = () => {
 
     function TextMeshPro() {
         A(find_method("Unity.TextMeshPro", "TextMeshPro", "get_transform", 0), (args) => {
-            let aimStr = "|" + readU16(callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "get_text", 0), args[0])) + "|"
+            let aimStr = "|" + readU16(callFunction(["Unity.TextMeshPro", "TextMeshPro", "get_text", 0], args[0])) + "|"
             if (filterDuplicateOBJ(String(args[0])) == -1) return
             recordTxtFirst(args[0], "TextMeshPro")
             LOG("\n[TextMeshPro]  " + args[0] + "\t" + aimStr, LogColor.C35)
@@ -4680,9 +4687,8 @@ var B_Text = () => {
         if (showGameObj == undefined) showGameObj = false;
         A(find_method("UnityEngine.UI", "Text", "get_text", 0), (args) => {
             recordTxtFirst(args[0], "Text")
-            if (showGameObj) {
-                showGameObject(callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), args[0]))
-            }
+            if (showGameObj)
+                showGameObject(callFunction(["UnityEngine.CoreModule", "Component", "get_gameObject", 0], args[0]))
         }, (ret, ctx) => {
             let aimStr = "|" + readU16(ret) + "|"
             if (filterDuplicateOBJ(String(ret)) == -1) return
@@ -4690,7 +4696,7 @@ var B_Text = () => {
             if (strMap.size != 0) {
                 let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
-                    ret.replace(allocStr(repStr, ""))
+                    ret.replace(allocUStr(repStr))
                     // callFunction(find_method("UnityEngine.UI", 'Text', 'set_text', 1), p_size == 4 ? ctx.r0 : ctx.x0, allocStr(repStr, ""))
                     LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
                 }
@@ -4705,31 +4711,28 @@ var B_Text = () => {
             if (strMap.size != 0) {
                 let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
-                    args[1] = allocStr(repStr, "")
+                    args[1] = allocUStr(repStr)
                     LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
                 }
-                if (showGameObj) {
-                    showGameObject(callFunction(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), args[0]))
-                }
+                if (showGameObj)
+                    showGameObject(callFunction(["UnityEngine.CoreModule", "Component", "get_gameObject", 0], args[0]))
             }
         })
     }
 
     function HookTrackText() {
         A(find_method('UnityEngine.UI', 'FontUpdateTracker', 'TrackText', 1), (args) => {
-            try {
-                let aimStr = "|" + callFunctionRUS(find_method("UnityEngine.UI", 'Text', 'get_text', 0), args[0]) + "|"
-                if (filterDuplicateOBJ(String(callFunctionRUS(find_method("UnityEngine.UI", 'Text', 'get_text', 0))) == -1)) return
-                LOG("\n[FontUpdateTracker]  " + args[0] + "\t" + aimStr, LogColor.C36)
-                recordTxtFirst(args[0], "Text")
-                if (strMap.size != 0) {
-                    let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
-                    if (repStr != undefined) {
-                        args[1] = allocStr(repStr, "")
-                        LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
-                    }
+            let aimStr = "|" + callFunctionRUS(["UnityEngine.UI", 'Text', 'get_text', 0], args[0]) + "|"
+            if (filterDuplicateOBJ(String(callFunctionRUS(["UnityEngine.UI", 'Text', 'get_text', 0], args[0])) == -1)) return
+            LOG("\n[FontUpdateTracker]  " + args[0] + "\t" + aimStr, LogColor.C36)
+            recordTxtFirst(args[0], "Text")
+            if (strMap.size != 0) {
+                let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
+                if (repStr != undefined) {
+                    args[1] = allocUStr(repStr)
+                    LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
                 }
-            } catch (e) {}
+            }
         })
     }
 
