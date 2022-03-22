@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/03/11 09:09
+ * @UpdateTime  2022/03/22 11:54
  * @Des         frida hook u3d functions script
  */
 
@@ -76,7 +76,7 @@ function main() {
     // Wait_Interval()
     // Wait_NewTread()
 
-    // 有些机型对dlopen的hook可能导致游戏崩溃
+    // 有些机型对dlopen的hook可能导致游戏崩溃 (别用在gadget)
     function hook_dlopen() {
         soAddr = Module.findBaseAddress(soName)
         if (soAddr != null) return initImages()
@@ -133,7 +133,7 @@ function main() {
         }, 300)
     }
 
-    // init 位置
+    // init
     function initImages() {
 
         LogFlag = false
@@ -143,7 +143,7 @@ function main() {
         initLibCFunctions()
         initLibArtFunctions()
         initEnv()
-        // initRuntimeType()
+        // initRuntimeType() //需要时候手动调用 (获取runtimeType)
         LogFlag = true
 
         function initExportFunctions() {
@@ -215,13 +215,11 @@ function main() {
             DecodeJObject = checkPointer(["libart.so", "_ZNK3art6Thread13DecodeJObjectEP8_jobject"])
             GetDescriptor = checkPointer(["libart.so", "_ZN3art6mirror5Class13GetDescriptorEPNSt3__112basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEE"])
 
-            // 实际就是获得 Thread::Current()
-            // 目前仅用作 jcls 的名称获取
+            // 实际就是获得 Thread::Current() , 目前仅用作 jcls 的名称获取
             A(DecodeJObject, (args) => {
                 ArtCurrent = args[0]
             })
 
-            // 五秒检测一次 ArtCurrent 是否拿到，拿到了就取消Attach
             var taskID = setInterval(() => {
                 if (ArtCurrent != undefined) {
                     d(DecodeJObject)
@@ -238,19 +236,21 @@ function main() {
     }
 }
 
-const i = filter => list_Images(filter)
+var i = filter => list_Images(filter)
 
-const c = (image, isShowClass) => list_Classes(image, isShowClass)
+var c = (image, isShowClass) => list_Classes(image, isShowClass)
 
-const m = klass => list_Methods(klass, 1)
+var m = klass => list_Methods(klass, 1)
 
-const f = klass => listFieldsFromCls(klass)
+var f = klass => listFieldsFromCls(klass)
+
+var fc = (arg0, arg1) => findClass(arg0, arg1)
 
 /**
  * 参数可以传递 绝对地址/相对地址/methodinfo指针（解析参数）
  * @param {Number} mPtr 
  */
-const b = mPtr => breakPoint(mPtr)
+var b = mPtr => breakPoint(mPtr)
 
 /**
  * 查找 Method 地址 == find_method()
@@ -259,25 +259,25 @@ const b = mPtr => breakPoint(mPtr)
  * @param {String} functionName 
  * @param {Number} ArgsCount 
  */
-const F = (ImageName, ClassName, functionName, ArgsCount) => find_method(ImageName, ClassName, functionName, ArgsCount, false)
+var F = (ImageName, ClassName, functionName, ArgsCount) => find_method(ImageName, ClassName, functionName, ArgsCount, false)
 
 /**
  * 用来查看地址 确定不是单独的一条B，以便于InlineHook的后续处理
  * @param {Number} mPtr 绝对地址相对地址都可以
  * @param {Number} 打印指令条数
  */
-const P = (mPtr, range, type) => printCtx(mPtr, (range == undefined ? 20 : range), type)
+var P = (mPtr, range, type) => printCtx(mPtr, (range == undefined ? 20 : range), type)
 
 /**
  * 简写 a(findClass(mStr))
  * @param {String} mStr 
  */
-function af(mStr) {
+var af = mStr => {
     if (mStr == undefined || !isNaN(mStr)) return
     a(findClass(mStr))
 }
 
-function a(imgOrCls) {
+var a = imgOrCls => {
     if (imgOrCls == undefined) {
         for (let i = 0; i < arr_img_names.length; i++) {
             // 默认就用Assembly-CSharp 和 MaxSdk.Scripts
@@ -300,14 +300,14 @@ function a(imgOrCls) {
     }
 }
 
-function B(filter, isAnalyticParameter) {
+var B = (filter, isAnalyticParameter) => {
     if (arrayAddr.length == 0) a()
     // 默认不要详细参数，都显示可能导致卡顿而且太乱了，建议再需要的时候新开cmd再使用b去指定某个method
     breakPoints(filter, isAnalyticParameter == undefined ? false : isAnalyticParameter)
 }
 
 // 遍历所有的img，添加所有方法，也是一个不太建议的使用方式，需要全部遍历的情况建议使用dps.py配合bpoints.js来使用
-function BA(filter, isAnalyticParameter) {
+var BA = (filter, isAnalyticParameter) => {
     D()
     a("ALL")
     breakPoints(filter, isAnalyticParameter == undefined ? false : isAnalyticParameter)
@@ -316,7 +316,7 @@ function BA(filter, isAnalyticParameter) {
 /**
  * 使用反射来查找class（暂时没怎么用到，在低版本的unity中可能就需要用这种方式来获取image了，后续再改吧。。。）
  */
-function C(ImgOrPtr) {
+var C = ImgOrPtr => {
     const corlib = il2cpp_get_corlib()
     const assemblyClass = il2cpp_class_from_name(corlib, allocStr("System.Reflection"), allocStr("Assembly"))
     const assemblyLoad = il2cpp_class_get_method_from_name(assemblyClass, allocStr("Load"), 1)
@@ -330,11 +330,11 @@ function C(ImgOrPtr) {
 
     LOG(getLine(85), LogColor.C33)
     arr_img_names
-        .filter(function (name, index) {
+        .filter((name, index) => {
             if (ImgOrPtr != undefined && Number(arr_img_addr[index]) == Number(ImgOrPtr)) return name
             if (ImgOrPtr != undefined && name.indexOf(ImgOrPtr) != -1) return name
             // return name
-        }).forEach(function (name) {
+        }).forEach(name => {
             let logstr = `${getLine(15)} ${name} ${getLine(15)}`
             LOG(logstr, LogColor.C33)
             LOG(getLine(logstr.length), LogColor.C33)
@@ -355,13 +355,13 @@ function C(ImgOrPtr) {
     LOG(getLine(85), LogColor.C33)
 }
 
-const attachJava = func => {
+var attachJava = func => {
     if (func == undefined) return
     Java.perform(() => func())
 }
 
 // attach A(0xabcd,(args,ctx,pass)=>{},(ret)=>{})
-function A(mPtr, mOnEnter, mOnLeave) {
+var A = (mPtr, mOnEnter, mOnLeave, needRecord) => {
     if (mPtr == null || mPtr == 0) throw new Error("Can't attach nullptr")
     var passValue = new Map()
     passValue.set("org", mPtr)
@@ -379,7 +379,7 @@ function A(mPtr, mOnEnter, mOnLeave) {
         }
     })
     // 记录已经被Attach的函数地址以及listner,默认添加listener记录 (只有填写false的时候不记录)
-    if (arguments[3] != false) map_attach_listener.set(String(mPtr), Listener)
+    if (needRecord != false) map_attach_listener.set(String(mPtr), Listener)
 }
 
 // R(0xabcd,(srcFunc,arg0,arg1,arg2,arg3)=>{......})
@@ -1582,16 +1582,16 @@ var setFunctionValue = (mPtr, value, index) => {
 // callFunction(["strcmp"],allocStr("123"),allocStr("123"))
 // callFunction(["libc.so","strcmp"],allocStr("123"),allocStr("123"))
 function callFunction(value, ...args) {
-    try {
-        if (value == undefined || value == null || value == 0x0) return ptr(0x0)
-        for (let i = 1; i <= (arguments.length < 5 ? 5 : arguments.length) - 1; i++)
-            arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))
-        return new NativeFunction(checkPointer(value), 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
-            (arguments[1], arguments[2], arguments[3], arguments[4])
-    } catch (e) {
-        LOG(e, LogColor.C95)
-        return ptr(0)
-    }
+    // try {
+    if (value == undefined || value == null || value == 0x0) return ptr(0x0)
+    for (let i = 1; i <= (arguments.length < 5 ? 5 : arguments.length) - 1; i++)
+        arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))
+    return new NativeFunction(checkPointer(value, true), 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
+        (arguments[1], arguments[2], arguments[3], arguments[4])
+    // } catch (e) {
+    //     LOG(e, LogColor.C95)
+    //     return ptr(0)
+    // }
 }
 
 // 返回 boolean
@@ -2562,7 +2562,7 @@ var seeHexA = (addr, length, header, color) => {
  * @param {Pointer} value
  * @returns ptr
  */
-var checkPointer = (value, showLog) => {
+var checkPointer = (value, throwErr, showLog) => {
     if (value == undefined || value == null || soAddr == null || soAddr == 0) return ptr(0)
     if (!isNaN(value)) {
         // checkPointer(mPtr)
@@ -2583,11 +2583,16 @@ var checkPointer = (value, showLog) => {
                 break
             default:
                 value == 0
+                break
         }
     } else {
         // checkPointer("expName")
         value = Module.findExportByName(null, value)
         if (value == 0) value = Module.findExportByName(soName, value[0])
+    }
+    if (throwErr != undefined && value == 0) {
+        LOGE("Can't call ptr 0x0")
+        return ptr(0)
     }
     if (value == 0) return ptr(0)
     let retValue = Process.findModuleByAddress(value) == null ?
@@ -2607,7 +2612,7 @@ var checkPointer = (value, showLog) => {
  */
 var printCtx = (mPtr, range, type, redLine) => {
     if (Process.arch != "arm" || mPtr == undefined) return
-    mPtr = checkPointer(ptr(mPtr))
+    mPtr = checkPointer(mPtr)
     if (type != undefined) {
         for (let offset = 0; offset < range; offset++) printLOG(mPtr, offset)
     } else {
@@ -2637,6 +2642,8 @@ var printCtx = (mPtr, range, type, redLine) => {
 var LOGW = str => LOG(str, LogColor.YELLOW)
 var LOGE = str => LOG(str, LogColor.RED)
 var LOGD = str => LOG(str, LogColor.C36)
+var LOGO = str => LOG(str, LogColor.C33)
+var LOGH = str => LOG(str, LogColor.C96)
 var LOG = (str, type) => {
     if (!LogFlag) return
     switch (type) {
@@ -2667,7 +2674,7 @@ var getLine = (length, fillStr) => {
 
 var Toast = msg => {
     Java.scheduleOnMainThread(() => {
-        var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
+        let context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
         Java.use("android.widget.Toast").makeText(context, Java.use("java.lang.String").$new(msg), 1).show()
     })
 }
@@ -2811,6 +2818,20 @@ var getGameObject = mPtr => callFunction(find_method("UnityEngine.CoreModule", "
 
 var getGameObjectG = mPtr => callFunction(find_method("UnityEngine.CoreModule", "GameObject", "get_gameObject", 0), ptr(mPtr))
 
+/**
+ * TODO 考虑使用 frida 去去获取 GetComponents 等等操作，便于定位obj上面的脚本名称，后续继续完善
+ * @param {Pointer} obj this指针
+ * @param {Pointer} type 
+ */
+var GetComponent = (obj, type) => {
+    if (getType(obj, 2)[0] == "GameObject") obj = f_getTransform(obj)
+    return callFunction(['UnityEngine.CoreModule', 'Component', 'GetComponent', 1], obj, type)
+}
+
+var GetComponentG = (obj, type) => {
+    return callFunction(find_method('UnityEngine.CoreModule', 'GameObject', 'GetComponent', 1), obj, type)
+}
+
 // public Component[] GetComponents(Type type) [UnityEngine.CoreModule UnityEngine.GameObject]
 var GetComponents = (insPtr, mType) => {
     // if (getType(insPtr, 2)[0] == "GameObject") {
@@ -2821,7 +2842,7 @@ var GetComponents = (insPtr, mType) => {
     let tempMem = alloc(8)
     if (mType == undefined) mType = getRuntimeType("MonoBehaviour") //make sure getRuntimeType return not null
     if (getType(insPtr, 2)[0] == "GameObject") insPtr = f_getTransform(ptr(insPtr))
-    callFunction(find_method("UnityEngine.CoreModule", "Component", "GetComponents", 2), insPtr, mType, tempMem)
+    callFunction(["UnityEngine.CoreModule", "Component", "GetComponents", 2], insPtr, mType, tempMem)
     seeHexA(tempMem, 8 * p_size)
 }
 
@@ -2833,7 +2854,7 @@ var GetComponentsInChildren = (insPtr, mType, includeInactive) => {
         //     callFunctionRA(find_method("UnityEngine.CoreModule", "GameObject", "GetComponentsInChildren", 2), insPtr, mType, includeInactive)
         // } else {
         // public Component[] GetComponents(Type type) 
-        callFunctionRA(find_method("UnityEngine.CoreModule", "Component", "GetComponentsInChildren", 2), insPtr, mType, includeInactive)
+        callFunctionRA(["UnityEngine.CoreModule", "Component", "GetComponentsInChildren", 2], insPtr, mType, includeInactive)
         // }
     } catch (e) {
         LOG("ERROR :" + e)
@@ -2845,10 +2866,10 @@ var GetComponentsInParent = (insPtr, mType, includeInactive) => {
     includeInactive = includeInactive == undefined ? true : false
     try {
         if (getType(insPtr, 2)[0] == "GameObject") {
-            callFunctionRA(find_method("UnityEngine.CoreModule", "GameObject", "GetComponentsInParent", 2), insPtr, mType, includeInactive)
+            callFunctionRA(["UnityEngine.CoreModule", "GameObject", "GetComponentsInParent", 2], insPtr, mType, includeInactive)
         } else {
             // public Component[] GetComponents(Type type) 
-            callFunctionRA(find_method("UnityEngine.CoreModule", "Component", "GetComponentsInParent", 2), insPtr, mType, includeInactive)
+            callFunctionRA(["UnityEngine.CoreModule", "Component", "GetComponentsInParent", 2], insPtr, mType, includeInactive)
         }
     } catch (e) {
         LOG("ERROR :" + e)
@@ -2876,7 +2897,7 @@ var InstantiatePR = (original, position, rotation) => {
  */
 var getType = (mPtr, TYPE) => {
     let p_type = callFunction(find_method('mscorlib', 'Object', 'GetType', 0), ptr(mPtr))
-    let p_name = typeDes(p_type)
+    let p_name = typeDes(p_type, 1)
     if (TYPE == 1) return p_name + "(" + p_type + ")"
     if (TYPE == 2) return [String(p_name).split(": ")[1], p_type]
     let p_level = typeExtends(p_type)
@@ -2890,6 +2911,7 @@ var getBaseType = (mPtr, level) => {
     return ptr(mPtr)
 }
 
+// 从当前的 runtimeType 查找上层的 runtimeType 并记录
 let typeExtends = mPtr => {
     var displayStr = ""
     let currentType = 0
@@ -2901,7 +2923,7 @@ let typeExtends = mPtr => {
                 break
             }
             addRuntimeType(currentType, 1)
-            displayStr += `${typeDes(currentType).split("Type: ")[1]}(${currentType})  <---  `
+            displayStr += `${typeDes(currentType)}(${currentType})  <---  `
         }
     } catch (e) {
         return ""
@@ -2909,33 +2931,17 @@ let typeExtends = mPtr => {
     return displayStr
 }
 
-var typeDes = mPtr => callFunctionRUS(find_method("mscorlib", "Type", "ToString", 0), mPtr)
+let typeDes = (mPtr, simple) => simple != undefined ? callFunctionRUS(find_method("mscorlib", "Type", "ToString", 0), mPtr) : callFunctionRUS(find_method("mscorlib", "Type", "ToString", 0), mPtr).split("Type: ")[1]
 
-/**
- * TODO 考虑使用 frida 去去获取 GetComponents 等等操作，便于定位obj上面的脚本名称，后续继续完善
- * @param {Pointer} obj this指针
- * @param {Pointer} type 
- */
-var GetComponent = (obj, type) => {
-    return callFunction(find_method('UnityEngine.CoreModule', 'Component', 'GetComponent', 1), ptr(obj), ptr(type))
-}
-
-var GetComponentG = (obj, type) => {
-    return callFunction(find_method('UnityEngine.CoreModule', 'GameObject', 'GetComponent', 1), ptr(obj), ptr(type))
-}
-
-var GetTypeFromHandle = (obj) => {
-    return callFunction(find_method('mscorlib', 'Type', 'GetTypeFromHandle', 1), ptr(obj), 0)
-}
+var GetTypeFromHandle = () => callFunction(find_method('mscorlib', 'Type', 'GetTypeFromHandle', 1), obj, 0)
 
 var SendMessage = (str0, str1, str2) => {
-
     // Java 
-    Java.perform(function () {
+    Java.perform(() => {
         Java.use("com.unity3d.player.UnityPlayer").UnitySendMessage(str0, str1, str2)
     })
 
-    // Native 好像有点问题,不太行
+    // Native 好像有点问题
     // callFunction(Module.findExportByName("libunity.so","UnitySendMessage"),allocStr(str0,1),allocStr(str1,1),allocStr(str2,1))
 }
 
@@ -3799,7 +3805,7 @@ function fuckSVC() {
 
 let newThreadCallBack = () => {}
 let newThreadDelay = 0
-let LshowLOG = false
+let LshowLOG = true
 let newThreadSrcCallBack = new NativeCallback(() => {
     if (LshowLOG) LOG("\nEnter new Thread pid:" + f_getpid() + " tid:" + f_gettid(), LogColor.C36)
     while (newThreadDelay-- > 0) {
@@ -3928,17 +3934,17 @@ function findInMemory(typeStr) {
                         file.write(Memory.readByteArray(result[0], length))
                         file.flush()
                         file.close()
-                        LOG('\tSave to\t\t===>\t' + path, LogColor.C36)
+                        LOGD('\tSave to\t\t===>\t' + path)
                     }).catch(err => {
-                        LOG(err)
+                        LOGE(err)
                     })
                 })
             })
             break
         case "global-metadata.dat":
             find("AF 1B B1 FA 18", (pattern, address, size) => {
-                LOG("\n" + getLine(80), LogColor.RED)
-                LOG('Found "global-metadata.dat"' + pattern + " Address: " + address.toString() + "\n", LogColor.C36)
+                LOGE("\n" + getLine(80))
+                LOGD('Found "global-metadata.dat"' + pattern + " Address: " + address.toString() + "\n")
                 seeHexA(address, 64, true, LogColor.C33)
 
                 let DefinitionsOffset = parseInt(address, 16) + 0x108;
@@ -3949,7 +3955,7 @@ function findInMemory(typeStr) {
 
                 // 根据两个偏移得出global-metadata大小
                 let global_metadata_size = DefinitionsOffset_size + DefinitionsCount_size
-                LOG("\nFile size\t===>\t" + global_metadata_size + "B (" + (global_metadata_size / 1024 / 1024).toFixed(2) + "MB)", LogColor.C36)
+                LOGD("\nFile size\t===>\t" + global_metadata_size + "B (" + (global_metadata_size / 1024 / 1024).toFixed(2) + "MB)")
                 // 只保留大于两兆的文件
                 if (global_metadata_size > 1024 * 1024 * 2) {
                     let path = "/data/data/" + getPkgName() + "/global-metadata.dat"
@@ -3957,9 +3963,9 @@ function findInMemory(typeStr) {
                     file.write(Memory.readByteArray(address, global_metadata_size))
                     file.flush()
                     file.close()
-                    LOG('Save to\t\t===>\t' + path, LogColor.C36)
+                    LOGD('Save to\t\t===>\t' + path)
                 }
-                LOG(getLine(80), LogColor.RED)
+                LOGD(getLine(80))
             })
             break
     }
@@ -4008,10 +4014,10 @@ function findGameObject(path, transform) {
                 showGameObject(getGameObject(callFunction(["UnityEngine.CoreModule", "Transform", "Find", 1], transform, allocStr(path, ""))))
             }
         } else {
-            LOG("\narguments[1] Need a Transform Ptr\n", LogColor.RED)
+            LOGE("\narguments[1] Need a Transform Ptr\n")
         }
     } catch (error) {
-        LOG("\nNot Found ...\n", LogColor.RED)
+        LOGE("\nNot Found ...\n")
     }
 }
 
@@ -4043,10 +4049,9 @@ var getRuntimeTypeFromBssOrData = (bssPtr, initFuc, index) => {
         // 可能出现没有初始化的情况， 所以还是得借助ida去查看出初始化函数以及index
         if (initFuc != undefined && index != undefined) {
             callFunction(initFuc, index)
-            LOG("called init / try call this function again", LogColor.RED)
+            LOGE("called init / try call this function again")
         } else {
-            LOG("且未填写初始化函数\n借助IDA查看初始化函数以及Index", LogColor.RED)
-            return
+            throw new Error("且未填写初始化函数\n借助IDA查看初始化函数以及Index")
         }
     }
     return callFunction(["mscorlib", "Type", "GetTypeFromHandle", 1], handle)
@@ -4097,10 +4102,7 @@ function FindObjectsOfType(typePtr) {
 
     function listObj(arrPtr) {
         let arrLenth = ptr(arrPtr).add(p_size * 3).readInt()
-        if (arrLenth == 0) {
-            LOG("There's no Instance", LogColor.RED)
-            return
-        }
+        if (arrLenth == 0) throw new Error("There's no Instance")
         // 记录上次 对比不同就显示类型 反之不显示 （应对typePtr为Monobehavior的情况）
         let lastType = null
         let enableTypeShow = false
@@ -4229,7 +4231,7 @@ var printSavedCache = key => {
  */
 let ansItems = (ret_mCalls, itemStr) => {
     //  ps:暂时只是适配了arm32
-    if (p_size != 0x4) return
+    if (Process.arch != "arm") return
     let ret_itemCalls = getFieldInfoFromCls(ret_mCalls[2], itemStr, ret_mCalls[5])
     let m_size = getFieldInfoFromCls(ret_itemCalls[2], "_size", ret_itemCalls[5])[5]
     if (m_size != 0) {
@@ -4244,8 +4246,8 @@ let ansItems = (ret_mCalls, itemStr) => {
             tmpValue += (functionName == "" || functionName == undefined ? "" : (" | " + functionName))
             arrAddr.push(tmpValue)
         }
-        LOG("\t" + itemStr.substring(2, 3) + "_calls ( INS :" + item[5] + ")  [TYPE : " + ret_itemCalls[3] + " ( " + ret_itemCalls[2] + " ) | LEN : " + m_size +
-            "] \n\t\t" + JSON.stringify(arrAddr) + " <--- " + JSON.stringify(JSON.parse(FuckKnownType(item[3], item[5], item[2])).slice(0, m_size)), LogColor.C36)
+        LOGD("\t" + itemStr.substring(2, 3) + "_calls ( INS :" + item[5] + ")  [TYPE : " + ret_itemCalls[3] + " ( " + ret_itemCalls[2] + " ) | LEN : " + m_size +
+            "] \n\t\t" + JSON.stringify(arrAddr) + " <--- " + JSON.stringify(JSON.parse(FuckKnownType(item[3], item[5], item[2])).slice(0, m_size)))
     }
 }
 
@@ -4285,17 +4287,18 @@ function getRuntimeType(str) {
         if (name == undefined) return ptr(0)
         for (let item of arr_runtimeType)
             if (String(name) == String(item[0])) return item[1]
-        new Promise((onFinish) => {
-            LOG("Waitting Init ... ", LogColor.RED)
-            LogFlag = false
-            initRuntimeType(1)
-            LogFlag = true
-            onFinish()
-        }).then(() => {
-            // 一处异步则需要处处异步 ...  这里异步的结果只是一个 log
-            for (let item of arr_runtimeType)
-                if (String(name) == String(item[0])) LOG(item[1])
-        })
+        return ptr(0)
+        // new Promise((onFinish) => {
+        //     LOG("Waitting Init ... ", LogColor.RED)
+        //     LogFlag = false
+        //     initRuntimeType(1)
+        //     LogFlag = true
+        //     onFinish()
+        // }).then(() => {
+        //     // 一处异步则需要处处异步 ...  这里异步的结果只是一个 log
+        //     for (let item of arr_runtimeType)
+        //         if (String(name) == String(item[0])) LOG(item[1])
+        // })
     }
 }
 
@@ -4384,10 +4387,13 @@ var B_Button = () => {
         let gObj = getGameObject(current)
         let gtrs = f_getTransform(getGameObject(current))
         LOG("\n[*] " + current + " ---> " + getObjName(current) + " { G:" + gObj + " | T:" + gtrs + " }", LogColor.C96)
-        LOG("    [-] " + ret_mCalls[3] + "(" + ret_mCalls[2] + ") " + ret_mCalls[0] + " " + ret_mCalls[5], LogColor.C33)
-        ansItems(ret_mCalls, "m_PersistentCalls")
-        ansItems(ret_mCalls, "m_RuntimeCalls")
-        ansItems(ret_mCalls, "m_ExecutingCalls")
+        LOGD("    [-] " + ret_mCalls[3] + "(" + ret_mCalls[2] + ") " + ret_mCalls[0] + " " + ret_mCalls[5], LogColor.C33)
+        // 立即去获取是拿不到函数地址的,这里做一点点小延时
+        setTimeout(() => {
+            ansItems(ret_mCalls, "m_PersistentCalls")
+            ansItems(ret_mCalls, "m_RuntimeCalls")
+            ansItems(ret_mCalls, "m_ExecutingCalls")
+        }, 10);
     })
 }
 
@@ -4452,7 +4458,7 @@ let GetComponentsOld = (GameObject, RuntimeType, TYPE) => {
                 LOG((i == 0 ? "" : "\n") + "[*] " + arrRet[0], LogColor.C36)
                 lastName = arrRet[0]
             }
-            LOG("\t" + current + " ---> " + arrRet[1] + "(" + arrRet[2] + ")", LogColor.C36)
+            LOGD("\t" + current + " ---> " + arrRet[1] + "(" + arrRet[2] + ")")
         }
         LOG("\n")
     }
@@ -4467,7 +4473,7 @@ var HookLocalized = () => {
         A(find_method("Assembly-CSharp", "LocalizedTextMeshPro", "SetText", 0), (args) => {
             let value = readU16(callFunction(find_method("Assembly-CSharp", "TextMeshProAttachment", "get_text", 0, true), args[0]))
             let key = readU16(ptr(args[0]).add(getFieldOffFromCls(findClass("LocalizedTextMeshPro"), "key")).readPointer())
-            LOG("[0] " + String(String(key).length < 20 ? String(key).padEnd(20, " ") : String(key)) + "\t--->\t\t" + value, LogColor.C36)
+            LOGD("[0] " + String(String(key).length < 20 ? String(key).padEnd(20, " ") : String(key)) + "\t--->\t\t" + value)
         })
     }
 
@@ -4477,7 +4483,7 @@ var HookLocalized = () => {
         A(find_method("Assembly-CSharp", "LocalizedText", "SetText", 0), (args) => {
             let value = readU16(callFunction(find_method("Assembly-CSharp", "TextAttachment", "get_text", 0, true), args[0]))
             let key = readU16(ptr(args[0]).add(getFieldOffFromCls(findClass("LocalizedText"), "key")).readPointer())
-            LOG("[1] " + String(String(key).length < 20 ? String(key).padEnd(20, " ") : String(key)) + "\t--->\t\t" + value, LogColor.C36)
+            LOGD("[1] " + String(String(key).length < 20 ? String(key).padEnd(20, " ") : String(key)) + "\t--->\t\t" + value)
         })
     }
 }
@@ -4599,15 +4605,15 @@ var B_InputField = () => {
 // 汉化翻译 相关函数
 var B_LocalizationManager = () => {
     A(find_method("Assembly-CSharp", "LocalizationManager", "GetLocalizedValue", 3), (args) => {
-        LOG("[*] Key: |" + readU16(args[0]) + "|", LogColor.C36)
+        LOGD("[*] Key: |" + readU16(args[0]) + "|")
     }, (ret) => {
-        LOG("\tTo : |" + readU16(ret) + "|", LogColor.C36)
+        LOGD("\tTo : |" + readU16(ret) + "|")
     })
 }
 
-//public static Void TrackText (Text t)
-//a(findClass("TextMesh"))
-//用作查找拼接后的字符串
+// public static Void TrackText (Text t)
+// a(findClass("TextMesh"))
+// 用作查找拼接后的字符串
 // find_method("mscorlib","String","Format",3)
 // a(findClass("String"))
 // find_method("UnityEngine.UI","Text","get_text",0,false)
@@ -4621,31 +4627,31 @@ var B_Text = () => {
     strMap.set("More games", "更多游戏")
 
     try {
-        LOG("Enable TMP_Text Hook".padEnd(30, " ") + "| class : " + findClass("TMP_Text"), LogColor.C36)
+        LOGD("Enable TMP_Text Hook".padEnd(30, " ") + "| class : " + findClass("TMP_Text"))
         TMP_Text(false)
     } catch {
-        LOG("Unity.TextMeshPro.TMP_Text.get_transform NOT FOUND !", LogColor.RED)
+        LOGE("Unity.TextMeshPro.TMP_Text.get_transform NOT FOUND !")
     }
 
     try {
-        LOG("Enable TextMeshPro Hook".padEnd(30, " ") + "| class : " + findClass("TextMeshPro"), LogColor.C36)
+        LOGD("Enable TextMeshPro Hook".padEnd(30, " ") + "| class : " + findClass("TextMeshPro"))
         TextMeshPro()
     } catch {
-        LOG("Unity.TextMeshPro.TextMeshPro.get_transform NOT FOUND !", LogColor.RED)
+        LOGE("Unity.TextMeshPro.TextMeshPro.get_transform NOT FOUND !")
     }
 
     try {
-        LOG("Enable Text Hook".padEnd(30, " ") + "| class : " + findClass("Text"), LogColor.C36)
+        LOGD("Enable Text Hook".padEnd(30, " ") + "| class : " + findClass("Text"))
         UnityEngine_UI_Text(false)
     } catch {
-        LOG("UnityEngine.UI.Text.get_text/set_text NOT FOUND!", LogColor.RED)
+        LOGE("UnityEngine.UI.Text.get_text/set_text NOT FOUND!")
     }
 
     try {
-        LOG("Enable TrackText Hook".padEnd(30, " ") + "| class : " + findClass("FontUpdateTracker"), LogColor.C36)
+        LOGD("Enable TrackText Hook".padEnd(30, " ") + "| class : " + findClass("FontUpdateTracker"))
         HookTrackText()
     } catch {
-        LOG("UnityEngine.UI.FontUpdateTracker.TrackText NOT FOUND !", LogColor.RED)
+        LOGE("UnityEngine.UI.FontUpdateTracker.TrackText NOT FOUND !")
     }
 
     function TMP_Text(showGobj) {
@@ -4773,9 +4779,9 @@ var TMP_Template = () => {
             '    LOG(ret + "\t" + readU16(arg0) + "\\t" + readU16(p_name))\n' +
             '    return ret\n' +
             '})\n'
-        LOG(Template_Resources_Load, LogColor.C36)
+        LOGD(Template_Resources_Load)
     } catch {
-        LOG("NOT FOUND ---> public static Object[] LoadAll(string path, Type systemTypeInstance)\n", LogColor.RED)
+        LOGE("NOT FOUND ---> public static Object[] LoadAll(string path, Type systemTypeInstance)\n")
     }
 
     try {
@@ -4786,9 +4792,9 @@ var TMP_Template = () => {
             '    LOG("[*] LoadFromFileAsync(\'" + readU16(arg0) + "\' , " + arg1 + ")")\n' +
             '    return srcFunc(arg0, arg1, arg2, arg3)\n' +
             '})\n'
-        LOG(Template_LoadFromFileAsync, LogColor.C36)
+        LOGD(Template_LoadFromFileAsync)
     } catch {
-        LOG("NOT FOUND ---> public static AssetBundleCreateRequest LoadFromFileAsync(string path, uint crc)\n", LogColor.RED)
+        LOGE("NOT FOUND ---> public static AssetBundleCreateRequest LoadFromFileAsync(string path, uint crc)\n")
     }
 
     try {
@@ -4806,9 +4812,9 @@ var TMP_Template = () => {
             '    console.error("\tDate  -> " + JSON.stringify(tmpArr))\n' +
             '    return ret\n' +
             '})\n'
-        LOG(Template_GetTermData, LogColor.C36)
+        LOGD(Template_GetTermData)
     } catch {
-        LOG("NOT FOUND ---> public TermData GetTermData(string term, bool allowCategoryMistmatch = false)\n", LogColor.RED)
+        LOGE("NOT FOUND ---> public TermData GetTermData(string term, bool allowCategoryMistmatch = false)\n")
     }
 }
 
@@ -4819,14 +4825,14 @@ var TMP_Template = () => {
 var ProductCollectionList = mPtr => {
     let retPtr = callFunction(find_method("UnityEngine.Purchasing", "ProductCollection", "get_all", 0, false, 2), mPtr)
     let arrLength = ptr(retPtr).add(p_size * 3).readUInt()
-    LOG("\n[*] Product length : " + arrLength + "  |  RET => " + retPtr + "\n", LogColor.C36)
+    LOGD("\n[*] Product length : " + arrLength + "  |  RET => " + retPtr + "\n")
     seeHexA(ptr(retPtr).add(p_size * 4), (arrLength > 32 ? 32 : arrLength) * p_size, false, LogColor.C33)
     LOG("\n")
     for (let i = 0; i < arrLength; ++i) {
         let tmpPtr = ptr(retPtr).add(p_size * (4 + i))
         let definitionk = getFieldInfoFromCls(findClass("Product"), "<definition>k__BackingField", tmpPtr.readPointer())
         let productName = readU16(getFieldInfoFromCls(definitionk[2], "<id>k__BackingField", definitionk[5])[5])
-        LOG("[" + i + "] " + tmpPtr + " ---> " + tmpPtr.readPointer() + "  |  " + productName, LogColor.C36)
+        LOGD("[" + i + "] " + tmpPtr + " ---> " + tmpPtr.readPointer() + "  |  " + productName)
     }
     LOG("\n")
 }
@@ -4862,11 +4868,10 @@ var getTextFromAsset = (type, mPtr) => {
         let addr_get_Item = getFunctionAddrFromCls(Type_list, "get_Item")
         let count = callFunctionRI(addr_get_Count, value_Terms)
 
-        LOG("\nFound " + count + " Items\n", LogColor.RED)
+        LOGE("\nFound " + count + " Items\n")
         let strArrCls = undefined
         let strArrStr = undefined
         let arrAddr_getItem = undefined
-        let line_30 = getLine(30)
         let resultStr = []
         for (let index = 0; index < count; index++) {
             let termData = callFunction(addr_get_Item, value_Terms, index)
@@ -4880,9 +4885,8 @@ var getTextFromAsset = (type, mPtr) => {
             let currentStr = readU16(getFieldInfoFromCls(findClass("TermData"), "Term", termData)[5])
             let currentLanguages = getFieldInfoFromCls(findClass("TermData"), "Languages", termData)[5]
             let LanguagesArr = FuckKnownType(strArrStr, currentLanguages, strArrCls)
-            LOG(line_30)
-            LOG(currentStr + "\n" + LanguagesArr, LogColor.C36)
-
+            LOG(getLine(30))
+            LOGD(currentStr + "\n" + LanguagesArr)
             let indexValue = callFunctionRUS(arrAddr_getItem, currentLanguages, 0)
             resultStr.push(indexValue)
         }
@@ -4893,20 +4897,20 @@ var getTextFromAsset = (type, mPtr) => {
         let debug = false
         let clsVoc = getFieldInfoFromCls(findClass("VocabulariesAsset"), "_vocabularyEntries", mPtr)
         let items = getFieldInfoFromCls(clsVoc[2], "_items", clsVoc[5])
-        LOG("\n" + getLine(60), LogColor.YELLOW)
+        LOGW("\n" + getLine(60))
         if (debug) LOG("items --->" + JSON.stringify(items))
         let size = ptr(getFieldInfoFromCls(clsVoc[2], "_size", clsVoc[5])[5]).toInt32()
         if (debug) LOG("size ---> " + size)
         let clsEntryStrOff = ptr(getFieldInfoFromCls(findClass("VocabularyEntry"), "Language")[1]).toInt32()
         if (debug) LOG("LanguageOffset --->" + clsEntryStrOff)
-        if (debug) LOG(getLine(30), LogColor.YELLOW)
+        if (debug) LOGW(getLine(30))
         for (let index = 0; index < size; index++) {
             let tempPtr1 = ptr(items[5].add(p_size * 4).add(index * 0x18))
             let tempPtr2 = tempPtr1.add(clsEntryStrOff)
             let itemStr = readU16(tempPtr2.readPointer())
             LOG((debug ? index + "\t--->\t" : "") + itemStr, LogColor.C36)
         }
-        LOG(getLine(60), LogColor.YELLOW)
+        LOGW(getLine(60))
     }
 }
 
@@ -4917,20 +4921,18 @@ let interceptorStalker = (mPtr, range) => {
     const moduleG = Process.findModuleByAddress(mPtr)
     // LOG(JSON.stringify(moduleG), LogColor.C33)
     A(mPtr, (args) => {
-        LOG("\n" + getLine(60), LogColor.YELLOW)
-        LOG(`Enter ---> arg0:${args[0]}  arg1:${args[1]}  arg2:${args[2]}  arg3:${args[3]}`, LogColor.RED)
+        LOGW("\n" + getLine(60))
+        LOGE(`Enter ---> arg0:${args[0]}  arg1:${args[1]}  arg2:${args[2]}  arg3:${args[3]}`)
         stalkerEnter(threadID)
     }, (ret) => {
-        LOG(`Exit ---> ${ret}`, LogColor.RED)
+        LOGE(`Exit ---> ${ret}`)
         stalkerExit(threadID)
-        LOG(getLine(60), LogColor.YELLOW)
+        LOGW(getLine(60))
     })
 
     function stalkerEnter(tid) {
         let moduleMap = new ModuleMap((module) => {
-            if (module.base.equals(moduleG.base)) {
-                return true
-            }
+            if (module.base.equals(moduleG.base)) return true
             Stalker.exclude(module)
             return false
         })
@@ -4942,10 +4944,10 @@ let interceptorStalker = (mPtr, range) => {
                 let subAddress = ptr(instruction.address).sub(soAddr)
                 if (range != undefined) {
                     if (Number(subAddress) > Number(range[0]) && Number(subAddress) < Number(range[1])) {
-                        LOG(`[*] ${instruction.address} ( ${subAddress} ） ---> ${instruction.mnemonic} ${instruction.opStr}`, LogColor.C36)
+                        LOGD(`[*] ${instruction.address} ( ${subAddress} ） ---> ${instruction.mnemonic} ${instruction.opStr}`)
                     }
                 } else if (isModuleCode) {
-                    LOG(`[*] ${instruction.address} ( ${subAddress} ） ---> ${instruction.mnemonic} ${instruction.opStr}`, LogColor.C36)
+                    LOGD(`[*] ${instruction.address} ( ${subAddress} ） ---> ${instruction.mnemonic} ${instruction.opStr}`)
                 }
                 do {
                     // if (isModuleCode) {
@@ -4967,9 +4969,8 @@ Object.prototype.toInt32Big = (mPtr) => {
     var resultStr = ''
     if (mPtr == undefined) mPtr = ptr(this)
     var aimStr = String(mPtr).split("0x")[1]
-    for (let i = aimStr.length - 1; i >= 0; i--) {
+    for (let i = aimStr.length - 1; i >= 0; i--)
         resultStr += aimStr.charAt(i)
-    }
     return ptr("0x" + resultStr)
 }
 
