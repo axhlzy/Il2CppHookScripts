@@ -35,11 +35,9 @@ let date = new Date()
 var count_method_times
 // 断点的函数出现次数大于 maxCallTime 即不显示
 var maxCallTime = 10
-// 存放初始化（list_Images）时候的 imgaddr 以及 imgName
+// 存放初始化（list_Images）时候的 imgAddr 以及 imgName
 let arr_img_addr = new Array()
 let arr_img_names = new Array()
-// 存放MethodInfo指针（供动态断点 a() 提供更详细的信息）
-let arrMethodInfo = new Array()
 // filterDuplicateOBJ 
 let outFilterMap = new Map()
 // findClassCache 第二次使用findClass的缓存
@@ -50,6 +48,8 @@ let CommonCache = new Map()
 let arr_nop_addr = new Array()
 // 用来记录运行时类型
 let arr_runtimeType = new Array()
+// findMethod 单独hook记录
+let findMethodArray = new Array()
 // 用来记录已经被 Attach  的函数Listener
 let map_attach_listener = new Map()
 // find_class 的缓存
@@ -63,6 +63,8 @@ let t_arrayAddr
 // clsName 如果显示不全可以使用 getClassName(ptr) 得到全名，不用过滤的时候置空这个array即可
 var filterClass = []
 
+// 存放MethodInfo指针（供动态断点 a() 提供更详细的信息）
+let arrMethodInfo = new Array()
 // 兼容之前的python脚本筛选，同时也是 addBreakPoints() 或者是 a() 所添加的断点的函数也是存放在这里的
 var arrayAddr = []
 
@@ -283,7 +285,11 @@ var a = imgOrCls => {
             // 默认就用Assembly-CSharp 和 MaxSdk.Scripts
             if (arr_img_names[i] == "Assembly-CSharp" || arr_img_names[i] == "MaxSdk.Scripts")
                 addBreakPoints(arr_img_addr[i])
+            if (arr_img_names[i] == "Game" || arr_img_names[i] == "Zenject" || arr_img_names[i] == "UniRx")
+                addBreakPoints(arr_img_addr[i])
         }
+
+
         // 补充一些常用的 unity API ...
         // a(findClass("GameObject"))
         // a(findClass("Component"))
@@ -1013,7 +1019,7 @@ let breakPoints = (filter, isAnalyticParameter) => {
         t_arrayAddr = arrayAddr
         t_arrayMethod = arrMethodInfo
     } else {
-        arrayName.forEach(function (value, index) {
+        arrayName.forEach((value, index) => {
             if (value.indexOf(filter) != -1) {
                 t_arrayName.push(value)
                 t_arrayAddr.push(arrayAddr[index])
@@ -1026,10 +1032,8 @@ let breakPoints = (filter, isAnalyticParameter) => {
     for (let t = 0; t < t_arrayAddr.length; t++) count_method_times[t] = Number(1)
 
     t_arrayAddr
-        .map(function (temp) {
-            return soAddr.add(temp)
-        })
-        .forEach(function (value, index) {
+        .map(temp => soAddr.add(temp))
+        .forEach((value, index) => {
             LOG(getLine(24), LogColor.C90)
             let tmpStrTitle = "Current : " + (isAnalyticParameter ? arrMethodInfo[index] : value)
             LOG(tmpStrTitle + "\t" + t_arrayName[index], LogColor.C32)
@@ -1392,20 +1396,20 @@ let get_method_modifier = method_ptr => {
     let ret_str = ""
     switch (access) {
         case il2cppTabledefs.METHOD_ATTRIBUTE_PRIVATE:
-            ret_str += "private ";
+            ret_str += "private "
             break
         case il2cppTabledefs.METHOD_ATTRIBUTE_PUBLIC:
-            ret_str += "public ";
+            ret_str += "public "
             break
         case il2cppTabledefs.METHOD_ATTRIBUTE_FAMILY:
-            ret_str += "protected ";
+            ret_str += "protected "
             break
         case il2cppTabledefs.METHOD_ATTRIBUTE_ASSEM:
         case il2cppTabledefs.METHOD_ATTRIBUTE_FAM_AND_ASSEM:
-            ret_str += "internal ";
+            ret_str += "internal "
             break
         case il2cppTabledefs.METHOD_ATTRIBUTE_FAM_OR_ASSEM:
-            ret_str += "protected internal ";
+            ret_str += "protected internal "
             break
     }
 
@@ -1452,7 +1456,7 @@ var printLogColors = () => {
     LOG(line)
 }
 
-let il2cppTabledefs = {
+const il2cppTabledefs = {
     METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK: 0x0007,
     METHOD_ATTRIBUTE_COMPILER_CONTROLLED: 0x0000,
     METHOD_ATTRIBUTE_PRIVATE: 0x0001,
@@ -1474,7 +1478,7 @@ let il2cppTabledefs = {
     METHOD_ATTRIBUTE_PINVOKE_IMPL: 0x2000,
 }
 
-let FieldAccess = {
+const FieldAccess = {
     FIELD_ATTRIBUTE_FIELD_ACCESS_MASK: 0x0007,
     FIELD_ATTRIBUTE_COMPILER_CONTROLLED: 0x0000,
     FIELD_ATTRIBUTE_PRIVATE: 0x0001,
@@ -1569,7 +1573,7 @@ let class_is_enum = Pcls => callFunction(checkPointer([soName, "il2cpp_class_is_
 var setFunctionBoolean = (mPtr, boolean, index) => setFunctionValue(mPtr, boolean == true ? 0x1 : 0x0, index)
 
 var setFunctionValue = (mPtr, value, index) => {
-    mPtr = checkPointer(mPtr)
+    mPtr = ptr(mPtr)
     A(mPtr, (args) => {
         if (index != undefined) args[index] = ptr(value)
     }, (ret) => {
@@ -1582,16 +1586,16 @@ var setFunctionValue = (mPtr, value, index) => {
 // callFunction(["strcmp"],allocStr("123"),allocStr("123"))
 // callFunction(["libc.so","strcmp"],allocStr("123"),allocStr("123"))
 function callFunction(value, ...args) {
-    // try {
-    if (value == undefined || value == null || value == 0x0) return ptr(0x0)
-    for (let i = 1; i <= (arguments.length < 5 ? 5 : arguments.length) - 1; i++)
-        arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))
-    return new NativeFunction(checkPointer(value, true), 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
-        (arguments[1], arguments[2], arguments[3], arguments[4])
-    // } catch (e) {
-    //     LOG(e, LogColor.C95)
-    //     return ptr(0)
-    // }
+    try {
+        if (value == undefined || value == null || value == 0x0) return ptr(0x0)
+        for (let i = 1; i <= (arguments.length < 5 ? 5 : arguments.length) - 1; i++)
+            arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))
+        return new NativeFunction(checkPointer(value, true), 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
+            (arguments[1], arguments[2], arguments[3], arguments[4])
+    } catch (e) {
+        LOG(e, LogColor.C95)
+        return ptr(0)
+    }
 }
 
 // 返回 boolean
@@ -1619,7 +1623,7 @@ var showArray = mPtr => {
     if (mPtr == undefined || mPtr == 0x0) return
     let retPtr = ptr(mPtr)
     let arrLength = ptr(retPtr).add(p_size * 3).readUInt()
-    LOG("\n[*] Array length : " + arrLength + "  |  RET => " + retPtr + "\n", LogColor.C36)
+    LOGD("\n[*] Array length : " + arrLength + "  |  RET => " + retPtr + "\n")
     if (arrLength == 0) return
     seeHexA(ptr(retPtr).add(p_size * 4), (arrLength > 32 ? 32 : arrLength) * p_size, false, LogColor.C33)
     LOG("\n")
@@ -1628,7 +1632,7 @@ var showArray = mPtr => {
         let ObjToString = callFunctionRUS(["mscorlib", "Object", "ToString", 0], tmpPtr.readPointer())
         if (ObjToString == "UnityEngine.UI.Text")
             ObjToString += ("\t" + callFunctionRUS(["UnityEngine.UI", "Text", "get_text", 0], tmpPtr.readPointer()))
-        LOG(String("[" + i + "]").padEnd(5, " ") + " " + tmpPtr + " ---> " + tmpPtr.readPointer() + "  |  " + ObjToString, LogColor.C36)
+        LOGD(String("[" + i + "]").padEnd(5, " ") + " " + tmpPtr + " ---> " + tmpPtr.readPointer() + "  |  " + ObjToString)
     }
     LOG("\n")
 }
@@ -1640,9 +1644,9 @@ var breakWithArgs = (mPtr, argCount) => {
         LOG("Called from " + ptr(mPtr) + " ---> " + ptr(mPtr).sub(soAddr) + "\t|  LR : " + ptr(ctx.lr).sub(soAddr) + "\n", LogColor.C96)
         let tStr = String(args[0])
         for (let t = 1; t < (argCount == undefined ? 4 : argCount); t++) tStr += "\t" + args[t]
-        LOG(tStr, LogColor.C36)
+        LOGD(tStr)
     }, (ret) => {
-        LOG("End Function return ---> " + ret, LogColor.C36)
+        LOGD("End Function return ---> " + ret)
     })
 }
 
@@ -1663,7 +1667,7 @@ var breakInline = (mPtr, filterRigster, maxCount) => {
         LOG("\n" + getLine(65), LogColor.C33)
         if (Process.arch != "arm" && filterRigster != undefined && filterDuplicateOBJ(String(filterReg(filterRigster, ctx)), maxCount) == -1) return
         LOG("Called from " + ptr(mPtr) + " ---> " + ptr(mPtr).sub(soAddr) + "\n", LogColor.C96)
-        LOG(JSON.stringify(ctx), LogColor.C36)
+        LOGD(JSON.stringify(ctx))
     })
 }
 
@@ -1954,6 +1958,38 @@ let readStatic = (imageName, className, fieldName) => {
     return addrOut.readPointer()
 }
 
+var BF = methodOrAddr => {
+    if (methodOrAddr == undefined) {
+        findMethodArray.forEach(value => b(value[0]))
+    } else {
+        backup()
+        reset()
+        d()
+        B()
+        restore()
+    }
+
+    let cp_arrayAddr, cp_arrayName, cp_arrayMethod
+
+    function backup() {
+        cp_arrayAddr = arrayAddr
+        cp_arrayName = arrayName
+        cp_arrayMethod = arrMethodInfo
+    }
+
+    function restore() {
+        arrayAddr = cp_arrayAddr
+        arrayName = cp_arrayName
+        arrMethodInfo = cp_arrayMethod
+    }
+
+    function reset() {
+        arrMethodInfo = findMethodArray.map(value => value[0])
+        arrayAddr = findMethodArray.map(value => value[1])
+        arrayName = findMethodArray.map(value => getMethodName(value[0]))
+    }
+}
+
 /**
  * 从Class中查找指定方法名的方法（异步方法）
  * 本质是从存放的 arr_img_addr arr_img_names arrMethodInfo 中去查找 
@@ -1964,7 +2000,7 @@ let readStatic = (imageName, className, fieldName) => {
 function findMethod(methodName, clsNameOrPtr) {
     if (methodName == undefined) return
     if (clsNameOrPtr != undefined) {
-        new Promise((callBack) => {
+        new Promise(callBack => {
             LOG("Task : add class functions ... ", LogColor.YELLOW)
             LogFlag = false
             a(isNaN(clsNameOrPtr) ? findClass(clsNameOrPtr) : clsNameOrPtr)
@@ -1984,19 +2020,24 @@ function findMethod(methodName, clsNameOrPtr) {
         new Promise((Finish) => {
             let strDes = ""
             let countStr = 0
+            let tmpRecord = new Array()
             for (let i = 0; i < arrayName.length; ++i) {
                 if (String(arrayName[i]).indexOf(String(name)) != -1) {
                     ++countStr
                     let clsAddr = getClassAddrFromMethodInfo(arrMethodInfo[i])
-                    strDes += String("[" + i + "] ").padEnd(8, " ") + arrMethodInfo[i] + " ---> " + arrayAddr[i] + " \t  | " + arrayName[i] + "\t" + getClassName(clsAddr) + "(" + clsAddr + ")" + "\n"
+                    let fixClsName = getClassName(clsAddr)
+                    fixClsName = fixClsName.length >= 15 ? fixClsName.substring(0, 14) + "." : fixClsName.padEnd(15, " ")
+                    tmpRecord.push([arrMethodInfo[i], arrayAddr[i]])
+                    strDes += String("[" + i + "] ").padEnd(8, " ") + fixClsName + "(" + clsAddr + ") |\t" + arrMethodInfo[i] + " ---> " + arrayAddr[i] + "\t" + arrayName[i] + "\t" + "\n"
                 }
             }
-            Finish([countStr, strDes.trimEnd()])
+            Finish([countStr, strDes.trimEnd(), tmpRecord])
         }).then(value => {
             if (Number(value[0]) == 0) throw new Error("NOT FOUND ...")
-            LOG(`\n${getLine(20)} Result (${Number(value[0])}) ${getLine(20)}\n`, LogColor.YELLOW)
-            LOG(String(value[1] + "\n"), LogColor.C36)
-        }).catch(e => LOG(e, LogColor.RED))
+            findMethodArray = value[2]
+            LOGW(`\n${getLine(20)} Result (${Number(value[0])}) ${getLine(20)}\n`)
+            LOGD(String(value[1] + "\n"))
+        }).catch(e => LOGE(e))
     }
 }
 
@@ -4211,17 +4252,15 @@ var FindObjectsOfTypeAll = typePtr => FindObjectsOfType(typePtr, 1)
 let saveCache = (key, value) => {
     if (CommonCache.get(String(key)) == undefined) CommonCache.set(String(key), new Array())
     let insArray = CommonCache.get(String(key))
-    if (insArray instanceof Array) insArray.push(value)
+    if (String(value).length != 0) return
+    if (insArray instanceof Array)
+        if (JSON.stringify(insArray).indexOf(value) == -1) insArray.push(value)
 }
 
 var printSavedCache = key => {
     if (CommonCache.get(String(key)) == undefined) return
     let insArray = CommonCache.get(String(key))
-    if (insArray instanceof Array) {
-        insArray.forEach(item => {
-            LOG(`${item}`)
-        })
-    }
+    if (insArray instanceof Array) insArray.forEach(item => LOGD(`${item}`))
 }
 
 /**
