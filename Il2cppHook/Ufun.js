@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/03/23 18：52
+ * @UpdateTime  2022/04/01 18:43
  * @Des         frida hook u3d functions script
  */
 
@@ -363,12 +363,12 @@ var C = ImgOrPtr => {
 
 var attachJava = func => {
     if (func == undefined) return
-    Java.perform(() => func())
+    Java.perform(() => func(frida_env))
 }
 
 // attach A(0xabcd,(args,ctx,pass)=>{},(ret)=>{})
 var A = (mPtr, mOnEnter, mOnLeave, needRecord) => {
-    if (mPtr == null || mPtr == 0) throw new Error("Can't attach nullptr")
+    if (mPtr == null || mPtr == 0) return
     var passValue = new Map()
     passValue.set("org", mPtr)
     passValue.set("src", mPtr)
@@ -755,9 +755,10 @@ function getFieldOffFromCls(clsptr, fieldName) {
     return listFieldsFromCls(clsptr, ptr(arguments[2]), 1, fieldName)
 }
 
-function getFieldInfoFromCls(clsptr, fieldName) {
-    if (arguments[2] == undefined) return listFieldsFromCls(clsptr, 0, 2, fieldName)
-    return listFieldsFromCls(clsptr, ptr(arguments[2]), 2, fieldName)
+function getFieldInfoFromCls(clsptrOrName, fieldName) {
+    if (isNaN(clsptrOrName)) clsptrOrName = findClass(clsptrOrName)
+    if (arguments[2] == undefined) return listFieldsFromCls(clsptrOrName, 0, 2, fieldName)
+    return listFieldsFromCls(clsptrOrName, ptr(arguments[2]), 2, fieldName)
 }
 
 /**
@@ -978,7 +979,7 @@ let breakPoint = (mPtr, index, name) => {
             let strType = getClassName(typeCls)
             //静态方法没有上下文，反之有则arg+1
             let ClsArg = args[(isStatic ? i + 1 : i)]
-            let result = FuckKnownType(IsJNIFunction(titleStr, strType), ClsArg, typeCls)
+            let result = FackKnownType(IsJNIFunction(titleStr, strType), ClsArg, typeCls)
             LOG("  arg" + i + " | " + arr_method_info[4][i] + "\t--->\t" + ClsArg + "\t" +
                 ((String(ClsArg).length) < 9 ? "\t" : "") +
                 strType + " (" + typeCls + ")" + "\t" + result, LogColor.C36)
@@ -986,7 +987,7 @@ let breakPoint = (mPtr, index, name) => {
     }, (ret) => {
         // if(index!=undefined && count_method_times[index] > maxCallTime) return
         let strType = getClassName(arr_method_info[1])
-        let result = FuckKnownType(IsJNIFunction(titleStr, strType), ret, arr_method_info[1])
+        let result = FackKnownType(IsJNIFunction(titleStr, strType), ret, arr_method_info[1])
         let methodStr = arr_method_info.length == 0 ? "" : " (" + arr_method_info[1] + ")"
         LOG("  ret  |" + arr_method_info[5] + "\t--->\t" + ret +
             //这里的长度在32位的时候是十个长度 0xc976bb40 故小于9就多给他添加一个\t补齐显示
@@ -1151,7 +1152,7 @@ var print_deserted_methods = () => {
     if (count_method_times == null || count_method_times.length == 0) return
     LOG(`${getLine(20)} deserted methods ${getLine(20)}\n`, LogColor.C92)
     count_method_times.forEach(function (value, index) {
-        if (Number(value) > maxCallTime) LOG("[*] " + arrayAddr[index].add(soAddr) + "\t" + arrayAddr[index] + "\t" + arrMethodInfo[index] + "\t(" + index + ")" + "\t--->\t" + arrayName[index] + "\n", LogColor.C32)
+        if (Number(value) > maxCallTime) LOG("[*] " + ptr(arrayAddr[index]).add(soAddr) + "\t" + arrayAddr[index] + "\t" + arrMethodInfo[index] + "\t(" + index + ")" + "\t--->\t" + arrayName[index] + "\n", LogColor.C32)
     })
 }
 
@@ -1186,7 +1187,7 @@ var readUInt64 = value => alloc(2).writePointer(value).readU64()
  * @param {Pointer} clsPtr     类指针（非必选）
  * @returns {String}         简写字符串描述
  */
-var FuckKnownType = (typeStr, insPtr, clsPtr) => {
+var FackKnownType = (typeStr, insPtr, clsPtr) => {
     if (insPtr == 0x0 && typeStr != "Boolean" && !class_is_enum(clsPtr)) return "NULL"
     if (clsPtr == undefined) clsPtr = findClass(typeStr)
     try {
@@ -1209,7 +1210,7 @@ var FuckKnownType = (typeStr, insPtr, clsPtr) => {
                     //TODO
                 } else {
                     // 通用解法速度偏慢，所以前面针对性的先处理一些常用的类型处理
-                    arr_retStr.push(FuckKnownType(type, item, findClass(type)))
+                    arr_retStr.push(FackKnownType(type, item, findClass(type)))
                 }
             }
             return JSON.stringify(arr_retStr)
@@ -1219,7 +1220,7 @@ var FuckKnownType = (typeStr, insPtr, clsPtr) => {
         if (clsPtr > 100 && typeStr.startsWith("Dictionary")) {
             let addr_getCount = getFunctionAddrFromCls(clsPtr, "get_Count")
             let count = callFunction(addr_getCount, insPtr)
-            return count + "\t" + FuckKnownType("-1", insPtr, 0x0)
+            return count + "\t" + FackKnownType("-1", insPtr, 0x0)
         }
 
         // 枚举解析
@@ -1299,8 +1300,8 @@ var FuckKnownType = (typeStr, insPtr, clsPtr) => {
             case "Image":
                 let retStr = ""
                 retStr += ("Sprite : " + callFunction(["UnityEngine.UI", "Image", "get_sprite", 0], insPtr) + " | ")
-                retStr += ("Type : " + FuckKnownType("Type", callFunctionRI(["UnityEngine.UI", "Image", "get_type", 0], insPtr), findClass("UnityEngine.UI", "Type")) + " | ")
-                retStr += ("fillMethod : " + FuckKnownType("FillMethod", callFunctionRI(["UnityEngine.UI", "Image", "get_fillMethod", 0], insPtr), findClass("UnityEngine.UI", "FillMethod")) + " ")
+                retStr += ("Type : " + FackKnownType("Type", callFunctionRI(["UnityEngine.UI", "Image", "get_type", 0], insPtr), findClass("UnityEngine.UI", "Type")) + " | ")
+                retStr += ("fillMethod : " + FackKnownType("FillMethod", callFunctionRI(["UnityEngine.UI", "Image", "get_fillMethod", 0], insPtr), findClass("UnityEngine.UI", "FillMethod")) + " ")
                 return retStr
             case "Text":
                 return callFunctionRUS(["UnityEngine.UI", "Text", "get_text", 0], insPtr)
@@ -1367,11 +1368,11 @@ var ShowList = (listPtr, valuePtr, type) => {
         try {
             name = getObjName(mPtr)
         } catch (e) {
-            name = FuckKnownType("-1", mPtr)
+            name = FackKnownType("-1", mPtr)
         }
         LOG(header + ptr(mPtr) + "\t\t" + name, LogColor.C36)
     }
-    LOG("\n" + FuckKnownType("-1", valuePtr) + "\n", LogColor.YELLOW)
+    LOG("\n" + FackKnownType("-1", valuePtr) + "\n", LogColor.YELLOW)
 }
 
 var HookSendMessage = () => {
@@ -1671,69 +1672,6 @@ var breakInline = (mPtr, filterRigster, maxCount) => {
     })
 }
 
-var printInfo = () => {
-
-    try {
-        LOG('\n\t// find_method("UnityEngine.UI","Button","OnPointerClick",1,false)', LogColor.C36)
-        LOG("\tunsigned long p_OnPointerClick      = base + " + canUseInlineHook(find_method("UnityEngine.UI", "Button", "OnPointerClick", 1), 3) + ";", LogColor.C36)
-        LOG('\t// find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0,false)', LogColor.C36)
-        LOG("\tunsigned long p_get_pointerEnter    = base + " + canUseInlineHook(find_method("UnityEngine.UI", "PointerEventData", "get_pointerEnter", 0), 3) + ";", LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","GameObject","SetActive",1,false)', LogColor.C36)
-        LOG("\tunsigned long p_SetActive           = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "GameObject", "SetActive", 1), 3) + ";", LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","GameObject","get_transform",0,false)', LogColor.C36)
-        LOG("\tunsigned long p_getTransform        = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "GameObject", "get_transform", 0), 3) + ";", LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","Object","GetName",1,false)', LogColor.C36)
-        LOG("\tunsigned long p_getName             = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Object", "GetName", 1), 3) + ";", LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetParent",0,false)', LogColor.C36)
-        LOG("\tunsigned long p_getParent           = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "GetParent", 0), 3) + ";", LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","Transform","get_childCount",0,false)', LogColor.C36)
-        LOG("\tunsigned long p_getChildCount       = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "get_childCount", 0), 3) + ";", LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetChild",1,false)', LogColor.C36)
-        LOG("\tunsigned long p_getChild            = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "GetChild", 1), 3) + ";", LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1,false)', LogColor.C36)
-        LOG("\tunsigned long p_setlocalScale       = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "set_localScale_Injected", 1), 3) + ";", LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule","Component","get_gameObject",0,false)', LogColor.C36)
-        LOG("\tunsigned long p_get_gameObject      = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), 3) + ";", LogColor.C36)
-
-        LOG('\t// find_method("UnityEngine.CoreModule", "GameObject", "Find", 1,false)', LogColor.C36)
-        LOG("\tunsigned long gameObj_find          = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "GameObject", "Find", 1), 3) + ";", LogColor.C36)
-        LOG('\t// find_method("UnityEngine.CoreModule", "Transform", "Find", 1,false)', LogColor.C36)
-        LOG("\tunsigned long transform_find        = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "Find", 1), 3) + ";", LogColor.C36)
-
-        LOG('\n\t// find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1,false)', LogColor.C96)
-        LOG("\tf_setLocalPosition \t= reinterpret_cast<void *(*)(void *, void *)>\t\t(base + " + find_method("UnityEngine.CoreModule", "Transform", "set_localPosition_Injected", 1).sub(soAddr) + ");", LogColor.C96)
-        LOG('\t// find_method("UnityEngine.UI","Text","set_text",1,false)', LogColor.C96)
-        LOG("\tf_set_text \t\t= reinterpret_cast<void *(*)(void *, MonoString *)>\t(base + " + find_method("UnityEngine.UI", 'Text', 'set_text', 1).sub(soAddr) + ");", LogColor.C96)
-        LOG('\t// find_method("UnityEngine.UI","Text","get_text",0,false)', LogColor.C96)
-        LOG("\tf_get_text \t\t= reinterpret_cast<MonoString *(*)(void *)>\t\t(base + " + find_method("UnityEngine.UI", 'Text', 'get_text', 0).sub(soAddr) + ");\n", LogColor.C96)
-
-        // return
-
-        LOG('\n\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2,false)')
-        var SetInt = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetInt", 2)
-        LOG("\tunsigned long p_SetInt       = base + " + (SetInt == 0 ? "0x0" : SetInt.sub(soAddr)) + ";")
-        LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","GetInt",2,false)')
-        var GetInt = find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetInt", 2)
-        LOG("\tunsigned long p_GetInt       = base + " + (GetInt == 0 ? "0x0" : GetInt.sub(soAddr)) + ";")
-        LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2,false)')
-        var SetFloat = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetFloat", 2)
-        LOG("\tunsigned long p_SetFloat     = base + " + (SetFloat == 0 ? "0x0" : SetFloat.sub(soAddr)) + ";")
-        LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2,false)')
-        var SetString = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetString", 2)
-        LOG("\tunsigned long p_SetString    = base + " + (SetString == 0 ? "0x0" : SetString.sub(soAddr)) + ";")
-
-        LOG('\n\tins.recordSymbols({"il2cpp_string_new": ' + checkPointer([soName, 'il2cpp_string_new']).sub(soAddr) +
-            ', "FindClass": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "FindClass", 1).sub(soAddr) +
-            ', "GetStaticMethodID": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "GetStaticMethodID", 3).sub(soAddr) +
-            ',"CallStaticVoidMethod": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "CallStaticVoidMethod", 3).sub(soAddr) +
-            '})')
-    } catch (e) {
-        LOG(e, LogColor.RED)
-    }
-
-    LOG("\n")
-}
-
 /**
  * 用作inlinehook中不指定使用动态查找功能，手动配置一些常用的基础参数
  */
@@ -1790,6 +1728,76 @@ var printExp = () => {
         LOG("\tQuit_0 = reinterpret_cast<bool (*)()>(soAddr + " + find_method("UnityEngine.CoreModule", "Application", "Quit", 0, false, 2) + ");", LogColor.C96)
         LOG("\tQuit_1 = reinterpret_cast<bool (*)(int)>(soAddr + " + find_method("UnityEngine.CoreModule", "Application", "Quit", 1, false, 2) + ");\n", LogColor.C96)
     } catch {}
+
+    LOGE("\t" + getLine(80))
+
+    printInfo()
+
+    function printInfo() {
+
+        try {
+            LOG('\n\t// find_method("UnityEngine.UI","Button","OnPointerClick",1,false)', LogColor.C36)
+            LOG("\tunsigned long p_OnPointerClick      = base + " + canUseInlineHook(find_method("UnityEngine.UI", "Button", "OnPointerClick", 1), 3) + ";", LogColor.C36)
+            LOG('\t// find_method("UnityEngine.UI","PointerEventData","get_pointerEnter",0,false)', LogColor.C36)
+            LOG("\tunsigned long p_get_pointerEnter    = base + " + canUseInlineHook(find_method("UnityEngine.UI", "PointerEventData", "get_pointerEnter", 0), 3) + ";", LogColor.C36)
+            LOG('\t// find_method("UnityEngine.CoreModule","GameObject","SetActive",1,false)', LogColor.C36)
+            LOG("\tunsigned long p_SetActive           = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "GameObject", "SetActive", 1), 3) + ";", LogColor.C36)
+            LOG('\t// find_method("UnityEngine.CoreModule","GameObject","get_transform",0,false)', LogColor.C36)
+            LOG("\tunsigned long p_getTransform        = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "GameObject", "get_transform", 0), 3) + ";", LogColor.C36)
+            LOG('\t// find_method("UnityEngine.CoreModule","Object","GetName",1,false)', LogColor.C36)
+            LOG("\tunsigned long p_getName             = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Object", "GetName", 1), 3) + ";", LogColor.C36)
+            LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetParent",0,false)', LogColor.C36)
+            LOG("\tunsigned long p_getParent           = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "GetParent", 0), 3) + ";", LogColor.C36)
+            LOG('\t// find_method("UnityEngine.CoreModule","Transform","get_childCount",0,false)', LogColor.C36)
+            LOG("\tunsigned long p_getChildCount       = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "get_childCount", 0), 3) + ";", LogColor.C36)
+            LOG('\t// find_method("UnityEngine.CoreModule","Transform","GetChild",1,false)', LogColor.C36)
+            LOG("\tunsigned long p_getChild            = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "GetChild", 1), 3) + ";", LogColor.C36)
+            LOG('\t// find_method("UnityEngine.CoreModule","Transform","set_localScale_Injected",1,false)', LogColor.C36)
+            LOG("\tunsigned long p_setlocalScale       = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "set_localScale_Injected", 1), 3) + ";", LogColor.C36)
+            LOG('\t// find_method("UnityEngine.CoreModule","Component","get_gameObject",0,false)', LogColor.C36)
+            LOG("\tunsigned long p_get_gameObject      = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Component", "get_gameObject", 0), 3) + ";", LogColor.C36)
+
+            try {
+                LOG('\t// find_method("UnityEngine.CoreModule", "GameObject", "Find", 1,false)', LogColor.C36)
+                LOG("\tunsigned long gameObj_find          = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "GameObject", "Find", 1), 3) + ";", LogColor.C36)
+                LOG('\t// find_method("UnityEngine.CoreModule", "Transform", "Find", 1,false)', LogColor.C36)
+                LOG("\tunsigned long transform_find        = base + " + canUseInlineHook(find_method("UnityEngine.CoreModule", "Transform", "Find", 1), 3) + ";", LogColor.C36)
+
+            } catch (e) {}
+
+            LOG('\n\t// find_method("UnityEngine.CoreModule","Transform","set_localPosition_Injected",1,false)', LogColor.C96)
+            LOG("\tf_setLocalPosition \t= reinterpret_cast<void *(*)(void *, void *)>\t\t(base + " + find_method("UnityEngine.CoreModule", "Transform", "set_localPosition_Injected", 1).sub(soAddr) + ");", LogColor.C96)
+            LOG('\t// find_method("UnityEngine.UI","Text","set_text",1,false)', LogColor.C96)
+            LOG("\tf_set_text \t\t= reinterpret_cast<void *(*)(void *, MonoString *)>\t(base + " + find_method("UnityEngine.UI", 'Text', 'set_text', 1).sub(soAddr) + ");", LogColor.C96)
+            LOG('\t// find_method("UnityEngine.UI","Text","get_text",0,false)', LogColor.C96)
+            LOG("\tf_get_text \t\t= reinterpret_cast<MonoString *(*)(void *)>\t\t(base + " + find_method("UnityEngine.UI", 'Text', 'get_text', 0).sub(soAddr) + ");\n", LogColor.C96)
+
+            // return
+
+            LOG('\n\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetInt",2,false)')
+            var SetInt = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetInt", 2)
+            LOG("\tunsigned long p_SetInt       = base + " + (SetInt == 0 ? "0x0" : SetInt.sub(soAddr)) + ";")
+            LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","GetInt",2,false)')
+            var GetInt = find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetInt", 2)
+            LOG("\tunsigned long p_GetInt       = base + " + (GetInt == 0 ? "0x0" : GetInt.sub(soAddr)) + ";")
+            LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetFloat",2,false)')
+            var SetFloat = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetFloat", 2)
+            LOG("\tunsigned long p_SetFloat     = base + " + (SetFloat == 0 ? "0x0" : SetFloat.sub(soAddr)) + ";")
+            LOG('\t// find_method("UnityEngine.CoreModule","PlayerPrefs","SetString",2,false)')
+            var SetString = find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetString", 2)
+            LOG("\tunsigned long p_SetString    = base + " + (SetString == 0 ? "0x0" : SetString.sub(soAddr)) + ";")
+
+            LOG('\n\tins.recordSymbols({"il2cpp_string_new": ' + checkPointer([soName, 'il2cpp_string_new']).sub(soAddr) +
+                ', "FindClass": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "FindClass", 1).sub(soAddr) +
+                ', "GetStaticMethodID": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "GetStaticMethodID", 3).sub(soAddr) +
+                ',"CallStaticVoidMethod": ' + find_method("UnityEngine.AndroidJNIModule", "AndroidJNI", "CallStaticVoidMethod", 3).sub(soAddr) +
+                '})')
+        } catch (e) {
+            LOG(e, LogColor.RED)
+        }
+
+        LOG("\n")
+    }
 }
 
 /**
@@ -1849,7 +1857,7 @@ function listFieldsFromCls(klass, instance) {
         let filedOffset = "0x" + field.add(3 * p_size).readInt().toString(16)
         let field_class = il2cpp_class_from_type(filedType)
         let fieldClassName = getClassName(field_class)
-        let accessStr = fuckAccess(filedType)
+        let accessStr = fackAccess(filedType)
         accessStr = accessStr.substring(0, accessStr.length - 1)
         let enumStr = (is_enum && (String(field_class) == String(klass))) ? (enumIndex++ + "\t") : " "
         let retStr = filedOffset + "\t" + accessStr + "\t" + fieldClassName + "\t" + field_class + "\t" + fieldName + "\t" + enumStr
@@ -1888,7 +1896,7 @@ function listFieldsFromCls(klass, instance) {
         if (instance != undefined && str.indexOf("static") == -1) {
             let mPtr = ptr(instance).add(mStr[0])
             let realP = mPtr.readPointer()
-            let fRet = FuckKnownType(mName, realP, mStr[3])
+            let fRet = FackKnownType(mName, realP, mStr[3])
             // 当它是boolean的时候只保留 最后两位显示
             if (mName == "Boolean") {
                 let header = String(realP).substr(0, 2)
@@ -1905,14 +1913,14 @@ function listFieldsFromCls(klass, instance) {
                 let addrOut = alloc()
                 il2cpp_field_static_get_value(field, addrOut)
                 let realP = addrOut.readPointer()
-                LOG("\t" + addrOut + " ---> " + realP + " ---> " + FuckKnownType(mName, realP, mStr[3]), LogColor.C90)
+                LOG("\t" + addrOut + " ---> " + realP + " ---> " + FackKnownType(mName, realP, mStr[3]), LogColor.C90)
             }
             LOG("\n")
         }
     })
     LOG(getLine(maxlength + 5), LogColor.C33)
 
-    function fuckAccess(m_type) {
+    function fackAccess(m_type) {
         let attrs = m_type.add(p_size).readPointer()
         let outPut = ""
         let access = attrs & FieldAccess.FIELD_ATTRIBUTE_FIELD_ACCESS_MASK
@@ -1959,6 +1967,8 @@ let readStatic = (imageName, className, fieldName) => {
 }
 
 var BF = methodOrAddr => {
+
+    var cp_arrayAddr, cp_arrayName, cp_arrayMethod
     if (methodOrAddr == undefined) {
         findMethodArray.forEach(value => b(value[0]))
     } else {
@@ -1968,8 +1978,6 @@ var BF = methodOrAddr => {
         B()
         restore()
     }
-
-    let cp_arrayAddr, cp_arrayName, cp_arrayMethod
 
     function backup() {
         cp_arrayAddr = arrayAddr
@@ -2161,7 +2169,7 @@ function getUnityInfo() {
         if (retStr != undefined) LOG("[*] unityVersion \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         // public static extern RuntimePlatform get_platform()
-        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Application", "get_platform", 0)), findClass("UnityEngine.CoreModule", "RuntimePlatform"))
+        retStr = FackKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Application", "get_platform", 0)), findClass("UnityEngine.CoreModule", "RuntimePlatform"))
         if (retStr != undefined) LOG("[*] platform \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         // public static string dataPath()
@@ -2177,7 +2185,7 @@ function getUnityInfo() {
         if (retStr != undefined) LOG("[*] persistentDataPath \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         // public static NetworkReachability internetReachability()
-        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Application", "get_internetReachability", 0)), findClass("UnityEngine.CoreModule", "NetworkReachability"))
+        retStr = FackKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Application", "get_internetReachability", 0)), findClass("UnityEngine.CoreModule", "NetworkReachability"))
         if (retStr != undefined) LOG("[*] internetReachability \t: " + retStr + "\n" + line20, LogColor.C36)
 
         // public static bool get_isMobilePlatform()
@@ -2207,15 +2215,15 @@ function getUnityInfo() {
         if (height != 0 && width != 0) LOG("[*] height*width \t\t: " + height + " × " + width + "\n" + line20, LogColor.C36)
 
         // public static extern FullScreenMode get_fullScreenMode()
-        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Screen", "get_fullScreenMode", 0)), findClass("UnityEngine.CoreModule", "FullScreenMode"))
+        retStr = FackKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Screen", "get_fullScreenMode", 0)), findClass("UnityEngine.CoreModule", "FullScreenMode"))
         if (retStr != undefined) LOG("[*] FullScreenMode \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         // public static ScreenOrientation get_orientation()
-        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Screen", "get_orientation", 0)), findClass("UnityEngine.CoreModule", "ScreenOrientation"))
+        retStr = FackKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Screen", "get_orientation", 0)), findClass("UnityEngine.CoreModule", "ScreenOrientation"))
         if (retStr != undefined) LOG("[*] ScreenOrientation \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         // public static extern SystemLanguage get_systemLanguage()
-        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Application", "get_systemLanguage", 0)), findClass("UnityEngine.CoreModule", "SystemLanguage"))
+        retStr = FackKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "Application", "get_systemLanguage", 0)), findClass("UnityEngine.CoreModule", "SystemLanguage"))
         if (retStr != undefined) LOG("[*] SystemLanguage \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
     }
@@ -2224,7 +2232,7 @@ function getUnityInfo() {
 
         LOG(`${line20} SystemInfo ${line20}`, LogColor.RED)
 
-        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_copyTextureSupport", 0)), findClass("UnityEngine.CoreModule", "CopyTextureSupport"))
+        retStr = FackKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_copyTextureSupport", 0)), findClass("UnityEngine.CoreModule", "CopyTextureSupport"))
         if (retStr != undefined && retStr != "") LOG("[*] copyTextureSupport \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_deviceModel", 0)))
@@ -2242,10 +2250,10 @@ function getUnityInfo() {
         retStr = callFunctionRB(find_method("UnityEngine.CoreModule", "SystemInfo", "get_hasHiddenSurfaceRemovalOnGPU ", 0))
         if (retStr != undefined) LOG("[*] HiddenSurfaceRemovalOnGPU \t: " + retStr + "\n" + line20, LogColor.C36)
 
-        // retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsDeviceType", 0)), findClass("UnityEngine.CoreModule", "GraphicsDeviceType"))
+        // retStr = FackKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_graphicsDeviceType", 0)), findClass("UnityEngine.CoreModule", "GraphicsDeviceType"))
         // if (retStr != undefined && retStr != "") LOG("[*] graphicsDeviceType \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
-        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_deviceType", 0)), findClass("UnityEngine.CoreModule", "DeviceType"))
+        retStr = FackKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_deviceType", 0)), findClass("UnityEngine.CoreModule", "DeviceType"))
         if (retStr != undefined && retStr != "") LOG("[*] deviceType \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         retStr = readU16(callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_deviceUniqueIdentifier", 0)))
@@ -2278,7 +2286,7 @@ function getUnityInfo() {
         retStr = callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_systemMemorySize", 0)).toInt32() + " MB"
         if (retStr != undefined && retStr != "") LOG("[*] systemMemorySize \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
-        retStr = FuckKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_operatingSystemFamily", 0)), findClass("UnityEngine.CoreModule", "OperatingSystemFamily"))
+        retStr = FackKnownType("1", callFunction(find_method("UnityEngine.CoreModule", "SystemInfo", "get_operatingSystemFamily", 0)), findClass("UnityEngine.CoreModule", "OperatingSystemFamily"))
         if (retStr != undefined && retStr != "") LOG("[*] operatingSystemFamily \t: " + retStr + "\n" + line20, LogColor.C36)
 
         retStr = callFunctionRI(find_method("UnityEngine.CoreModule", "SystemInfo", "get_supportedRenderTargetCount", 0))
@@ -2405,7 +2413,7 @@ function getUnityInfo() {
         // retStr = readU16(callFunction(find_method("mscorlib", "Environment", "get_NewLine", 0)))
         // if (retStr != undefined) LOG("[*] NewLine \t\t: " + retStr + "\n" + line20, LogColor.C36)
 
-        retStr = FuckKnownType("1", callFunction(find_method("mscorlib", "OperatingSystem", "get_Platform", 0), callFunction(find_method("mscorlib", "Environment", "get_OSVersion", 0))), findClass("mscorlib", "PlatformID"))
+        retStr = FackKnownType("1", callFunction(find_method("mscorlib", "OperatingSystem", "get_Platform", 0), callFunction(find_method("mscorlib", "Environment", "get_OSVersion", 0))), findClass("mscorlib", "PlatformID"))
         if (retStr != undefined) LOG("[*] PlatformID \t\t\t: " + retStr + "\n" + line20, LogColor.C36)
 
         retStr = callFunction(find_method("mscorlib", "Environment", "get_ProcessorCount", 0)).toInt32()
@@ -2636,8 +2644,12 @@ var checkPointer = (value, throwErr, showLog) => {
         return ptr(0)
     }
     if (value == 0) return ptr(0)
-    let retValue = Process.findModuleByAddress(value) == null ?
-        ptr(Process.findModuleByAddress(soAddr.add(value)).base).add(value) : value
+    try {
+        var retValue = Process.findModuleByAddress(value) == null ?
+            ptr(Process.findModuleByAddress(soAddr.add(value)).base).add(value) : value
+    } catch {
+        var retValue = value
+    }
     if (showLog == undefined) return retValue
     let moduleValue = Process.findModuleByAddress(retValue)
     let moduleStr = JSON.stringify(moduleValue)
@@ -2921,7 +2933,7 @@ var GetComponentsInParent = (insPtr, mType, includeInactive) => {
 // public static Object Instantiate(Object original)
 var Instantiate = original => {
     runOnMain(find_method("UnityEngine.UI", "CanvasUpdateRegistry", "PerformUpdate", 0), () => {
-        callFunction(find_method("UnityEngine.CoreModule", "Object", "Instantiate", 1), original)
+        showGameObject(callFunction(find_method("UnityEngine.CoreModule", "Object", "Instantiate", 1), original))
     })
 }
 
@@ -3540,7 +3552,7 @@ var HookPlayerPrefs = () => {
         //public static extern float GetFloat(string key, float defaultValue)
         A(find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetFloat", 2, true), (args, ctx, pass) => {
             pass.set("arg0", readU16(args[0]))
-            pass.set("arg1", (args[1] == 0 ? 0 : args[1].readFloat()))
+            pass.set("arg1", (args[1] == 0 ? 0 : readSingle(args[1])))
         }, (ret, ctx, pass) => {
             LOG("\n[*] SetFloat('" + pass.get("arg0") + "'," + pass.get("arg1") + ")" + " | LR : " + ctx.lr, LogColor.C36)
             if (isShowPrintStack) PrintStackTraceN(ctx)
@@ -3651,8 +3663,9 @@ var HookInstantiate = () => {
 var PrintHierarchy = (mPtr, level, inCall) => {
     LogFlag = true
     if (mPtr == 0 || mPtr == undefined) return
+    if (getType(ptr(mPtr), 2)[0] == "GameObject") mPtr = f_getTransform(ptr(mPtr))
 
-    if (level == undefined) level = 10
+    if (level == undefined) level = 2
     let transform = ptr(mPtr)
 
     if (level == 10) LOG(getLine(75) + "\n", LogColor.C33)
@@ -3747,7 +3760,6 @@ var findTransform = (mPtr, level, filter) => {
 var canUseInlineHook = (mPtr, Type) => {
     mPtr = checkPointer(mPtr)
     if (Type == undefined) Type = 0
-
     if (Type == 0) return getNextB(mPtr) > 3
     if (Type == 1) return getNextB(mPtr)
     if (Type == 2) return ptr(recommandInlineHook(mPtr))
@@ -3805,7 +3817,7 @@ class MemoryUtil {
  * 使用系统 8.1  R7即为中断号
  * 参考 https://bbs.pediy.com/thread-268086.htm
  */
-function fuckSVC() {
+function fackSVC() {
     let LIBC = "libc.so"
     let syscall = Module.findExportByName(LIBC, "syscall")
     LOG("\nsyscall addr = " + syscall + "\n", LogColor.C92)
@@ -4128,18 +4140,35 @@ var getRuntimeTypeFromBssOrData = (bssPtr, initFuc, index) => {
  *  3.当然运行时类型也有其他的方式获得 getType(ins) 即可（受限于必须得有方法调用才能拿到对应的实例）
  *  4.新增了 
  * @param {ptr} typePtr 运行时类型 
- * @param {String} typeStr fuckknowType的参数，解析为什么类型
+ * @param {String} typeStr fackknowType的参数，解析为什么类型
  */
-function FindObjectsOfType(typePtr) {
+function FindObjectsOfType(typePtr, ext) {
     // 给一个默认的 MonoBehaviour
     if (typePtr == undefined) typePtr = "MonoBehaviour"
     if (isNaN(typePtr)) typePtr = getRuntimeType(String(typePtr))
     if (typePtr == 0x0) return
-    let FindObjectsOfTypeAddr = (arguments[1] == undefined) ?
-        find_method("UnityEngine.CoreModule", "Object", "FindObjectsOfType", 1) :
-        find_method("UnityEngine.CoreModule", "Resources", "FindObjectsOfTypeAll", 1)
-
-    if (FindObjectsOfTypeAddr != 0) listObj(callFunction(FindObjectsOfTypeAddr, typePtr, 0), "OBJ")
+    let FindObjectsOfTypeAddr = 0x0
+    var tmpArray = new Array()
+    switch (ext) {
+        case 0:
+        case 1:
+            FindObjectsOfTypeAddr = find_method("UnityEngine.CoreModule", "Object", "FindObjectsOfType", 2)
+            listObj(callFunction(FindObjectsOfTypeAddr, typePtr, ext), "OBJ")
+            break
+        case 2:
+            FindObjectsOfTypeAddr = find_method("UnityEngine.CoreModule", "Resources", "FindObjectsOfTypeAll", 1)
+            if (FindObjectsOfTypeAddr == 0x0) {
+                FindObjectsOfTypeAddr = find_method("UnityEngine.CoreModule", "Object", "FindObjectsOfType", 2)
+                listObj(callFunction(FindObjectsOfTypeAddr, typePtr, 1), "OBJ")
+            } else {
+                listObj(callFunction(FindObjectsOfTypeAddr, typePtr, 0), "OBJ")
+            }
+            break
+        default:
+            FindObjectsOfTypeAddr = find_method("UnityEngine.CoreModule", "Object", "FindObjectsOfType", 1)
+            listObj(callFunction(FindObjectsOfTypeAddr, typePtr, 0), "OBJ")
+            break
+    }
 
     function listObj(arrPtr) {
         let arrLenth = ptr(arrPtr).add(p_size * 3).readInt()
@@ -4148,16 +4177,14 @@ function FindObjectsOfType(typePtr) {
         let lastType = null
         let enableTypeShow = false
         let runtimeTypeDes = callFunctionRUS(["mscorlib", "Type", "ToString", 0], typePtr)
-        LOG(getLine(60), LogColor.YELLOW)
-        for (let i = 0; i < arrLenth; i++) {
-            let current = ptr(arrPtr).add(p_size * (4 + i)).readPointer()
-            let arrRet = FuckKnownType("OBJ", current, 0x1)
-            if (i == 0 && runtimeTypeDes == "Type: MonoBehaviour") {
-                LOG(runtimeTypeDes + "(" + arrPtr + ")", LogColor.C91)
-                LOG("---> Count:" + arrLenth + "\n", LogColor.C31)
-            } else if (i == 0) {
-                LOG(arrRet[1] + "(" + arrRet[2] + ")", LogColor.C91)
-                LOG("---> Count:" + arrLenth + "\n", LogColor.C31)
+        LOGW(getLine(60))
+        for (let index = 0; index < arrLenth; ++index) {
+            let current = ptr(arrPtr).add(p_size * (4 + index)).readPointer()
+            let arrRet = FackKnownType("OBJ", current, 0x1)
+            if (index == 0) {
+                runtimeTypeDes == "Type: MonoBehaviour" ? LOG(runtimeTypeDes + "(" + arrPtr + ")", LogColor.C91) : LOG(arrRet[1] + "(" + arrRet[2] + ")", LogColor.C91)
+                LOG("---> Count:" + arrLenth, LogColor.C31)
+                LOGW(getLine(40) + "\n")
             }
             let gObj = getGameObject(current)
             let gtrs = f_getTransform(getGameObject(current))
@@ -4165,22 +4192,22 @@ function FindObjectsOfType(typePtr) {
             if (lastType == null) lastType = String(runtimeType)
             if (lastType != "" && lastType != String(runtimeType)) enableTypeShow = true
             let disPlayItemTitile = "[*] " + current + " ---> " + arrRet[0] + " { G:" + gObj + " | T:" + gtrs + " }  " + (enableTypeShow ? ("RuntimeType: " + runtimeType[0] + "(" + runtimeType[1] + ")") : "")
-            LOG(disPlayItemTitile, LogColor.C96)
+            LOGH(disPlayItemTitile)
             TaskDisplay(arrRet, current)
         }
-        LOG("\n" + getLine(60), LogColor.YELLOW)
+        LOGW(getLine(60))
     }
 
-    // 解析展示不同运行时类型 <--- 原 FuckRuntimeType()
+    // 解析展示不同运行时类型 <--- 原 FackRuntimeType()
     function TaskDisplay(arrRet, mPtr) {
         switch (arrRet[1]) {
             case "UnityEngine.UI.Text":
-                LOG("\t[-] |" + FuckKnownType("Text", mPtr, arrRet[2]) + "|", LogColor.C36)
+                LOGD("\t[-] |" + FackKnownType("Text", mPtr, arrRet[2]) + "|")
                 break
             case "UnityEngine.UI.Button":
                 let ButtonClickedEvent = callFunction(["UnityEngine.UI", "Button", "get_onClick", 0], mPtr)
                 let ret_mCalls = getFieldInfoFromCls(findClass("UnityEventBase"), "m_Calls", ButtonClickedEvent)
-                LOG("    [-] " + ret_mCalls[3] + "(" + ret_mCalls[2] + ") " + ret_mCalls[0] + " " + ret_mCalls[5], LogColor.C33)
+                LOGO("\t[-] Button: " + ret_mCalls[3] + "(" + ret_mCalls[2] + ") " + ret_mCalls[0] + " " + ret_mCalls[5])
                 // 处理三个 list
                 ansItems(ret_mCalls, "m_PersistentCalls")
                 // ansItems(ret_mCalls, "m_RuntimeCalls")
@@ -4191,26 +4218,38 @@ function FindObjectsOfType(typePtr) {
                 let arr_m_Text = getFieldInfoFromCls(findClass("InputField"), "m_Text", mPtr)
                 let arr_m_ReadOnly = getFieldInfoFromCls(findClass("InputField"), "m_ReadOnly", mPtr)
                 let arr_m_AllowInput = getFieldInfoFromCls(findClass("InputField"), "m_AllowInput", mPtr)
-                LOG("    [-] Text:" + readU16(arr_m_Text[5]) + " | ReadOnly(" + arr_m_ReadOnly[1] + "):" + (ptr(arr_m_ReadOnly[4]).readU8() == 0 ? "false" : "true") +
-                    " | AllowInput(" + arr_m_AllowInput[1] + "):" + (ptr(arr_m_AllowInput[4]).readU8() == 0 ? "false" : "true"), LogColor.C33)
+                let disPlayStr = "\t[-] Text: " + readU16(arr_m_Text[5]) + " | ReadOnly(" + arr_m_ReadOnly[1] + "):" + (ptr(arr_m_ReadOnly[4]).readU8() == 0 ? "false" : "true") +
+                    " | AllowInput(" + arr_m_AllowInput[1] + "):" + (ptr(arr_m_AllowInput[4]).readU8() == 0 ? "false" : "true")
+                LOGO(disPlayStr.replace(/^\s+|\s+$/g, ''))
                 break
             case "TMPro.TextMeshProUGUI":
                 // todo 这个还有点东西 先这么简单的写写
-                let text = callFunctionRUS(find_method("Unity.TextMeshPro", "TMP_Text", "get_text", 0), mPtr)
-                let fontSize = callFunctionRF(find_method("Unity.TextMeshPro", "TMP_Text", "get_fontSize", 0), mPtr).toFixed(2)
-                let tmpText = ("    [-] Text: |" + text + "|  fontSize:" + fontSize)
-                let fontAsset = callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_font", 0), mPtr)
+                let text = callFunctionRUS(["Unity.TextMeshPro", "TMP_Text", "get_text", 0], mPtr)
+                let fontSize = callFunctionRF(["Unity.TextMeshPro", "TMP_Text", "get_fontSize", 0], mPtr).toFixed(2)
+                let tmpText = ("\t[-] Text: |" + text + "|  fontSize:" + fontSize)
+                let fontAsset = callFunction(["Unity.TextMeshPro", "TMP_Text", "get_font", 0], mPtr)
                 tmpText += (fontAsset != 0 ? ("  TMP_FontAsset:" + fontAsset) : "")
-                let spriteAsset = callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_spriteAsset", 0), mPtr)
+                let spriteAsset = callFunction(["Unity.TextMeshPro", "TMP_Text", "get_spriteAsset", 0], mPtr)
                 tmpText += (spriteAsset != 0 ? ("  TMP_SpriteAsset:" + spriteAsset) : "")
-                let styleSheet = callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "get_styleSheet", 0), mPtr)
+                let styleSheet = callFunction(["Unity.TextMeshPro", "TMP_Text", "get_styleSheet", 0], mPtr)
                 tmpText += (styleSheet != 0 ? ("  TMP_StyleSheet:" + styleSheet) : "")
-                tmpText += "\n"
                 saveCache("TextMeshProUGUI", text)
-                LOG(tmpText, LogColor.C33)
+                LOGO(tmpText)
                 break
             case "UnityEngine.UI.Image":
-                LOG("\t[-] " + FuckKnownType("Image", mPtr), LogColor.C33)
+                LOGO(`"\t[-] " + ${FackKnownType("Image", mPtr)}`)
+                break
+            case "I2.Loc.Localize":
+                var str0 = readU16(ptr(getFieldInfoFromCls(findClass("Localize"), "LastLocalizedLanguage", mPtr)[4].readPointer())) + " | "
+                var str1 = readU16(ptr(getFieldInfoFromCls(findClass("Localize"), "FinalSecondaryTerm", mPtr)[4]).readPointer())
+                LOGO(`\t[-] Localize: " ${str0} ${str1}`)
+                break
+            case "UnityEngine.EventSystems.StandaloneInputModule":
+                var str0 = "m_SubmitButton : " + readU16(ptr(getFieldInfoFromCls(findClass("StandaloneInputModule"), "m_SubmitButton", mPtr)[4].readPointer())) + " | "
+                var str1 = "m_CancelButton : " + readU16(ptr(getFieldInfoFromCls(findClass("StandaloneInputModule"), "m_CancelButton", mPtr)[4]).readPointer()) + " | "
+                var str2 = "m_InputActionsPerSecond : " + readSingle(getFieldInfoFromCls(findClass("StandaloneInputModule"), "m_InputActionsPerSecond", mPtr)[5]) + " | "
+                var str3 = "m_RepeatDelay : " + readSingle(getFieldInfoFromCls(findClass("StandaloneInputModule"), "m_RepeatDelay", mPtr)[5])
+                LOGO(`\t[-] Localize: { " ${str0} ${str1} ${str2} ${str3} " ]`)
                 break
             case "UnityEngine.EventSystems.EventSystem":
 
@@ -4224,43 +4263,53 @@ function FindObjectsOfType(typePtr) {
             case "UnityEngine.RectTransform":
 
                 break
-            case "UnityEngine.CanvasRenderer":
-
-                break
-            case "UnityEngine.AudioListener":
-
-                break
-            case "UnityEngine.UI.CanvasScaler":
-
-                break
-            case "UnityEngine.UI.VerticalLayoutGroup":
-
-                break
-            case "UnityEngine.UI.HorizontalLayoutGroup":
-
-                break
             default:
                 // if (strType.startsWith("UnityEngine.") || strType.startsWith("TMPro.")) break
                 // lffc(findClass(strType), mPtr)
+                if (RepeatCount(arrRet[1])) LOG("\t[-] " + JSON.stringify(arrRet) + " ---> " + mPtr, LogColor.C90)
                 break
         }
     }
+
+
+
+    function RepeatCount(str) {
+        for (var value of tmpArray)
+            if (String(value) == str) return false
+        tmpArray.push(String(str))
+        return true
+    }
 }
 
-var FindObjectsOfTypeAll = typePtr => FindObjectsOfType(typePtr, 1)
+var FindObjectsOfTypeAll = typePtr => FindObjectsOfType(typePtr, 2)
 
 let saveCache = (key, value) => {
+    // 不记录数字
+    if (!isNaN(value)) return
     if (CommonCache.get(String(key)) == undefined) CommonCache.set(String(key), new Array())
     let insArray = CommonCache.get(String(key))
-    if (String(value).length != 0) return
-    if (insArray instanceof Array)
-        if (JSON.stringify(insArray).indexOf(value) == -1) insArray.push(value)
+    if (String(value).length == 0) return
+    if (insArray instanceof Array && JSON.stringify(insArray).indexOf(value) == -1)
+        insArray.push(value)
 }
 
 var printSavedCache = key => {
-    if (CommonCache.get(String(key)) == undefined) return
-    let insArray = CommonCache.get(String(key))
-    if (insArray instanceof Array) insArray.forEach(item => LOGD(`${item}`))
+    if (key == undefined) {
+        new Promise((onFinish) => {
+            let maxKeyLength = 0
+            for (var item of CommonCache) maxKeyLength = maxKeyLength > item[0].length ? maxKeyLength : item[0].length
+            onFinish(maxKeyLength)
+        }).then((len) => {
+            LOGE(`${getLine(50)}`)
+            for (var item of CommonCache)
+                LOGD(`[*] ${String(item[0]).padEnd(len, " ")}  --->  ${item[1]}`)
+            LOGE(`${getLine(50)}`)
+        })
+    } else {
+        if (CommonCache.get(String(key)) == undefined) return
+        let insArray = CommonCache.get(String(key))
+        if (insArray instanceof Array) insArray.forEach(item => LOGD(`[*] ${item}`))
+    }
 }
 
 /**
@@ -4280,13 +4329,13 @@ let ansItems = (ret_mCalls, itemStr) => {
             // 本来是想解析动态解析类型的
             let tmpType = "UnityAction"
             // 这里就默认使用了0x8偏移位置的函数指针 从dump出来的情况看起来并不是每一个子类类型都有一个0x8，但实测0x8是可用的
-            let tmpValue = FuckKnownType(tmpType, ptr(item[5]).add(p_size * (4 + i)).readPointer().add(p_size * 2).readPointer())
+            let tmpValue = FackKnownType(tmpType, ptr(item[5]).add(p_size * (4 + i)).readPointer().add(p_size * 2).readPointer())
             let functionName = mapNameToAddr(tmpValue)
             tmpValue += (functionName == "" || functionName == undefined ? "" : (" | " + functionName))
             arrAddr.push(tmpValue)
         }
         LOGD("\t" + itemStr.substring(2, 3) + "_calls ( INS :" + item[5] + ")  [TYPE : " + ret_itemCalls[3] + " ( " + ret_itemCalls[2] + " ) | LEN : " + m_size +
-            "] \n\t\t" + JSON.stringify(arrAddr) + " <--- " + JSON.stringify(JSON.parse(FuckKnownType(item[3], item[5], item[2])).slice(0, m_size)))
+            "] \n\t\t" + JSON.stringify(arrAddr) + " <--- " + JSON.stringify(JSON.parse(FackKnownType(item[3], item[5], item[2])).slice(0, m_size)))
     }
 }
 
@@ -4371,7 +4420,7 @@ var B_Component = () => {
         }, () => {
             newLine()
             LOG(" [*] AddComponent ---> G:" + pass.get("arg0") + " T:" + f_getTransform(ptr(pass.get("arg0"))) + "(" + getObjName(this.arg0) + ")" +
-                "\t\t\t(" + pass.get("arg1") + ")" + FuckKnownType('Type', pass.get("arg1")), LogColor.C36)
+                "\t\t\t(" + pass.get("arg1") + ")" + FackKnownType('Type', pass.get("arg1")), LogColor.C36)
         })
 
         // Interceptor.attach(find_method('UnityEngine.CoreModule', 'GameObject', 'AddComponent', 1), {
@@ -4382,7 +4431,7 @@ var B_Component = () => {
         //     onLeave: function (ret) {
         //         newLine()
         //         LOG(" [*] AddComponent ---> G:" + this.arg0 + " T:" + f_getTransform(ptr(this.arg0)) + "(" + getObjName(this.arg0) + ")" +
-        //             "\t\t\t(" + this.arg1 + ")" + FuckKnownType('Type', this.arg1), LogColor.C36)
+        //             "\t\t\t(" + this.arg1 + ")" + FackKnownType('Type', this.arg1), LogColor.C36)
         //     }
         // })
     }
@@ -4396,7 +4445,7 @@ var B_Component = () => {
             onLeave: function (ret) {
                 newLine()
                 LOG(" [*] AddComponent ---> G:" + this.arg0 + " T:" + getTransform(ptr(this.arg0)) + "(" + getObjName(this.arg0) + ")" +
-                    "\t\t\t(" + this.arg1 + ")" + FuckKnownType('Type', this.arg1), LogColor.C36)
+                    "\t\t\t(" + this.arg1 + ")" + FackKnownType('Type', this.arg1), LogColor.C36)
             }
         })
     }
@@ -4404,11 +4453,9 @@ var B_Component = () => {
     // 间隔时间大于一秒,就用新的一行展示
     function newLine() {
         var current = 0
-        Java.perform(() => {
-            current = Java.use('java.lang.System').currentTimeMillis()
-        })
+        Java.perform(() => current = Java.use('java.lang.System').currentTimeMillis())
         if (current - lastTime > 1000) {
-            console.log("\n")
+            LOG("\n")
             lastTime = current
         }
     }
@@ -4426,7 +4473,7 @@ var B_Button = () => {
         let gObj = getGameObject(current)
         let gtrs = f_getTransform(getGameObject(current))
         LOG("\n[*] " + current + " ---> " + getObjName(current) + " { G:" + gObj + " | T:" + gtrs + " }", LogColor.C96)
-        LOGD("    [-] " + ret_mCalls[3] + "(" + ret_mCalls[2] + ") " + ret_mCalls[0] + " " + ret_mCalls[5], LogColor.C33)
+        LOG("    [-] " + ret_mCalls[3] + "(" + ret_mCalls[2] + ") " + ret_mCalls[0] + " " + ret_mCalls[5], LogColor.C33)
         // 立即去获取是拿不到函数地址的,这里做一点点小延时
         setTimeout(() => {
             ansItems(ret_mCalls, "m_PersistentCalls")
@@ -4492,7 +4539,7 @@ let GetComponentsOld = (GameObject, RuntimeType, TYPE) => {
         let lastName = ""
         for (let i = 0; i < arrLenth; i++) {
             let current = ptr(arrPtr).add(p_size * (4 + i)).readPointer()
-            let arrRet = FuckKnownType(typeStr, current, 0x1)
+            let arrRet = FackKnownType(typeStr, current, 0x1)
             if (lastName == "" || lastName != arrRet[0]) {
                 LOG((i == 0 ? "" : "\n") + "[*] " + arrRet[0], LogColor.C36)
                 lastName = arrRet[0]
@@ -4923,7 +4970,7 @@ var getTextFromAsset = (type, mPtr) => {
             // lffc(findClass("TermData"), termData)
             let currentStr = readU16(getFieldInfoFromCls(findClass("TermData"), "Term", termData)[5])
             let currentLanguages = getFieldInfoFromCls(findClass("TermData"), "Languages", termData)[5]
-            let LanguagesArr = FuckKnownType(strArrStr, currentLanguages, strArrCls)
+            let LanguagesArr = FackKnownType(strArrStr, currentLanguages, strArrCls)
             LOG(getLine(30))
             LOGD(currentStr + "\n" + LanguagesArr)
             let indexValue = callFunctionRUS(arrAddr_getItem, currentLanguages, 0)
@@ -5016,5 +5063,5 @@ Object.prototype.toInt32Big = (mPtr) => {
 // todo
 // particleSystem 相关...
 // anamation 相关...
-// image 相关 (加载图片的资源) 
-// 动态插入提示 gobj addcomponent<type>... 
+// image 相关 (加载图片的资源)
+// 动态插入提示 gobj addcomponent<type>...
