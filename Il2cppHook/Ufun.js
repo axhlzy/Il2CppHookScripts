@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/04/01 18:43
+ * @UpdateTime  2022/04/22 17:21
  * @Des         frida hook u3d functions script
  */
 
@@ -1298,8 +1298,7 @@ var FackKnownType = (typeStr, insPtr, clsPtr) => {
                 if (clsPtr == 0x1) return [objName, readU16(tmp_str_Ptr), tmp_type_Ptr]
                 return objName + "\t\t" + readU16(tmp_str_Ptr) + " (" + tmp_type_Ptr + ")"
             case "Image":
-                let retStr = ""
-                retStr += ("Sprite : " + callFunction(["UnityEngine.UI", "Image", "get_sprite", 0], insPtr) + " | ")
+                let retStr = "Sprite : " + callFunction(["UnityEngine.UI", "Image", "get_sprite", 0], insPtr) + " | "
                 retStr += ("Type : " + FackKnownType("Type", callFunctionRI(["UnityEngine.UI", "Image", "get_type", 0], insPtr), findClass("UnityEngine.UI", "Type")) + " | ")
                 retStr += ("fillMethod : " + FackKnownType("FillMethod", callFunctionRI(["UnityEngine.UI", "Image", "get_fillMethod", 0], insPtr), findClass("UnityEngine.UI", "FillMethod")) + " ")
                 return retStr
@@ -1655,7 +1654,7 @@ var breakWithStack = mPtr => {
     mPtr = checkPointer(mPtr)
     A(mPtr, (args, ctx) => {
         LOG("\n" + getLine(65), LogColor.C33)
-        LOG("Called from " + ptr(mPtr) + " ---> " + ptr(mPtr).sub(soAddr) + "\t|  LR : " + ptr(ctx.lr).sub(soAddr) + "\n", LogColor.C96)
+        LOG("Called from " + ptr(mPtr) + " ---> " + ptr(mPtr) + "\t|  LR : " + ptr(ctx.lr) + "\n", LogColor.C96)
         PrintStackTraceN(ctx)
         LOG("\n" + getLine(65), LogColor.C33)
     })
@@ -4237,7 +4236,7 @@ function FindObjectsOfType(typePtr, ext) {
                 LOGO(tmpText)
                 break
             case "UnityEngine.UI.Image":
-                LOGO(`"\t[-] " + ${FackKnownType("Image", mPtr)}`)
+                LOGO(`\t[-] ${FackKnownType("Image", mPtr)}`)
                 break
             case "I2.Loc.Localize":
                 var str0 = readU16(ptr(getFieldInfoFromCls(findClass("Localize"), "LastLocalizedLanguage", mPtr)[4].readPointer())) + " | "
@@ -4249,7 +4248,10 @@ function FindObjectsOfType(typePtr, ext) {
                 var str1 = "m_CancelButton : " + readU16(ptr(getFieldInfoFromCls(findClass("StandaloneInputModule"), "m_CancelButton", mPtr)[4]).readPointer()) + " | "
                 var str2 = "m_InputActionsPerSecond : " + readSingle(getFieldInfoFromCls(findClass("StandaloneInputModule"), "m_InputActionsPerSecond", mPtr)[5]) + " | "
                 var str3 = "m_RepeatDelay : " + readSingle(getFieldInfoFromCls(findClass("StandaloneInputModule"), "m_RepeatDelay", mPtr)[5])
-                LOGO(`\t[-] Localize: { " ${str0} ${str1} ${str2} ${str3} " ]`)
+                LOGO(`\t[-] Localize: ${str0} ${str1} ${str2} ${str3}`)
+                break
+            case "LocalizationTextMeshProUGUI":
+
                 break
             case "UnityEngine.EventSystems.EventSystem":
 
@@ -4708,6 +4710,7 @@ var B_Text = () => {
     let mapRecord = new Map()
     let strMap = new Map()
     strMap.set("SETTINGS", "设置")
+    strMap.set("ADDED", "已添加")
     strMap.set("ON", "开")
     strMap.set("Loading...", "加载中...")
     strMap.set("More games", "更多游戏")
