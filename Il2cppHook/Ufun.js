@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/04/22 17:21
+ * @UpdateTime  2022/04/24 16:03
  * @Des         frida hook u3d functions script
  */
 
@@ -4706,9 +4706,12 @@ var B_LocalizationManager = () => {
 // a(findClass("String"))
 // find_method("UnityEngine.UI","Text","get_text",0,false)
 // FindObjectsOfType("TextMeshProUGUI")
+// \n 0x0A | \r 0x0D | \t 0x09 | [空格] 0x20 | [换行] 0x0D 0x0A
 var B_Text = () => {
     let mapRecord = new Map()
     let strMap = new Map()
+    let printHex = true
+
     strMap.set("SETTINGS", "设置")
     strMap.set("ADDED", "已添加")
     strMap.set("ON", "开")
@@ -4743,11 +4746,18 @@ var B_Text = () => {
         LOGE("UnityEngine.UI.FontUpdateTracker.TrackText NOT FOUND !")
     }
 
+    try {
+        LOGD("Enable Print Hook".padEnd(30, " ") + "| class : " + findClass("NGUIText"))
+        HookPrint()
+    } catch {
+        LOGE("NGUIText.Print NOT FOUND !")
+    }
+
     function TMP_Text(showGobj) {
         A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {
             let aimStr = "|" + readU16(callFunction(["Unity.TextMeshPro", "TMP_Text", "get_text", 0], args[0])) + "|"
             if (filterDuplicateOBJ(String(args[0]), 30) == -1) return
-            recordTxtFirst(args[0], "TMP_Text")
+            worksWithText(args[0], "TMP_Text")
             LOG("\n[TMP_Text]  " + args[0] + "\t" + aimStr, LogColor.C36)
             if (strMap.size != 0) {
                 let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
@@ -4766,7 +4776,7 @@ var B_Text = () => {
         A(find_method("Unity.TextMeshPro", "TextMeshPro", "get_transform", 0), (args) => {
             let aimStr = "|" + readU16(callFunction(["Unity.TextMeshPro", "TextMeshPro", "get_text", 0], args[0])) + "|"
             if (filterDuplicateOBJ(String(args[0])) == -1) return
-            recordTxtFirst(args[0], "TextMeshPro")
+            worksWithText(args[0], "TextMeshPro")
             LOG("\n[TextMeshPro]  " + args[0] + "\t" + aimStr, LogColor.C35)
             if (strMap.size != 0) {
                 let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
@@ -4781,7 +4791,7 @@ var B_Text = () => {
     function UnityEngine_UI_Text(showGameObj) {
         if (showGameObj == undefined) showGameObj = false;
         A(find_method("UnityEngine.UI", "Text", "get_text", 0), (args) => {
-            recordTxtFirst(args[0], "Text")
+            worksWithText(args[0], "Text")
             if (showGameObj)
                 showGameObject(callFunction(["UnityEngine.CoreModule", "Component", "get_gameObject", 0], args[0]))
         }, (ret, ctx) => {
@@ -4793,21 +4803,21 @@ var B_Text = () => {
                 if (repStr != undefined) {
                     ret.replace(allocUStr(repStr))
                     // callFunction(find_method("UnityEngine.UI", 'Text', 'set_text', 1), p_size == 4 ? ctx.r0 : ctx.x0, allocStr(repStr, ""))
-                    LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
+                    LOGH(` \n\t {REP} ${aimStr} ---> ${repStr}`)
                 }
             }
         })
 
         A(find_method("UnityEngine.UI", "Text", "set_text", 1), (args, ctx) => {
             if (filterDuplicateOBJ(String(args[1])) == -1) return
-            recordTxtFirst(args[0], "Text")
+            worksWithText(args[0], "Text")
             let aimStr = "|" + readU16(args[1]) + "|"
             LOG("\n[Text_Set]  " + args[0] + "\t" + aimStr, LogColor.C33)
             if (strMap.size != 0) {
                 let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
                     args[1] = allocUStr(repStr)
-                    LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
+                    LOGH(` \n\t {REP} ${aimStr} ---> ${repStr}`)
                 }
                 if (showGameObj)
                     showGameObject(callFunction(["UnityEngine.CoreModule", "Component", "get_gameObject", 0], args[0]))
@@ -4819,13 +4829,29 @@ var B_Text = () => {
         A(find_method('UnityEngine.UI', 'FontUpdateTracker', 'TrackText', 1), (args) => {
             let aimStr = "|" + callFunctionRUS(["UnityEngine.UI", 'Text', 'get_text', 0], args[0]) + "|"
             if (filterDuplicateOBJ(String(callFunctionRUS(["UnityEngine.UI", 'Text', 'get_text', 0], args[0])) == -1)) return
-            LOG("\n[FontUpdateTracker]  " + args[0] + "\t" + aimStr, LogColor.C36)
-            recordTxtFirst(args[0], "Text")
+            LOGD(`\n[FontUpdateTracker] ${args[0]} \t ${aimStr}`)
+            worksWithText(args[0], "Text")
             if (strMap.size != 0) {
                 let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
                     args[1] = allocUStr(repStr)
-                    LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
+                    LOGH(` \n\t {REP} ${aimStr} ---> ${repStr}`)
+                }
+            }
+        })
+    }
+
+    function HookPrint() {
+        A(find_method('Assembly-CSharp', 'NGUIText', 'Print', 4), (args) => {
+            let aimStr = "|" + readU16(args[0]) + "|"
+            if (filterDuplicateOBJ(aimStr) == -1) return
+            LOGD(`\n[NGUIText] ${args[0]} \t ${aimStr}`)
+            worksWithText(args[0], "Text")
+            if (strMap.size != 0) {
+                let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
+                if (repStr != undefined) {
+                    args[0] = allocUStr(repStr)
+                    LOGH(` \n\t {REP} ${aimStr} ---> ${repStr}`)
                 }
             }
         })
@@ -4838,7 +4864,7 @@ var B_Text = () => {
         A(get_Ins, () => {}, (ret) => {
             INS = ret
             d(get_Ins)
-            LOG("[*] TMPro.TMP_Settings ---> " + ret)
+            LOGD(`[*] TMPro.TMP_Settings ---> ${ret}`)
             let TMP_FontAsset = callFunction(find_method("Unity.TextMeshPro", "TMP_Settings", "get_defaultFontAsset", 0), INS)
             lffc(findClass("TMP_FontAsset"), TMP_FontAsset)
             let faceInfo = callFunction(find_method("Unity.TextMeshPro", "TMP_FontAsset", "get_fontInfo", 0), TMP_FontAsset)
@@ -4846,64 +4872,75 @@ var B_Text = () => {
         })
     }
 
-    function recordTxtFirst(mPtr, mapStr) {
-        if (mapRecord.get(mapStr) == null) {
-            mapRecord.set(mapStr, 1)
+    function worksWithText(textPtr, typeStr) {
+        if (mapRecord.get(typeStr) == null) {
+            mapRecord.set(typeStr, 1)
             LogFlag = false
-            getType(mPtr)
+            getType(textPtr)
             LogFlag = true
         }
-    }
-}
-
-var TMP_Template = () => {
-
-    try {
-        LOG(getLine(80) + "\n[*] Hook Resources.Load\n" + getLine(30), LogColor.C96)
-        let Template_Resources_Load =
-            'R(' + find_method("UnityEngine.CoreModule", "Resources", "Load", 2, false, 2) + ', (srcFunc, arg0, arg1, arg2, arg3) => {\n' +
-            '    var ret = srcFunc(arg0, arg1, arg2, arg3)\n' +
-            '    var p_type = callFunction(' + find_method("mscorlib", "Object", "GetType", 0, false, 2) + ', ret)\n' +
-            '    var p_name = callFunction(' + find_method("mscorlib", "Type", "ToString", 0, false, 2) + ', p_type)\n' +
-            '    LOG(ret + "\t" + readU16(arg0) + "\\t" + readU16(p_name))\n' +
-            '    return ret\n' +
-            '})\n'
-        LOGD(Template_Resources_Load)
-    } catch {
-        LOGE("NOT FOUND ---> public static Object[] LoadAll(string path, Type systemTypeInstance)\n")
+        if (printHex) {
+            try {
+                let startPtr = ptr(textPtr).add(p_size * 2)
+                let endPtr = Memory.scanSync(startPtr, (startPtr.readInt() * 0.5 + 3) * p_size, "00 00 00 00")[0]["address"]
+                LOGO("\t" + hexdump(ptr(startPtr).add(p_size), {
+                    length: endPtr - startPtr - p_size,
+                    header: false
+                }).replaceAll("\n", "\n\t"))
+            } catch (e) {}
+        }
     }
 
-    try {
-        if (find_method("UnityEngine.AssetBundleModule", "AssetBundle", "LoadFromFileAsync", 2, false, 2) == 0) throw new Error()
-        LOG(getLine(80) + "\n[*] Hook AssetBundle\n" + getLine(30), LogColor.C96)
-        let Template_LoadFromFileAsync =
-            '\nR(' + find_method("UnityEngine.AssetBundleModule", "AssetBundle", "LoadFromFileAsync", 2, false, 2) + ', (srcFunc, arg0, arg1, arg2, arg3) => {\n' +
-            '    LOG("[*] LoadFromFileAsync(\'" + readU16(arg0) + "\' , " + arg1 + ")")\n' +
-            '    return srcFunc(arg0, arg1, arg2, arg3)\n' +
-            '})\n'
-        LOGD(Template_LoadFromFileAsync)
-    } catch {
-        LOGE("NOT FOUND ---> public static AssetBundleCreateRequest LoadFromFileAsync(string path, uint crc)\n")
-    }
+    var TMP_Template = () => {
 
-    try {
-        LOG(getLine(80) + "\n[*] Hook LanguageSourceData\n" + getLine(30), LogColor.C96)
-        let Template_GetTermData =
-            'R(0x557578, (srcFunc, arg0, arg1, arg2, arg3) => {\n' +
-            '    var ret = srcFunc(arg0, arg1, arg2, arg3)\n' +
-            '    LOG(ret + " = GetTermData(string " + readU16(arg1) + " , bool allowCategoryMistmatch = " + (arg2 == 0x0 ? false : true) + ") ")\n' +
-            '    if (ret == 0x0) return ret\n' +
-            '    var strArr = ptr(ret).add(' + getFieldOffFromCls(findClass("TermData"), "Languages") + ').readPointer()\n' +
-            '    var size = ptr(strArr).add(' + p_size + ' * 3).readUInt()\n' +
-            '    console.error("\tSize  -> " + size)\n' +
-            '    var tmpArr = []\n' +
-            '    for (let i = 1; i <= size; i++) tmpArr.push(readU16(ptr(strArr).add(' + p_size + ' * (3 + i)).readPointer()))\n' +
-            '    console.error("\tDate  -> " + JSON.stringify(tmpArr))\n' +
-            '    return ret\n' +
-            '})\n'
-        LOGD(Template_GetTermData)
-    } catch {
-        LOGE("NOT FOUND ---> public TermData GetTermData(string term, bool allowCategoryMistmatch = false)\n")
+        try {
+            LOGH(`${getLine(80)} \n[*] Hook Resources.Load\n${getLine(30)}`)
+            let Template_Resources_Load =
+                'R(' + find_method("UnityEngine.CoreModule", "Resources", "Load", 2, false, 2) + ', (srcFunc, arg0, arg1, arg2, arg3) => {\n' +
+                '    var ret = srcFunc(arg0, arg1, arg2, arg3)\n' +
+                '    var p_type = callFunction(' + find_method("mscorlib", "Object", "GetType", 0, false, 2) + ', ret)\n' +
+                '    var p_name = callFunction(' + find_method("mscorlib", "Type", "ToString", 0, false, 2) + ', p_type)\n' +
+                '    LOG(ret + "\t" + readU16(arg0) + "\\t" + readU16(p_name))\n' +
+                '    return ret\n' +
+                '})\n'
+            LOGD(Template_Resources_Load)
+        } catch {
+            LOGE("NOT FOUND ---> public static Object[] LoadAll(string path, Type systemTypeInstance)\n")
+        }
+
+        try {
+            if (find_method("UnityEngine.AssetBundleModule", "AssetBundle", "LoadFromFileAsync", 2, false, 2) == 0) throw new Error()
+            LOG(getLine(80) + "\n[*] Hook AssetBundle\n" + getLine(30), LogColor.C96)
+            let Template_LoadFromFileAsync =
+                '\nR(' + find_method("UnityEngine.AssetBundleModule", "AssetBundle", "LoadFromFileAsync", 2, false, 2) + ', (srcFunc, arg0, arg1, arg2, arg3) => {\n' +
+                '    LOG("[*] LoadFromFileAsync(\'" + readU16(arg0) + "\' , " + arg1 + ")")\n' +
+                '    return srcFunc(arg0, arg1, arg2, arg3)\n' +
+                '})\n'
+            LOGD(Template_LoadFromFileAsync)
+        } catch {
+            LOGE("NOT FOUND ---> public static AssetBundleCreateRequest LoadFromFileAsync(string path, uint crc)\n")
+        }
+
+        try {
+
+            LOGH(`${getLine(80)} \n[*] Hook LanguageSourceData\n${getLine(30)}`)
+            let Template_GetTermData =
+                'R(0x557578, (srcFunc, arg0, arg1, arg2, arg3) => {\n' +
+                '    var ret = srcFunc(arg0, arg1, arg2, arg3)\n' +
+                '    LOG(ret + " = GetTermData(string " + readU16(arg1) + " , bool allowCategoryMistmatch = " + (arg2 == 0x0 ? false : true) + ") ")\n' +
+                '    if (ret == 0x0) return ret\n' +
+                '    var strArr = ptr(ret).add(' + getFieldOffFromCls(findClass("TermData"), "Languages") + ').readPointer()\n' +
+                '    var size = ptr(strArr).add(' + p_size + ' * 3).readUInt()\n' +
+                '    console.error("\tSize  -> " + size)\n' +
+                '    var tmpArr = []\n' +
+                '    for (let i = 1; i <= size; i++) tmpArr.push(readU16(ptr(strArr).add(' + p_size + ' * (3 + i)).readPointer()))\n' +
+                '    console.error("\tDate  -> " + JSON.stringify(tmpArr))\n' +
+                '    return ret\n' +
+                '})\n'
+            LOGD(Template_GetTermData)
+        } catch {
+            LOGE(`NOT FOUND ---> public TermData GetTermData(string term, bool allowCategoryMistmatch = false)\n`)
+        }
     }
 }
 
@@ -4914,14 +4951,14 @@ var TMP_Template = () => {
 var ProductCollectionList = mPtr => {
     let retPtr = callFunction(find_method("UnityEngine.Purchasing", "ProductCollection", "get_all", 0, false, 2), mPtr)
     let arrLength = ptr(retPtr).add(p_size * 3).readUInt()
-    LOGD("\n[*] Product length : " + arrLength + "  |  RET => " + retPtr + "\n")
+    LOGD(`\n[*] Product length : ${arrLength}  |  RET => ${retPtr}\n`)
     seeHexA(ptr(retPtr).add(p_size * 4), (arrLength > 32 ? 32 : arrLength) * p_size, false, LogColor.C33)
     LOG("\n")
     for (let i = 0; i < arrLength; ++i) {
         let tmpPtr = ptr(retPtr).add(p_size * (4 + i))
         let definitionk = getFieldInfoFromCls(findClass("Product"), "<definition>k__BackingField", tmpPtr.readPointer())
         let productName = readU16(getFieldInfoFromCls(definitionk[2], "<id>k__BackingField", definitionk[5])[5])
-        LOGD("[" + i + "] " + tmpPtr + " ---> " + tmpPtr.readPointer() + "  |  " + productName)
+        LOGD(`[${i}] ${tmpPtr} ---> ${tmpPtr.readPointer()}  |  ${productName}`)
     }
     LOG("\n")
 }
