@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/04/24 16:03
+ * @UpdateTime  2022/05/10 17:51
  * @Des         frida hook u3d functions script
  */
 
@@ -1641,7 +1641,7 @@ var breakWithArgs = (mPtr, argCount) => {
     mPtr = checkPointer(mPtr)
     A(mPtr, (args, ctx) => {
         LOG("\n" + getLine(65), LogColor.C33)
-        LOG("Called from " + ptr(mPtr) + " ---> " + ptr(mPtr).sub(soAddr) + "\t|  LR : " + ptr(ctx.lr).sub(soAddr) + "\n", LogColor.C96)
+        LOG("Called from " + ptr(mPtr) + " ---> " + ptr(mPtr).sub(soAddr) + "\t|  LR : " + checkCtx(ctx.lr) + "\n", LogColor.C96)
         let tStr = String(args[0])
         for (let t = 1; t < (argCount == undefined ? 4 : argCount); t++) tStr += "\t" + args[t]
         LOGD(tStr)
@@ -1654,7 +1654,7 @@ var breakWithStack = mPtr => {
     mPtr = checkPointer(mPtr)
     A(mPtr, (args, ctx) => {
         LOG("\n" + getLine(65), LogColor.C33)
-        LOG("Called from " + ptr(mPtr) + " ---> " + ptr(mPtr) + "\t|  LR : " + ptr(ctx.lr) + "\n", LogColor.C96)
+        LOG("Called from " + ptr(mPtr) + " ---> " + ptr(mPtr) + "\t|  LR : " + checkCtx(ctx.lr) + "\n", LogColor.C96)
         PrintStackTraceN(ctx)
         LOG("\n" + getLine(65), LogColor.C33)
     })
@@ -2804,14 +2804,20 @@ var HideClickedObj = (x, y) => {
 }
 
 // 打印java堆栈
-var PrintStackTrace = () => LOG(Java.use("android.util.Log").getStackTraceString(Java.use("java.lang.Throwable").$new()), LogColor.C36)
+var PrintStackTrace = () => LOGD(GetStackTrace())
+
+var GetStackTrace = () => Java.use("android.util.Log").getStackTraceString(Java.use("java.lang.Throwable").$new())
 
 // 打印native堆栈
-var PrintStackTraceN = ctx => {
-    LOG(Thread.backtrace(ctx, Backtracer.FUZZY)
-        .slice(0, 6)
+var PrintStackTraceN = (ctx, level) => LOGD(GetStackTraceN(ctx, level))
+
+var GetStackTraceN = (ctx, level) => {
+    return Thread.backtrace(ctx, Backtracer.FUZZY)
+        .slice(0, level === undefined ? 6 : level)
         // .reverse()
-        .map(DebugSymbol.fromAddress).join("\n"), LogColor.C36)
+        .map(frame => DebugSymbol.fromAddress(frame))
+        // .map(symbol => `${getLine(level==undefined?0:level,"\n")}${symbol}\n`)
+        .join("\n")
 }
 
 var SetInt = (key, value) => {
@@ -3360,9 +3366,9 @@ var getRealAddr = () => {
         // 使用frida的api Instruction
         realAddr = ptr(Instruction.parse(aimAddr).opStr.split('#')[1])
 
-        LOG(getLine(20) + '\n' + exp + ' \n\t' +
+        LOGH(getLine(20) + '\n' + exp + ' \n\t' +
             aimAddr + ' (' + aimAddr.sub(soAddr) + ')\t--->\t' +
-            realAddr + ' (' + realAddr.sub(soAddr) + ')', LogColor.C96)
+            realAddr + ' (' + realAddr.sub(soAddr) + ')')
     }
 }
 
@@ -3393,9 +3399,9 @@ var HookSetActive = defaltActive => {
         // 过滤那些不安分的反复横跳的obj
         if (filterDuplicateOBJ(readU16(f_getName(ptr(args[0])))) == -1) return
         if (defaltActive == 2 || args[1].toInt32() == defaltActive) {
-            LOG("\n" + getLine(38), LogColor.YELLOW)
-            LOG("public extern void SetActive( " + (args[1].toInt32() == 0 ? "false" : "true") + " );  LR :" + ptr(ctx.lr).sub(soAddr), LogColor.C36)
-            LOG(getLine(20), LogColor.C33)
+            LOGW("\n" + getLine(38))
+            LOGD("public extern void SetActive( " + (args[1].toInt32() == 0 ? "false" : "true") + " );  LR:" + checkCtx(ctx.lr))
+            LOGO(getLine(20))
             showGameObject(args[0])
         }
     })
@@ -3421,97 +3427,109 @@ var filterDuplicateOBJ = (objstr, maxCount) => {
 function HookOnPointerClick() {
     let funcAddr = undefined
     switch (arguments[0]) {
-        case 0:
-            funcAddr = find_method("UnityEngine.UI", "PointerInputModule", "DeselectIfSelectionChanged", 2)
-            if (funcAddr == 0) break
-            LOG("\nEnable Hook DeselectIfSelectionChanged at " + funcAddr + "(" + funcAddr.sub(soAddr) + ")" + "\n", LogColor.RED)
-            A(funcAddr, (args) => {
-                LOG("\n" + getLine(38), LogColor.YELLOW)
-                LOG("protected void DeselectIfSelectionChanged(Ins = " + args[0] + " , GameObject = " + args[1] + " , BaseEventData(" + findClass("BaseEventData") + ") = " + args[2] + " );", LogColor.C36)
-                if (args[1] != 0) showGameObject(args[1])
-            })
-            break
         default:
             funcAddr = find_method("UnityEngine.UI", "Button", "OnPointerClick", 1)
             if (funcAddr == 0) break
-            LOG("\nEnable Hook OnPointerClick at " + funcAddr + "(" + funcAddr.sub(soAddr) + ")" + "\n", LogColor.RED)
+            LOGE("\nEnable Hook OnPointerClick at " + funcAddr + "(" + funcAddr.sub(soAddr) + ")" + "\n")
             A(funcAddr, (args) => {
-                LOG("\n" + getLine(38), LogColor.YELLOW)
-                LOG("public void OnPointerClick( " + args[0] + " , " + args[1] + " );", LogColor.C36)
-                let pointerEventData = args[1]
-                if (pointerEventData == 0) return
-                let gameObj = f_get_pointerEnter(pointerEventData)
-                if (gameObj != 0) showGameObject(gameObj)
-                // showTransform(f_getTransform(gameObj))
-                // showEventData(pointerEventData)
+                LOGW("\n" + getLine(38))
+                LOGD("public void OnPointerClick( " + args[0] + " , " + args[1] + " );")
+                FakePointerEventData(args[1])
+            })
+            break
+        case 0:
+            funcAddr = find_method("UnityEngine.UI", "PointerInputModule", "DeselectIfSelectionChanged", 2)
+            if (funcAddr == 0) break
+            LOGE("\nEnable Hook DeselectIfSelectionChanged at " + funcAddr + "(" + funcAddr.sub(soAddr) + ")" + "\n")
+            A(funcAddr, (args) => {
+                LOGW("\n" + getLine(38))
+                LOGD("protected void DeselectIfSelectionChanged(Ins = " + args[0] + " , GameObject = " + args[1] + " , BaseEventData(" + findClass("BaseEventData") + ") = " + args[2] + " );")
+                if (args[1] != 0) showGameObject(args[1])
+            })
+            break
+        case 1:
+            funcAddr = find_method("UnityEngine.UI", "ScrollRect", "OnInitializePotentialDrag", 1)
+            if (funcAddr == 0) break
+            LOGE("\nEnable Hook OnInitializePotentialDrag at " + funcAddr + "(" + funcAddr.sub(soAddr) + ")" + "\n")
+            A(funcAddr, (args) => {
+                LOGW("\n" + getLine(38))
+                LOGD("public void OnInitializePotentialDrag( " + args[0] + " , " + args[1] + " );")
+                FakePointerEventData(args[1])
+            })
+            break
+        case 2:
+            A(find_method("UnityEngine.UI", "PointerInputModule", "ProcessMove", 1), (args) => {
+                LOGW("\n" + getLine(38))
+                LOGD("protected virtual Void ProcessMove( " + (args[1]) + " );")
+                FakePointerEventData(args[1])
+            })
+            break
+        case 3:
+            A(find_method("UnityEngine.UI", "PointerInputModule", "ProcessDrag", 1), (args) => {
+                LOGW("\n" + getLine(38))
+                LOGD("protected virtual Void ProcessDrag( " + (args[1]) + " );")
+                FakePointerEventData(args[1])
+            })
+            break
+        case 4:
+            A(find_method("UnityEngine.UI", "BaseInputModule", "HandlePointerExitAndEnter", 2), (args) => {
+                LOGW("\n" + getLine(38))
+                LOGD("protected virtual Void HandlePointerExitAndEnter( " + (args[1]) + " , " + (args[2]) + ")")
+                FakePointerEventData(args[1])
+            })
+            break
+        case 5:
+            A(find_method("UnityEngine.UI", "PointerEventData", "set_pointerPress", 1), (args) => {
+                LOGW("\n" + getLine(38))
+                LOGD("protected virtual Void set_pointerPress( " + (args[1]) + " );")
+                showGameObject(args[1])
+            })
+            break
+        case 6:
+            A(find_method("UnityEngine.UI", "PointerInputModule", "GetPointerData", 3), (args) => {
+                LOGW("\n" + getLine(38))
+                LOGD("protected virtual Void GetPointerData( " + (args[2]) + " );")
+                showGameObject(args[1])
+                showEventData(args[2])
+            })
+            break
+        case 7:
+            // EventSystem --->  public Void RaycastAll (PointerEventData eventData,List`1 raycastResults)
+            A(find_method("UnityEngine.UI", "EventSystem", "RaycastAll", 2), (args) => {
+                LOGW("\n" + getLine(38))
+                LOGD(`protected virtual Void RaycastAll( ${args[0]} , ${args[1]} , ${args[2]} );`)
+                FakePointerEventData(args[1])
+            })
+            break
+        case 8:
+            // PointerInputModule --->  protected PointerEventData GetTouchPointerEventData (Touch input,Boolean pressed,Boolean released)
+            A(find_method("UnityEngine.UI", "PointerInputModule", "GetTouchPointerEventData", 3), (args) => {}, (ret) => {
+                LOGW("\n" + getLine(38))
+                LOGD(`protected virtual Void GetTouchPointerEventData `)
+                FakePointerEventData(ret)
+            })
+        case 9:
+            // Selectable --->  public virtual Void OnPointerExit (PointerEventData eventData)
+            A(find_method("UnityEngine.UI", "Selectable", "OnPointerExit", 1), (args) => {
+                LOGW("\n" + getLine(38))
+                LOGD("protected virtual Void OnPointerExit( " + (args[1]) + " );")
+                FakePointerEventData(args[1])
             })
             break
     }
 
-    // HookOthers()
-
-    // 其他时机点
-    function HookOthers() {
-
-        HookHandlePointerExitAndEnter()
-        move()
-        drag()
-        set_pointerPress()
-        GetPointerData()
-
-
-        function move() {
-            A(find_method("UnityEngine.UI", "PointerInputModule", "ProcessMove", 1), (args) => {
-                LOG("\n" + getLine(38), LogColor.YELLOW)
-                LOG("protected virtual Void ProcessMove( " + (args[1]) + " );", LogColor.C36)
-                let pointerEventData = args[1]
-                let gameObj = f_get_pointerEnter(pointerEventData)
-                showGameObject(gameObj)
-            })
-        }
-
-        function drag() {
-            A(find_method("UnityEngine.UI", "PointerInputModule", "ProcessDrag", 1), (args) => {
-                LOG("\n" + getLine(38), LogColor.YELLOW)
-                LOG("protected virtual Void ProcessDrag( " + (args[1]) + " );", LogColor.C36)
-                let pointerEventData = args[1]
-                let gameObj = f_get_pointerEnter(pointerEventData)
-                showGameObject(gameObj)
-            })
-        }
-
-        function HookHandlePointerExitAndEnter() {
-            A(find_method("UnityEngine.UI", "BaseInputModule", "HandlePointerExitAndEnter", 2), (args) => {
-                LOG("\n" + getLine(38), LogColor.YELLOW)
-                LOG("protected virtual Void HandlePointerExitAndEnter( " + (args[1]) + " , " + (args[2]) + ")", LogColor.C36)
-                let pointerEventData = args[1]
-                let gameObj = f_get_pointerEnter(pointerEventData)
-                showGameObject(args[2])
-                showEventData(pointerEventData)
-            })
-        }
-
-        function set_pointerPress() {
-            A(find_method("UnityEngine.UI", "PointerEventData", "set_pointerPress", 1), (args) => {
-                LOG("\n" + getLine(38), LogColor.YELLOW)
-                LOG("protected virtual Void set_pointerPress( " + (args[1]) + " );", LogColor.C36)
-                showGameObject(args[1])
-            })
-        }
-
-        function GetPointerData() {
-            A(find_method("UnityEngine.UI", "PointerInputModule", "GetPointerData", 3), (args) => {
-                LOG("\n" + getLine(38), LogColor.YELLOW)
-                LOG("protected virtual Void set_pointerPress( " + (args[2]) + " );", LogColor.C36)
-                showGameObject(args[1])
-                showEventData(args[2])
-            })
-        }
+    function FakePointerEventData(eventData) {
+        if (eventData == 0) return
+        let gameObj = f_get_pointerEnter(eventData)
+        if (gameObj != 0) showGameObject(gameObj)
+        // showTransform(f_getTransform(gameObj))
+        // showEventData(pointerEventData)
     }
 }
 
-var HookPlayerPrefs = () => {
-    const isShowPrintStack = false
+var HookPlayerPrefs = (isShowPrintStack, needLRInfo) => {
+    isShowPrintStack = !(isShowPrintStack == undefined)
+    if (needLRInfo == undefined && !isShowPrintStack) needLRInfo = true
 
     InterceptorGetFunctions()
     InterceptorSetFunctions()
@@ -3523,8 +3541,9 @@ var HookPlayerPrefs = () => {
             pass.set("arg0", readU16(args[0]))
             pass.set("arg1", args[1])
         }, (ret, ctx, pass) => {
-            LOG("\n[*] '" + ret + "' = GetFloat('" + pass.get("arg0") + "'," + pass.get("arg1") + ")" + " | LR : " + ctx.lr, LogColor.C36)
-            if (isShowPrintStack) PrintStackTraceN(ctx)
+            LOGD("\n[*] '" + ret + "' = GetFloat('" + pass.get("arg0") + "'," + pass.get("arg1") + ")")
+            if (needLRInfo) LOG("\t\t { LR:" + checkCtx(ctx.lr) + " } | { PC:" + checkCtx(ctx.pc) + " }", LogColor.C90)
+            if (isShowPrintStack) LOG((GetStackTraceN(ctx)), LogColor.C90)
         })
 
         //public static extern int GetInt(string key, int defaultValue)
@@ -3532,8 +3551,9 @@ var HookPlayerPrefs = () => {
             pass.set("arg0", readU16(args[0]))
             pass.set("arg1", args[1])
         }, (ret, ctx, pass) => {
-            LOG("\n[*] '" + ret.toInt32() + "' = GetInt('" + pass.get("arg0") + "'," + pass.get("arg1") + ")" + " | LR : " + ctx.lr, LogColor.C36)
-            if (isShowPrintStack) PrintStackTraceN(ctx)
+            LOGD("\n[*] '" + ret.toInt32() + "' = GetInt('" + pass.get("arg0") + "'," + pass.get("arg1") + ")")
+            if (needLRInfo) LOG("\t\t { LR:" + checkCtx(ctx.lr) + " } | { PC:" + checkCtx(ctx.pc) + " }", LogColor.C90)
+            if (isShowPrintStack) LOG((GetStackTraceN(ctx)), LogColor.C90)
             if (pass.get("arg0").indexOf("SaleBoughted") != -1) ret.replace(ptr(0x1))
         })
 
@@ -3541,8 +3561,9 @@ var HookPlayerPrefs = () => {
         A(find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetString", 1, true), (args, ctx, pass) => {
             pass.set("arg0", readU16(args[0]))
         }, (ret, ctx, pass) => {
-            LOG("\n[*] '" + readU16(ret) + "' = GetString('" + pass.get("arg0") + "')" + " | LR : " + ctx.lr, LogColor.C36)
-            if (isShowPrintStack) PrintStackTraceN(ctx)
+            LOGD("\n[*] '" + readU16(ret) + "' = GetString('" + pass.get("arg0") + "')")
+            if (needLRInfo) LOG("\t\t { LR:" + checkCtx(ctx.lr) + " } | { PC:" + checkCtx(ctx.pc) + " }", LogColor.C90)
+            if (isShowPrintStack) LOG((GetStackTraceN(ctx)), LogColor.C90)
         })
     }
 
@@ -3553,8 +3574,9 @@ var HookPlayerPrefs = () => {
             pass.set("arg0", readU16(args[0]))
             pass.set("arg1", (args[1] == 0 ? 0 : readSingle(args[1])))
         }, (ret, ctx, pass) => {
-            LOG("\n[*] SetFloat('" + pass.get("arg0") + "'," + pass.get("arg1") + ")" + " | LR : " + ctx.lr, LogColor.C36)
-            if (isShowPrintStack) PrintStackTraceN(ctx)
+            LOGD("\n[*] SetFloat('" + pass.get("arg0") + "'," + pass.get("arg1") + ")")
+            if (needLRInfo) LOG("\t\t { LR:" + checkCtx(ctx.lr) + " } | { PC:" + checkCtx(ctx.pc) + " }", LogColor.C90)
+            if (isShowPrintStack) LOG((GetStackTraceN(ctx)), LogColor.C90)
         })
 
         //public static extern int GetInt(string key, int defaultValue)
@@ -3562,8 +3584,9 @@ var HookPlayerPrefs = () => {
             pass.set("arg0", readU16(args[0]))
             pass.set("arg1", args[1])
         }, (ret, ctx, pass) => {
-            LOG("\n[*] SetInt('" + pass.get("arg0") + "'," + pass.get("arg1") + ")" + " | LR : " + ctx.lr, LogColor.C36)
-            if (isShowPrintStack) PrintStackTraceN(ctx)
+            LOGD("\n[*] SetInt('" + pass.get("arg0") + "'," + pass.get("arg1") + ")")
+            if (needLRInfo) LOG("\t\t { LR:" + checkCtx(ctx.lr) + " } | { PC:" + checkCtx(ctx.pc) + " }", LogColor.C90)
+            if (isShowPrintStack) LOG((GetStackTraceN(ctx)), LogColor.C90)
         })
 
         //public static string GetString(string key)
@@ -3571,10 +3594,16 @@ var HookPlayerPrefs = () => {
             pass.set("arg0", readU16(args[0]))
             pass.set("arg1", readU16(args[1]))
         }, (ret, ctx, pass) => {
-            LOG("\n[*] SetString('" + pass.get("arg0") + "','" + pass.get("arg1") + "')" + " | LR : " + ctx.lr, LogColor.C36)
-            if (isShowPrintStack) PrintStackTraceN(ctx)
+            LOGD("\n[*] SetString('" + pass.get("arg0") + "','" + pass.get("arg1") + "')")
+            if (needLRInfo) LOG("\t\t { LR:" + checkCtx(ctx.lr) + " } | { PC:" + checkCtx(ctx.pc) + " }", LogColor.C90)
+            if (isShowPrintStack) LOG((GetStackTraceN(ctx)), LogColor.C90)
         })
     }
+}
+
+function checkCtx(lr) {
+    let md = Process.findModuleByAddress(lr)
+    return ptr(lr).sub(md.base) + `|${md.name}`
 }
 
 var HookDebugLog = () => {
@@ -3587,7 +3616,7 @@ var HookDebugLog = () => {
     let addr_Log = find_method("UnityEngine.CoreModule", "Logger", "Log", 2, false, 2)
     LOG("[*] Hook : UnityEngine.CoreModule.Logger.Log : " + addr_Log)
     A(addr_Log, (args, ctx) => {
-        LOG("\n[*] Logger.LOG('" + args[1] + "\t" + readU16(args[2]) + "') LR : " + ctx.lr, LogColor.C32)
+        LOG("\n[*] Logger.LOG('" + args[1] + "\t" + readU16(args[2]) + "') LR : " + checkCtx(ctx.lr), LogColor.C32)
     })
 
     // public static void LogException(Exception exception)
@@ -5042,7 +5071,7 @@ var getTextFromAsset = (type, mPtr) => {
 
 let interceptorStalker = (mPtr, range) => {
     if (mPtr == undefined || mPtr == 0x0) return
-    mPtr = checkPointer(mPtr)
+    mPtr = soAddr.add(mPtr)
     const threadID = Process.enumerateThreads[0]
     const moduleG = Process.findModuleByAddress(mPtr)
     // LOG(JSON.stringify(moduleG), LogColor.C33)
