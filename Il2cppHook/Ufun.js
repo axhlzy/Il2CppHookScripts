@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/05/10 17:51
+ * @UpdateTime  2022/05/13 18:36
  * @Des         frida hook u3d functions script
  */
 
@@ -359,6 +359,19 @@ var C = ImgOrPtr => {
             }
         })
     LOG(getLine(85), LogColor.C33)
+}
+
+var aui = () => {
+    // for 遍历 arr_img_names
+    for (let i = 0; i < arr_img_names.length; ++i) {
+        if (arr_img_names[i] == "UnityEngine.UI") {
+            a(arr_img_addr[i])
+        }
+    }
+    B()
+    setTimeout(() => {
+        print_deserted_methods(1)
+    }, 3000)
 }
 
 var attachJava = func => {
@@ -1148,11 +1161,12 @@ var print_list_result = filter => {
 /**
  * 显示哪些因为超出了最大调用次数的函数地址名称以及index
  */
-var print_deserted_methods = () => {
+var print_deserted_methods = (type) => {
     if (count_method_times == null || count_method_times.length == 0) return
     LOG(`${getLine(20)} deserted methods ${getLine(20)}\n`, LogColor.C92)
     count_method_times.forEach(function (value, index) {
-        if (Number(value) > maxCallTime) LOG("[*] " + ptr(arrayAddr[index]).add(soAddr) + "\t" + arrayAddr[index] + "\t" + arrMethodInfo[index] + "\t(" + index + ")" + "\t--->\t" + arrayName[index] + "\n", LogColor.C32)
+        if (Number(value) > maxCallTime && (type != undefined ? String(arrayName[index]).indexOf("Update") != -1 : true))
+            LOG("[*] " + ptr(arrayAddr[index]).add(soAddr) + "\t" + arrayAddr[index] + "\t" + arrMethodInfo[index] + "\t(" + index + ")" + "\t--->\t" + arrayName[index] + "\n", LogColor.C32)
     })
 }
 
@@ -4739,7 +4753,6 @@ var B_LocalizationManager = () => {
 var B_Text = () => {
     let mapRecord = new Map()
     let strMap = new Map()
-    let printHex = true
 
     strMap.set("SETTINGS", "设置")
     strMap.set("ADDED", "已添加")
@@ -4875,7 +4888,7 @@ var B_Text = () => {
             let aimStr = "|" + readU16(args[0]) + "|"
             if (filterDuplicateOBJ(aimStr) == -1) return
             LOGD(`\n[NGUIText] ${args[0]} \t ${aimStr}`)
-            worksWithText(args[0], "Text")
+            worksWithText(args[0], "Text", true)
             if (strMap.size != 0) {
                 let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
@@ -4901,7 +4914,7 @@ var B_Text = () => {
         })
     }
 
-    function worksWithText(textPtr, typeStr) {
+    function worksWithText(textPtr, typeStr, printHex = false) {
         if (mapRecord.get(typeStr) == null) {
             mapRecord.set(typeStr, 1)
             LogFlag = false
