@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/05/13 18:36
+ * @UpdateTime  2022/05/23 11:53
  * @Des         frida hook u3d functions script
  */
 
@@ -70,7 +70,7 @@ var arrayAddr = []
 
 var arrayName = []
 
-setImmediate(main)
+setImmediate(() => Module.findBaseAddress(soName) == null ? LOGE("Not Unity Game") : main())
 
 function main() {
 
@@ -196,14 +196,16 @@ function main() {
         }
 
         function initU3DFunctions() {
-            f_getName = new NativeFunction(p_getName = find_method("UnityEngine.CoreModule", "Object", "GetName", 1), 'pointer', ['pointer'])
-            f_getLayer = new NativeFunction(p_getLayer = find_method("UnityEngine.CoreModule", "GameObject", "get_layer", 0), 'int', ['pointer'])
-            f_getTransform = new NativeFunction(p_getTransform = find_method("UnityEngine.CoreModule", "GameObject", "get_transform", 0), 'pointer', ['pointer'])
-            f_getParent = new NativeFunction(p_getParent = find_method("UnityEngine.CoreModule", "Transform", "GetParent", 0), 'pointer', ['pointer'])
-            f_getChildCount = new NativeFunction(p_getChildCount = find_method("UnityEngine.CoreModule", "Transform", "get_childCount", 0), 'int', ['pointer'])
-            f_getChild = new NativeFunction(p_getChild = find_method("UnityEngine.CoreModule", "Transform", "GetChild", 1), 'pointer', ['pointer', 'int'])
-            f_get_pointerEnter = new NativeFunction(p_get_pointerEnter = find_method("UnityEngine.UI", "PointerEventData", "get_pointerEnter", 0), 'pointer', ['pointer'])
-            // var f_getTag         = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_tag",0,true),'pointer',['pointer'])
+            try {
+                f_getName = new NativeFunction(p_getName = find_method("UnityEngine.CoreModule", "Object", "GetName", 1), 'pointer', ['pointer'])
+                f_getLayer = new NativeFunction(p_getLayer = find_method("UnityEngine.CoreModule", "GameObject", "get_layer", 0), 'int', ['pointer'])
+                f_getTransform = new NativeFunction(p_getTransform = find_method("UnityEngine.CoreModule", "GameObject", "get_transform", 0), 'pointer', ['pointer'])
+                f_getParent = new NativeFunction(p_getParent = find_method("UnityEngine.CoreModule", "Transform", "GetParent", 0), 'pointer', ['pointer'])
+                f_getChildCount = new NativeFunction(p_getChildCount = find_method("UnityEngine.CoreModule", "Transform", "get_childCount", 0), 'int', ['pointer'])
+                f_getChild = new NativeFunction(p_getChild = find_method("UnityEngine.CoreModule", "Transform", "GetChild", 1), 'pointer', ['pointer', 'int'])
+                f_get_pointerEnter = new NativeFunction(p_get_pointerEnter = find_method("UnityEngine.UI", "PointerEventData", "get_pointerEnter", 0), 'pointer', ['pointer'])
+                // var f_getTag         = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_tag",0,true),'pointer',['pointer'])
+            } catch {}
         }
 
         function initLibCFunctions() {
@@ -288,8 +290,6 @@ var a = imgOrCls => {
             if (arr_img_names[i] == "Game" || arr_img_names[i] == "Zenject" || arr_img_names[i] == "UniRx")
                 addBreakPoints(arr_img_addr[i])
         }
-
-
         // 补充一些常用的 unity API ...
         // a(findClass("GameObject"))
         // a(findClass("Component"))
@@ -708,6 +708,8 @@ var list_Methods = (klass, TYPE) => {
     if (TYPE == 1) LOG("\n" + getLine(85), LogColor.C33)
     try {
         while (method = il2cpp_class_get_methods(klass, iter)) {
+            if (method == 0) break
+            if (klass != getClassAddrFromMethodInfo(method)) MethodInfoOffset = 0x1
             let methodName = getMethodName(method)
             let retClass = il2cpp_class_from_type(getMethodReturnType(method))
             let retName = getClassName(retClass)
@@ -878,7 +880,8 @@ let addBreakPoints = imgOrCls => {
         let method = NULL
         try {
             while (method = il2cpp_class_get_methods(cls, iter)) {
-                if (Number(method) == 0) break
+                if (method == 0) break
+                if (cls != getClassAddrFromMethodInfo(method)) MethodInfoOffset = 0x1
                 let methodName = get_method_des(method)
                 let methodAddr = method.readPointer()
                 if (methodAddr == 0) continue
@@ -1550,29 +1553,41 @@ const LogColor = {
     C107: 107
 }
 
+// 2021.2.7f1c1
+// typedef struct MethodInfo {
+//     Il2CppMethodPointer methodPointer;
+//     Il2CppMethodPointer virtualMethodPointer;
+//     InvokerMethod invoker_method;
+//     const char * name;
+//     Il2CppClass * klass;
+//     const Il2CppType * return_type;
+//     const Il2CppType ** parameters;
+
+var MethodInfoOffset = 0x0
+
 var getClassName = klass => ptr(klass).add(p_size * 2).readPointer().readCString()
 
-var getMethodName = method => ptr(method).add(p_size * 2).readPointer().readCString()
+var getMethodName = method => ptr(method).add(p_size * (2 + MethodInfoOffset)).readPointer().readCString()
 
-let getFieldsCount = kclass => il2cpp_class_num_fields(ptr(kclass))
+var getFieldsCount = kclass => il2cpp_class_num_fields(ptr(kclass))
 
-let getImgName = img => ptr(img).add(p_size * 1).readPointer().readCString()
+var getImgName = img => ptr(img).add(p_size * 1).readPointer().readCString()
 
-let getMethodParametersCount = method => ptr(method).add(p_size * 8 + 4 + 2 + 2 + 2).readU8()
+var getMethodParametersCount = method => ptr(method).add(p_size * (8 + MethodInfoOffset) + 4 + 2 + 2 + 2).readU8()
 
-let getMethodParameters = method => ptr(method).add(p_size * 5).readPointer()
+var getMethodParameters = method => ptr(method).add(p_size * (5 + MethodInfoOffset)).readPointer()
 
-let getMethodReturnType = method => ptr(method).add(p_size * 4).readPointer()
+var getMethodReturnType = method => ptr(method).add(p_size * (4 + MethodInfoOffset)).readPointer()
 
-let getParameterName = ParameterInfo => ptr(ParameterInfo).readPointer().readCString()
+var getParameterName = ParameterInfo => ptr(ParameterInfo).readPointer().readCString()
 
-let getParameterType = Il2CppType => ptr(Il2CppType).add(4 * 2 + p_size).readPointer()
+var getParameterType = Il2CppType => ptr(Il2CppType).add(4 * 2 + p_size).readPointer()
 
-let getClassAddrFromMethodInfo = methodInfo => ptr(methodInfo).add(p_size * 3).readPointer()
+var getClassAddrFromMethodInfo = methodInfo => ptr(methodInfo).add(p_size * (3 + MethodInfoOffset)).readPointer()
 
-let getClassNameFromMethodInfo = methodInfo => getClassName(getClassAddrFromMethodInfo(methodInfo))
+var getClassNameFromMethodInfo = methodInfo => getClassName(getClassAddrFromMethodInfo(methodInfo))
 
-let class_is_enum = Pcls => callFunction(checkPointer([soName, "il2cpp_class_is_enum"]), Pcls) == 0x1
+var class_is_enum = Pcls => callFunction(checkPointer([soName, "il2cpp_class_is_enum"]), Pcls) == 0x1
 
 /**
  * -------------------------------------------其他方法-------------------------------------------------
@@ -3062,11 +3077,11 @@ var SendMessageImpl = platform => {
         SendMessage('MaxSdkCallbacks', 'ForwardEvent', 'revenue=0.014579974174499511\nnetworkName=AppLovin\nname=OnRewardedAdReceivedRewardEvent\nplacement=\nrewardAmount=0\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\nrewardLabel=\n')
         SendMessage('MaxSdkCallbacks', 'ForwardEvent', 'networkName=AppLovin\nname=OnRewardedAdHiddenEvent\nrevenue=0.014579974174499511\nplacement=\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\n')
 
-        // SendMessage('MaxSdkCallbacks','ForwardEvent','name=OnSdkInitializedEvent\nconsentDialogState=2\ncountryCode=SG\n')
-        // SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdDisplayedEvent\nadUnitId=ec1a772e0459f45b")
-        // SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdReceivedRewardEvent\nrewardAmount=0\nadUnitId=ec1a772e0459f45b\nrewardLabel=")
-        // SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdHiddenEvent\nadUnitId=ec1a772e0459f45b")
-        // SendMessage("MaxSdkCallbacks","ForwardEvent","name=OnRewardedAdLoadedEvent\nadUnitId=ec1a772e0459f45b")
+        SendMessage('MaxSdkCallbacks', 'OnRollicAdsRewardedVideoClickedEvent', 'name=OnSdkInitializedEvent\nconsentDialogState=2\ncountryCode=SG\n')
+        SendMessage("MaxSdkCallbacks", "OnRollicAdsRewardedVideoClosedEvent", "name=OnRewardedAdDisplayedEvent\nadUnitId=ec1a772e0459f45b")
+        SendMessage("MaxSdkCallbacks", "OnRollicAdsRewardedVideoReceivedRewardEvent", "name=OnRewardedAdReceivedRewardEvent\nrewardAmount=0\nadUnitId=ec1a772e0459f45b\nrewardLabel=")
+        SendMessage("MaxSdkCallbacks", "OnRollicAdsRewardedVideoShownEvent", "name=OnRewardedAdHiddenEvent\nadUnitId=ec1a772e0459f45b")
+        SendMessage("MaxSdkCallbacks", "OnRollicAdsRewardedVideoLoadedEvent", "name=OnRewardedAdLoadedEvent\nadUnitId=ec1a772e0459f45b")
     }
 
     function MoPubManager() {
@@ -5140,6 +5155,14 @@ Object.prototype.toInt32Big = (mPtr) => {
     for (let i = aimStr.length - 1; i >= 0; i--)
         resultStr += aimStr.charAt(i)
     return ptr("0x" + resultStr)
+}
+
+// 其他
+var hookT = () => {
+    // hook concat  
+    find_method("mscorlib", "String", "Concat", 2)
+    // hook AndroidJavaObject (主要是 string 构造  配合 lr 查看位置)
+    a(findClass("UnityEngine.AndroidJNIModule", "AndroidJavaObject"))
 }
 
 // todo
