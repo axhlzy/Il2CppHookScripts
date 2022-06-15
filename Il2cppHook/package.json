@@ -2,7 +2,6 @@
   "name": "il2cpp-hooker",
   "version": "1.0.0",
   "description": "Extended scripting based on frida-il2cpp-bridge",
-  "private": true,
   "main": "agent/index.ts",
   "scripts": {
     "prepare": "npm run build",
@@ -14,7 +13,7 @@
     "@types/node": "^17.0.35"
   },
   "dependencies": {
-    "frida-il2cpp-bridge": "^0.7.13",
+    "frida-il2cpp-bridge": "0.7.13",
     "decorator-cache-getter": "^1.0.0",
     "fastest-levenshtein": "^1.0.12",
     "frida-compile": "^10.2.5",

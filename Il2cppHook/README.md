@@ -1,10 +1,10 @@
 ### How to compile & load
 
 ```sh
-$ git clone git://github.com/oleavr/frida-agent-example.git
-$ cd frida-agent-example/
+$ git clone https://github.com/axhlzy/Il2CppHookScripts.git
+$ cd Il2cppHook/
 $ npm install
-$ frida -U -f com.example.android --no-pause -l _agent.js
+$ frida -U --no-pause -f com.xxx.xxx -l  ../_Ufunc.js
 ```
 
 ### Development workflow
