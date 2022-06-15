@@ -1,0 +1,15 @@
+
+{
+    "compilerOptions": {
+        "baseUrl": "./",
+        "paths": {
+            "@/*":[
+                "node_modules/*"
+            ]
+        }
+    },
+    "exclude": [
+        "node_modeules",
+        "dist"
+    ]
+}

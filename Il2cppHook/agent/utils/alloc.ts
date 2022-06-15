@@ -1,0 +1,48 @@
+import { TYPE_STR, EpFunc } from "../base/enum"
+import { GET_F, ONE_ARG_S } from "../base/globle"
+
+
+let allocStrInner = (str: string, type: TYPE_STR = TYPE_STR.C_STR): NativePointer => type == TYPE_STR.C_STR ?
+    Memory.allocUtf8String(str) : Il2Cpp.Api._stringNew(Memory.allocUtf8String(str))
+
+const allocCStr = (str: string): NativePointer => allocStrInner(str, TYPE_STR.C_STR)
+
+const allocUStr = (str: string): NativePointer => allocStrInner(str, TYPE_STR.U_STR)
+
+const allocS = (size: number): NativePointer => Memory.alloc(size)
+
+const alloc = (size: number = 1): NativePointer => allocS(size * p_size)
+
+/**
+ * 创建一个vector2/vector3/vector4
+ * 也可使用u3d自己的函数创建
+ * @param {Number} x 
+ * @param {Number} y 
+ * @param {Number} z 
+ * @param {Number} w 
+ */
+function allocVector(x: number, y: number, z: number, w: number): NativePointer {
+    let argsLength = arguments.length
+    argsLength = argsLength == 0 ? 3 : argsLength
+    let temp_vector = alloc(argsLength + 1)
+    for (let index = 0; index < argsLength; ++index)
+        temp_vector.add(Process.pointerSize * index).writeFloat(arguments[index] == undefined ? 0 : arguments[index])
+    temp_vector.add(Process.pointerSize * argsLength).writeInt(0)
+    return temp_vector
+}
+
+export { alloc, allocS, allocCStr, allocUStr, allocVector }
+
+declare global {
+    var allocCStr: Function
+    var allocUStr: Function
+    var allocVector: Function
+    var alloc: Function
+    var allocP: Function
+}
+
+globalThis.allocCStr = allocCStr
+globalThis.allocUStr = allocUStr
+globalThis.allocVector = allocVector
+globalThis.alloc = alloc
+globalThis.allocP = allocS
