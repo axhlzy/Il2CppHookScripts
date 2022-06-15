@@ -7,13 +7,11 @@ $ npm install
 $ frida -U --no-pause -f com.xxx.xxx -l  ../_Ufunc.js
 ```
 
-### Development workflow
+以 frida-il2cpp-bridge 为基础，重新搭建上层函数
 
-To continuously recompile on change, keep this running in a terminal:
+（刚开张,代码看起来非常乱 后续抽空慢慢的优化代码结构）
 
-```sh
-$ npm run watch
-```
-
-And use an editor like Visual Studio Code for code completion and instant
-type-checking feedback.
+<!--
+        QQ 交流群: 992091014
+        欢迎各位大佬加群交流反馈问题
+-->
