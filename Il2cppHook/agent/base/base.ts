@@ -7,7 +7,7 @@ import { LogColor } from "./enum";
 import exp from "constants";
 
 class HookerBase {
-    protected constructor() { }
+    constructor() { }
 
     @cache
     static get _list_assemblies(): Il2Cpp.Assembly[] {
@@ -102,7 +102,7 @@ class HookerBase {
                     // filterClassName 不区分大小写
                     if (klass.name.toLowerCase().indexOf(filterClassName.toLowerCase()) != -1) {
                         ++countFilterCls
-                        LOGD(`\t[-] ${klass.handle} (F:${klass.fields.length}/M:${klass.methods.length})\t${klass.name}`)
+                        LOGD(`\t[-] ${klass.handle} (F:${klass.fields.length}/M:${klass.methods.length}/E:${Number(klass.isEnum)})\t${klass.name}`)
                     }
                 })
             }
@@ -142,10 +142,11 @@ class HookerBase {
 
     static showFields(mPtr: NativePointer): void {
         let klass: Il2Cpp.Class = HookerBase.checkType(mPtr)
-        if (klass.methods.length == 0) return
+        if (klass.fields.length == 0) return
+        LOGH(`\nFound ${klass.fields.length} Fields (${klass.isEnum ? "enum" : ""}) in class: ${klass.name} (${klass.handle})\n`)
         LOGO(getLine(85))
         klass.fields.forEach((field: Il2Cpp.Field) => {
-            LOGD(`[*] ${field.handle}  ${field.type.name} ${field.toString()} [type:${field.type.class.handle}]`)
+            LOGD(`[*] ${field.handle} ${field.type.name} ${field.toString()} [type:${field.type.class.handle}]`)
         })
         LOGO(getLine(85))
     }
