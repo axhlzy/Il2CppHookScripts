@@ -2,11 +2,10 @@ import "frida-il2cpp-bridge"
 import { cache } from "decorator-cache-getter";
 import versioning from "versioning";
 
-import "./API/api"
-import "./API/gameobject"
 import "./API/list"
 import "./API/text"
-import "./API/transform"
+
+import "./expand/include"
 
 import "./base/base"
 import "./base/breaker"
