@@ -185,25 +185,27 @@ class HookerBase {
     // findMethod("UnityEngine.CoreModule","UnityEngine.Color","GetHashCode",0)  //最快 注意第二个参数全称
     // findMethod("GetHashCode","Color") functionName ClassName(简称)
     // findMethod("LerpUnclamped") // 最慢
-    static findMethodAsync(assemblyName: string, className: string, methodName: string, argsCount: number = -1): void {
+    static findMethodNew(assemblyName: string, className: string, methodName: string, argsCount: number = -1, cmdCall = true): Il2Cpp.Method | undefined {
+        let methodInfo
         if (arguments[3] != undefined && typeof arguments[3] == "number") {
-            Il2Cpp.perform<NativePointer>(() => {
-                return Il2Cpp.Domain.assembly(assemblyName).image.class(className).method(methodName, argsCount).handle
-            }).then(value => LOGD(value))
+            methodInfo = Il2Cpp.Domain.assembly(assemblyName).image.class(className).method(methodName, argsCount)
         } else if (arguments[1] != undefined) {
-            Il2Cpp.perform<NativePointer>(() => {
-                return new Il2Cpp.Class(findClass(arguments[1])).method(arguments[0], arguments[2]).handle
-            }).then(value => LOGD(value))
-
+            methodInfo = new Il2Cpp.Class(findClass(arguments[1])).method(arguments[0], arguments[2])
         } else if (arguments[0] != undefined && arguments[1] == undefined) {
-            Il2Cpp.perform<NativePointer>(() => {
-                for (let i = 0; i < HookerBase._list_classes.length; i++) {
-                    for (let m = 0; m < HookerBase._list_classes[i].methods.length; m++) {
-                        if (HookerBase._list_classes[i].methods[m] == arguments[0]) return HookerBase._list_classes[i].methods[m].handle
+            for (let i = 0; i < HookerBase._list_classes.length; i++) {
+                for (let m = 0; m < HookerBase._list_classes[i].methods.length; m++) {
+                    if (HookerBase._list_classes[i].methods[m] == arguments[0]) {
+                        methodInfo = HookerBase._list_classes[i].methods[m]
+                        break
                     }
                 }
-                return ptr(0)
-            }).then(value => LOGD(value))
+            }
+        }
+        if (methodInfo == undefined) throw new Error("method not found")
+        if (cmdCall) {
+            showMethodInfo(methodInfo.handle)
+        } else {
+            return methodInfo
         }
     }
 
@@ -284,7 +286,7 @@ const find_method = HookerBase.findMethodSync as find_MethodType
 export { find_method }
 
 type find_MethodType = (imageName: string, className: string, functionName: string, argsCount?: number, isRealAddr?: boolean) => NativePointer
-type findMethodType = (assemblyName: string, className: string, methodName: string, argsCount?: number) => void
+type findMethodType = (assemblyName: string, className: string, methodName: string, argsCount?: number, cmdCall?: boolean) => Il2Cpp.Method | undefined
 
 Reflect.set(globalThis, "Hooker", HookerBase)
 
@@ -293,7 +295,7 @@ globalThis.c = HookerBase.showClasses
 globalThis.m = HookerBase.showMethods
 globalThis.f = HookerBase.showFields
 globalThis.findClass = HookerBase.findClass
-globalThis.findMethod = HookerBase.findMethodAsync
+globalThis.findMethod = HookerBase.findMethodNew
 globalThis.find_method = HookerBase.findMethodSync as find_MethodType
 
 declare global {
