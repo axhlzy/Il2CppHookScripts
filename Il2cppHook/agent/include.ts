@@ -34,4 +34,6 @@ import "./utils/math"
 import "./utils/reader"
 import "./utils/stack"
 
+import "./native/include"
+
 import "./globel"
