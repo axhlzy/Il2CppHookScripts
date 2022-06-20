@@ -11,7 +11,7 @@ const readInt = (value: NativePointer): number => alloc().writePointer(value).re
 
 const readUInt = (value: NativePointer): number => alloc(1).writePointer(value).readUInt()
 
-const readUInt64 = (value: NativePointer): number => alloc(2).writePointer(value).readU64()
+const readUInt64 = (value: NativePointer): UInt64 => alloc(2).writePointer(value).readU64()
 
 /**
  * 读取 c# 字符串
@@ -65,15 +65,15 @@ var seeHexA = (addr: PTR, length: number = 0x40, header: boolean = true, color: 
 export { readSingle, readBoolean, readInt, readUInt, readUInt64, readU16, showArray, seeHexR, seeHexA }
 
 declare global {
-    var readSingle: Function
-    var readBoolean: Function
-    var readInt: Function
-    var readUInt: Function
-    var readUInt64: Function
-    var readU16: Function
-    var showArray: Function
-    var seeHexR: Function
-    var seeHexA: Function
+    var readSingle: (value: NativePointer) => number
+    var readBoolean: (value: NativePointer) => boolean
+    var readInt: (value: NativePointer) => number
+    var readUInt: (value: NativePointer) => number
+    var readUInt64: (value: NativePointer) => UInt64
+    var readU16: (mPtr: ARGM) => string
+    var showArray: (mPtr: ARGM) => void
+    var seeHexR: (addr: PTR, length?: number, color?: LogColor | undefined) => void
+    var seeHexA: (addr: PTR, length?: number, header?: boolean, color?: any | undefined) => void
 }
 
 globalThis.readSingle = readSingle

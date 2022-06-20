@@ -8,14 +8,9 @@ function PTR2NativePtr(mPtr: PTR): NativePointer {
 }
 
 let map_attach_listener = GET_MAP<string, InvocationListener>(MapKAY.map_attach_listener)
-let map_find_class_cache = GET_MAP<string, NativePointer>(MapKAY.map_find_class_cache)
-let arr_img_names = GET_ARRAY<string>(ArrKAY.arr_img_names)
-let arr_img_addr = GET_ARRAY<NativePointer>(ArrKAY.arr_img_addr)
-let findClassCache = GET_ARRAY<NativePointer>(ArrKAY.findClassCache)
-
 type OnEnterType = (args: InvocationArguments, ctx: CpuContext, passValue: Map<string, any>) => void
 type OnExitType = (retval: InvocationReturnValue, ctx: CpuContext, passValue: Map<string, any>) => void
-const A = (mPtr: ARGM, mOnEnter?: OnEnterType, mOnLeave?: OnExitType, needRecord: boolean = true): void => {
+const attachNative = (mPtr: ARGM, mOnEnter?: OnEnterType, mOnLeave?: OnExitType, needRecord: boolean = true): void => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     if (mPtr == ptr(0)) return
     var passValue = new Map()
@@ -40,14 +35,14 @@ const A = (mPtr: ARGM, mOnEnter?: OnEnterType, mOnLeave?: OnExitType, needRecord
 // 用来记录已经被 replace 的函数地址
 let arr_nop_addr = new Array()
 // nop 指定函数
-var n = (mPtr: ARGM): void => {
+var nopFunction = (mPtr: ARGM): void => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     if (mPtr == undefined) return
-    R(mPtr, () => ptr(0), true)
+    replaceFunction(mPtr, () => ptr(0), true)
 }
 
 // 取消被 nop 的函数
-var nn = (mPtr: ARGM): void => {
+var cancelNop = (mPtr: ARGM): void => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     if (mPtr == ptr(0)) return
     mPtr = checkPointer(mPtr)
@@ -60,10 +55,10 @@ var nn = (mPtr: ARGM): void => {
 }
 
 // 取消所有已经Replace的函数
-var nnn = () => arr_nop_addr.forEach((addr) => Interceptor.revert(addr))
+var cancelAllNopedFunction = () => arr_nop_addr.forEach((addr) => Interceptor.revert(addr))
 
 //detach ---> A(mPtr)
-const d = (mPtr?: ARGM) => {
+const detachAll = (mPtr?: ARGM) => {
     let map_attach_listener = GET_MAP<string, InvocationListener>(MapKAY.map_attach_listener)
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     if (mPtr == undefined) {
@@ -79,19 +74,10 @@ const d = (mPtr?: ARGM) => {
     }
 }
 
-var r = () => {
-    // d()
-    // GET_ARRAY(ArrKAY.arrMethodInfo).splice(0, arrMethodInfo.length)
-    // arrayAddr.length = 0
-    // arrayName.length = 0
-    // count_method_times = 0
-    // t_arrayAddr = new Array()
-}
-
 // R(0xabcd,(srcFunc,arg0,arg1,arg2,arg3)=>{......})
 type ReplaceFunc = NativeFunction<NativePointer, [NativePointerValue, NativePointerValue, NativePointerValue, NativePointerValue]>
 type ReplaceFuncType = (srcCall: ReplaceFunc, arg0: NativePointer, arg1: NativePointer, arg2: NativePointer, arg3: NativePointer) => any
-function R(mPtr: ARGM, callBack: ReplaceFuncType, TYPENOP: boolean = true): void {
+function replaceFunction(mPtr: ARGM, callBack: ReplaceFuncType, TYPENOP: boolean = true): void {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     let src_ptr = mPtr
     mPtr = checkPointer(mPtr)
@@ -346,15 +332,6 @@ const getJclassName = (jclsName: NativePointer, ShouldRet: boolean) => {
     LOG("\n" + String(k_class.readCString()) + "\n", LogColor.C36)
 }
 
-let linesMap = new Map()
-const getLine = (length: number, fillStr: string = "-") => {
-    let key = length + "|" + fillStr
-    if (linesMap.get(key) != null) return linesMap.get(key)
-    for (var index = 0, tmpRet = ""; index < length; index++) tmpRet += fillStr
-    linesMap.set(key, tmpRet)
-    return tmpRet
-}
-
 function checkCtx(lr: ARGM) {
     if (typeof lr === "number") lr = ptr(lr)
     let md = Process.findModuleByAddress(lr)
@@ -392,31 +369,28 @@ export {
 }
 
 export {
-    A, d, R, n, nn, nnn, r, getLine, checkCtx, filterDuplicateOBJ, PTR2NativePtr
+    attachNative, detachAll, replaceFunction, nopFunction, cancelNop, cancelAllNopedFunction, checkCtx,
+    filterDuplicateOBJ, PTR2NativePtr
 }
 
 declare global {
     var d: Function
     var A: Function
     var n: Function
-    var r: Function
     var nn: Function
     var nnn: Function
-    var getLine: Function
     var R: Function
     var getJclassName: Function
     var checkCtx: Function
     var filterDuplicateOBJ: Function
 }
 
-globalThis.d = d
-globalThis.A = A
-globalThis.n = n
-globalThis.r = r
-globalThis.nn = nn
-globalThis.nnn = nnn
-globalThis.getLine = getLine
-globalThis.R = R
+globalThis.d = detachAll
+globalThis.A = attachNative
+globalThis.n = nopFunction
+globalThis.nn = cancelNop
+globalThis.nnn = cancelAllNopedFunction
+globalThis.R = replaceFunction
 globalThis.getJclassName = getJclassName
 globalThis.checkCtx = checkCtx
 globalThis.filterDuplicateOBJ = filterDuplicateOBJ

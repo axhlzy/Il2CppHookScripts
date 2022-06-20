@@ -1,20 +1,20 @@
-interface GameObject {
+interface Il2cppGameObject {
 
-    ctor_0(): GameObject;
-    ctor_1(name: string): GameObject;
-    ctor_2(name: string, type: Il2Cpp.Type[]): GameObject;
+    ctor_0(): Il2Cpp.GameObject;
+    ctor_1(name: string): Il2Cpp.GameObject;
+    ctor_2(name: string, type: Il2Cpp.Type[]): Il2Cpp.GameObject;
 
     // public Component AddComponent(Type componentType)
-    AddComponent(componentType: Il2Cpp.Type): Component;
+    AddComponent(componentType: Il2Cpp.Type): Il2Cpp.Component;
 
     // public extern Component GetComponent(Type type);
-    GetComponent(type: Il2Cpp.Type): Component;
+    GetComponent(type: Il2Cpp.Type): Il2Cpp.Component;
 
     // public extern Component GetComponentInChildren(Type type, bool includeInactive);
-    GetComponentInChildren(type: Il2Cpp.Type, includeInactive: boolean): Component;
+    GetComponentInChildren(type: Il2Cpp.Type, includeInactive: boolean): Il2Cpp.Component;
 
     // public extern Component GetComponentInParent(Type type, bool includeInactive);
-    GetComponentInParent(type: Il2Cpp.Type, includeInactive: boolean): Component;
+    GetComponentInParent(type: Il2Cpp.Type, includeInactive: boolean): Il2Cpp.Component;
 
     // private extern Array GetComponentsInternal(Type type, bool useSearchTypeAsArrayReturnType, bool recursive, bool includeInactive, bool reverse, object resultList);
     GetComponentsInternal(type: Il2Cpp.Type, useSearchTypeAsArrayReturnType: boolean, recursive: boolean, includeInactive: boolean, reverse: boolean, resultList: any): any;
@@ -25,14 +25,14 @@ interface GameObject {
     // public extern void SetActive(bool value);
     SetActive(value: boolean): void;
 
-    // internal extern void TryGetComponentFastPath(Type type, IntPtr oneFurtherThanResultValue);
-    TryGetComponentFastPath(type: Il2Cpp.Type, oneFurtherThanResultValue: NativePointer): void;
+    // internal extern void GetComponentFastPath(Type type, IntPtr oneFurtherThanResultValue);
+    GetComponentFastPath(type: Il2Cpp.Type, oneFurtherThanResultValue: NativePointer): void;
 
     // public extern bool CompareTag(string tag);
     CompareTag(tag: string): boolean;
 
     // public extern Transform get_transform();
-    get_transform(): Transform;
+    get_transform(): Il2Cpp.Transform;
 
     // public extern string get_tag();
     get_tag(): string;
@@ -44,7 +44,7 @@ interface GameObject {
     get_layer(): number;
 
     // public GameObject get_gameObject();
-    get_gameObject(): GameObject;
+    get_gameObject(): Il2Cpp.GameObject;
 
     // public extern bool get_activeSelf();
     get_activeSelf(): boolean;

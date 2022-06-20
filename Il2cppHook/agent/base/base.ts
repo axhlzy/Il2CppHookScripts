@@ -4,7 +4,7 @@ import "../bridge/fix/Il2cppClass"
 import { getMethodModifier } from "../bridge/fix/il2cppMethod";
 import { allocCStr } from "../utils/alloc";
 import { LogColor } from "./enum";
-import exp from "constants";
+import { formartClass } from "../utils/formart";
 
 class HookerBase {
     constructor() { }
@@ -48,7 +48,7 @@ class HookerBase {
     }
 
     static showImages(filter: string = "", sort: boolean = true): void {
-        LOGO(getLine(85))
+        formartClass.printTitile("List Images { assembly -> image -> classCount -> imageName }")
         HookerBase._list_images.filter((image: Il2Cpp.Image) => {
             return filter != "" ? image.name.indexOf(filter) != -1 : true
         }).sort((first, secend) => {
@@ -88,12 +88,11 @@ class HookerBase {
             tMap.get(key)?.push(image.classes[i])
         }
 
-        LOGO(getLine(85))
+        formartClass.printTitile("List Classes { namespace {classPtr->filedsCount->methodCount->enumClass->className} }")
         for (let key of tMap.keys()) {
             let nameSpace = key
             if (nameSpace != undefined) {
                 let array = tMap.get(nameSpace)
-                "".toLowerCase
                 // filterNameSpace 不区分大小写
                 if (nameSpace.toLowerCase().indexOf(filterNameSpace.toLowerCase()) == -1) continue
                 ++countNameSpace
@@ -133,22 +132,20 @@ class HookerBase {
     static showMethods(mPtr: NativePointer): void {
         let klass: Il2Cpp.Class = HookerBase.checkType(mPtr)
         if (klass.methods.length == 0) return
-        LOGO(getLine(85))
+        formartClass.printTitile(`Found ${klass.fields.length} Fields (${klass.isEnum ? "enum" : ""}) in class: ${klass.name} (${klass.handle})`)
         klass.methods.forEach((method: Il2Cpp.Method) => {
             LOGD(`[*] ${method.toString()}`)
         })
-        LOGO(getLine(85))
     }
 
     static showFields(mPtr: NativePointer): void {
         let klass: Il2Cpp.Class = HookerBase.checkType(mPtr)
         if (klass.fields.length == 0) return
-        LOGH(`\nFound ${klass.fields.length} Fields (${klass.isEnum ? "enum" : ""}) in class: ${klass.name} (${klass.handle})\n`)
-        LOGO(getLine(85))
+        formartClass.printTitile(`Found ${klass.fields.length} Fields (${klass.isEnum ? "enum" : ""}) in class: ${klass.name} (${klass.handle})`)
         klass.fields.forEach((field: Il2Cpp.Field) => {
             LOGD(`[*] ${field.handle} ${field.type.name} ${field.toString()} [type:${field.type.class.handle}]`)
         })
-        LOGO(getLine(85))
+        LOGO(`\n`)
     }
 
     /** 优先从fromAssebly列表中去查找，找不到再查找其他Assebly */
@@ -188,7 +185,11 @@ class HookerBase {
     static findMethodNew(assemblyName: string, className: string, methodName: string, argsCount: number = -1, cmdCall = true): Il2Cpp.Method | undefined {
         let methodInfo
         if (arguments[3] != undefined && typeof arguments[3] == "number") {
-            methodInfo = Il2Cpp.Domain.assembly(assemblyName).image.class(className).method(methodName, argsCount)
+            try {
+                methodInfo = Il2Cpp.Domain.assembly(assemblyName).image.class(className).method(methodName, argsCount)
+            } catch {
+                throw new Error(`findMethod failed: Not Found ${methodName}(argCount:${argsCount}) in ${className}`)
+            }
         } else if (arguments[1] != undefined) {
             methodInfo = new Il2Cpp.Class(findClass(arguments[1])).method(arguments[0], arguments[2])
         } else if (arguments[0] != undefined && arguments[1] == undefined) {
@@ -201,7 +202,7 @@ class HookerBase {
                 }
             }
         }
-        if (methodInfo == undefined) throw new Error("method not found")
+        if (methodInfo == undefined) throw new Error("Method not found")
         if (cmdCall) {
             showMethodInfo(methodInfo.handle)
         } else {

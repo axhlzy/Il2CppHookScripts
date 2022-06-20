@@ -34,11 +34,11 @@ function allocVector(x: number, y: number, z: number, w: number): NativePointer 
 export { alloc, allocS, allocCStr, allocUStr, allocVector }
 
 declare global {
-    var allocCStr: Function
-    var allocUStr: Function
-    var allocVector: Function
-    var alloc: Function
-    var allocP: Function
+    var allocCStr: (str: string) => NativePointer
+    var allocUStr: (str: string) => NativePointer
+    var allocVector: (x: number, y: number, z: number, w: number) => NativePointer
+    var alloc: (size?: number) => NativePointer
+    var allocP: (size: number) => NativePointer
 }
 
 globalThis.allocCStr = allocCStr

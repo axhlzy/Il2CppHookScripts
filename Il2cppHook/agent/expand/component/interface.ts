@@ -1,3 +1,4 @@
-interface Component {
+interface Il2cppComponent {
+
 
 }

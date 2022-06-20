@@ -10,6 +10,9 @@ const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, show
     if (typeof value == "number") value = ptr(value)
     if (typeof value != "string" && !(value instanceof Array) && value.isNull()) return ptr(0)
     let tmpValue: NativePointer | null
+    if (typeof value == "function") {
+        return value as NativePointer
+    }
     if (value instanceof Array) {
         switch (value.length) {
             case 1:

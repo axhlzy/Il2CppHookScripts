@@ -1,4 +1,7 @@
 import { cache } from "decorator-cache-getter";
+import "./export"
+import "./instance"
+import "./interface"
 
 class TransformAPI {
 
@@ -193,6 +196,12 @@ class TransformAPI {
 declare global {
     namespace Il2Cpp.Api {
         class Transform extends TransformAPI { }
+    }
+    namespace Il2Cpp {
+        enum Space {
+            World = 0,
+            Self = 1,
+        }
     }
 }
 

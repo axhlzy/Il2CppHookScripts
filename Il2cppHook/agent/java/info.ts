@@ -93,7 +93,7 @@ function getApkInfo() {
 
 /**
  * 用包名启动 APK
- * @param {String}} pkgName 
+ * @param {String} pkgName 
  */
 var launchApp = (pkgName: string): void => Java.perform(() => {
     let context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
