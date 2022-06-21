@@ -1,0 +1,6 @@
+import "./Behavior/include"
+import "./Collider/include"
+import "./ParticleSystem/include"
+import "./Rigidbody/include"
+import "./Renderer/include"
+import "./Transform/include"

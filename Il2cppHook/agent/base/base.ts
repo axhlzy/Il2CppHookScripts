@@ -88,7 +88,7 @@ class HookerBase {
             tMap.get(key)?.push(image.classes[i])
         }
 
-        formartClass.printTitile("List Classes { namespace {classPtr->filedsCount->methodCount->enumClass->className} }")
+        formartClass.printTitile("List Classes { namespace {classPtr->filedsCount->methodsCount->enumClass->className} }")
         for (let key of tMap.keys()) {
             let nameSpace = key
             if (nameSpace != undefined) {
@@ -132,7 +132,7 @@ class HookerBase {
     static showMethods(mPtr: NativePointer): void {
         let klass: Il2Cpp.Class = HookerBase.checkType(mPtr)
         if (klass.methods.length == 0) return
-        formartClass.printTitile(`Found ${klass.fields.length} Fields (${klass.isEnum ? "enum" : ""}) in class: ${klass.name} (${klass.handle})`)
+        formartClass.printTitile(`Found ${klass.fields.length} Fields ${klass.isEnum ? "(enum)" : ""} in class: ${klass.name} (${klass.handle})`)
         klass.methods.forEach((method: Il2Cpp.Method) => {
             LOGD(`[*] ${method.toString()}`)
         })
@@ -141,11 +141,11 @@ class HookerBase {
     static showFields(mPtr: NativePointer): void {
         let klass: Il2Cpp.Class = HookerBase.checkType(mPtr)
         if (klass.fields.length == 0) return
-        formartClass.printTitile(`Found ${klass.fields.length} Fields (${klass.isEnum ? "enum" : ""}) in class: ${klass.name} (${klass.handle})`)
+        formartClass.printTitile(`Found ${klass.fields.length} Fields ${klass.isEnum ? "(enum) " : ""}in class: ${klass.name} (${klass.handle})`)
         klass.fields.forEach((field: Il2Cpp.Field) => {
             LOGD(`[*] ${field.handle} ${field.type.name} ${field.toString()} [type:${field.type.class.handle}]`)
         })
-        LOGO(`\n`)
+        LOGO(``)
     }
 
     /** 优先从fromAssebly列表中去查找，找不到再查找其他Assebly */
