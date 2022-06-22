@@ -179,14 +179,28 @@ class HookerBase {
         return ptr(0)
     }
 
-    // findMethod("UnityEngine.CoreModule","UnityEngine.Color","GetHashCode",0)  //最快 注意第二个参数全称
-    // findMethod("GetHashCode","Color") functionName ClassName(简称)
-    // findMethod("LerpUnclamped") // 最慢
-    static findMethodNew(assemblyName: string, className: string, methodName: string, argsCount: number = -1, cmdCall = true): Il2Cpp.Method | undefined {
-        let methodInfo
+
+    /**
+     * using example:
+     * 
+     * findMethod("UnityEngine.CoreModule","UnityEngine.Transform","Rotate",2,["UnityEngine.Vector3","System.Single"]) // 最快 带参数重载
+     * findMethod("UnityEngine.CoreModule","UnityEngine.Color","GetHashCode",0)  //最快 注意第二个参数全称
+     * findMethod("GetHashCode","Color") functionName ClassName(简称)
+     * findMethod("LerpUnclamped") // 最慢
+     * 
+     * @param assemblyName  Assembly 名称
+     * @param className     类名称(全称)
+     * @param methodName    函数名称
+     * @param argsCount     函数参数个数
+     * @param overload      函数重载(字符串数组[全称])
+     * @param cmdCall       是否是命令行调用(控制是返回值还是打印日志)
+     */
+    static findMethodNew(assemblyName: string, className: string, methodName: string, argsCount: number = -1, overload: string[] = [], cmdCall = true): Il2Cpp.Method | undefined {
+        let methodInfo: Il2Cpp.Method | undefined
         if (arguments[3] != undefined && typeof arguments[3] == "number") {
             try {
                 methodInfo = Il2Cpp.Domain.assembly(assemblyName).image.class(className).method(methodName, argsCount)
+                if (overload.length != 0) methodInfo = methodInfo?.overload(...overload)
             } catch {
                 throw new Error(`findMethod failed: Not Found ${methodName}(argCount:${argsCount}) in ${className}`)
             }
@@ -215,7 +229,7 @@ class HookerBase {
      *  最后一个参数 isRealAddr 用作显示静态分析地址还是当前内存地址（带这个参数则只返回地址，不带则列表信息）
      *  find_method("UnityEngine.UI","Text","get_text",0)
      *  find_method("UnityEngine.UI","Text","get_text",0,false)
-     * @param {String} imageName 
+     * @param {String} imageName    
      * @param {String} className 
      * @param {String} functionName 
      * @param {Number} argsCount 
@@ -287,7 +301,7 @@ const find_method = HookerBase.findMethodSync as find_MethodType
 export { find_method }
 
 type find_MethodType = (imageName: string, className: string, functionName: string, argsCount?: number, isRealAddr?: boolean) => NativePointer
-type findMethodType = (assemblyName: string, className: string, methodName: string, argsCount?: number, cmdCall?: boolean) => Il2Cpp.Method | undefined
+type findMethodType = (assemblyName: string, className: string, methodName: string, argsCount?: number, overload?: string[], cmdCall?: boolean) => Il2Cpp.Method | undefined
 
 Reflect.set(globalThis, "Hooker", HookerBase)
 

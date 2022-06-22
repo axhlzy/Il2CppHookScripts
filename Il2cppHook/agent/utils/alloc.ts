@@ -9,7 +9,7 @@ const allocCStr = (str: string): NativePointer => allocStrInner(str, TYPE_STR.C_
 
 const allocUStr = (str: string): NativePointer => allocStrInner(str, TYPE_STR.U_STR)
 
-const allocS = (size: number): NativePointer => Memory.alloc(size)
+const allocS = (size: number = Process.pointerSize): NativePointer => Memory.alloc(size)
 
 const alloc = (size: number = 1): NativePointer => allocS(size * p_size)
 

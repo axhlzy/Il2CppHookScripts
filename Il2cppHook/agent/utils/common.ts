@@ -350,14 +350,14 @@ function checkCtx(lr: ARGM) {
  * @param {int} maxCount 最大出现次数
  * @returns ? -1
  */
-const filterDuplicateOBJ = (objstr: string, maxCount: number) => {
+const filterDuplicateOBJ = (objstr: string, maxCount: number = 10) => {
     if (!GET_MAP(MapKAY.outFilterMap).has(objstr)) {
         SET_MAP_VALUE(MapKAY.outFilterMap, objstr, 0)
         return 0
     }
     let count = Number(GET_MAP_VALUE(MapKAY.outFilterMap, objstr)) + 1
     SET_MAP_VALUE(MapKAY.outFilterMap, objstr, count)
-    return (count >= (maxCount == undefined ? 10 : maxCount)) ? -1 : count
+    return (count >= maxCount) ? -1 : count
 }
 
 (Number as any).prototype.add = (num: string | number) => {
@@ -382,7 +382,7 @@ declare global {
     var R: Function
     var getJclassName: Function
     var checkCtx: Function
-    var filterDuplicateOBJ: Function
+    var filterDuplicateOBJ: (objstr: string, maxCount?: number) => number
 }
 
 globalThis.d = detachAll

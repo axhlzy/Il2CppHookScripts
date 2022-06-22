@@ -7,11 +7,11 @@ class TransformImpl extends ComponentImpl implements Il2cppTransform {
     }
 
     ctor_0(): Il2Cpp.Transform {
-        throw new Error("Method not implemented.");
+        return new TransformImpl(Il2Cpp.Api.Transform._ctor(alloc()));
     }
 
     GetChild(index: number): Il2Cpp.Transform {
-        throw new Error("Method not implemented.");
+        return new TransformImpl(Il2Cpp.Api.Transform._GetChild(this.handle, index));
     }
 
     GetEnumerator() {
@@ -19,7 +19,7 @@ class TransformImpl extends ComponentImpl implements Il2cppTransform {
     }
 
     GetParent(): Il2Cpp.Transform {
-        throw new Error("Method not implemented.");
+        return new TransformImpl(Il2Cpp.Api.Transform._get_parent(this.handle));
     }
 
     GetSiblingIndex(): number {
@@ -39,7 +39,7 @@ class TransformImpl extends ComponentImpl implements Il2cppTransform {
     }
 
     IsChildOf(parent: Il2Cpp.Transform): boolean {
-        throw new Error("Method not implemented.");
+        return Il2Cpp.Api.Transform._IsChildOf(this.handle, parent.handle);
     }
 
     // LookAt(target: Il2Cpp.Transform): void;
@@ -96,18 +96,19 @@ class TransformImpl extends ComponentImpl implements Il2cppTransform {
         throw new Error("Method not implemented.");
     }
 
-    // Translate(translation: Il2Cpp.Vector3): void;
-    // Translate(translation: Il2Cpp.Vector3, relativeTo: Il2Cpp.Space): void;
-    // Translate(x: number, y: number, z: number, relativeTo: Il2Cpp.Space): void;
-    // Translate(x: unknown, y?: unknown, z?: unknown, relativeTo?: unknown): void {
-    //     throw new Error("Method not implemented.");
-    // }
-    get_childCount(): number {
+    Translate(translation: Il2Cpp.Vector3): void;
+    Translate(translation: Il2Cpp.Vector3, relativeTo: Il2Cpp.Space): void;
+    Translate(x: number, y: number, z: number, relativeTo: Il2Cpp.Space): void;
+    Translate(x: unknown, y?: unknown, z?: unknown, relativeTo?: unknown): void {
         throw new Error("Method not implemented.");
     }
 
+    get_childCount(): number {
+        return Il2Cpp.Api.Transform._get_childCount(this.handle);
+    }
+
     get_eulerAngles(): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+        return Il2Cpp.Api.Transform._get_eulerAngles(this.handle);
     }
 
     set_eulerAngles(value: Il2Cpp.Vector3): void {
@@ -115,7 +116,7 @@ class TransformImpl extends ComponentImpl implements Il2cppTransform {
     }
 
     get_forward(): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+        return Il2Cpp.Api.Transform._get_forward(this.handle);
     }
 
     set_hasChanged(value: boolean): void {
@@ -127,35 +128,35 @@ class TransformImpl extends ComponentImpl implements Il2cppTransform {
     }
 
     get_localEulerAngles(): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+        return new Il2Cpp.Vector3(Il2Cpp.Api.Transform._get_localEulerAngles(this.handle));
     }
 
     set_localEulerAngles(value: Il2Cpp.Vector3): void {
-        throw new Error("Method not implemented.");
+        return Il2Cpp.Api.Transform._set_localEulerAngles(this.handle, value);
     }
 
     get_localPosition(): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+        return new Il2Cpp.Vector3(Il2Cpp.Api.Transform._get_localPosition(this.handle));
     }
 
     set_localPosition(value: Il2Cpp.Vector3): void {
-        throw new Error("Method not implemented.");
+        return Il2Cpp.Api.Transform._set_localPosition(this.handle, value.handle);
     }
 
     get_localRotation(): Il2Cpp.Quaternion {
-        throw new Error("Method not implemented.");
+        return new Il2Cpp.Quaternion(Il2Cpp.Api.Transform._get_localRotation(this.handle))
     }
 
     set_localRotation(value: Il2Cpp.Quaternion): void {
-        throw new Error("Method not implemented.");
+        return Il2Cpp.Api.Transform._set_localRotation(this.handle, value.handle);
     }
 
     get_localScale(): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+        return new Il2Cpp.Vector3(Il2Cpp.Api.Transform._get_localScale(this.handle));
     }
 
     set_localScale(value: Il2Cpp.Vector3): void {
-        throw new Error("Method not implemented.");
+        return Il2Cpp.Api.Transform._set_localScale(this.handle, value.handle);
     }
 
     get_lossyScale(): Il2Cpp.Vector3 {
@@ -163,19 +164,20 @@ class TransformImpl extends ComponentImpl implements Il2cppTransform {
     }
 
     get_parent(): Il2Cpp.Transform {
-        return Il2Cpp.Api.Transform._get_parent(this.handle);
+        if (this.handle == ptr(0)) return new Il2Cpp.Transform(ptr(0));
+        return new Il2Cpp.Transform(Il2Cpp.Api.Transform._get_parent(this.handle));
     }
 
     set_parent(value: Il2Cpp.Transform): void {
-        throw new Error("Method not implemented.");
+        return Il2Cpp.Api.Transform._set_parent(this.handle, value.handle);
     }
 
     get_position(): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+        return new Il2Cpp.Vector3(Il2Cpp.Api.Transform._get_position(this.handle));
     }
 
     set_position(value: Il2Cpp.Vector3): void {
-        throw new Error("Method not implemented.");
+        return Il2Cpp.Api.Transform._set_position(this.handle, value.handle);
     }
 
     get_right(): Il2Cpp.Vector3 {
@@ -183,15 +185,15 @@ class TransformImpl extends ComponentImpl implements Il2cppTransform {
     }
 
     get_rotation(): Il2Cpp.Quaternion {
-        throw new Error("Method not implemented.");
+        return new Il2Cpp.Quaternion(Il2Cpp.Api.Transform._get_rotation(this.handle));
     }
 
     set_rotation(value: Il2Cpp.Quaternion): void {
-        throw new Error("Method not implemented.");
+        return Il2Cpp.Api.Transform._set_rotation(this.handle, value.handle);
     }
 
     get_up(): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+        return new Il2Cpp.Vector3(Il2Cpp.Api.Transform._get_up(this.handle));
     }
 
     set_up(value: Il2Cpp.Vector3): void {

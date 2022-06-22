@@ -1,7 +1,4 @@
 import { cache } from "decorator-cache-getter";
-import "./export"
-import "./class"
-import "./interface"
 
 class GameObjectAPI {
 
@@ -39,7 +36,6 @@ class GameObjectAPI {
     static get _GetComponentInParent() {
         return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.GameObject", "GetComponentInParent", 1, "pointer", ["pointer", "pointer"]);
     }
-
 
     @cache
     static get _GetComponentsInternal() {

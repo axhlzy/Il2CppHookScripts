@@ -7,11 +7,11 @@ class GameObjectImpl extends ObjectIl2cpp_impl implements Il2cppGameObject {
     }
 
     ctor_0(): Il2Cpp.GameObject {
-        return Il2Cpp.Api.GameObject._ctor_0(this.handle, allocP(1))
+        return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._ctor_0(allocP(1)))
     }
 
     ctor_1(name: string): Il2Cpp.GameObject {
-        return Il2Cpp.Api.GameObject._ctor_1(this.handle, allocP(1), allocUStr(name))
+        return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._ctor_1(allocP(1), allocUStr(name)))
     }
 
     ctor_2(name: string, type: Il2Cpp.Type[]): Il2Cpp.GameObject {
@@ -91,22 +91,22 @@ class GameObjectImpl extends ObjectIl2cpp_impl implements Il2cppGameObject {
 
     // public static extern GameObject Find(string name);
     static Find(name: string): Il2Cpp.GameObject {
-        return Il2Cpp.Api.GameObject._Find(allocUStr(name))
+        return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._Find(allocUStr(name)))
     }
 
     // public static extern GameObject[] FindGameObjectsWithTag(string tag);
     static FindGameObjectsWithTag_A(tag: string): Il2Cpp.GameObject[] {
-        return Il2Cpp.Api.GameObject._FindGameObjectsWithTag_A(allocUStr(tag))
+        return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._FindGameObjectsWithTag_A(allocUStr(tag))) as unknown as Il2Cpp.GameObject[]
     }
 
     // public static extern GameObject FindGameObjectWithTag(string tag);
     static FindGameObjectWithTag(tag: string): Il2Cpp.GameObject {
-        return Il2Cpp.Api.GameObject._FindGameObjectWithTag(allocUStr(tag))
+        return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._FindGameObjectWithTag(allocUStr(tag)))
     }
 
     // public static GameObject FindWithTag(string tag)
     static FindWithTag(tag: string): Il2Cpp.GameObject {
-        return Il2Cpp.Api.GameObject._FindWithTag(allocUStr(tag))
+        return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._FindWithTag(allocUStr(tag)))
     }
 }
 

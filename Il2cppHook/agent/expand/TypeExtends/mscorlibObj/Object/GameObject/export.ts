@@ -13,23 +13,23 @@ const HookSetActive = (defaltActive: number = 1) => {
 }
 
 function showGameObject(gameObj: NativePointer) {
-    // if (typeof gameObj == "number") gameObj = ptr(gameObj)
-    // let gameObject = new Il2Cpp.GameObject(gameObj)
-    // LOGO("--------- GameObject ---------")
-    // LOGD("gameObj\t\t--->\t" + gameObj)
-    // LOGD("getName\t\t--->\t" + gameObject.toString())
-    // LOGD("getLayer\t--->\t" + gameObject.get_layer())
-    // let m_transform = gameObject.get_transform()
-    // LOGD("getTransform\t--->\t" + m_transform.handle)
-    // let layerNames = ""
-    // for (var i = 0; i < 10; i++) {
-    //     let getName = m_transform.toString()
-    //     let spl = layerNames == "" ? "" : " <--- "
-    //     layerNames = layerNames + spl + getName
-    //     m_transform = m_transform.get_parent()
-    //     if (m_transform.handle == ptr(0)) break
-    // }
-    // LOGD("hierarchy\t--->\t" + layerNames)
+    if (typeof gameObj == "number") gameObj = ptr(gameObj)
+    let gameObject = new Il2Cpp.GameObject(gameObj)
+    LOGO("--------- GameObject ---------")
+    LOGD("gameObj\t\t--->\t" + gameObj)
+    LOGD("getName\t\t--->\t" + gameObject.get_name())
+    LOGD("getLayer\t--->\t" + gameObject.get_layer())
+    let m_transform = gameObject.get_transform()
+    LOGD("getTransform\t--->\t" + m_transform.handle)
+    let layerNames = ""
+    for (var i = 0; i < 10; i++) {
+        if (m_transform.handle.isNull()) break
+        let getName = m_transform.get_gameObject().get_name()
+        let spl = layerNames == "" ? "" : " <--- "
+        layerNames = layerNames + spl + getName
+        m_transform = m_transform.get_parent()
+    }
+    LOGD("hierarchy\t--->\t" + layerNames)
 }
 
 globalThis.HookSetActive = HookSetActive
@@ -40,4 +40,4 @@ declare global {
     var showGameObject: (gameObj: NativePointer) => void;
 }
 
-export { showGameObject }
+export { showGameObject } 

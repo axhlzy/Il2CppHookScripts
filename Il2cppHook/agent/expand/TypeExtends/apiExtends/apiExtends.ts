@@ -3,7 +3,7 @@ function transfromStrToFunction<R extends NativeFunctionReturnType, A extends Na
     AssemblyName: string, NameSpaces: string, functionName: string, argsCount: number,
     retType: R, argTypes: A
 ) {
-    let method = findMethod(AssemblyName, NameSpaces, functionName, argsCount, false)
+    let method = findMethod(AssemblyName, NameSpaces, functionName, argsCount, [], false)
     if (method == undefined) throw new Error(`method ${functionName} not found`)
     let exportPointer = method.virtualAddress
     if (exportPointer == null) throw new Error("Could not find method")

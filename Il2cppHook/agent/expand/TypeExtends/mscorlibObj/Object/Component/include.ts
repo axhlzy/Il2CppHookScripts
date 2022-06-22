@@ -4,3 +4,8 @@ import "./ParticleSystem/include"
 import "./Rigidbody/include"
 import "./Renderer/include"
 import "./Transform/include"
+
+import "./api"
+import "./class"
+import "./export"
+import "./interface"

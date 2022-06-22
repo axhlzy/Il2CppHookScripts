@@ -4,6 +4,12 @@ import "./interface"
 class TransformAPI {
 
     @cache
+    static get _ctor() {
+        // public extern Transform GetChild(int index);
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Transform", ".ctor", 1, "pointer", ["pointer"]);
+    }
+
+    @cache
     static get _GetChild() {
         // public extern Transform GetChild(int index);
         return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Transform", "GetChild", 1, "pointer", ["pointer", "int"]);
