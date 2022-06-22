@@ -50,36 +50,15 @@ export const getLine = (length: number, fillStr: string = "-") => {
     return tmpRet
 }
 
-/** @internal */
-export function raise(message: any): never {
-    throw `\x1B[0m\x1B[38;5;9mil2cpp\x1B[0m: ${message}`;
-}
-
-/** @internal */
-export function warn(message: any): void {
-    (globalThis as any).console.log(`\x1B[38;5;11mil2cpp\x1B[0m: ${message}`);
-}
-
-/** @internal */
-export function ok(message: any): void {
-    (globalThis as any).console.log(`\x1B[38;5;10mil2cpp\x1B[0m: ${message}`);
-}
-
-/** @internal */
-export function inform(message: any): void {
-    (globalThis as any).console.log(`\x1B[38;5;12mil2cpp\x1B[0m: ${message}`);
-}
-
-
 declare global {
-    var LOG: Function
-    var LOGW: Function
-    var LOGE: Function
-    var LOGD: Function
-    var LOGO: Function
-    var LOGH: Function
-    var getLine: Function
-    var printLogColors: Function
+    var LOG: (str: any, type?: LogColor) => void
+    var LOGW: (msg: any) => void // LogColor.YELLOW
+    var LOGE: (msg: any) => void // LogColor.RED
+    var LOGD: (msg: any) => void // LogColor.C36
+    var LOGO: (msg: any) => void // LogColor.C33
+    var LOGH: (msg: any) => void // LogColor.C96
+    var getLine: (length: number, fillStr?: string) => string
+    var printLogColors: () => void
     var LogColor: any
 }
 

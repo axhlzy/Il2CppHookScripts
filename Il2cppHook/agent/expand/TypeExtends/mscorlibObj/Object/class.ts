@@ -1,7 +1,5 @@
 import { cache } from "decorator-cache-getter";
-import { il2cppObjAPI } from "./api";
 
-// 拓展 mscorlib.System.Object
 class il2cppObjAPI_impl extends Il2Cpp.Object implements CoreModule_Object {
 
     constructor(handle: NativePointerValue) {

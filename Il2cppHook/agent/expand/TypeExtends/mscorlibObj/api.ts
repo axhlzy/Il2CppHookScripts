@@ -14,7 +14,7 @@ class mscorlibObjAPI {
 
     @cache
     static get _getType() {
-        return Il2Cpp.Api.t("mscorlib", "System.Object", "getType", 0, "pointer", ["pointer"]);
+        return Il2Cpp.Api.t("mscorlib", "System.Object", "GetType", 0, "pointer", ["pointer"]);
     }
 
     @cache
@@ -40,11 +40,19 @@ class mscorlibObjAPI {
 }
 
 declare global {
-    namespace Il2Cpp.Api {
+    class mscorlib { }
+
+    namespace mscorlib {
+        class Api { }
+    }
+    namespace mscorlib.Api {
         class mscorlibObj extends mscorlibObjAPI { }
     }
 }
 
-Il2Cpp.Api.mscorlibObj = mscorlibObjAPI;
+Reflect.set(globalThis, "mscorlib", class { });
+Reflect.set(mscorlib, "Api", class { });
+
+mscorlib.Api.mscorlibObj = mscorlibObjAPI;
 
 export { }

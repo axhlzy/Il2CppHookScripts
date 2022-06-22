@@ -49,9 +49,9 @@ const showArray = (mPtr: ARGM): void => {
 
 var seeHexR = (addr: PTR, length: number = 0x40, color: LogColor | undefined) => {
     addr = PTR2NativePtr(addr)
-    LOG(hexdump(addr.readPointer()), {
+    LOG(hexdump(addr.readPointer(), {
         length: length
-    }, color == undefined ? LogColor.WHITE : color)
+    }), color == undefined ? LogColor.WHITE : color)
 }
 
 var seeHexA = (addr: PTR, length: number = 0x40, header: boolean = true, color: any | undefined) => {

@@ -1,5 +1,4 @@
 import { cache } from "decorator-cache-getter";
-import { LOGD, raise } from "../utils/logger";
 import "../bridge/fix/Il2cppClass"
 import { getMethodModifier } from "../bridge/fix/il2cppMethod";
 import { allocCStr } from "../utils/alloc";

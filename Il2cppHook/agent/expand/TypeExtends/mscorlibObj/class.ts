@@ -1,3 +1,4 @@
+import { type } from "os";
 import "./interface"
 
 // 拓展 mscorlib.System.Object
@@ -9,33 +10,53 @@ class mscorlib_System_Object_impl implements mscorlib_System_Object {
     }
 
     ctor(): mscorlib_System_Object {
-        return Il2Cpp.Api.mscorlibObj._ctor_0(allocP(1));
+        return mscorlib.Api.mscorlibObj._ctor_0(allocP(1));
     }
 
     toString(): string {
-        return Il2Cpp.Api.mscorlibObj._toString(this.handle);
+        return readU16(mscorlib.Api.mscorlibObj._toString(this.handle));
     }
 
     memberwiseClone(): mscorlib_System_Object {
-        return Il2Cpp.Api.mscorlibObj._toString(this.handle);
+        throw new Error("Not implemented");
     }
 
-    getType(): Il2Cpp.Type {
-        return Il2Cpp.Api.mscorlibObj._getType(this.handle);
+    getType(): mscorlib.Type {
+        return new mscorlib.Type(mscorlib.Api.mscorlibObj._getType(this.handle));
     }
 
     finalize(): void {
-        return Il2Cpp.Api.mscorlibObj._finalize(this.handle);
+        return mscorlib.Api.mscorlibObj._finalize(this.handle);
     }
 
     getHashCode(): number {
-        return Il2Cpp.Api.mscorlibObj._getHashCode(this.handle);
+        return mscorlib.Api.mscorlibObj._getHashCode(this.handle);
     }
 }
 
-declare global {
-    namespace Il2Cpp.Object {
-    }
+const getTypeInner = (mPtr: NativePointer): mscorlib.Type => {
+    if (typeof mPtr == "number") mPtr = ptr(mPtr)
+    return new mscorlib_System_Object_impl(mPtr).getType();
 }
+
+const getTypeNameInner = (mPtr: NativePointer): string => {
+    return getTypeInner(mPtr).toString();
+}
+
+declare global {
+
+    namespace mscorlib {
+        class Object extends mscorlib_System_Object_impl { }
+    }
+
+    var getType: (mPtr: NativePointer) => mscorlib.Type;
+    var getTypeName: (mPtr: NativePointer) => string;
+}
+
+
+mscorlib.Object = mscorlib_System_Object_impl;
+
+globalThis.getType = getTypeInner
+globalThis.getTypeName = getTypeNameInner
 
 export { mscorlib_System_Object_impl };

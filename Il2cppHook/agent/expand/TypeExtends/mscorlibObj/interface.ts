@@ -9,7 +9,7 @@ interface mscorlib_System_Object {
     memberwiseClone(): mscorlib_System_Object;
 
     // GetType() : Type
-    getType(): Il2Cpp.Type;
+    getType(): mscorlib.Type;
 
     // Finalize() : Void
     finalize(): void;
