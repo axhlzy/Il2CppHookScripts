@@ -1,5 +1,6 @@
+import { mscorlib_System_ValueType } from "../class";
 
-class Vector3Impl extends Il2Cpp.Object implements Il2cppVector3 {
+class Vector3Impl extends mscorlib_System_ValueType implements Il2cppVector3 {
 
 }
 

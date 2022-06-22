@@ -18,4 +18,4 @@ declare global {
 
 mscorlib.RuntimeTypeHandle = mscorlib_System_RuntimeTypeHandle_impl;
 
-export { mscorlib_System_RuntimeTypeHandle_impl as mscorlib_System_RuntimeTypeHandle };
+export { mscorlib_System_RuntimeTypeHandle_impl };

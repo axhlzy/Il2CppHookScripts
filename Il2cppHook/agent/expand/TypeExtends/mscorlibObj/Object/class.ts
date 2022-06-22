@@ -2,10 +2,6 @@ import { cache } from "decorator-cache-getter";
 
 class il2cppObjAPI_impl extends Il2Cpp.Object implements CoreModule_Object {
 
-    constructor(handle: NativePointerValue) {
-        super(handle);
-    }
-
     ctor(): CoreModule_Object {
         return Il2Cpp.Api.il2cppObj._ctor_0(allocP(1));
     }
@@ -48,9 +44,7 @@ class il2cppObjAPI_impl extends Il2Cpp.Object implements CoreModule_Object {
 }
 
 class ObjectIl2cpp_impl extends il2cppObjAPI_impl {
-    constructor(handle: NativePointerValue) {
-        super(handle);
-    }
+
 }
 
 export { ObjectIl2cpp_impl };

@@ -1,5 +1,3 @@
-
-
 interface mscorlib_System_Type {
 
     // Equals(Object): Boolean
@@ -30,7 +28,7 @@ interface mscorlib_System_Type {
     GetType_1(typeName: string): mscorlib_System_Type;
 
     // ToString() : String
-    ToString(): string;
+    toString(): string;
 
     // GetTypeFromHandle(RuntimeTypeHandle) : Type
     // GetTypeFromHandle(handle: mscorlib_System_RuntimeTypeHandle): mscorlib_System_Type;

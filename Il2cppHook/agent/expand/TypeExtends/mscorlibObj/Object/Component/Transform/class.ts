@@ -2,10 +2,6 @@ import { ComponentImpl } from "../class";
 
 class TransformImpl extends ComponentImpl implements Il2cppTransform {
 
-    constructor(handle: NativePointerValue) {
-        super(handle)
-    }
-
     ctor_0(): Il2Cpp.Transform {
         return new TransformImpl(Il2Cpp.Api.Transform._ctor(alloc()));
     }

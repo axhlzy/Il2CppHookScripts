@@ -1,13 +1,13 @@
 
 function transfromStrToFunction<R extends NativeFunctionReturnType, A extends NativeFunctionArgumentType[] | []>(
-    AssemblyName: string, NameSpaces: string, functionName: string, argsCount: number,
+    AssemblyName: string, NameSpaces: string, functionName: string, argsCount: number = -1,
     retType: R, argTypes: A
 ) {
     return overloadTransfromStrToFunction(AssemblyName, NameSpaces, functionName, argsCount, [], retType, argTypes)
 }
 
 function overloadTransfromStrToFunction<R extends NativeFunctionReturnType, A extends NativeFunctionArgumentType[] | []>(
-    AssemblyName: string, NameSpaces: string, functionName: string, argsCount: number,
+    AssemblyName: string, NameSpaces: string, functionName: string, argsCount: number = -1,
     overload: string[], retType: R, argTypes: A
 ) {
     let method = findMethod(AssemblyName, NameSpaces, functionName, argsCount, overload, false)

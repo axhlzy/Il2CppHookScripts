@@ -4,8 +4,8 @@ import "./interface"
 // 拓展 mscorlib.System.Object
 class mscorlib_System_Object_impl implements mscorlib_System_Object {
 
-    handle: NativePointerValue;
-    constructor(handleOrWrapper: NativePointerValue) {
+    handle: NativePointer;
+    constructor(handleOrWrapper: NativePointer) {
         this.handle = handleOrWrapper;
     }
 
@@ -40,7 +40,21 @@ const getTypeInner = (mPtr: NativePointer): mscorlib.Type => {
 }
 
 const getTypeNameInner = (mPtr: NativePointer): string => {
-    return getTypeInner(mPtr).toString();
+    return getTypeInner(mPtr).name;
+}
+
+const getTypeParentInner = (mPtr: NativePointer) => {
+    let handle = getTypeInner(mPtr).handle
+    LOGD(`\nType => ${handle}`);
+    LOGD(`Name => ${getTypeInner(mPtr).toString()}\n`);
+    let describe = getTypeInner(mPtr).name;
+    for (let i = 0; i < 10; i++) {
+        let tmpRuntimeType = new mscorlib.RuntimeType(handle)
+        let baseType = tmpRuntimeType.get_BaseType();
+        if (baseType.handle == ptr(0) || baseType.handle.isNull()) break;
+        describe += " <---" + baseType.name + " "
+    }
+    LOGD(`${describe}\n`);
 }
 
 declare global {
@@ -51,12 +65,13 @@ declare global {
 
     var getType: (mPtr: NativePointer) => mscorlib.Type;
     var getTypeName: (mPtr: NativePointer) => string;
+    var showType: (mPtr: NativePointer) => void;
 }
-
 
 mscorlib.Object = mscorlib_System_Object_impl;
 
 globalThis.getType = getTypeInner
 globalThis.getTypeName = getTypeNameInner
+globalThis.showType = getTypeParentInner
 
 export { mscorlib_System_Object_impl };

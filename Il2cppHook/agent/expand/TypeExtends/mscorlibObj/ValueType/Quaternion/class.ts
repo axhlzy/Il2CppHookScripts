@@ -1,6 +1,6 @@
-import { mscorlib_System_Object_impl } from "../../class";
+import { mscorlib_System_ValueType } from "../class";
 
-class QuaternionImpl extends mscorlib_System_Object_impl implements Il2cppQuaternion {
+class QuaternionImpl extends mscorlib_System_ValueType implements Il2cppQuaternion {
     x: number;
     y: number;
     z: number;
