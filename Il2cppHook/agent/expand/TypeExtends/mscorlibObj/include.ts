@@ -3,7 +3,7 @@ import "./class"
 import "./interface"
 
 import "./GUI/include"
-import "./Il2cppObject/include"
+import "./Object/include"
 import "./Input/include"
 import "./Physics/include"
 import "./Resources/include"

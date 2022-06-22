@@ -303,7 +303,7 @@ declare global {
     namespace Il2Cpp {
         class Hooker extends HookerBase { }
     }
-    var i: (filter: string, sort?: boolean) => void
+    var i: (filter?: string, sort?: boolean) => void
     var c: (imageOrName: string | NativePointer, filter: string) => void
     var m: (klass: NativePointer) => void
     var f: (klass: NativePointer) => void

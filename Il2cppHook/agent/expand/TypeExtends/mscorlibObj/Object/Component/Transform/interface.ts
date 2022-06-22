@@ -27,32 +27,32 @@ interface Il2cppTransform {
     // IsChildOf(Transform) : Boolean
     IsChildOf(parent: Il2Cpp.Transform): boolean;
 
-    // LookAt(Transform) : Void
-    LookAt(target: Il2Cpp.Transform): void;
+    // // LookAt(Transform) : Void
+    // LookAt(target: Il2Cpp.Transform): void;
 
-    // LookAt(Vector3) : Void
-    LookAt(target: Il2Cpp.Vector3): void;
+    // // LookAt(Vector3) : Void
+    // LookAt(target: Il2Cpp.Vector3): void;
 
-    // LookAt(Transform, Vector3) : Void
-    LookAt(target: Il2Cpp.Transform, worldUp: Il2Cpp.Vector3): void;
+    // // LookAt(Transform, Vector3) : Void
+    // LookAt(target: Il2Cpp.Transform, worldUp: Il2Cpp.Vector3): void;
 
-    // LookAt(Vector3, Vector3) : Void
-    LookAt(target: Il2Cpp.Vector3, worldUp: Il2Cpp.Vector3): void;
+    // // LookAt(Vector3, Vector3) : Void
+    // LookAt(target: Il2Cpp.Vector3, worldUp: Il2Cpp.Vector3): void;
 
-    // Rotate(Vector3) : Void
-    Rotate(eulerAngles: Il2Cpp.Vector3): void;
+    // // Rotate(Vector3) : Void
+    // Rotate(eulerAngles: Il2Cpp.Vector3): void;
 
-    // Rotate(Vector3, Space) : Void
-    Rotate(eulerAngles: Il2Cpp.Vector3, relativeTo: Il2Cpp.Space): void;
+    // // Rotate(Vector3, Space) : Void
+    // Rotate(eulerAngles: Il2Cpp.Vector3, relativeTo: Il2Cpp.Space): void;
 
-    // public void Rotate(Vector3 axis, float angle)
-    Rotate(axis: Il2Cpp.Vector3, angle: number): void;
+    // // public void Rotate(Vector3 axis, float angle)
+    // Rotate(axis: Il2Cpp.Vector3, angle: number): void;
 
-    // Rotate(Vector3, Single, Space) : Void
-    Rotate(axis: Il2Cpp.Vector3, angle: number, relativeTo: Il2Cpp.Space): void;
+    // // Rotate(Vector3, Single, Space) : Void
+    // Rotate(axis: Il2Cpp.Vector3, angle: number, relativeTo: Il2Cpp.Space): void;
 
-    // Rotate(Single, Single, Single, Space) : Void
-    Rotate(x: number, y: number, z: number, relativeTo: Il2Cpp.Space): void;
+    // // Rotate(Single, Single, Single, Space) : Void
+    // Rotate(x: number, y: number, z: number, relativeTo: Il2Cpp.Space): void;
 
     // RotateAround(Vector3, Vector3, Single) : Void
     RotateAround(point: Il2Cpp.Vector3, axis: Il2Cpp.Vector3, angle: number): void;
@@ -63,11 +63,11 @@ interface Il2cppTransform {
     // SetAsLastSibling() : Void
     SetAsLastSibling(): void;
 
-    // SetParent(Transform) : Void
-    SetParent(parent: Il2Cpp.Transform): void;
+    // // SetParent(Transform) : Void
+    // SetParent(parent: Il2Cpp.Transform): void;
 
-    // SetParent(Transform, Boolean) : Void
-    SetParent(parent: Il2Cpp.Transform, worldPositionStays: boolean): void;
+    // // SetParent(Transform, Boolean) : Void
+    // SetParent(parent: Il2Cpp.Transform, worldPositionStays: boolean): void;
 
     // SetPositionAndRotation(Vector3, Quaternion) : Void
     SetPositionAndRotation(position: Il2Cpp.Vector3, rotation: Il2Cpp.Quaternion): void;
@@ -87,14 +87,14 @@ interface Il2cppTransform {
     // TransformVector(Vector3) : Vector3
     TransformVector(vector: Il2Cpp.Vector3): Il2Cpp.Vector3;
 
-    // Translate(Vector3) : Void
-    Translate(translation: Il2Cpp.Vector3): void;
+    // // Translate(Vector3) : Void
+    // Translate(translation: Il2Cpp.Vector3): void;
 
-    // Translate(Vector3, Space) : Void
-    Translate(translation: Il2Cpp.Vector3, relativeTo: Il2Cpp.Space): void;
+    // // Translate(Vector3, Space) : Void
+    // Translate(translation: Il2Cpp.Vector3, relativeTo: Il2Cpp.Space): void;
 
-    // Translate(Single, Single, Single, Space) : Void
-    Translate(x: number, y: number, z: number, relativeTo: Il2Cpp.Space): void;
+    // // Translate(Single, Single, Single, Space) : Void
+    // Translate(x: number, y: number, z: number, relativeTo: Il2Cpp.Space): void;
 
     /**
      * get/set Transform fileds
@@ -148,11 +148,11 @@ interface Il2cppTransform {
     // get_lossyScale() : Vector3
     get_lossyScale(): Il2Cpp.Vector3;
 
-    // get_parent() : Transform
-    get_parent(): Il2Cpp.Transform;
+    // // get_parent() : Transform
+    // get_parent(): Il2Cpp.Transform;
 
-    // set_parent(Transform) : Void
-    set_parent(value: Il2Cpp.Transform): void;
+    // // set_parent(Transform) : Void
+    // set_parent(value: Il2Cpp.Transform): void;
 
     // get_position() : Vector3
     get_position(): Il2Cpp.Vector3;

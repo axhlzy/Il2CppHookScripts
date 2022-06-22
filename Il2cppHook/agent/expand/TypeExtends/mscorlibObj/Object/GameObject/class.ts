@@ -1,8 +1,10 @@
-import { il2cppObjAPI_impl } from "../class"
+import { ObjectIl2cpp_impl } from "../class"
 
+class GameObjectImpl extends ObjectIl2cpp_impl implements Il2cppGameObject {
 
-
-class GameObjectImpl extends il2cppObjAPI_impl implements Il2cppGameObject {
+    constructor(handle: NativePointer) {
+        super(handle)
+    }
 
     ctor_0(): Il2Cpp.GameObject {
         return Il2Cpp.Api.GameObject._ctor_0(this.handle, allocP(1))
@@ -59,6 +61,7 @@ class GameObjectImpl extends il2cppObjAPI_impl implements Il2cppGameObject {
     }
 
     get_transform(): Il2Cpp.Transform {
+        if (this.handle == ptr(0)) throw new Error("get_transform : GameObject is null")
         return new Il2Cpp.Transform(Il2Cpp.Api.GameObject._get_transform(this.handle))
     }
 
