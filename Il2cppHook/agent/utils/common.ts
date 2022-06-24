@@ -3,6 +3,7 @@ import { ArrKAY, EpFunc, LogColor, MapKAY, PTR } from "../base/enum";
 import { ARGM, GET_ARRAY, GET_F, GET_MAP, GET_MAP_VALUE, ONE_ARG, SET_MAP_VALUE, THREE_ARG, TWO_ARG } from "../base/globle";
 
 function PTR2NativePtr(mPtr: PTR): NativePointer {
+    if (mPtr == undefined) return ptr(0)
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     return mPtr
 }

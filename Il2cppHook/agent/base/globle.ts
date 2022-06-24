@@ -18,7 +18,7 @@ export type THREE_ARG = NativeFunction<NativePointer, [NativePointer, NativePoin
 export type FOUR_ARG = NativeFunction<NativePointer, [NativePointer, NativePointer, NativePointer, NativePointer]>
 export type ARGS = ONE_ARG_S | TWO_ARG_S | THREE_ARG_S | FOUR_ARG_S | ZERO_ARG_S | ZERO_ARG | ONE_ARG | TWO_ARG | THREE_ARG | FOUR_ARG
 
-export type TYPE_CHECK_POINTER = NativePointer | Array<string | number | NativePointer | boolean> | string | number
+export type TYPE_CHECK_POINTER = NativePointer | NativePointerValue | Array<string | number | NativePointer | boolean> | string | number
 
 // export type GameObject = NativePointer
 // export type Component = NativePointer

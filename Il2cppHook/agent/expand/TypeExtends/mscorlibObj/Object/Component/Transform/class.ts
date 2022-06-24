@@ -1,3 +1,4 @@
+import { Vector3Impl } from "../../../ValueType/Vector3/class";
 import { ComponentImpl } from "../class";
 
 class TransformImpl extends ComponentImpl implements Il2cppTransform {
@@ -104,7 +105,9 @@ class TransformImpl extends ComponentImpl implements Il2cppTransform {
     }
 
     get_eulerAngles(): Il2Cpp.Vector3 {
-        return Il2Cpp.Api.Transform._get_eulerAngles(this.handle);
+        let allocMem = alloc(4);
+        Il2Cpp.Api.Transform._get_eulerAngles(this.handle, allocMem)
+        return new Il2Cpp.Vector3(allocMem);
     }
 
     set_eulerAngles(value: Il2Cpp.Vector3): void {
@@ -169,7 +172,9 @@ class TransformImpl extends ComponentImpl implements Il2cppTransform {
     }
 
     get_position(): Il2Cpp.Vector3 {
-        return new Il2Cpp.Vector3(Il2Cpp.Api.Transform._get_position(this.handle));
+        let allocMem = allocVector(0, 0, 0);
+        Il2Cpp.Api.Transform._get_position(allocMem, this.handle)
+        return new Vector3Impl(allocMem, 2);
     }
 
     set_position(value: Il2Cpp.Vector3): void {
@@ -205,4 +210,4 @@ declare global {
 
 Il2Cpp.Transform = TransformImpl;
 
-export { }
+export { TransformImpl }

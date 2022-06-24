@@ -2,11 +2,12 @@ import { LogColor } from "../base/enum"
 
 class formartClass {
 
-    static printTitile = (strTitle: string, Line1: LogColor = LogColor.C33, Line2: LogColor = LogColor.C33, Line3: LogColor = LogColor.C33) => {
+    static printTitile = (strTitle: string, Line1: LogColor = LogColor.C33, Line2: LogColor = LogColor.C33, Line3: LogColor = LogColor.C33): number => {
         let len = strTitle.length + 2
         LOG(` ${getLine(len)} `, Line1)
         LOG(`| ${strTitle} |`, Line2)
         LOG(` ${getLine(len)} `, Line3)
+        return len
     }
 
     static linesMap = new Map()

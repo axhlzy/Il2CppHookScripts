@@ -1,4 +1,3 @@
-
 function transfromStrToFunction<R extends NativeFunctionReturnType, A extends NativeFunctionArgumentType[] | []>(
     AssemblyName: string, NameSpaces: string, functionName: string, argsCount: number = -1,
     retType: R, argTypes: A

@@ -5,10 +5,11 @@ const showMethodInfo = (methodInfo: NativePointer): void => {
     let Il2CppImage = packMethod.class.image.handle
     let Il2CppAssembly = packMethod.class.image.assembly.handle
 
-    LOG("\nCurrent Function " + packMethod.name + "\t" + packMethod.parameterCount + "\t0x" + Number(methodInfo).toString(16) + " ---> "
-        + packMethod.virtualAddress + " ---> " + packMethod.relativeVirtualAddress + "\n", LogColor.C96)
-    LOG(packMethod.name + " ---> " + packMethod.class.name + "(" + Il2CppClass + ") ---> " + (packMethod.class.namespace.length == 0 ? " - " : packMethod.class.namespace)
-        + " ---> " + packMethod.class.image.name + "(" + Il2CppImage + ") ---> Il2CppAssembly(" + Il2CppAssembly + ")", LogColor.C96)
+    LOGH("Function: " + packMethod.name + "\t" + packMethod.parameterCount + "\t0x" + Number(methodInfo).toString(16) + " ---> "
+        + packMethod.virtualAddress + " ---> " + packMethod.relativeVirtualAddress + "\n")
+    LOGH(packMethod.name + " ---> " + packMethod.class.name + "(" + Il2CppClass + ") ---> " + (packMethod.class.namespace.length == 0 ? " - " : packMethod.class.namespace)
+        + " ---> " + packMethod.class.image.name + "(" + Il2CppImage + ") ---> Il2CppAssembly(" + Il2CppAssembly + ")\n")
+    if (packMethod.parameterCount != 0) LOGH("ARGS: " + packMethod.parameters.map(p => p.type.name + "(" + p.type.handle + ") " + p.name).join(", ") + "\n")
 }
 
 

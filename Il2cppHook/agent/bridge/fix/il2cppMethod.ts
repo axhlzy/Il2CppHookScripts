@@ -22,9 +22,9 @@ export enum il2cppTabledefs {
 
 /**
  * 解析 Method 的权限符
- * @param {Number} method_ptr 
+ * @param {Number} methodPtr 
  */
-export function getMethodModifier(methodPtr: NativePointer | number | Il2Cpp.Method): string {
+export const getMethodModifier = (methodPtr: NativePointer | number | Il2Cpp.Method): string => {
     if (typeof methodPtr == "number") methodPtr = ptr(methodPtr)
     let localMethod: Il2Cpp.Method
     // let flags = methodPtr.add(p_size * 8 + 4).readU16()
@@ -81,4 +81,31 @@ export function getMethodModifier(methodPtr: NativePointer | number | Il2Cpp.Met
         ret_str += "extern "
     }
     return ret_str
+}
+
+export const getMethodDesFromMethodPtr = (methodPtr: NativePointer | number | Il2Cpp.Method, simpleType = true): string => {
+    if (typeof methodPtr == "number") methodPtr = ptr(methodPtr)
+    if (methodPtr == null || methodPtr.isNull()) throw new Error("getMethodDesFromMethodPtr: methodPtr can't be null")
+    let localMethod: Il2Cpp.Method = methodPtr instanceof Il2Cpp.Method ? methodPtr : new Il2Cpp.Method(methodPtr)
+    let ret_str = ""
+    ret_str += getMethodModifier(localMethod)
+    ret_str += localMethod.name
+    ret_str += "(" + localMethod.parameters.map(x => `${simpleType ? (function (name) {
+        let sp = name.split(".")
+        return sp[sp.length - 1]
+    }(x.type.name)) : x.type.name} ${x.name}`).join(",") + ")"
+    return ret_str
+}
+
+export const methodToString = (method: Il2Cpp.Method, simple: boolean = false): string => {
+    if (simple) {
+        return `${getMethodDesFromMethodPtr(method)} ${(method.name.includes(".ctor")) ? `\t${method.class.name}` : ""}`
+    }
+    let displayStr = `[*] `
+    displayStr += `${method.handle} ---> `
+    displayStr += `${method.virtualAddress} (${method.relativeVirtualAddress})`
+    displayStr += `\t|  `
+    displayStr += `${getMethodDesFromMethodPtr(method)}`
+    if (method.name.includes(".ctor")) displayStr += `\t${method.class.name}`
+    return displayStr
 }

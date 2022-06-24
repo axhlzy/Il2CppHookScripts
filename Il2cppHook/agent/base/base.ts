@@ -87,7 +87,7 @@ class HookerBase {
             tMap.get(key)?.push(image.classes[i])
         }
 
-        formartClass.printTitile("List Classes { namespace {classPtr->filedsCount->methodsCount->enumClass->className} }")
+        let titleLen = formartClass.printTitile("List Classes { namespace {classPtr->filedsCount->methodsCount->enumClass->className} }")
         for (let key of tMap.keys()) {
             let nameSpace = key
             if (nameSpace != undefined) {
@@ -112,7 +112,7 @@ class HookerBase {
         } else {
             LOGE(`ALl ${image.classCount} Classes | List ${countFilterCls} Classes | Group by ${countNameSpace} NameSpaces`)
         }
-        LOGO(getLine(85))
+        LOGO(getLine(titleLen))
     }
 
     static checkType(mPtr: NativePointer | string | number): Il2Cpp.Class {
@@ -297,7 +297,7 @@ class HookerBase {
 }
 
 const find_method = HookerBase.findMethodSync as find_MethodType
-export { find_method }
+export { HookerBase, find_method }
 
 type find_MethodType = (imageName: string, className: string, functionName: string, argsCount?: number, isRealAddr?: boolean) => NativePointer
 type findMethodType = (assemblyName: string, className: string, methodName: string, argsCount?: number, overload?: string[], cmdCall?: boolean) => Il2Cpp.Method | undefined
@@ -312,6 +312,8 @@ globalThis.findClass = HookerBase.findClass
 globalThis.findMethod = HookerBase.findMethodNew
 globalThis.find_method = HookerBase.findMethodSync as find_MethodType
 
+Il2Cpp.perform(() => globalThis.soAddr = Il2Cpp.module.base)
+
 declare global {
     namespace Il2Cpp {
         class Hooker extends HookerBase { }
@@ -323,4 +325,5 @@ declare global {
     var findClass: (name: string, fromAssebly?: string[]) => NativePointer
     var findMethod: findMethodType
     var find_method: find_MethodType
+    var soAddr: NativePointerValue
 }

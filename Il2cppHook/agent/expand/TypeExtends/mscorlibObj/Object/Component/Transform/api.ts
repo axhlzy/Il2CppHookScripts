@@ -84,7 +84,7 @@ class TransformAPI {
     @cache
     static get _get_eulerAngles() {
         // public Vector3 get_eulerAngles()
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Transform", "get_eulerAngles", 0, "pointer", ["pointer"]);
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Transform", "get_eulerAngles", 0, "pointer", ["pointer", "pointer"]);
     }
 
     @cache
@@ -168,7 +168,7 @@ class TransformAPI {
     @cache
     static get _get_position() {
         // public Vector3 get_position()
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Transform", "get_position", 0, "pointer", ["pointer"]);
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Transform", "get_position", 0, "pointer", ["pointer", "pointer"]);
     }
 
     @cache

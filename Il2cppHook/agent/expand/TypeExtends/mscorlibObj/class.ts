@@ -43,16 +43,18 @@ const getTypeNameInner = (mPtr: NativePointer): string => {
     return getTypeInner(mPtr).name;
 }
 
-const getTypeParentInner = (mPtr: NativePointer) => {
+const getTypeParentShowInfo = (mPtr: NativePointer) => {
     let handle = getTypeInner(mPtr).handle
     LOGD(`\nType => ${handle}`);
     LOGD(`Name => ${getTypeInner(mPtr).toString()}\n`);
-    let describe = getTypeInner(mPtr).name;
+    let describe = `${getTypeInner(mPtr).name}(${getTypeInner(mPtr).handle})`;
+    let lastHandle: NativePointer = handle;
     for (let i = 0; i < 10; i++) {
-        let tmpRuntimeType = new mscorlib.RuntimeType(handle)
-        let baseType = tmpRuntimeType.get_BaseType();
+        let baseType = new mscorlib.RuntimeType(handle).get_BaseType();
+        if (lastHandle.equals(baseType.handle)) break;
+        lastHandle = baseType.handle;
         if (baseType.handle == ptr(0) || baseType.handle.isNull()) break;
-        describe += " <---" + baseType.name + " "
+        describe += ` <--- ${baseType.name}(${baseType.handle}) `
     }
     LOGD(`${describe}\n`);
 }
@@ -72,6 +74,6 @@ mscorlib.Object = mscorlib_System_Object_impl;
 
 globalThis.getType = getTypeInner
 globalThis.getTypeName = getTypeNameInner
-globalThis.showType = getTypeParentInner
+globalThis.showType = getTypeParentShowInfo
 
 export { mscorlib_System_Object_impl };

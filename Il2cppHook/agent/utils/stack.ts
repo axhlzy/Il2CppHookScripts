@@ -19,9 +19,9 @@ const PrintStackTraceN = (ctx: CpuContext, retText: boolean = false, slice: numb
 
 var GetStackTrace = () => Java.use("android.util.Log").getStackTraceString(Java.use("java.lang.Throwable").$new())
 
-var GetStackTraceN = (ctx: CpuContext, level?: number) => {
+var GetStackTraceN = (ctx: CpuContext, level: number = 6) => {
     return Thread.backtrace(ctx, Backtracer.FUZZY)
-        .slice(0, level === undefined ? 6 : level)
+        .slice(0, level)
         // .reverse()
         .map(frame => DebugSymbol.fromAddress(frame))
         // .map(symbol => `${getLine(level==undefined?0:level,"\n")}${symbol}\n`)
@@ -30,10 +30,10 @@ var GetStackTraceN = (ctx: CpuContext, level?: number) => {
 export { PrintStackTrace, PrintStackTraceN, GetStackTrace, GetStackTraceN }
 
 declare global {
-    var PrintStackTrace: Function
-    var PrintStackTraceN: Function
-    var GetStackTrace: Function
-    var GetStackTraceN: Function
+    var PrintStackTrace: () => void
+    var PrintStackTraceN: (ctx: CpuContext, retText?: boolean, slice?: number, reverse?: boolean) => string | void
+    var GetStackTrace: () => void
+    var GetStackTraceN: (ctx: CpuContext, level?: number) => string
 }
 
 globalThis.PrintStackTrace = PrintStackTrace
