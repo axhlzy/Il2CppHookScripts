@@ -1,5 +1,5 @@
 
-export enum il2cppTabledefs {
+enum il2cppTabledefs {
     METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK = 0x0007,
     METHOD_ATTRIBUTE_COMPILER_CONTROLLED = 0x0000,
     METHOD_ATTRIBUTE_PRIVATE = 0x0001,
@@ -20,10 +20,7 @@ export enum il2cppTabledefs {
     METHOD_ATTRIBUTE_NEW_SLOT = 0x0100
 }
 
-/**
- * 解析 Method 的权限符
- * @param {Number} methodPtr 
- */
+// 解析 Method 的权限符
 export const getMethodModifier = (methodPtr: NativePointer | number | Il2Cpp.Method): string => {
     if (typeof methodPtr == "number") methodPtr = ptr(methodPtr)
     let localMethod: Il2Cpp.Method
@@ -97,15 +94,59 @@ export const getMethodDesFromMethodPtr = (methodPtr: NativePointer | number | Il
     return ret_str
 }
 
-export const methodToString = (method: Il2Cpp.Method, simple: boolean = false): string => {
-    if (simple) {
-        return `${getMethodDesFromMethodPtr(method)} ${(method.name.includes(".ctor")) ? `\t${method.class.name}` : ""}`
+// 缓存 method info to array
+const map_cache_method_des = new Map<Il2Cpp.Method, Array<string | NativePointer>>()
+export const methodToArray = (method: Il2Cpp.Method | NativePointer | number): Array<string | NativePointer> | undefined => {
+    if (method instanceof NativePointer) {
+        return getArrayFromMethod(new Il2Cpp.Method(method))
+    } else if (typeof method == "number") {
+        return getArrayFromMethod(new Il2Cpp.Method(ptr(method)))
+    } else if (method instanceof Il2Cpp.Method) {
+        return getArrayFromMethod(method)
+    } else {
+        throw new Error("methodToArray: method unknown type")
     }
+
+    // [
+    //     "0xbf88b6f4",
+    //     "0xc81e101c",
+    //     "0x99901c",
+    //     "public static x0y1(Vector2 v)",
+    //     "0xbf9ee3e0",
+    //     "ExtensionMethods"
+    // ]
+
+    function getArrayFromMethod(method: Il2Cpp.Method): Array<string | NativePointer> {
+        let cache = map_cache_method_des.get(method)
+        if (cache != undefined) return cache
+        let ret_arr = []
+        ret_arr.push(method.handle)                     // 0
+        ret_arr.push(method.virtualAddress)             // 1
+        ret_arr.push(method.virtualAddress.isNull() ? ptr(0) : method.relativeVirtualAddress)     // 2
+        ret_arr.push(getMethodDesFromMethodPtr(method)) // 3
+        ret_arr.push(method.class.handle)               // 4
+        ret_arr.push(method.class.name)                 // 5
+        map_cache_method_des.set(method, ret_arr)
+        return ret_arr
+    }
+}
+
+//Il2Cpp.Method toString impl
+export const methodToString = (method: Il2Cpp.Method, simple: boolean = false): string => {
+    let arr = methodToArray(method)
+    if (arr == undefined) throw new Error("methodToString: methodToArray return undefined")
+    // ctor cctor
+    if (simple) return `${arr[3]} ${(method.name.includes("ctor")) ? `   { class => ${arr[5]}( ${arr[4]} ) }` : ""}`
     let displayStr = `[*] `
-    displayStr += `${method.handle} ---> `
-    displayStr += `${method.virtualAddress} (${method.relativeVirtualAddress})`
-    displayStr += `\t|  `
-    displayStr += `${getMethodDesFromMethodPtr(method)}`
-    if (method.name.includes(".ctor")) displayStr += `\t${method.class.name}`
+    displayStr += `${arr[0]} ---> `
+    displayStr += `${arr[1]} (${arr[2]})`
+    displayStr += `${(arr[1] as NativePointer).isNull() ? `\t\t\t` : `\t`}|  `
+    displayStr += `${arr[3]}`
+    if (method.name.includes(".ctor")) displayStr += `   { class => ${arr[5]}( ${arr[4]} ) } `
     return displayStr
+}
+
+globalThis.methodToArray = methodToArray as any
+declare global {
+    var methodToArray: (method: Il2Cpp.Method | NativePointer | number) => Array<string | NativePointer>
 }

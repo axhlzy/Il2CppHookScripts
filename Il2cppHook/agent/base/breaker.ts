@@ -1,29 +1,66 @@
 import { getMethodModifier, methodToString } from "../bridge/fix/il2cppMethod";
 import { getObjClass, getObjName } from "../expand/TypeExtends/mscorlibObj/Object/export";
-import { PTR2NativePtr } from "../utils/common";
 import { HookerBase } from "./base";
-import { PTR } from "./enum";
 
+type SpecialClass = "CommonClass" | "JNI" | "Soon"
 class Breaker {
 
-    public static maxCallTimes: number = 10
+    public static maxCallTimes: number = 10     // 出现 ${} 次后不再显示
+    public static detachTimes: number = 500     // 出现 ${} 次后取消 hook
+    private static attathing: boolean = false
     private static map_attachedMethodInfos: Map<Il2Cpp.Method, InvocationListener> = new Map()
     private static map_methodInfo_callTimes: Map<Il2Cpp.Method, number> = new Map()
     private static array_methodInfo_detached: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
+    private static array_attach_failed: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
 
-    static break(imgOrClsPtr: PTR): void {
-        imgOrClsPtr = PTR2NativePtr(imgOrClsPtr) as NativePointer
-        if (imgOrClsPtr.isNull()) throw new Error("can't attach nullptr")
-        if (HookerBase._list_images_pointers.map(item => Number(item)).includes(Number(imgOrClsPtr))) {
-            let imageHandle = imgOrClsPtr
-            new Il2Cpp.Image(imageHandle).classes
-                .flatMap(cls => cls.methods)
-                .forEach(Breaker.attachMethod)
+    static addBreakPoint(imgOrClsPtr: NativePointer | number | string | SpecialClass = "CommonClass"): void {
+        Breaker.attathing = true
+        if (imgOrClsPtr instanceof NativePointer) {
+            innerImage(imgOrClsPtr)
+        } else if (typeof imgOrClsPtr == "number") {
+            innerImage(ptr(imgOrClsPtr))
+        } else if (typeof imgOrClsPtr == "string") {
+            if (imgOrClsPtr == "CommonClass" || imgOrClsPtr == "JNI" || imgOrClsPtr == "Soon") return checkSpecialClass(imgOrClsPtr)
+            // ImageName
+            if (HookerBase._list_images_names.toString().includes(imgOrClsPtr)) {
+                HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
+                    if (image.name == imgOrClsPtr) innerImage(image.handle)
+                })
+            } else {
+                // className
+                innerImage(findClass(imgOrClsPtr))
+            }
+        }
+        Breaker.attathing = false
 
-        } else {
-            let classHandle = imgOrClsPtr
-            new Il2Cpp.Class(classHandle).methods
-                .forEach(Breaker.attachMethod)
+        function innerImage(imgOrClsPtr: NativePointer): void {
+            if (imgOrClsPtr.isNull()) throw new Error("can't attach nullptr")
+            if (HookerBase._list_images_pointers.map(item => Number(item)).includes(Number(imgOrClsPtr))) {
+                let imageHandle = imgOrClsPtr
+                new Il2Cpp.Image(imageHandle).classes
+                    .flatMap(cls => cls.methods)
+                    .forEach(Breaker.attachMethod)
+            } else {
+                let classHandle = imgOrClsPtr
+                new Il2Cpp.Class(classHandle).methods
+                    .forEach(Breaker.attachMethod)
+            }
+        }
+
+        function checkSpecialClass(type: SpecialClass) {
+            if (type == "CommonClass") {
+                HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
+                    let name = image.assembly.name
+                    if (name == "Assembly-CSharp" || name == "MaxSdk.Scripts" || name == "Game" || name == "Zenject" || name == "UniRx") innerImage(image.handle)
+                })
+            } else if (type == "JNI") {
+                innerImage(Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNI").handle)
+                // innerImage(Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNIHelper").handle)
+            } else if (type == "Soon") {
+
+            } else {
+                throw new Error("checkSpecialClass : type error")
+            }
         }
     }
 
@@ -33,61 +70,95 @@ class Breaker {
 
         function attachMethodInner(method: Il2Cpp.Method, filterModifier: "all" | "public" | "private" | "protected" | "internal" = "all"): void {
             if (filterModifier == "all") {
-                attachMethodInfo(method)
+                if (!getMethodModifier(method).includes("abstract") && !method.virtualAddress.isNull()) attachMethodInfo(method)
             } else {
                 if (!getMethodModifier(method).includes(filterModifier)) return
-                attachMethodInfo(method)
+                if (!method.virtualAddress.isNull()) attachMethodInfo(method)
             }
         }
 
         function attachMethodInfo(method: Il2Cpp.Method): void {
-            LOGD(methodToString(method))
-            let handleFunc: InvocationListener = Interceptor.attach(method.virtualAddress, {
-                onEnter: function (this: InvocationContext, args: InvocationArguments) {
-                    if (Breaker.needDetach(method)) {
-                        Breaker.map_attachedMethodInfos.get(method)!.detach()
-                        Breaker.array_methodInfo_detached.push(method)
-                    }
-                    this.disp_title = `Called ${methodToString(method, true)}\t [${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress}] | ${new Date().toLocaleTimeString().split(" ")[0]}`
-                    let tmp_content = []
-                    // 不是 static 方法
-                    if (!method.isStatic) {
-                        tmp_content[0] = `  inst\t| \t\t\t${args[0]}\t\t[${getObjName(args[0])}(${getObjClass(args[0])})]`
-                        for (let index = 1; index < method.parameterCount + 1; ++index) {
-                            let formartArg = args[index] < soAddr ? `${args[index]}\t` : args[index]
-                            tmp_content[tmp_content.length] = `  arg${index}  | ${method.parameters[index - 1].name}\t--->\t${formartArg}\t\t${method.parameters[index - 1].type.name} (${method.parameters[index - 1].type.class.handle})`
+            if (method.virtualAddress.isNull()) {
+                LOGE(methodToString(method))
+                return
+            }
+            if (Breaker.map_attachedMethodInfos.has(method)) return
+            try {
+                let handleFunc: InvocationListener = Interceptor.attach(method.virtualAddress, {
+                    onEnter: function (this: InvocationContext, args: InvocationArguments) {
+                        this.needShowLog = Breaker.needShowLOG(method)
+                        if (!this.needShowLog) return
+                        this.disp_title = `Called ${methodToString(method, true)}\t [${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress}] | ${new Date().toLocaleTimeString().split(" ")[0]}`
+                        let tmp_content = []
+                        // 不是 static 方法
+                        if (!method.isStatic) {
+                            tmp_content[0] = `  inst\t| \t\t\t${args[0]}\t\t[${getObjName(args[0])}(${getObjClass(args[0])})]`
+                            for (let index = 1; index < method.parameterCount + 1; ++index) {
+                                let formartArg = args[index] < soAddr ? `${args[index]}\t` : args[index]
+                                tmp_content[tmp_content.length] = `  arg${index}  | ${method.parameters[index - 1].name}\t--->\t${formartArg}\t\t${method.parameters[index - 1].type.name} (${method.parameters[index - 1].type.class.handle})`
+                            }
+                        } else {
+                            for (let index = 0; index < method.parameterCount; ++index) {
+                                let formartArg = args[index] < soAddr ? `${args[index]}\t` : args[index]
+                                tmp_content[tmp_content.length] = `  arg${index}  | ${method.parameters[index].name}\t--->\t${formartArg}\t\t${method.parameters[index].type.name} (${method.parameters[index].type.class.handle})`
+                            }
                         }
-                    } else {
-                        for (let index = 0; index < method.parameterCount; ++index) {
-                            let formartArg = args[index] < soAddr ? `${args[index]}\t` : args[index]
-                            tmp_content[tmp_content.length] = `  arg${index}  | ${method.parameters[index].name}\t--->\t${formartArg}\t\t${method.parameters[index].type.name} (${method.parameters[index].type.class.handle})`
-                        }
+                        this.content = tmp_content
+                    },
+                    onLeave: function (this: InvocationContext, retval: InvocationReturnValue) {
+                        if (!this.needShowLog) return
+                        this.content[this.content.length] = `  ret\t| \t\t\t${retval}\t\t\t${method.returnType.name} (${method.returnType.class.handle}]`
+                        let lenMex = Math.max(...(this.content as Array<string>).map(item => item.length), this.disp_title.length)
+                        LOGO(`\n${getLine(lenMex)}`)
+                        LOGD(this.disp_title);
+                        LOGO(getLine(this.disp_title.length / 3))
+                        this.content.forEach(LOGD)
+                        LOGO(getLine(lenMex))
                     }
-                    this.content = tmp_content
-                },
-                onLeave: function (this: InvocationContext, retval: InvocationReturnValue) {
-                    this.content[this.content.length] = `  ret\t| \t\t\t${retval}\t\t\t${method.returnType.name} (${method.returnType.class.handle}]`
-                    let lenMex = Math.max(...(this.content as Array<string>).map(item => item.length), this.disp_title.length)
-                    LOGO(`\n${getLine(lenMex)}`)
-                    LOGD(this.disp_title);
-                    LOGO(getLine(this.disp_title.length / 3))
-                    this.content.forEach(LOGD)
-                    LOGO(getLine(lenMex))
-                }
-            })
-            Breaker.map_attachedMethodInfos.set(method, handleFunc)
+                })
+                LOGD(methodToString(method))
+                Breaker.map_attachedMethodInfos.set(method, handleFunc)
+            } catch (error) {
+                LOGE(methodToString(method))
+                // if (Process.arch == "arm") {
+                //     let ins = method.virtualAddress.readByteArray(4)
+                //     if (ins != null) {
+                //         LOGE(`${JSON.stringify(ins)}`)
+                //         if (Buffer.from(ins).equals(Buffer.from([0xE1, 0x2F, 0xFF, 0x1E]))) {
+                //             LOGE("\tMethod null implementation")
+                //         }
+                //     }
+
+                // } else if (Process.arch == "arm64") {
+                //     let ins = method.virtualAddress.readByteArray(8)
+                //     if (ins != null) {
+                //         if (Buffer.from(ins).equals(Buffer.from([0xC0, 0x03, 0x5F, 0xD6]))) {
+                //             LOGE("\tMethod null implementation")
+                //         }
+                //     }
+                // } else {
+                Breaker.array_attach_failed.push(method)
+                printCtx(method.relativeVirtualAddress, 1, 1, LogColor.WHITE, 1)
+                // }
+            }
         }
     }
 
-    private static needDetach = (method: Il2Cpp.Method | NativePointer): boolean => {
+    private static needShowLOG = (method: Il2Cpp.Method | NativePointer): boolean => {
+        if (Breaker.attathing) return false
         if (method instanceof Il2Cpp.Method) {
             if (!Breaker.map_methodInfo_callTimes.has(method)) Breaker.map_methodInfo_callTimes.set(method, 0)
             let times = Breaker.map_methodInfo_callTimes.get(method)
             if (times == null || times == undefined) times = 0
+            if (times >= Breaker.detachTimes) {
+                Breaker.map_attachedMethodInfos.get(method)!.detach()
+                Breaker.array_methodInfo_detached.push(method)
+            }
             Breaker.map_methodInfo_callTimes.set(method, times + 1)
-            return times >= Breaker.maxCallTimes
+            return times < Breaker.maxCallTimes
+        } else {
+            throw new Error("method must be Il2Cpp.Method")
         }
-        return false
     }
 
     static breakWithArgs = (mPtr: NativePointer, argCount: number = 4) => {
@@ -135,25 +206,45 @@ class Breaker {
         Breaker.map_methodInfo_callTimes.clear()
         Breaker.array_methodInfo_detached = []
     }
-}
 
+    static printDesertedMethods = (filterName: string = "") => {
+        if (Breaker.map_methodInfo_callTimes.size == 0) return
+        let title = `${getLine(20)} detached methods ${getLine(20)}`
+        let countHideFunctions: number = 0
+        LOG(`${title}`, LogColor.C92)
+        // 筛选 Breaker.map_methodInfo_callTimes 调用次数大雨 maxCallTimes 的方法
+        Breaker.map_methodInfo_callTimes.forEach((value: number, key: Il2Cpp.Method) => {
+            if (value >= Breaker.maxCallTimes) {
+                if (filterName == "" || key.name.indexOf(filterName) != -1) {
+                    let arr = methodToArray(key)
+                    let times = this.map_methodInfo_callTimes.get(key)
+                    ++countHideFunctions
+                    LOGD(`[*] ${arr[0]} ---> ${arr[1]} ${arr[2]}\t\t${times}\t${arr[3]}`)
+                }
+            }
+        })
+        LOG(`${getLine(20)}`, LogColor.C92)
+        LOGD(` ${Breaker.map_attachedMethodInfos.size} attached / ${Breaker.array_methodInfo_detached.length} detached / ${countHideFunctions} hidden`)
+        LOG(getLine(title.length), LogColor.C92)
+    }
+}
 
 globalThis.getPlatform = (): string => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
 globalThis.getPlatformCtx = (ctx: CpuContext): ArmCpuContext | Arm64CpuContext => getPlatform() == "arm" ? ctx as ArmCpuContext : ctx as Arm64CpuContext
 globalThis.maxCallTimes = Breaker.maxCallTimes
 globalThis.D = Breaker.clearBreak
-globalThis.B = Breaker.break
+globalThis.B = Breaker.addBreakPoint
 globalThis.b = (mPtr: NativePointer) => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     try {
-        new Il2Cpp.Method(mPtr).name // 用报错来判断是methodInfoPtr还是methodAddress
+        new Il2Cpp.Method(mPtr).name // 用报错来判断是method指针还是一个普通的地址
         if (mPtr instanceof Il2Cpp.Method) return Breaker.attachMethod(mPtr)
         Breaker.attachMethod(new Il2Cpp.Method(mPtr))
     } catch (error) {
         Breaker.breakWithArgs(mPtr)
     }
 }
-
+globalThis.printDesertedMethods = Breaker.printDesertedMethods
 declare global {
     var b: (mPtr: NativePointer) => void
     var B: (mPtr: NativePointer) => void
@@ -161,6 +252,7 @@ declare global {
     var getPlatform: () => string
     var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
     var maxCallTimes: number
+    var printDesertedMethods: (filterName?: string) => void
 }
 
 export { Breaker }

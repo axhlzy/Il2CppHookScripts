@@ -43,6 +43,7 @@ export function printLogColors(): void {
 
 let linesMap = new Map()
 export const getLine = (length: number, fillStr: string = "-") => {
+    if (length == 0) return ""
     let key = length + "|" + fillStr
     if (linesMap.get(key) != null) return linesMap.get(key)
     for (var index = 0, tmpRet = ""; index < length; index++) tmpRet += fillStr

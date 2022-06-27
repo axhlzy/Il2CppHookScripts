@@ -15,9 +15,9 @@ const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, show
 }
 
 declare global {
-    var checkPointer: Function
+    var checkPointer: (args: any) => NativePointer
 }
 
-globalThis.checkPointer = checkPointer
+globalThis.checkPointer = checkPointer as any
 
 export { checkPointer }

@@ -1,6 +1,4 @@
 import "frida-il2cpp-bridge"
-import { cache } from "decorator-cache-getter";
-import versioning from "versioning";
 
 import "./API/list"
 import "./API/text"
@@ -24,16 +22,7 @@ import "./native/std/std_deque"
 import "./native/std/std_string"
 import "./native/std/std_vector"
 
-import "./utils/alloc"
-import "./utils/cache"
-import "./utils/caller"
-import "./utils/checkP"
-import "./utils/common"
-import "./utils/formart"
-import "./utils/logger"
-import "./utils/math"
-import "./utils/reader"
-import "./utils/stack"
+import "./utils/_include"
 
 import "./native/include"
 

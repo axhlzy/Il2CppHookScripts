@@ -1,9 +1,10 @@
+
 import "./include"
+
 
 // setImmediate(() => Il2Cpp.perform(() => main()))
 
 export function main() {
-
 
 }
 
