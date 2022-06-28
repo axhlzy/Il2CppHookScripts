@@ -1,10 +1,10 @@
 import { ObjectIl2cpp_impl } from "./class"
 
 const getObjName = (mPtr: NativePointer): string => {
-    if (mPtr instanceof NativePointer && !mPtr.isNull()) {
-        return new ObjectIl2cpp_impl(mPtr).get_name()
-    } else if (typeof mPtr == "number" && mPtr != 0) {
+    if (typeof mPtr == "number" && mPtr != 0) {
         return new ObjectIl2cpp_impl(ptr(mPtr)).get_name()
+    } else if (mPtr instanceof NativePointer && !mPtr.isNull()) {
+        return new ObjectIl2cpp_impl(mPtr).get_name()
     }
     return ""
 }
