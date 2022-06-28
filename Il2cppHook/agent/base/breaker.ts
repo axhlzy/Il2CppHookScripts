@@ -1,5 +1,7 @@
+import { type } from "os";
 import { getMethodModifier, methodToString } from "../bridge/fix/il2cppMethod";
 import { getObjClass, getObjName } from "../expand/TypeExtends/mscorlibObj/Object/export";
+import { mapValueToArray } from "../utils/common";
 import { formartClass } from "../utils/formart";
 import { HookerBase } from "./base";
 
@@ -14,6 +16,9 @@ class Breaker {
     private static array_methodInfo_detached: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
     private static array_attach_failed: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
     private static array_log_cache: Array<string> = new Array<string>()
+
+    // private static array_log_cache: Map<string, [string, NativePointer[], NativePointer]> = new Map()
+
 
     static addBreakPoint(imgOrClsPtr: NativePointer | number | string | SpecialClass = "CommonClass"): void {
         // Breaker.attathing = true
@@ -99,8 +104,12 @@ class Breaker {
                         let classInfo = `${formartClass.alignStr(method.class.name, 18)}(${method.class.handle})`
                         let infoContent = `===>  ${methodToString(method, true)}\t `
                         let finnalStr = `${startTime}\t${addressInfo}\t|  ${classInfo}  ${infoContent}`
+                        let tmpValue = []
+                        // 记录参数
+                        for (let i = 0; i < (method.isStatic ? method.parameterCount + 1 : method.parameterCount); i++) tmpValue[i] = args[i]
+                        this.translateValue = [startTime, finnalStr, tmpValue]
                         Breaker.array_log_cache.push(finnalStr)
-                        if (!moreInfo) return LOGD(finnalStr)
+                        return LOGD(finnalStr)
                     }
                     let tmp_content = []
                     if (!method.isStatic) {
@@ -120,6 +129,11 @@ class Breaker {
                     this.disp_title = disptitle
                 },
                 onLeave: function (this: InvocationContext, retval: InvocationReturnValue) {
+                    // try {
+                    //     if (!moreInfo) Breaker.array_log_cache.set(this.translateValue[0], [this.translateValue[1], this.translateValue[2], retval])
+                    // } catch (error) {
+                    //     LOGE(error)
+                    // }
                     if (!Breaker.needShowLOG(method, "onLeave")) return
                     if (this.content == null || this.disp_title == null) return
                     this.content[this.content.length] = `  ret\t| \t\t\t${retval}\t\t\t${method.returnType.name} (${method.returnType.class.handle}]`
@@ -151,7 +165,7 @@ class Breaker {
             }
 
             function showErrorLog(ins: NativePointer, error: string = "\tMethod null implementation or attach by other intercepter"): void {
-                LOGE(`${JSON.stringify(ins)}`)
+                LOGE(`\t${method.virtualAddress} -> ${ins} -> ${ins.toMatchPattern()} `)
                 LOGE(error)
             }
         }
@@ -172,6 +186,10 @@ class Breaker {
         } else {
             throw new Error("method must be Il2Cpp.Method")
         }
+    }
+
+    private static recordMethodsValues = (): void => {
+
     }
 
     static breakWithArgs = (mPtr: NativePointer, argCount: number = 4) => {
@@ -241,10 +259,18 @@ class Breaker {
         LOG(getLine(title.length), LogColor.C92)
     }
 
-    static printHistoryLog = (filterStr: string = "", countLogs: number = 100, reverse: boolean = true) => {
-        let filterArray = this.array_log_cache.filter((value: string) => {
-            return value.indexOf(filterStr) != -1
-        })
+    static printHistoryLog = (filterStr: string = "", countLogs: number = 100, reverse: boolean = false, detachAll: boolean = true) => {
+        if (detachAll) d()
+        // 方便cmd调用
+        if (typeof filterStr == "number") {
+            countLogs = filterStr
+            filterStr = ""
+        }
+        // let filterArray = (mapValueToArray(Breaker.array_log_cache) as Array<[string, NativePointer[], NativePointer]>)
+        //     .map((value: [string, NativePointer[], NativePointer]) => value[0])
+
+        let filterArray = Breaker.array_log_cache
+        filterArray.filter((value: string) => value.includes(filterStr))
         if (reverse) filterArray.reverse()
         filterArray.forEach((value: string) => {
             if (countLogs-- > 0) LOGD(value)
@@ -272,7 +298,7 @@ globalThis.b = (mPtr: NativePointer) => {
 globalThis.printDesertedMethods = Breaker.printDesertedMethods
 declare global {
     var b: (mPtr: NativePointer) => void
-    var h: (filterStr?: string, countLogs?: number, reverse?: boolean) => void
+    var h: (filterStr?: string, countLogs?: number, reverse?: boolean, detachAll?: boolean) => void
     var B: (mPtr: NativePointer) => void
     var D: () => void
     var getPlatform: () => string

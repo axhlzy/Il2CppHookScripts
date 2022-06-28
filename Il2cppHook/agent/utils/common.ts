@@ -343,6 +343,12 @@ function checkCtx(lr: ARGM) {
     return ptr(lr).sub(md.base) + `|${md.name}`
 }
 
+const mapValueToArray = (map: Map<any, any>) => {
+    var list = []
+    for (var key in map) list.push([key, map.get(key)])
+    return list
+}
+
 
 /**
  * 大于最大出现次数返回值为 -1
@@ -371,7 +377,7 @@ export {
 
 export {
     attachNative, detachAll, replaceFunction, nopFunction, cancelNop, cancelAllNopedFunction, checkCtx,
-    filterDuplicateOBJ, PTR2NativePtr
+    filterDuplicateOBJ, PTR2NativePtr, mapValueToArray
 }
 
 declare global {
