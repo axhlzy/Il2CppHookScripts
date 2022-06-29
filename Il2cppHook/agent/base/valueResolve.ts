@@ -2,7 +2,7 @@ import { methodToString } from "../bridge/fix/il2cppMethod";
 import { ObjectIl2cpp_impl } from "../expand/TypeExtends/mscorlibObj/Object/class";
 import { ColorImpl } from "../expand/TypeExtends/mscorlibObj/ValueType/Color/class";
 import { formartClass } from "../utils/formart";
-import { readBoolean, readInt, readInt64, readSingle, readU16, readUInt } from "../utils/reader";
+import { readInt, readInt64, readSingle, readU16, readUInt } from "../utils/reader";
 
 class ValueResolve {
 

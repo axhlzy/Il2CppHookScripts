@@ -102,7 +102,7 @@ class Breaker {
                 onEnter: function (this: InvocationContext, args: InvocationArguments) {
                     if (!Breaker.needShowLOG(method, "onEnter")) return
                     if (!moreInfo) {
-                        // 简介版 B() 针对单个classes/Images
+                        // 精简版 B() 针对单个classes/Images
                         let cacheID = `[${++Breaker.callTimesInline}|${new Date().toLocaleTimeString().split(" ")[0]}]`
                         this.passValue = new ValueResolve(cacheID, method).setArgs(args)
                         return LOGD((this.passValue as ValueResolve).toString())
@@ -124,13 +124,14 @@ class Breaker {
                             for (let index = 0; index < method.parameterCount; ++index) {
                                 let start = `  arg${index}  | `
                                 let mid = `${method.parameters[index].name}\t--->\t\t${formartClass.getPtrFormart(args[index])}\t\t`
-                                let end = `${method.parameters[index].type.name} (${method.parameters[index].type.class.handle})`
-                                let res = `\t ${ValueResolve.fakeValue(args[index], method.parameters[index].type, method)}`
+                                let end = `${method.parameters[index].type.name} (${method.parameters[index].type.class.handle})\t `
+                                let res = `${ValueResolve.fakeValue(args[index], method.parameters[index].type, method)}`
                                 tmp_content[tmp_content.length] = `${start}${mid}${end}${res}`
                             }
                         }
                         this.content = tmp_content
-                        let disptitle = `Called ${methodToString(method, true)}\t [${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress}] | ${new Date().toLocaleTimeString().split(" ")[0]}`
+                        let classTitle = `${method.class.namespace}.${method.class.name}`
+                        let disptitle = `${classTitle} | ${methodToString(method, true)}\t [${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress}] | ${new Date().toLocaleTimeString().split(" ")[0]}`
                         this.disp_title = disptitle
                     }
                 },
@@ -142,8 +143,8 @@ class Breaker {
                     if (this.content == null || this.disp_title == null) return
                     let start = `  ret\t| `
                     let mid = `\t\t\t${formartClass.getPtrFormart(retval)}\t\t`
-                    let end = `${method.returnType.name} (${method.returnType.class.handle})`
-                    let res = `\t${new ValueResolve("", method).setRetval(retval).resolve(-1)}`
+                    let end = `${method.returnType.name} (${method.returnType.class.handle})\t `
+                    let res = `${new ValueResolve("", method).setRetval(retval).resolve(-1)}`
                     this.content[this.content.length] = `${start}${mid}${end}${res}`
                     let lenMex = Math.max(...(this.content as Array<string>).map(item => item.length), this.disp_title.length)
                     LOGO(`\n${getLine(lenMex)}`)
