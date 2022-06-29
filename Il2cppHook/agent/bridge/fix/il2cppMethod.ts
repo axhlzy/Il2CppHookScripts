@@ -84,8 +84,10 @@ export const getMethodDesFromMethodPtr = (methodPtr: NativePointer | number | Il
     if (typeof methodPtr == "number") methodPtr = ptr(methodPtr)
     if (methodPtr == null || methodPtr.isNull()) throw new Error("getMethodDesFromMethodPtr: methodPtr can't be null")
     let localMethod: Il2Cpp.Method = methodPtr instanceof Il2Cpp.Method ? methodPtr : new Il2Cpp.Method(methodPtr)
+    let returnTypeArr = localMethod.returnType.name.split(".")
     let ret_str = ""
     ret_str += getMethodModifier(localMethod)
+    ret_str += `${returnTypeArr[returnTypeArr.length - 1]} `
     ret_str += localMethod.name
     ret_str += "(" + localMethod.parameters.map(x => `${simpleType ? (function (name) {
         let sp = name.split(".")

@@ -1,44 +1,47 @@
-import { type } from "os";
+import { randomInt } from "crypto";
 import { getMethodModifier, methodToString } from "../bridge/fix/il2cppMethod";
 import { getObjClass, getObjName } from "../expand/TypeExtends/mscorlibObj/Object/export";
-import { mapValueToArray } from "../utils/common";
 import { formartClass } from "../utils/formart";
 import { HookerBase } from "./base";
+import ValueResolve from "./valueResolve";
 
 type SpecialClass = "CommonClass" | "JNI" | "Soon"
 class Breaker {
 
     public static maxCallTimes: number = 10     // 出现 ${} 次后不再显示
     public static detachTimes: number = 500     // 出现 ${} 次后取消 hook
-    public static attathing: boolean = false
     private static map_attachedMethodInfos: Map<Il2Cpp.Method, InvocationListener> = new Map()
     private static map_methodInfo_callTimes: Map<Il2Cpp.Method, number> = new Map()
     private static array_methodInfo_detached: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
     private static array_attach_failed: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
-    private static array_log_cache: Array<string> = new Array<string>()
-
+    private static array_methodValue_cache: Array<ValueResolve> = new Array<ValueResolve>() // 日志相关,记录参数
     // private static array_log_cache: Map<string, [string, NativePointer[], NativePointer]> = new Map()
 
-
     static addBreakPoint(imgOrClsPtr: NativePointer | number | string | SpecialClass = "CommonClass"): void {
-        // Breaker.attathing = true
         if (imgOrClsPtr instanceof NativePointer) {
             innerImage(imgOrClsPtr)
         } else if (typeof imgOrClsPtr == "number") {
             innerImage(ptr(imgOrClsPtr))
         } else if (typeof imgOrClsPtr == "string") {
             if (imgOrClsPtr == "CommonClass" || imgOrClsPtr == "JNI" || imgOrClsPtr == "Soon") return checkSpecialClass(imgOrClsPtr)
-            // ImageName
-            if (HookerBase._list_images_names.toString().includes(imgOrClsPtr)) {
+            // is ImageName or className
+            if (HookerBase._list_images_names.toString().includes(imgOrClsPtr)) { // is ImageName.dll / assemblyName
+                // ImageName
                 HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
-                    if (image.name == imgOrClsPtr) innerImage(image.handle)
+                    if (image.name.includes(imgOrClsPtr)) {
+                        formartClass.printTitile("Found : ImageName: " + imgOrClsPtr + " at " + image.handle)
+                        innerImage(image.handle)
+                    }
                 })
             } else {
                 // className
-                innerImage(findClass(imgOrClsPtr))
+                let clsPtr: NativePointer = findClass(imgOrClsPtr)
+                if (!clsPtr.isNull()) {
+                    formartClass.printTitile("Found : ClassName: " + imgOrClsPtr + " at " + clsPtr)
+                    innerImage(clsPtr)
+                }
             }
         }
-        // Breaker.attathing = false
 
         function innerImage(imgOrClsPtr: NativePointer): void {
             let lastSize = Breaker.map_attachedMethodInfos.size
@@ -99,44 +102,49 @@ class Breaker {
                 onEnter: function (this: InvocationContext, args: InvocationArguments) {
                     if (!Breaker.needShowLOG(method, "onEnter")) return
                     if (!moreInfo) {
-                        let startTime = `[${++Breaker.callTimesInline}|${new Date().toLocaleTimeString().split(" ")[0]}]`
-                        let addressInfo = ` ${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress} `
-                        let classInfo = `${formartClass.alignStr(method.class.name, 18)}(${method.class.handle})`
-                        let infoContent = `===>  ${methodToString(method, true)}\t `
-                        let finnalStr = `${startTime}\t${addressInfo}\t|  ${classInfo}  ${infoContent}`
-                        let tmpValue = []
-                        // 记录参数
-                        for (let i = 0; i < (method.isStatic ? method.parameterCount + 1 : method.parameterCount); i++) tmpValue[i] = args[i]
-                        this.translateValue = [startTime, finnalStr, tmpValue]
-                        Breaker.array_log_cache.push(finnalStr)
-                        return LOGD(finnalStr)
-                    }
-                    let tmp_content = []
-                    if (!method.isStatic) {
-                        tmp_content[0] = `  inst\t| \t\t\t${args[0]}\t\t[${getObjName(args[0])}(${getObjClass(args[0])})]`
-                        for (let index = 1; index < method.parameterCount + 1; ++index) {
-                            let formartArg = args[index] < soAddr ? `${args[index]}\t` : args[index]
-                            tmp_content[tmp_content.length] = `  arg${index}  | ${method.parameters[index - 1].name}\t--->\t${formartArg}\t\t${method.parameters[index - 1].type.name} (${method.parameters[index - 1].type.class.handle})`
-                        }
+                        // 简介版 B() 针对单个classes/Images
+                        let cacheID = `[${++Breaker.callTimesInline}|${new Date().toLocaleTimeString().split(" ")[0]}]`
+                        this.passValue = new ValueResolve(cacheID, method).setArgs(args)
+                        return LOGD((this.passValue as ValueResolve).toString())
                     } else {
-                        for (let index = 0; index < method.parameterCount; ++index) {
-                            let formartArg = args[index] < soAddr ? `${args[index]}\t` : args[index]
-                            tmp_content[tmp_content.length] = `  arg${index}  | ${method.parameters[index].name}\t--->\t${formartArg}\t\t${method.parameters[index].type.name} (${method.parameters[index].type.class.handle})`
+                        // 详细版 b() 针对单个函数
+                        let tmp_content = []
+                        if (!method.isStatic) {
+                            // 非static方法
+                            tmp_content[0] = `  inst\t| \t\t\t${args[0]}\t\t[ ${ValueResolve.fakeValue(args[0], new Il2Cpp.Type(ptr(1)), method)} ] ( ${method.class.handle} )`
+                            for (let index = 1; index < method.parameterCount + 1; ++index) {
+                                let start = `  arg${index}  | `
+                                let mid = `${method.parameters[index - 1].name}\t--->\t\t${formartClass.getPtrFormart(args[index])}\t\t`
+                                let end = `${method.parameters[index - 1].type.name} (${method.parameters[index - 1].type.class.handle})`
+                                let res = `\t ${ValueResolve.fakeValue(args[index], method.parameters[index - 1].type, method)}`
+                                tmp_content[tmp_content.length] = `${start}${mid}${end}${res}`
+                            }
+                        } else {
+                            // static方法
+                            for (let index = 0; index < method.parameterCount; ++index) {
+                                let start = `  arg${index}  | `
+                                let mid = `${method.parameters[index].name}\t--->\t\t${formartClass.getPtrFormart(args[index])}\t\t`
+                                let end = `${method.parameters[index].type.name} (${method.parameters[index].type.class.handle})`
+                                let res = `\t ${ValueResolve.fakeValue(args[index], method.parameters[index].type, method)}`
+                                tmp_content[tmp_content.length] = `${start}${mid}${end}${res}`
+                            }
                         }
+                        this.content = tmp_content
+                        let disptitle = `Called ${methodToString(method, true)}\t [${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress}] | ${new Date().toLocaleTimeString().split(" ")[0]}`
+                        this.disp_title = disptitle
                     }
-                    this.content = tmp_content
-                    let disptitle = `Called ${methodToString(method, true)}\t [${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress}] | ${new Date().toLocaleTimeString().split(" ")[0]}`
-                    this.disp_title = disptitle
                 },
                 onLeave: function (this: InvocationContext, retval: InvocationReturnValue) {
-                    // try {
-                    //     if (!moreInfo) Breaker.array_log_cache.set(this.translateValue[0], [this.translateValue[1], this.translateValue[2], retval])
-                    // } catch (error) {
-                    //     LOGE(error)
-                    // }
                     if (!Breaker.needShowLOG(method, "onLeave")) return
+                    if (!moreInfo && this.passValue != undefined) {
+                        Breaker.array_methodValue_cache.push((this.passValue as ValueResolve).setRetval(retval))
+                    }
                     if (this.content == null || this.disp_title == null) return
-                    this.content[this.content.length] = `  ret\t| \t\t\t${retval}\t\t\t${method.returnType.name} (${method.returnType.class.handle}]`
+                    let start = `  ret\t| `
+                    let mid = `\t\t\t${formartClass.getPtrFormart(retval)}\t\t`
+                    let end = `${method.returnType.name} (${method.returnType.class.handle})`
+                    let res = `\t${new ValueResolve("", method).setRetval(retval).resolve(-1)}`
+                    this.content[this.content.length] = `${start}${mid}${end}${res}`
                     let lenMex = Math.max(...(this.content as Array<string>).map(item => item.length), this.disp_title.length)
                     LOGO(`\n${getLine(lenMex)}`)
                     LOGD(this.disp_title);
@@ -171,38 +179,34 @@ class Breaker {
         }
     }
 
-    private static needShowLOG = (method: Il2Cpp.Method | NativePointer, enterType: "onEnter" | "onLeave" = "onEnter"): boolean => {
-        // if (Breaker.attathing) return false
+    private static needShowLOG = (method: Il2Cpp.Method | NativePointer, enterType: "onEnter" | "onEnterSingle" | "onLeave" = "onEnter"): boolean => {
+        // LOGD("needShowLOG : " + enterType + " " + Breaker.attathing)
         if (method instanceof Il2Cpp.Method) {
             if (!Breaker.map_methodInfo_callTimes.has(method)) Breaker.map_methodInfo_callTimes.set(method, 0)
             let times = Breaker.map_methodInfo_callTimes.get(method)
-            if (times == null || times == undefined) times = 0
+            if (times === undefined || times === null) times = 0
             if (times >= Breaker.detachTimes) {
                 Breaker.map_attachedMethodInfos.get(method)!.detach()
                 Breaker.array_methodInfo_detached.push(method)
             }
-            if (enterType == "onEnter") Breaker.map_methodInfo_callTimes.set(method, times + 1)
+            if (enterType === "onEnter") Breaker.map_methodInfo_callTimes.set(method, times + 1)
             return times < Breaker.maxCallTimes
         } else {
             throw new Error("method must be Il2Cpp.Method")
         }
     }
 
-    private static recordMethodsValues = (): void => {
-
-    }
-
     static breakWithArgs = (mPtr: NativePointer, argCount: number = 4) => {
         mPtr = checkPointer(mPtr)
         Interceptor.attach(mPtr, {
-            onEnter(this, args) {
+            onEnter(this: InvocationContext, args: InvocationArguments) {
                 LOGO("\n" + getLine(65))
                 LOGH("Called from " + mPtr + " ---> " + mPtr.sub(soAddr) + "\t|  LR : " + checkCtx(getPlatformCtx(this.context).lr) + "\n")
                 let tStr = String(args[0])
                 for (let t = 1; t < argCount; ++t) tStr += "\t" + args[t]
                 LOGD(tStr)
             },
-            onLeave(this, retval) {
+            onLeave(this: InvocationContext, retval: InvocationReturnValue) {
                 LOGD("End Function return ---> " + retval)
             },
         })
@@ -211,7 +215,7 @@ class Breaker {
     static breakWithStack = (mPtr: NativePointer) => {
         mPtr = checkPointer(mPtr)
         Interceptor.attach(mPtr, {
-            onEnter(this, args) {
+            onEnter(this: InvocationContext, args: InvocationArguments) {
                 LOGO("\n" + getLine(65))
                 LOGH("Called from " + mPtr + " ---> " + mPtr.sub(soAddr) + "\t|  LR : " + checkCtx(getPlatformCtx(this.context).lr) + "\n")
                 PrintStackTraceN(this.context)
@@ -224,7 +228,7 @@ class Breaker {
         if (maxCount == undefined) maxCount = 10
         mPtr = checkPointer(mPtr)
         Interceptor.attach(mPtr, {
-            onEnter(this, args) {
+            onEnter(this: InvocationContext, args: InvocationArguments) {
                 LOGO("\n" + getLine(65))
                 LOGH("Called from " + mPtr + " ---> " + mPtr.sub(soAddr) + "\n")
                 LOGD(JSON.stringify(this.context))
@@ -233,9 +237,16 @@ class Breaker {
     }
 
     static clearBreak = () => {
+        d()
         Breaker.map_attachedMethodInfos.clear()
         Breaker.map_methodInfo_callTimes.clear()
         Breaker.array_methodInfo_detached = []
+    }
+
+    static clearBreakAll = () => {
+        Breaker.clearBreak();
+        Breaker.array_methodValue_cache = []
+        Breaker.array_attach_failed = []
     }
 
     static printDesertedMethods = (filterName: string = "") => {
@@ -259,30 +270,27 @@ class Breaker {
         LOG(getLine(title.length), LogColor.C92)
     }
 
-    static printHistoryLog = (filterStr: string = "", countLogs: number = 100, reverse: boolean = false, detachAll: boolean = true) => {
-        if (detachAll) d()
-        // 方便cmd调用
+    static printHistoryLog = (filterStr: string = "", countLogs: number = 50, reverse: boolean = false, detachAll: boolean = true) => {
+        if (detachAll) D()
+        // attathing = true
         if (typeof filterStr == "number") {
             countLogs = filterStr
             filterStr = ""
         }
-        // let filterArray = (mapValueToArray(Breaker.array_log_cache) as Array<[string, NativePointer[], NativePointer]>)
-        //     .map((value: [string, NativePointer[], NativePointer]) => value[0])
-
-        let filterArray = Breaker.array_log_cache
-        filterArray.filter((value: string) => value.includes(filterStr))
+        let filterArray = Breaker.array_methodValue_cache
+            .map((value: ValueResolve) => value.toString())
+            .filter((value: string) => value.includes(filterStr))
+            .slice(0, countLogs)
         if (reverse) filterArray.reverse()
-        filterArray.forEach((value: string) => {
-            if (countLogs-- > 0) LOGD(value)
-        })
+        filterArray.forEach(LOGD)
     }
 }
 
 globalThis.getPlatform = (): string => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
 globalThis.getPlatformCtx = (ctx: CpuContext): ArmCpuContext | Arm64CpuContext => getPlatform() == "arm" ? ctx as ArmCpuContext : ctx as Arm64CpuContext
 globalThis.maxCallTimes = Breaker.maxCallTimes
-globalThis.attathing = Breaker.attathing
 globalThis.D = Breaker.clearBreak
+globalThis.DD = Breaker.clearBreakAll
 globalThis.B = Breaker.addBreakPoint
 globalThis.h = Breaker.printHistoryLog
 globalThis.b = (mPtr: NativePointer) => {
@@ -301,6 +309,7 @@ declare global {
     var h: (filterStr?: string, countLogs?: number, reverse?: boolean, detachAll?: boolean) => void
     var B: (mPtr: NativePointer) => void
     var D: () => void
+    var DD: () => void
     var getPlatform: () => string
     var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
     var maxCallTimes: number

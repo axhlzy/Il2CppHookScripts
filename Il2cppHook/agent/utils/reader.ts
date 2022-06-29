@@ -11,6 +11,8 @@ const readInt = (value: NativePointer): number => alloc().writePointer(value).re
 
 const readUInt = (value: NativePointer): number => alloc(1).writePointer(value).readUInt()
 
+const readInt64 = (value: NativePointer): UInt64 => alloc(2).writePointer(value).readS64()
+
 const readUInt64 = (value: NativePointer): UInt64 => alloc(2).writePointer(value).readU64()
 
 /**
@@ -62,24 +64,29 @@ var seeHexA = (addr: PTR, length: number = 0x40, header: boolean = true, color: 
     }), color == undefined ? LogColor.WHITE : color)
 }
 
-export { readSingle, readBoolean, readInt, readUInt, readUInt64, readU16, showArray, seeHexR, seeHexA }
+const getFloat = (intNum: number): NativePointer => alloc(1).writeFloat(intNum).readPointer()
+
+export { readSingle, readBoolean, readInt, readUInt, readUInt64, readInt64, readU16, showArray, seeHexR, seeHexA, getFloat }
 
 declare global {
     var readSingle: (value: NativePointer) => number
     var readBoolean: (value: NativePointer) => boolean
     var readInt: (value: NativePointer) => number
     var readUInt: (value: NativePointer) => number
+    var readInt64: (value: NativePointer) => Int64
     var readUInt64: (value: NativePointer) => UInt64
     var readU16: (mPtr: ARGM) => string
     var showArray: (mPtr: ARGM) => void
     var seeHexR: (addr: PTR, length?: number, color?: LogColor | undefined) => void
     var seeHexA: (addr: PTR, length?: number, header?: boolean, color?: any | undefined) => void
+    var getFloat: () => NativePointer
 }
 
 globalThis.readSingle = readSingle
 globalThis.readBoolean = readBoolean
 globalThis.readInt = readInt
 globalThis.readUInt = readUInt
+globalThis.readInt64 = readInt64
 globalThis.readUInt64 = readUInt64
 globalThis.readU16 = readU16
 globalThis.showArray = showArray

@@ -117,7 +117,9 @@ class HookerBase {
 
     static checkType(mPtr: NativePointer | string | number): Il2Cpp.Class {
         let klass: Il2Cpp.Class
-        if (typeof mPtr == "string") {
+        if (mPtr instanceof NativePointer) {
+            klass = new Il2Cpp.Class(mPtr)
+        } else if (typeof mPtr == "string") {
             klass = new Il2Cpp.Class(findClass(mPtr))
         } else if (typeof mPtr == "number") {
             klass = new Il2Cpp.Class(ptr(mPtr))

@@ -29,12 +29,12 @@ class formartClass {
     }
 
     /**
- * 字符串指定位置添加元素
- * @param str1:原字符串
- * @param n:插入位置
- * @param str2:插入元素
- * @return  拼接后的字符串
- */
+     * 字符串指定位置添加元素
+     * @param str1:原字符串
+     * @param n:插入位置
+     * @param str2:插入元素
+     * @return  拼接后的字符串
+     */
     static insertStr(str1: string, n: number, str2: string): string {
         var s1 = '';
         var s2 = '';
@@ -45,6 +45,13 @@ class formartClass {
             s2 = str1.substring(n, str1.length);
             return `${s1}${str2}${s2}`;
         }
+    }
+
+    static getPtrFormart = (ptr: NativePointer, size: number = String(Il2Cpp.module.base).length): string => {
+        let str = ptr.toString(16)
+        if (str.length > size) return str.substring(0, size - 1) + "."
+        for (let i = size - str.length; i > 0; i--) str += " "
+        return `0x${str}`
     }
 }
 
