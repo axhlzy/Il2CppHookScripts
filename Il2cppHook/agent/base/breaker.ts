@@ -56,17 +56,23 @@ class Breaker {
                 new Il2Cpp.Class(classHandle).methods
                     .forEach(Breaker.attachMethod)
             }
-            LOGO(`${getLine(40, "-")}\n Attached ${Breaker.map_attachedMethodInfos.size - lastSize} methods / All ${Breaker.map_attachedMethodInfos.size}\n${getLine(85, "-")}`)
+            LOGO(`${getLine(40, "-")}\n Attached ${Breaker.map_attachedMethodInfos.size - lastSize} methods / All ${Breaker.map_attachedMethodInfos.size}\n${getLine(85, "-")} methods`)
         }
 
         function checkSpecialClass(type: SpecialClass) {
             if (type == "CommonClass") {
+                let CommonClass = ["Assembly-CSharp", "MaxSdk.Scripts", "Game", "Zenject", "UniRx", "Purchasing.Common", "UnityEngine.Purchasing"]
                 HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
-                    let name = image.assembly.name
-                    if (name == "Assembly-CSharp" || name == "MaxSdk.Scripts" || name == "Game" || name == "Zenject" || name == "UniRx") innerImage(image.handle)
+                    if (CommonClass.includes(image.assembly.name)) {
+                        formartClass.printTitile("Found : ImageName: " + image.name + " at " + image.handle)
+                        innerImage(image.handle)
+                    }
                 })
             } else if (type == "JNI") {
-                innerImage(Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNI").handle)
+                let clsTmp = Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNI")
+                if (clsTmp.isNull()) throw new Error("can't find class UnityEngine.AndroidJNI")
+                formartClass.printTitile("Found : ClassName: " + clsTmp.name + " at " + clsTmp.handle)
+                innerImage(clsTmp.handle)
                 // innerImage(Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNIHelper").handle)
             } else if (type == "Soon") {
 
