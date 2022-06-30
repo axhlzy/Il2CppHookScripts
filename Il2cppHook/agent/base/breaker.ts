@@ -1,7 +1,5 @@
-import { randomInt } from "crypto";
 import { closest } from "fastest-levenshtein";
 import { getMethodModifier, methodToString } from "../bridge/fix/il2cppMethod";
-import { getObjClass, getObjName } from "../expand/TypeExtends/mscorlibObj/Object/export";
 import { formartClass } from "../utils/formart";
 import { HookerBase } from "./base";
 import ValueResolve from "./valueResolve";
@@ -9,8 +7,8 @@ import ValueResolve from "./valueResolve";
 type SpecialClass = "CommonClass" | "JNI" | "AUI" | "Soon"
 class Breaker {
 
-    public static maxCallTimes: number = 10     // 出现 ${} 次后不再显示
-    public static detachTimes: number = 500     // 出现 ${} 次后取消 hook
+    public static maxCallTimes: number = 10     // 出现 ${maxCallTimes} 次后不再显示
+    public static detachTimes: number = 500     // 出现 ${detachTimes} 次后取消 hook
     private static map_attachedMethodInfos: Map<Il2Cpp.Method, InvocationListener> = new Map()
     private static map_methodInfo_callTimes: Map<Il2Cpp.Method, number> = new Map()
     private static array_methodInfo_detached: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()

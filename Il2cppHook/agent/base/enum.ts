@@ -1,4 +1,3 @@
-import { type } from "os"
 
 export enum TYPE_STR { U_STR, C_STR }
 
