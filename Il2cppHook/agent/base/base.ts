@@ -310,9 +310,12 @@ globalThis.i = HookerBase.showImages
 globalThis.c = HookerBase.showClasses
 globalThis.m = HookerBase.showMethods
 globalThis.f = HookerBase.showFields
+globalThis.fc = HookerBase.findClass
 globalThis.findClass = HookerBase.findClass
 globalThis.findMethod = HookerBase.findMethodNew
 globalThis.find_method = HookerBase.findMethodSync as find_MethodType
+globalThis.af = (className: string) => B(findClass(className))
+globalThis.aui = () => B("AUI")
 
 Il2Cpp.perform(() => globalThis.soAddr = Il2Cpp.module.base)
 
@@ -325,6 +328,9 @@ declare global {
     var m: (klass: NativePointer) => void
     var f: (klass: NativePointer) => void
     var findClass: (name: string, fromAssebly?: string[]) => NativePointer
+    var fc: (name: string, fromAssebly?: string[]) => NativePointer
+    var af: (className: string) => void
+    var aui: () => void
     var findMethod: findMethodType
     var find_method: find_MethodType
     var soAddr: NativePointerValue

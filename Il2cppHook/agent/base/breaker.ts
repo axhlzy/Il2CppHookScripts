@@ -1,11 +1,12 @@
 import { randomInt } from "crypto";
+import { closest } from "fastest-levenshtein";
 import { getMethodModifier, methodToString } from "../bridge/fix/il2cppMethod";
 import { getObjClass, getObjName } from "../expand/TypeExtends/mscorlibObj/Object/export";
 import { formartClass } from "../utils/formart";
 import { HookerBase } from "./base";
 import ValueResolve from "./valueResolve";
 
-type SpecialClass = "CommonClass" | "JNI" | "Soon"
+type SpecialClass = "CommonClass" | "JNI" | "AUI" | "Soon"
 class Breaker {
 
     public static maxCallTimes: number = 10     // 出现 ${} 次后不再显示
@@ -39,6 +40,9 @@ class Breaker {
                 if (!clsPtr.isNull()) {
                     formartClass.printTitile("Found : ClassName: " + imgOrClsPtr + " at " + clsPtr)
                     innerImage(clsPtr)
+                } else {
+                    let imageName = closest(imgOrClsPtr, HookerBase._list_images_names)
+                    LOGE(`You mean this ? ${imageName} @ ${Il2Cpp.Domain.assemblies.filter(item => item.name.includes)[0].handle}`)
                 }
             }
         }
@@ -56,7 +60,7 @@ class Breaker {
                 new Il2Cpp.Class(classHandle).methods
                     .forEach(Breaker.attachMethod)
             }
-            LOGO(`${getLine(40, "-")}\n Attached ${Breaker.map_attachedMethodInfos.size - lastSize} methods / All ${Breaker.map_attachedMethodInfos.size}\n${getLine(85, "-")} methods`)
+            LOGO(`${getLine(40, "-")}\n Attached ${Breaker.map_attachedMethodInfos.size - lastSize} methods / All ${Breaker.map_attachedMethodInfos.size} methods\n${getLine(85, "-")}`)
         }
 
         function checkSpecialClass(type: SpecialClass) {
@@ -74,8 +78,11 @@ class Breaker {
                 formartClass.printTitile("Found : ClassName: " + clsTmp.name + " at " + clsTmp.handle)
                 innerImage(clsTmp.handle)
                 // innerImage(Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNIHelper").handle)
+            } else if ("AUI") {
+                B("UnityEngine.UI")
+                setTimeout(() => h("Update"), 3000)
             } else if (type == "Soon") {
-
+                //todo others
             } else {
                 throw new Error("checkSpecialClass : type error")
             }
@@ -314,7 +321,7 @@ globalThis.printDesertedMethods = Breaker.printDesertedMethods
 declare global {
     var b: (mPtr: NativePointer) => void
     var h: (filterStr?: string, countLogs?: number, reverse?: boolean, detachAll?: boolean) => void
-    var B: (mPtr: NativePointer) => void
+    var B: (mPtr: NativePointer | number | string | SpecialClass) => void
     var D: () => void
     var DD: () => void
     var getPlatform: () => string
