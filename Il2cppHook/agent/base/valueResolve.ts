@@ -63,7 +63,7 @@ class ValueResolve {
     }
 
     public setArgs(value: InvocationArguments): ValueResolve {
-        if (value == undefined || value.length == 0 || value.length < this.method.parameterCount) return this
+        if (value == undefined || value.length === 0 || value.length < this.method.parameterCount) return this
         this.args = value
         return this
     }
@@ -73,7 +73,13 @@ class ValueResolve {
         let cache = ValueResolve.MapCacheStringWithOutValue.get(this.cacheId)
         if (cache) return cache
         let addressInfo = ` ${this.method.handle} -> ${this.method.relativeVirtualAddress} `
-        let classInfo = `${formartClass.alignStr(this.method.class.name, 18)}(${this.method.class.handle} - ${this.args[0]})`
+        let append = " - "
+        try {
+            append += formartClass.alignStr(String(this.args[0]), String(this.method.class.handle).length, " ")
+        } catch (error) {
+            append += formartClass.getLine(String(this.method.class.handle).length, " ")
+        }
+        let classInfo = `${formartClass.alignStr(this.method.class.name, 18)}(${this.method.class.handle} ${append}})`
         let infoContent = `===>  ${methodToString(this.method, true)}\t `
         let retStr = `${this.cacheId}\t${addressInfo}\t|  ${classInfo}  ${infoContent}`
         ValueResolve.MapCacheStringWithOutValue.set(this.cacheId, retStr)
