@@ -73,13 +73,16 @@ class ValueResolve {
         let cache = ValueResolve.MapCacheStringWithOutValue.get(this.cacheId)
         if (cache) return cache
         let addressInfo = ` ${this.method.handle} -> ${this.method.relativeVirtualAddress} `
-        let append = " - "
+        let append = ""
+        let length = String(this.method.class.handle).length + 1
         try {
-            append += formartClass.alignStr(String(this.args[0]), String(this.method.class.handle).length, " ")
-        } catch (error) {
-            append += formartClass.getLine(String(this.method.class.handle).length, " ")
+            append += ","
+            append += formartClass.alignStr(String(this.args[0]), length, " ")
+        } catch {
+            append += "  "
+            append += formartClass.getLine(length, " ")
         }
-        let classInfo = `${formartClass.alignStr(this.method.class.name, 18)}(${this.method.class.handle} ${append}})`
+        let classInfo = `${formartClass.alignStr(this.method.class.name, 18)}(${this.method.class.handle}${append.trim()})`
         let infoContent = `===>  ${methodToString(this.method, true)}\t `
         let retStr = `${this.cacheId}\t${addressInfo}\t|  ${classInfo}  ${infoContent}`
         ValueResolve.MapCacheStringWithOutValue.set(this.cacheId, retStr)
