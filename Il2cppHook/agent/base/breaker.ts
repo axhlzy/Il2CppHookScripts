@@ -77,7 +77,7 @@ class Breaker {
                 innerImage(clsTmp.handle)
                 // innerImage(Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNIHelper").handle)
             } else if ("AUI") {
-                B("UnityEngine.UI")
+                innerImage(Il2Cpp.Domain.assembly("Assembly-CSharp").image.handle)
                 setTimeout(() => h("Update"), 3000)
             } else if (type == "Soon") {
                 //todo others
