@@ -1,10 +1,12 @@
+import { filterDuplicateOBJ, passValueKey } from "../../../../../utils/common"
 
 const HookSetActive = (defaltActive: number = 1) => {
-    A(Il2Cpp.Api.GameObject._SetActive, (args: any[], ctx: { lr: any }) => {
+    A(Il2Cpp.Api.GameObject._SetActive, (args: InvocationArguments, ctx: CpuContext, passValue: Map<passValueKey, any>) => {
+        if (args[0].isNull()) return
         let gameObject = new Il2Cpp.GameObject(args[0])
         if (filterDuplicateOBJ(gameObject.toString()) == -1) return
         if (defaltActive == 2 || args[1].toInt32() == defaltActive) {
-            let strTmp = "public extern void SetActive( " + (args[1].toInt32() == 0 ? "false" : "true") + " );  LR:" + checkCtx(ctx.lr)
+            let strTmp = "public extern void SetActive( " + (args[1].toInt32() == 0 ? "false" : "true") + " );  LR:" + checkCtx(ctx)
             LOGW("\n" + getLine(strTmp.length))
             LOGD(strTmp)
             LOGO(getLine(strTmp.length / 2))
@@ -45,7 +47,7 @@ globalThis.HookSetActive = HookSetActive
 globalThis.showGameObject = showGameObject
 
 declare global {
-    var HookSetActive: (defaltActive: number) => void;
+    var HookSetActive: (defaltActive?: number) => void;
     var showGameObject: (gameObjOrTransform: NativePointer) => void;
 }
 

@@ -79,28 +79,28 @@ class PointerEventImpl extends BaseEventDataImpl implements PointerEventDataInte
         return Il2Cpp.Api.PointerEventData._get_pointerCurrentRaycast(this.handle)
     }
 
-    set_lastPress(lastPress: Il2cppGameObject): void {
+    set_lastPress(lastPress: Il2Cpp.GameObject): void {
         return Il2Cpp.Api.PointerEventData._set_lastPress(this.handle, lastPress)
     }
 
-    get_lastPress(): Il2cppGameObject {
-        return Il2Cpp.Api.PointerEventData._get_lastPress(this.handle)
+    get_lastPress(): Il2Cpp.GameObject {
+        return new Il2Cpp.GameObject(Il2Cpp.Api.PointerEventData._get_lastPress(this.handle))
     }
 
-    set_pointerDrag(pointerDrag: Il2cppGameObject): void {
+    set_pointerDrag(pointerDrag: Il2Cpp.GameObject): void {
         return Il2Cpp.Api.PointerEventData._set_pointerEnter(this.handle, pointerDrag)
     }
 
-    get_pointerDrag(): Il2cppGameObject {
-        return Il2Cpp.Api.PointerEventData._get_pointerDrag(this.handle)
+    get_pointerDrag(): Il2Cpp.GameObject {
+        return new Il2Cpp.GameObject(Il2Cpp.Api.PointerEventData._get_pointerDrag(this.handle))
     }
 
-    set_pointerEnter(pointerEnter: Il2cppGameObject): void {
+    set_pointerEnter(pointerEnter: Il2Cpp.GameObject): void {
         return Il2Cpp.Api.PointerEventData._set_pointerEnter(this.handle, pointerEnter)
     }
 
-    get_pointerEnter(): Il2cppGameObject {
-        return Il2Cpp.Api.PointerEventData._get_pointerEnter(this.handle)
+    get_pointerEnter(): Il2Cpp.GameObject {
+        return new Il2Cpp.GameObject(Il2Cpp.Api.PointerEventData._get_pointerEnter(this.handle))
     }
 
     set_pointerId(pointerId: number): void {
@@ -111,12 +111,12 @@ class PointerEventImpl extends BaseEventDataImpl implements PointerEventDataInte
         return Il2Cpp.Api.PointerEventData._get_pointerId(this.handle)
     }
 
-    set_pointerPress(pointerPress: Il2cppGameObject): void {
+    set_pointerPress(pointerPress: Il2Cpp.GameObject): void {
         return Il2Cpp.Api.PointerEventData._set_pointerPress(this.handle, pointerPress)
     }
 
-    get_pointerPress(): Il2cppGameObject {
-        return Il2Cpp.Api.PointerEventData._get_pointerPress(this.handle)
+    get_pointerPress(): Il2Cpp.GameObject {
+        return new Il2Cpp.GameObject(Il2Cpp.Api.PointerEventData._get_pointerPress(this.handle))
     }
 
     set_pointerPressRaycast(pointerPressRaycast: NativePointer): void {
@@ -146,12 +146,12 @@ class PointerEventImpl extends BaseEventDataImpl implements PointerEventDataInte
         return Il2Cpp.Api.PointerEventData._get_pressPosition(this.handle)
     }
 
-    set_rawPointerPress(rawPointerPress: Il2cppGameObject): void {
+    set_rawPointerPress(rawPointerPress: Il2Cpp.GameObject): void {
         return Il2Cpp.Api.PointerEventData._set_rawPointerPress(this.handle, rawPointerPress)
     }
 
-    get_rawPointerPress(): Il2cppGameObject {
-        return Il2Cpp.Api.PointerEventData._get_rawPointerPress(this.handle)
+    get_rawPointerPress(): Il2Cpp.GameObject {
+        return new Il2Cpp.GameObject(Il2Cpp.Api.PointerEventData._get_rawPointerPress(this.handle))
     }
 
     set_scrollDelta(scrollDelta: NativePointer): void {

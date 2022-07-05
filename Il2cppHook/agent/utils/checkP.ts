@@ -8,9 +8,11 @@ import { TYPE_CHECK_POINTER } from "../base/globle"
  */
 const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, showLog: boolean = false): NativePointer => {
     if (typeof value === "number") {
-        return calPointer(new NativePointer(value))
+        return calPointer(ptr(value))
     } else if (typeof value === "string") {
         return Module.findExportByName(null, value) as NativePointer
+    } else if (typeof value === "function") {
+        return value as NativePointer
     } else if (typeof value === "object") {
         if (value instanceof NativePointer) {
             return calPointer(value)
@@ -38,9 +40,10 @@ const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, show
     return ptr(0)
 
     function calPointer(mPtr: NativePointer): NativePointer {
-        if (mPtr.isNull() || mPtr.compare(soAddr)) return mPtr
+        if (mPtr.isNull() || !mPtr.compare(soAddr)) return mPtr
+        LOGE(mPtr)
         try {
-            let tmpValue = Process.findModuleByAddress(mPtr)
+            let tmpValue: Module | null = Process.findModuleByAddress(mPtr)
             if (tmpValue === null) {
                 let addValue = Il2Cpp.module.base.add(mPtr)
                 let tmpModule = Process.findModuleByAddress(addValue)
@@ -72,7 +75,7 @@ const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, show
 }
 
 declare global {
-    var checkPointer: (args: any) => NativePointer
+    var checkPointer: (args: NativePointer | number) => NativePointer
 }
 
 globalThis.checkPointer = checkPointer as any

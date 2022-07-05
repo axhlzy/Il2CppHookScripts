@@ -213,7 +213,7 @@ class Breaker {
         Interceptor.attach(mPtr, {
             onEnter(this: InvocationContext, args: InvocationArguments) {
                 LOGO("\n" + getLine(65))
-                LOGH("Called from " + mPtr + " ---> " + mPtr.sub(soAddr) + "\t|  LR : " + checkCtx(getPlatformCtx(this.context).lr) + "\n")
+                LOGH("Called from " + mPtr + " ---> " + mPtr.sub(soAddr) + "\t|  LR : " + checkCtx(getPlatformCtx(this.context)) + "\n")
                 let tStr = String(args[0])
                 for (let t = 1; t < argCount; ++t) tStr += "\t" + args[t]
                 LOGD(tStr)
@@ -229,7 +229,7 @@ class Breaker {
         Interceptor.attach(mPtr, {
             onEnter(this: InvocationContext, args: InvocationArguments) {
                 LOGO("\n" + getLine(65))
-                LOGH("Called from " + mPtr + " ---> " + mPtr.sub(soAddr) + "\t|  LR : " + checkCtx(getPlatformCtx(this.context).lr) + "\n")
+                LOGH("Called from " + mPtr + " ---> " + mPtr.sub(soAddr) + "\t|  LR : " + checkCtx(getPlatformCtx(this.context)) + "\n")
                 PrintStackTraceN(this.context)
                 LOGO("\n" + getLine(65))
             }

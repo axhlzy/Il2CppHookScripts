@@ -7,18 +7,26 @@ function PTR2NativePtr(mPtr: PTR): NativePointer {
     return mPtr
 }
 
+export enum passValueKey {
+    org = "org",
+    src = "src",
+    enter = "enter",
+    leave = "leave",
+    time = "time"
+}
+
 let map_attach_listener = GET_MAP<string, InvocationListener>(MapKAY.map_attach_listener)
-type OnEnterType = (args: InvocationArguments, ctx: CpuContext, passValue: Map<string, any>) => void
-type OnExitType = (retval: InvocationReturnValue, ctx: CpuContext, passValue: Map<string, any>) => void
+type OnEnterType = (args: InvocationArguments, ctx: CpuContext, passValue: Map<passValueKey, any>) => void
+type OnExitType = (retval: InvocationReturnValue, ctx: CpuContext, passValue: Map<passValueKey, any>) => void
 const attachNative = (mPtr: ARGM, mOnEnter?: OnEnterType, mOnLeave?: OnExitType, needRecord: boolean = true): void => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
-    if (mPtr == ptr(0)) return
+    if (mPtr instanceof NativePointer && mPtr.isNull()) return
     var passValue = new Map()
-    passValue.set("org", mPtr)
-    passValue.set("src", mPtr)
-    passValue.set("enter", mOnEnter)
-    passValue.set("leave", mOnLeave)
-    passValue.set("time", new Date())
+    passValue.set(passValueKey.org, mPtr)
+    passValue.set(passValueKey.src, mPtr)
+    passValue.set(passValueKey.enter, mOnEnter)
+    passValue.set(passValueKey.leave, mOnLeave)
+    passValue.set(passValueKey.time, new Date())
     mPtr = checkPointer(mPtr)
     let Listener = Interceptor.attach(mPtr, {
         onEnter: function (args: InvocationArguments) {
@@ -128,7 +136,7 @@ export const SeeTypeToString = (obj: number | NativePointer, b: boolean) => {
  * https://cs.android.com/android/platform/superproject/+/master:art/runtime/mirror/class.cc;l=1634;bpv=1;bpt=1?q=class.cc&sq=&ss=android%2Fplatform%2Fsuperproject
  * @param {*} jclsName 
  */
-const getJclassName = (jclsName: NativePointer, ShouldRet: boolean) => {
+const getJclassName = (jclsName: NativePointer, ShouldRet: boolean): string | undefined => {
     ShouldRet == undefined ? false : true
     let pVoid = callFunction(GET_F(EpFunc.DecodeJObject), GET_F(EpFunc.ArtCurrent), jclsName)
     let k_class = callFunction(GET_F(EpFunc.GetDescriptor), pVoid, alloc())
@@ -136,14 +144,14 @@ const getJclassName = (jclsName: NativePointer, ShouldRet: boolean) => {
     LOG("\n" + String(k_class.readCString()) + "\n", LogColor.C36)
 }
 
-function checkCtx(lr: ARGM) {
-    if (typeof lr === "number") lr = ptr(lr)
+function checkCtx(ctx: CpuContext): void | string {
+    let lr: NativePointer = getPlatformCtx(ctx).lr
     let md = Process.findModuleByAddress(lr)
     if (md == null) {
         LOGE("Module not found")
         return
     }
-    return ptr(lr).sub(md.base) + `|${md.name}`
+    return lr.sub(md.base) + `|${md.name}`
 }
 
 const mapValueToArray = (map: Map<any, any>) => {
@@ -175,24 +183,20 @@ const filterDuplicateOBJ = (objstr: string, maxCount: number = 10) => {
 }
 
 export {
-    getJclassName
-}
-
-export {
     attachNative, detachAll, replaceFunction, nopFunction, cancelNop, cancelAllNopedFunction, checkCtx,
-    filterDuplicateOBJ, PTR2NativePtr, mapValueToArray
+    filterDuplicateOBJ, PTR2NativePtr, mapValueToArray, getJclassName
 }
 
 declare global {
-    var d: Function
-    var A: Function
-    var n: Function
-    var nn: Function
-    var nnn: Function
-    var R: Function
-    var getJclassName: Function
-    var checkCtx: Function
-    var filterDuplicateOBJ: (objstr: string, maxCount?: number) => number
+    var d: () => void
+    var A: (mPtr: NativePointer | number, mOnEnter?: OnEnterType, mOnLeave?: OnExitType, needRecord?: boolean) => void
+    var n: (mPtr: NativePointer) => void
+    var nn: (mPtr: NativePointer) => void
+    var nnn: () => void
+    var R: (mPtr: NativePointer, callBack: ReplaceFuncType, TYPENOP: boolean) => void
+    var getJclassName: (jclsName: NativePointer, ShouldRet: boolean) => string | undefined
+    var checkCtx: (ctx: CpuContext) => void | string
+    // var filterDuplicateOBJ: (objstr: string, maxCount?: number) => number
 }
 
 globalThis.d = detachAll
@@ -203,4 +207,4 @@ globalThis.nnn = cancelAllNopedFunction
 globalThis.R = replaceFunction
 globalThis.getJclassName = getJclassName
 globalThis.checkCtx = checkCtx
-globalThis.filterDuplicateOBJ = filterDuplicateOBJ
+// globalThis.filterDuplicateOBJ = filterDuplicateOBJ

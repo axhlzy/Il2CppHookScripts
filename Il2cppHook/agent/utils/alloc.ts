@@ -21,7 +21,7 @@ const alloc = (size: number = 1): NativePointer => allocS(size * p_size)
  * @param {Number} z 
  * @param {Number} w 
  */
-function allocVector(x: number, y: number, z: number, w?: number): NativePointer {
+function allocVector(x: number = 0, y: number = 0, z: number = 0, w?: number): NativePointer {
     let argsLength = arguments.length
     argsLength = argsLength == 0 ? 3 : argsLength
     let temp_vector = alloc(argsLength + 1)
@@ -36,7 +36,7 @@ export { alloc, allocS, allocCStr, allocUStr, allocVector }
 declare global {
     var allocCStr: (str: string) => NativePointer
     var allocUStr: (str: string) => NativePointer
-    var allocVector: (x: number, y: number, z: number, w?: number) => NativePointer
+    var allocVector: (x?: number, y?: number, z?: number, w?: number) => NativePointer
     var alloc: (size?: number) => NativePointer
     var allocP: (size: number) => NativePointer
 }

@@ -237,14 +237,14 @@ class HookerBase {
      * @param {Boolean} isRealAddr 
      */
     private static findMethodsyncCacheMap = new Map<string, NativePointer>()
-    static findMethodSync(imageName: string, className: string, functionName: string, argsCount: number = -1, isRealAddr: boolean = true): NativePointer | undefined {
+    static findMethodSync(imageName: string, className: string, functionName: string, argsCount: number = -1, isRealAddr: boolean = true, cmdCall: boolean = true): NativePointer | undefined {
         if (imageName == undefined || className == undefined || functionName == undefined) return ptr(0)
         // var corlib = il2cpp_get_corlib()
         const soAddr = Il2Cpp.module.base
         let cacheKey = imageName + "." + className + "." + functionName + "." + argsCount
         if (isRealAddr) {
             let cachedPointer = HookerBase.findMethodsyncCacheMap.get(cacheKey)
-            if (cache != undefined) return cachedPointer as NativePointer
+            if (cachedPointer != undefined) return cachedPointer as NativePointer
         }
         let currentlibPack = Il2Cpp.Domain.assembly(imageName).image
         let currentlib: NativePointer = currentlibPack.handle
@@ -301,7 +301,7 @@ class HookerBase {
 const find_method = HookerBase.findMethodSync as find_MethodType
 export { HookerBase, find_method }
 
-type find_MethodType = (imageName: string, className: string, functionName: string, argsCount?: number, isRealAddr?: boolean) => NativePointer
+type find_MethodType = (imageName: string, className: string, functionName: string, argsCount?: number, isRealAddr?: boolean, cmdCall?: boolean) => NativePointer
 type findMethodType = (assemblyName: string, className: string, methodName: string, argsCount?: number, overload?: string[], cmdCall?: boolean) => Il2Cpp.Method | undefined
 
 Reflect.set(globalThis, "Hooker", HookerBase)
