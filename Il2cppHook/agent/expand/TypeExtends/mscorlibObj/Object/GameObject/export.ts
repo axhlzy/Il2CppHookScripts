@@ -1,3 +1,4 @@
+
 const HookSetActive = (defaltActive: number = 1) => {
     A(Il2Cpp.Api.GameObject._SetActive, (args: any[], ctx: { lr: any }) => {
         let gameObject = new Il2Cpp.GameObject(args[0])

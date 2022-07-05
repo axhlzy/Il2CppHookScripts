@@ -1,4 +1,3 @@
-import { type } from "os";
 import "./interface"
 
 // 拓展 mscorlib.System.Object
