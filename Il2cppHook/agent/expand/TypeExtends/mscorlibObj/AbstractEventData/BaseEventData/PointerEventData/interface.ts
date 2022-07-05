@@ -1,9 +1,9 @@
-import { Vector3Impl } from "../../../ValueType/Vector3/class";
+// import { Vector3Impl } from "../../../ValueType/Vector3/class";
 
 interface PointerEventDataInterface {
 
     // .ctor(EventSystem)
-    ctor_1(eventSystem: NativePointer): PointerEventDataInterface;
+    ctor_11(eventSystem: NativePointer): PointerEventDataInterface;
 
     // IsPointerMoving() : Boolean
     IsPointerMoving(): boolean;
@@ -128,17 +128,15 @@ interface PointerEventDataInterface {
     // get_useDragThreshold() : Boolean
     get_useDragThreshold(): boolean;
 
-    // set_worldNormal(Vector3) : Void
-    set_worldNormal(worldNormal: Vector3Impl): void;
+    // // set_worldNormal(Vector3) : Void
+    // set_worldNormal(worldNormal: Vector3Impl): void;
 
-    // get_worldNormal() : Vector3
-    get_worldNormal(): Vector3Impl;
+    // // get_worldNormal() : Vector3
+    // get_worldNormal(): Vector3Impl;
 
-    // set_worldPosition(Vector3) : Void
-    set_worldPosition(worldPosition: Vector3Impl): void;
+    // // set_worldPosition(Vector3) : Void
+    // set_worldPosition(worldPosition: Vector3Impl): void;
 
-    // get_worldPosition() : Vector3
-    get_worldPosition(): Vector3Impl;
+    // // get_worldPosition() : Vector3
+    // get_worldPosition(): Vector3Impl;
 }
-
-export { PointerEventDataInterface }

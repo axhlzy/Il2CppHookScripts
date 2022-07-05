@@ -118,4 +118,4 @@ declare global {
 
 Il2Cpp.GameObject = GameObjectImpl;
 
-export { }
+export { GameObjectImpl }

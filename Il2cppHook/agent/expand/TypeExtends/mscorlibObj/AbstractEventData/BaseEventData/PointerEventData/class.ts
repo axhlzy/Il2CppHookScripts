@@ -1,10 +1,9 @@
 import { Vector3Impl } from "../../../ValueType/Vector3/class";
 import { BaseEventDataImpl } from "../class";
-import { PointerEventDataInterface } from "./interface";
 
 class PointerEventImpl extends BaseEventDataImpl implements PointerEventDataInterface {
 
-    ctor_1(eventSystem: NativePointer): PointerEventImpl {
+    ctor_11(eventSystem: NativePointer): PointerEventImpl {
         return new PointerEventImpl(Il2Cpp.Api.PointerEventData._ctor_1(alloc(), eventSystem))
     }
 
