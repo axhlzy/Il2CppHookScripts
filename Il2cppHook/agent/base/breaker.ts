@@ -5,6 +5,7 @@ import { HookerBase } from "./base";
 import ValueResolve from "./valueResolve";
 
 type SpecialClass = "CommonClass" | "JNI" | "AUI" | "Soon"
+var CommonClass = ["Assembly-CSharp", "MaxSdk.Scripts", "Game", "Zenject", "UniRx", "Purchasing.Common", "UnityEngine.Purchasing"]
 class Breaker {
 
     public static maxCallTimes: number = 10     // 出现 ${maxCallTimes} 次后不再显示
@@ -63,7 +64,6 @@ class Breaker {
 
         function checkSpecialClass(type: SpecialClass) {
             if (type == "CommonClass") {
-                let CommonClass = ["Assembly-CSharp", "MaxSdk.Scripts", "Game", "Zenject", "UniRx", "Purchasing.Common", "UnityEngine.Purchasing"]
                 HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
                     if (CommonClass.includes(image.assembly.name)) {
                         formartClass.printTitile("Found : ImageName: " + image.name + " at " + image.handle)
@@ -102,7 +102,7 @@ class Breaker {
     }
 
     static callTimesInline: number = 0
-    public static attachMethodInfo(method: Il2Cpp.Method, moreInfo: boolean = false): void {
+    public static attachMethodInfo(method: Il2Cpp.Method, detailLog: boolean = false): void {
         if (method.virtualAddress.isNull()) {
             LOGE(methodToString(method))
             return
@@ -112,7 +112,7 @@ class Breaker {
             let handleFunc: InvocationListener = Interceptor.attach(method.virtualAddress, {
                 onEnter: function (this: InvocationContext, args: InvocationArguments) {
                     if (!Breaker.needShowLOG(method, "onEnter")) return
-                    if (!moreInfo) {
+                    if (!detailLog) {
                         // 精简版 B() 针对单个classes/Images
                         let cacheID = `[${++Breaker.callTimesInline}|${new Date().toLocaleTimeString().split(" ")[0]}]`
                         this.passValue = new ValueResolve(cacheID, method).setArgs(args)
@@ -148,7 +148,7 @@ class Breaker {
                 },
                 onLeave: function (this: InvocationContext, retval: InvocationReturnValue) {
                     if (!Breaker.needShowLOG(method, "onLeave")) return
-                    if (!moreInfo && this.passValue != undefined) {
+                    if (!detailLog && this.passValue != undefined) {
                         Breaker.array_methodValue_cache.push((this.passValue as ValueResolve).setRetval(retval))
                     }
                     if (this.content == null || this.disp_title == null) return
@@ -316,12 +316,25 @@ globalThis.b = (mPtr: NativePointer) => {
     }
 }
 globalThis.printDesertedMethods = Breaker.printDesertedMethods
+globalThis.BF = (filterStr: string): void => {
+    if (typeof filterStr != "string") return
+    DD()
+    HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
+        if (CommonClass.includes(image.assembly.name)) {
+            image.classes.flatMap((cls: Il2Cpp.Class) => cls.methods).forEach((mPtr: Il2Cpp.Method) => {
+                if (mPtr.name.indexOf(filterStr) != -1) Breaker.attachMethodInfo(mPtr, false)
+            })
+        }
+    })
+}
+
 declare global {
     var b: (mPtr: NativePointer) => void
     var h: (filterStr?: string, countLogs?: number, reverse?: boolean, detachAll?: boolean) => void
     var B: (mPtr: NativePointer | number | string | SpecialClass) => void
     var D: () => void
     var DD: () => void
+    var BF: (filterStr: string) => void
     var getPlatform: () => string
     var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
     var maxCallTimes: number
