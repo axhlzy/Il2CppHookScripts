@@ -1,3 +1,4 @@
+import { type } from "os";
 import { EpFunc, LogColor, MapKAY, PTR } from "../base/enum";
 import { ARGM, GET_F, GET_MAP, GET_MAP_VALUE, SET_MAP_VALUE } from "../base/globle";
 
@@ -7,7 +8,7 @@ function PTR2NativePtr(mPtr: PTR): NativePointer {
     return mPtr
 }
 
-export enum passValueKey {
+enum passValueKey {
     org = "org",
     src = "src",
     enter = "enter",
@@ -15,9 +16,11 @@ export enum passValueKey {
     time = "time"
 }
 
+export type PassType = passValueKey | string
+
 let map_attach_listener = GET_MAP<string, InvocationListener>(MapKAY.map_attach_listener)
-type OnEnterType = (args: InvocationArguments, ctx: CpuContext, passValue: Map<passValueKey, any>) => void
-type OnExitType = (retval: InvocationReturnValue, ctx: CpuContext, passValue: Map<passValueKey, any>) => void
+type OnEnterType = (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => void
+type OnExitType = (retval: InvocationReturnValue, ctx: CpuContext, passValue: Map<PassType, any>) => void
 const attachNative = (mPtr: ARGM, mOnEnter?: OnEnterType, mOnLeave?: OnExitType, needRecord: boolean = true): void => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     if (mPtr instanceof NativePointer && mPtr.isNull()) return
@@ -144,14 +147,16 @@ const getJclassName = (jclsName: NativePointer, ShouldRet: boolean): string | un
     LOG("\n" + String(k_class.readCString()) + "\n", LogColor.C36)
 }
 
-function checkCtx(ctx: CpuContext): void | string {
-    let lr: NativePointer = getPlatformCtx(ctx).lr
-    let md = Process.findModuleByAddress(lr)
-    if (md == null) {
-        LOGE("Module not found")
-        return
-    }
-    return lr.sub(md.base) + `|${md.name}`
+function checkCtx(ctx: CpuContext, type: "PC" | "LR" | "SP" = "LR"): void | string {
+    let TMP: ArmCpuContext | Arm64CpuContext = getPlatformCtx(ctx)
+    let lr: NativePointer = TMP.lr
+    let pc: NativePointer = TMP.pc
+    let md_lr = Process.findModuleByAddress(lr)
+    if (type == "LR" && md_lr != null) return lr.sub(md_lr.base) + `|${md_lr.name}`
+    let md_pc = Process.findModuleByAddress(pc)
+    if (type == "PC" && md_pc != null) return pc.sub(md_pc.base) + `|${md_pc.name}`
+    if (type == "SP") return String(TMP.sp).toString()
+    return JSON.stringify(ctx)
 }
 
 const mapValueToArray = (map: Map<any, any>) => {
@@ -160,6 +165,129 @@ const mapValueToArray = (map: Map<any, any>) => {
     return list
 }
 
+var runOnMain = (UpDatePtr: NativePointer, Callback: Function) => {
+    if (Callback == undefined) return
+    if (typeof (UpDatePtr) == "function") {
+        Callback = UpDatePtr
+        UpDatePtr = find_method("UnityEngine.UI", "CanvasUpdateRegistry", "PerformUpdate", 0)
+    }
+    A(UpDatePtr, () => {
+        if (Callback != undefined && Callback != null) {
+            try {
+                Callback()
+            } catch (e) {
+                LOGE(e)
+            }
+            Callback = () => { }
+        }
+    })
+}
+
+var SendMessage = (str0: string, str1: string, str2: string = ""): void => {
+    // Java 
+    Java.perform(() => Java.use("com.unity3d.player.UnityPlayer").UnitySendMessage(str0, str1, str2))
+
+    // Native 
+    // callFunction(Module.findExportByName("libunity.so","UnitySendMessage"),allocStr(str0,1),allocStr(str1,1),allocStr(str2,1))
+}
+
+var SendMessageImpl = (platform: string | "IronSource" | "MaxSdkCallbacks" | "MoPubManager" | "TPluginsGameObject"): void => {
+
+    switch (platform) {
+        case "IronSource":
+            IronSourceEvents()
+            break
+        case "MaxSdkCallbacks":
+            MaxSdkCallbacks()
+            break
+        case "MoPubManager":
+            MoPubManager()
+            break
+        case "TPluginsGameObject":
+            TTPluginsGameObject()
+            break
+        default:
+            IronSourceEvents()
+            MaxSdkCallbacks()
+            MoPubManager()
+            TTPluginsGameObject()
+            break
+    }
+
+    SendMessage('GameAnalytics', 'OnCommandCenterUpdated', '')
+    SendMessage('GameAnalytics', 'OnRemoteConfigsUpdated', '')
+    SendMessage('UnityFacebookSDKPlugin', 'OnInitComplete', '{"key_hash":"0eWmEB4CY7TpepNbZdxCOaz2Crs=\n"}')
+
+    function IronSourceEvents() {
+        SendMessage("IronSourceEvents", "onRewardedVideoAvailabilityChanged", "true")
+        SendMessage("IronSourceEvents", "onRewardedVideoAdShowFailedDemandOnly", "true")
+        SendMessage('IronSourceEvents', 'onInterstitialAdReady', '')
+        SendMessage("IronSourceEvents", "onRewardedVideoAdOpened", "")
+        SendMessage("IronSourceEvents", "onRewardedVideoAdStarted", "")
+        SendMessage("IronSourceEvents", "onRewardedVideoAdEnded", "")
+        SendMessage("IronSourceEvents", "onRewardedVideoAdRewarded", "{'placement_reward_name':'Virtual Item','placement_name':'rewardedVideo','placement_reward_amount':'1','placement_id':'2'}")
+        SendMessage("IronSourceEvents", "onRewardedVideoAdClosed", "")
+
+        SendMessage("IronSourceRewardedVideoAndroid", "onRewardedVideoAvailabilityChanged", "true")
+        SendMessage("IronSourceRewardedVideoAndroid", "onRewardedVideoAdShowFailedDemandOnly", "true")
+        SendMessage('IronSourceRewardedVideoAndroid', 'onInterstitialAdReady', '')
+        SendMessage("IronSourceRewardedVideoAndroid", "onRewardedVideoAdOpened", "")
+        SendMessage("IronSourceRewardedVideoAndroid", "onRewardedVideoAdStarted", "")
+        SendMessage("IronSourceRewardedVideoAndroid", "onRewardedVideoAdEnded", "")
+        SendMessage("IronSourceRewardedVideoAndroid", "OnRewardedVideoAdRewarded", "{'placement_reward_name':'Virtual Item','placement_name':'rewardedVideo','placement_reward_amount':'1','placement_id':'2'}")
+        SendMessage("IronSourceRewardedVideoAndroid", "onRewardedVideoAdClosed", "")
+    }
+
+    function MaxSdkCallbacks() {
+        SendMessage('MaxSdkCallbacks', 'ForwardEvent', 'networkName=AppLovin\nname=OnRewardedAdRevenuePaidEvent\nrevenue=0.014579974174499511\nplacement=\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\n')
+        SendMessage('MaxSdkCallbacks', 'ForwardEvent', 'networkName=AppLovin\nname=OnRewardedAdDisplayedEvent\nrevenue=0.014579974174499511\nplacement=\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\n')
+        SendMessage('MaxSdkCallbacks', 'ForwardEvent', 'revenue=0.014579974174499511\nnetworkName=AppLovin\nname=OnRewardedAdReceivedRewardEvent\nplacement=\nrewardAmount=0\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\nrewardLabel=\n')
+        SendMessage('MaxSdkCallbacks', 'ForwardEvent', 'networkName=AppLovin\nname=OnRewardedAdHiddenEvent\nrevenue=0.014579974174499511\nplacement=\nadUnitId=e01cb721520cd33c\ncreativeId=11831000\n')
+
+        SendMessage('MaxSdkCallbacks', 'OnRollicAdsRewardedVideoClickedEvent', 'name=OnSdkInitializedEvent\nconsentDialogState=2\ncountryCode=SG\n')
+        SendMessage("MaxSdkCallbacks", "OnRollicAdsRewardedVideoClosedEvent", "name=OnRewardedAdDisplayedEvent\nadUnitId=ec1a772e0459f45b")
+        SendMessage("MaxSdkCallbacks", "OnRollicAdsRewardedVideoReceivedRewardEvent", "name=OnRewardedAdReceivedRewardEvent\nrewardAmount=0\nadUnitId=ec1a772e0459f45b\nrewardLabel=")
+        SendMessage("MaxSdkCallbacks", "OnRollicAdsRewardedVideoShownEvent", "name=OnRewardedAdHiddenEvent\nadUnitId=ec1a772e0459f45b")
+        SendMessage("MaxSdkCallbacks", "OnRollicAdsRewardedVideoLoadedEvent", "name=OnRewardedAdLoadedEvent\nadUnitId=ec1a772e0459f45b")
+    }
+
+    function MoPubManager() {
+
+        // java.lang.Throwable
+        // at com.unity3d.player.UnityPlayer.UnitySendMessage(Native Method)
+        // at com.mopub.unity.MoPubUnityPlugin$UnityEvent.Emit(MoPubUnityPlugin.java:95)
+        // at com.mopub.unity.MoPubRewardedVideoUnityPluginManager.onRewardedVideoClosed(MoPubRewardedVideoUnityPluginManager.java:67)
+        // at com.mopub.mobileads.MoPubRewardedVideos$1.callback(MoPubRewardedVideos.java:87)
+        // at com.mopub.mobileads.MoPubRewardedVideos.showRewardedVideo(MoPubRewardedVideos.java:77)
+        // at com.mopub.mobileads.MoPubRewardedVideos.showRewardedVideo(MoPubRewardedVideos.java:103)
+        // at com.mopub.unity.MoPubRewardedVideoUnityPlugin$2.run(MoPubRewardedVideoUnityPlugin.java:122)
+        // at com.mopub.unity.MoPubUnityPlugin$10.run(MoPubUnityPlugin.java:526)
+        // at android.os.Handler.handleCallback(Handler.java:790)
+        // at android.os.Handler.dispatchMessage(Handler.java:99)
+        // at android.os.Looper.loop(Looper.java:164)
+        // at android.app.ActivityThread.main(ActivityThread.java:6494)
+        // at java.lang.reflect.Method.invoke(Native Method)
+        // at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:438)
+        // at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:807)
+
+        SendMessage("UnityFacebookSDKPlugin", "UnityFacebookSDKPlugin", "{\"key_hash\":\"NgS2u0aEWjJAWRbMgtyAolzO6s8=\\n\"}")
+        SendMessage("MoPubManager", "EmitSdkInitializedEvent", "[\"0fe07d2ca88549ff9598aed6c45f0773\",\"70\"]")
+        SendMessage("MoPubManager", "EmitInterstitialLoadedEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
+        SendMessage('MoPubManager', 'EmitAdLoadedEvent', '["f7a8241fad1041bda59f303eae75be2d","320","50"]')
+        SendMessage("MoPubManager", "EmitRewardedVideoLoadedEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
+
+        SendMessage("MoPubManager", "EmitRewardedVideoShownEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
+        // SendMessage("MoPubManager", "EmitRewardedVideoReceivedRewardEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
+        SendMessage('MoPubManager', 'EmitRewardedVideoReceivedRewardEvent', '["a44632b619174dfa98c46420592a3756","","0"]')
+        SendMessage("MoPubManager", "EmitRewardedVideoClosedEvent", "[\"a44632b619174dfa98c46420592a3756\"]")
+    }
+
+    function TTPluginsGameObject() {
+        SendMessage("TTPluginsGameObject", "OnRewardedAdsShown", "")
+        SendMessage("TTPluginsGameObject", "OnRewardedAdsClosed", "{\"shouldReward\":true,\"network\":\"admob-unityads\",\"revenue\":0.00138,\"currency\":\"USD\",\"precision\":\"ESTIMATED\"}")
+        SendMessage("TTPluginsGameObject", "OnRewardedAdsReady", "{\"loaded\":true}")
+    }
+}
 
 /**
  * 大于最大出现次数返回值为 -1
@@ -195,8 +323,11 @@ declare global {
     var nnn: () => void
     var R: (mPtr: NativePointer, callBack: ReplaceFuncType, TYPENOP: boolean) => void
     var getJclassName: (jclsName: NativePointer, ShouldRet: boolean) => string | undefined
-    var checkCtx: (ctx: CpuContext) => void | string
+    var checkCtx: (ctx: CpuContext, type?: "LR" | "PC" | "SP") => void | string
     // var filterDuplicateOBJ: (objstr: string, maxCount?: number) => number
+    var runOnMain: (UpDatePtr: NativePointer, Callback: Function) => void
+    var SendMessage: (str0: string, str1: string, str2?: string) => void
+    var SendMessageImpl: (platform: "IronSource" | "MaxSdkCallbacks" | "MoPubManager" | "TPluginsGameObject") => void
 }
 
 globalThis.d = detachAll
@@ -208,3 +339,6 @@ globalThis.R = replaceFunction
 globalThis.getJclassName = getJclassName
 globalThis.checkCtx = checkCtx
 // globalThis.filterDuplicateOBJ = filterDuplicateOBJ
+globalThis.runOnMain = runOnMain
+globalThis.SendMessage = SendMessage
+globalThis.SendMessageImpl = SendMessageImpl

@@ -37,6 +37,7 @@ export const LOGE = (msg: any): void => LOG(msg, LogColor.RED)
 export const LOGD = (msg: any): void => LOG(msg, LogColor.C36)
 export const LOGO = (msg: any): void => LOG(msg, LogColor.C33)
 export const LOGH = (msg: any): void => LOG(msg, LogColor.C96)
+export const LOGZ = (msg: any): void => LOG(msg, LogColor.C90)
 
 export function printLogColors(): void {
     let str = "123456789"
@@ -77,6 +78,7 @@ declare global {
     var LOGD: (msg: any) => void // LogColor.C36
     var LOGO: (msg: any) => void // LogColor.C33
     var LOGH: (msg: any) => void // LogColor.C96
+    var LOGZ: (msg: any) => void // LogColor.C90
     var getLine: (length: number, fillStr?: string) => string
     var printLogColors: () => void
     var LogColor: any
@@ -89,6 +91,7 @@ globalThis.LOGE = LOGE
 globalThis.LOGD = LOGD
 globalThis.LOGO = LOGO
 globalThis.LOGH = LOGH
+globalThis.LOGZ = LOGZ
 globalThis.getLine = getLine
 globalThis.printLogColors = printLogColors
 globalThis.LogColor = LogColor

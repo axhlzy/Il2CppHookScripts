@@ -1,7 +1,7 @@
-import { filterDuplicateOBJ, passValueKey } from "../../../../../utils/common"
+import { filterDuplicateOBJ, PassType } from "../../../../../utils/common"
 
 const HookSetActive = (defaltActive: number = 1) => {
-    A(Il2Cpp.Api.GameObject._SetActive, (args: InvocationArguments, ctx: CpuContext, passValue: Map<passValueKey, any>) => {
+    A(Il2Cpp.Api.GameObject._SetActive, (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
         if (args[0].isNull()) return
         let gameObject = new Il2Cpp.GameObject(args[0])
         if (filterDuplicateOBJ(gameObject.toString()) == -1) return
