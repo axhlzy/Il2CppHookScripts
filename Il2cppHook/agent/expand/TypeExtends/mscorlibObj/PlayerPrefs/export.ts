@@ -72,8 +72,35 @@ const HookPlayerPrefs = (isShowPrintStack: boolean = false, needLRInfo: boolean 
     }
 }
 
+globalThis.SetInt = (key: string, value: number) => callFunction(find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetInt", 2, true), allocUStr(key), value)
+
+globalThis.SetFloat = (key: string, value: number) => callFunction(find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetFloat", 2, true), allocUStr(key), value)
+
+globalThis.SetString = (key: string, value: string) => callFunction(find_method("UnityEngine.CoreModule", "PlayerPrefs", "SetString", 2, true), allocUStr(key), allocUStr(value))
+
+globalThis.GetInt = (key: string): void => {
+    let ret = callFunctionRI(find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetInt", 2, true), allocUStr(key), 0)
+    LOG("\n[*] GetInt('" + key + "')\t--->\t" + ret + "\n", LogColor.C95)
+}
+
+globalThis.GetFloat = (key: string): void => {
+    let ret = callFunctionRF(find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetFloat", 2, true), allocUStr(key), 0)
+    LOG("\n[*] GetFloat('" + key + "')\t--->\t" + ret + "\n", LogColor.C95)
+}
+
+globalThis.GetString = (key: string): void => {
+    let ret = callFunctionRUS(find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetString", 1), allocUStr(key))
+    LOG("\n[*] GetString('" + key + "')\t--->\t" + ret + "\n", LogColor.C95)
+}
+
 declare global {
     var HookPlayerPrefs: (isShowPrintStack?: boolean, needLRInfo?: boolean) => void
+    var SetInt: (key: string, value: number) => void
+    var SetFloat: (key: string, value: number) => void
+    var SetString: (key: string, value: string) => void
+    var GetInt: (key: string) => void
+    var GetFloat: (key: string) => void
+    var GetString: (key: string) => void
 }
 
 globalThis.HookPlayerPrefs = HookPlayerPrefs
