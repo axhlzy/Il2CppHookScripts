@@ -1,4 +1,5 @@
 import { PointerEventImpl } from "../../../../../../AbstractEventData/BaseEventData/PointerEventData/class"
+import { ButtonImpl } from "./class"
 
 function OnPointerClick() {
     let funcAddr: NativePointer | undefined = undefined
@@ -104,15 +105,90 @@ function OnPointerClick() {
 }
 
 const OnButtonClick = () => {
-
+    // A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
+    //     let current = args[0]
+    //     // addRuntimeType(current)
+    //     let ButtonClickedEvent = new ButtonImpl(current).get_onClick()
+    //     let ret_mCalls = getFieldInfoFromCls(findClass("UnityEventBase"), "m_Calls", ButtonClickedEvent)
+    //     let gObj = getGameObject(current)
+    //     let gtrs = f_getTransform(getGameObject(current))
+    //     LOG("\n[*] " + current + " ---> " + getObjName(current) + " { G:" + gObj + " | T:" + gtrs + " }", LogColor.C96)
+    //     LOG("    [-] " + ret_mCalls[3] + "(" + ret_mCalls[2] + ") " + ret_mCalls[0] + " " + ret_mCalls[5], LogColor.C33)
+    //     // 立即去获取是拿不到函数地址的,这里做一点点小延时
+    //     setTimeout(() => {
+    //         ansItems(ret_mCalls, "m_PersistentCalls")
+    //         ansItems(ret_mCalls, "m_RuntimeCalls")
+    //         ansItems(ret_mCalls, "m_ExecutingCalls")
+    //     }, 10);
+    // })
 }
 
-export { OnPointerClick, OnButtonClick }
+// /**
+//  * 内部调用函数（展示解析的数据）  
+//  * @param {*} ret_mCalls 
+//  * @param {*} itemStr 
+//  */
+// let ansItems = (ret_mCalls, itemStr) => {
+//     //  ps:暂时只是适配了arm32
+//     if (Process.arch != "arm") return
+//     let ret_itemCalls = getFieldInfoFromCls(ret_mCalls[2], itemStr, ret_mCalls[5])
+//     let m_size = getFieldInfoFromCls(ret_itemCalls[2], "_size", ret_itemCalls[5])[5]
+//     if (m_size != 0) {
+//         let item = getFieldInfoFromCls(ret_itemCalls[2], "_items", ret_itemCalls[5])
+//         let arrAddr = []
+//         for (let i = 0; i < m_size; ++i) {
+//             // 本来是想解析动态解析类型的
+//             let tmpType = "UnityAction"
+//             // 这里就默认使用了0x8偏移位置的函数指针 从dump出来的情况看起来并不是每一个子类类型都有一个0x8，但实测0x8是可用的
+//             let tmpValue = FackKnownType(tmpType, ptr(item[5]).add(p_size * (4 + i)).readPointer().add(p_size * 2).readPointer())
+//             let functionName = mapNameToAddr(tmpValue)
+//             tmpValue += (functionName == "" || functionName == undefined ? "" : (" | " + functionName))
+//             arrAddr.push(tmpValue)
+//         }
+//         LOGD("\t" + itemStr.substring(2, 3) + "_calls ( INS :" + item[5] + ")  [TYPE : " + ret_itemCalls[3] + " ( " + ret_itemCalls[2] + " ) | LEN : " + m_size +
+//             "] \n\t\t" + JSON.stringify(arrAddr) + " <--- " + JSON.stringify(JSON.parse(FackKnownType(item[3], item[5], item[2])).slice(0, m_size)))
+//     }
+// }
+
+
+
+
+/**
+ * 隐藏模拟点击位置的gameobj
+ * 这里find_method()在移植的时候写具体的地址就是，不用移植整个js代码
+ * @param {*} x 
+ * @param {*} y 
+ */
+const HideClickedObj = (x: number, y: number) => {
+    let m_ptr = find_method("UnityEngine.UI", "Button", "OnPointerClick", 1)
+    let srcFunc = new NativeFunction(m_ptr, 'void', ['pointer', 'pointer', 'pointer', 'pointer'])
+    Interceptor.revert(m_ptr)
+    Interceptor.replace(m_ptr, new NativeCallback(function (arg0, pointerEventData, arg2, arg3) {
+        srcFunc(arg0, pointerEventData, arg2, arg3)
+        if (pointerEventData.isNull()) return
+        let gameObj = new PointerEventImpl(pointerEventData).get_pointerEnter()
+        // 判断名字后使用这三种方式都可以去掉该对象
+        if (gameObj.get_name() === "Settings Button") {
+            // setActive(gameObj,0)
+            // var m_transform = new NativeFunction(find_method("UnityEngine.CoreModule","GameObject","get_transform",0),'pointer',['pointer'])(gameObj)
+            // SetLocalScale(m_transform,0,0,0)
+            // destroyObj(gameObj)
+        }
+    }, 'void', ['pointer', 'pointer', 'pointer', 'pointer']))
+
+    setClick(x, y)
+    // B 去断点找到点击事件的处理函数并nop掉
+    // 循环调用，出现时destory掉这个gameObj
+}
+
+export { OnPointerClick, OnButtonClick, HideClickedObj }
 
 declare global {
     var HookOnPointerClick: () => void;
     var B_Button: () => void;
+    var HideClickedObj: (x: number, y: number) => void;
 }
 
 globalThis.HookOnPointerClick = OnPointerClick;
 globalThis.B_Button = OnButtonClick;
+globalThis.HideClickedObj = HideClickedObj;

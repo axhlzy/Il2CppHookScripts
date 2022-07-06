@@ -2,8 +2,9 @@ import { cache } from "decorator-cache-getter";
 import "../bridge/fix/Il2cppClass"
 import { getMethodModifier } from "../bridge/fix/il2cppMethod";
 import { allocCStr } from "../utils/alloc";
-import { LogColor } from "./enum";
+import { FieldAccess, LogColor } from "./enum";
 import { formartClass } from "../utils/formart";
+import { type } from "os";
 
 class HookerBase {
     constructor() { }
@@ -296,6 +297,146 @@ class HookerBase {
         LOGD("methodPointer\t---->\t" + method.readPointer() + "\t===>\t" + method.readPointer().sub(soAddr))
         LOGO(getLine(85))
     }
+
+    // static getFieldOffFromCls(clsptr: NativePointer, fieldName: string): NativePointer {
+    //     if (arguments[2] == undefined) return HookerBase.listFieldsFromCls(clsptr, 0, 2, fieldName)
+    //     return HookerBase.listFieldsFromCls(clsptr, ptr(arguments[2]), 1, fieldName)
+    // }
+
+    // static getFieldInfoFromCls(clsptrOrName: string | NativePointer | number, fieldName: string) {
+    //     if (typeof clsptrOrName == "string") clsptrOrName = findClass(clsptrOrName)
+    //     if (typeof clsptrOrName == "number") clsptrOrName = ptr(clsptrOrName)
+    //     if (arguments[2] == undefined) return listFieldsFromCls(clsptrOrName, 0, 2, fieldName)
+    //     return HookerBase.listFieldsFromCls(clsptrOrName, ptr(arguments[2]), 2, fieldName)
+    // }
+
+    static listFieldsFromCls(klass: NativePointer | number, instance: NativePointer | number) {
+        if (klass == undefined || klass == null) return
+        if (typeof klass == "number") klass = ptr(klass)
+        if (typeof instance == "number") instance = ptr(instance)
+        let packCls = new Il2Cpp.Class(klass)
+        let fieldsCount = packCls.fields.length
+        if (fieldsCount <= 0) return
+        let is_enum = packCls.isEnum
+        if (arguments[2] == undefined) LOGH("\nFound " + fieldsCount + " Fields" + (is_enum ? "(enum)" : "") + " in class: " + packCls.name + " (" + klass + ")")
+        // ...\Data\il2cpp\libil2cpp\il2cpp-class-internals.h
+        let iter = alloc()
+        let field = null
+        let maxlength = 0
+        let arrStr = new Array()
+        let enumIndex = 0
+        while (field = Il2Cpp.Api._classGetFields(klass, iter)) {
+            if (field.isNull()) break
+            let fieldName = field.readPointer().readCString()
+            let filedType = field.add(p_size).readPointer()
+            let filedOffset = "0x" + field.add(3 * p_size).readInt().toString(16)
+            let field_class = Il2Cpp.Api._classFromType(filedType)
+            let fieldClassName = new Il2Cpp.Class(field_class).name
+            let accessStr = fackAccess(filedType)
+            accessStr = accessStr.substring(0, accessStr.length - 1)
+            let enumStr = (is_enum && (String(field_class) == String(klass))) ? (enumIndex++ + "\t") : " "
+            let retStr = filedOffset + "\t" + accessStr + "\t" + fieldClassName + "\t" + field_class + "\t" + fieldName + "\t" + enumStr
+            if (arguments[2] == "1" && fieldName == arguments[3]) return ptr(filedOffset)
+            if (arguments[2] == "2" && fieldName == arguments[3]) {
+                let tmpValue = !instance.isNull() ? instance.add(ptr(filedOffset)) : ptr(0)
+                let tmpValueR = !instance.isNull() ? instance.add(ptr(filedOffset)).readPointer() : ptr(0)
+                return [fieldName, filedOffset, field_class, fieldClassName, tmpValue, tmpValueR]
+            }
+            arrStr.push(retStr)
+            maxlength = retStr.length < maxlength ? maxlength : retStr.length
+        }
+        if (arguments[2] != undefined) return ptr(0)
+
+        LOGO("\n" + getLine(maxlength + 5))
+
+        /**
+         * mStr[0] offset
+         * mStr[1] access flag str
+         * mStr[2] field class name
+         * mStr[3] field class pointer
+         * mStr[4] field name
+         */
+        arrStr.sort((x, y) => {
+            return parseInt(x.split("\t")[0]) - parseInt(y.split("\t")[0])
+        }).forEach((str, index) => {
+            // 静态变量
+            // if (str.indexOf("static") != -1) str = str.replace("0x0", "---")
+            let mStr = str.split("\t")
+            // 值解析          
+            let mName = mStr[2]
+            let indexStr = String("[" + index + "]")
+            let indexSP = indexStr.length == 3 ? " " : ""
+            let enumStr = String(mStr[5]).length == 1 ? String(mStr[5] + " ") : String(mStr[5])
+            LOG(indexStr + indexSP + " " + mStr[0] + " " + mStr[1] + " " + mStr[2] + "(" + mStr[3] + ") " + enumStr + " " + mStr[4], LogColor.C36)
+            if (typeof instance == "number") instance = ptr(instance)
+            if (instance != undefined && str.indexOf("static") == -1) {
+                let mPtr = instance.add(mStr[0])
+                let realP = mPtr.readPointer()
+                let fRet = FackKnownType(mName, realP, mStr[3])
+                // 当它是boolean的时候只保留 最后两位显示
+                if (mName == "Boolean") {
+                    let header = String(realP).substr(0, 2)
+                    let endstr = String(realP).substr(String(realP).length - 2, String(realP).length).replace("x", "0")
+                    let middle = getLine(((Process.arch == "arm" ? 10 : 14) - 2 - 2), ".")
+                    // realP = header + middle + endstr
+                }
+                // fRet = fRet == "UnKnown" ? (mPtr + " ---> " + realP) : (mPtr + " ---> " + realP + " ---> " + fRet)
+                LOG("\t" + fRet + "\n", LogColor.C90)
+            } else if (str.indexOf("static") != -1) {
+                // console.warn(+ptr(mStr[3])+allocStr(mStr[4])+"\t"+mStr[4])
+                let field = Il2Cpp.Api._classGetFieldFromName(ptr(mStr[3]), allocCStr(mStr[4]))
+                if (!field.isNull()) {
+                    let addrOut = alloc()
+                    Il2Cpp.Api._fieldGetStaticValue(field, addrOut)
+                    let realP = addrOut.readPointer()
+                    LOG("\t" + addrOut + " ---> " + realP + " ---> " + FackKnownType(mName, realP, mStr[3]), LogColor.C90)
+                }
+                LOG("\n")
+            }
+        })
+        LOGO(getLine(maxlength + 5))
+
+        function fackAccess(m_type: NativePointer) {
+            let attrs = m_type.add(p_size).readPointer()
+            let outPut = ""
+            let access = Number(attrs) & FieldAccess.FIELD_ATTRIBUTE_FIELD_ACCESS_MASK
+            switch (access) {
+                case FieldAccess.FIELD_ATTRIBUTE_PRIVATE:
+                    outPut += "private "
+                    break;
+                case FieldAccess.FIELD_ATTRIBUTE_PUBLIC:
+                    outPut += "public "
+                    break;
+                case FieldAccess.FIELD_ATTRIBUTE_FAMILY:
+                    outPut += "protected "
+                    break;
+                case FieldAccess.FIELD_ATTRIBUTE_ASSEMBLY:
+                case FieldAccess.FIELD_ATTRIBUTE_FAM_AND_ASSEM:
+                    outPut += "internal "
+                    break;
+                case FieldAccess.FIELD_ATTRIBUTE_FAM_OR_ASSEM:
+                    outPut += "protected internal "
+                    break;
+            }
+            if (Number(attrs) & FieldAccess.FIELD_ATTRIBUTE_LITERAL) {
+                outPut += "const "
+            } else {
+                if (Number(attrs) & FieldAccess.FIELD_ATTRIBUTE_STATIC) {
+                    outPut += "static "
+                }
+                if (Number(attrs) & FieldAccess.FIELD_ATTRIBUTE_INIT_ONLY) {
+                    outPut += "readonly "
+                }
+            }
+            return outPut
+        }
+    }
+
+
+}
+
+function FackKnownType(...args: any[]) {
+
 }
 
 const find_method = HookerBase.findMethodSync as find_MethodType

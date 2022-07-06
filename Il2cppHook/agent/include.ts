@@ -16,7 +16,7 @@ import "./bridge/fix/apiFix"
 import "./bridge/fix/Il2cppClass"
 import "./bridge/fix/il2cppMethod"
 
-import "./java/info"
+import "./java/include"
 
 import "./native/std/std_deque"
 import "./native/std/std_string"
