@@ -28,6 +28,11 @@ class formartClass {
         return str
     }
 
+    static getTime = (): string => {
+        let today = new Date()
+        return today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
+    }
+
     /**
      * 字符串指定位置添加元素
      * @param str1:原字符串
