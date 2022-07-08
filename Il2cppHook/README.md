@@ -95,6 +95,20 @@
  */
 </pre>
 
+// 2021.2.7f1c1
+// typedef struct MethodInfo {
+//     Il2CppMethodPointer methodPointer;
+//     Il2CppMethodPointer virtualMethodPointer;
+//     InvokerMethod invoker_method;
+//     const char * name;
+//     Il2CppClass * klass;
+//     const Il2CppType * return_type;
+//     const Il2CppType ** parameters;
+
+遇到不可用的时候 MethodInfoOffset 可尝试修改为 0x0 / 0x1
+var MethodInfoOffset = 0x0
+
+
 ### 用例
 1. **list_Images()   ===   i()**
    
