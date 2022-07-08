@@ -2,7 +2,7 @@
  * @Author      lzy <axhlzy@live.cn>
  * @HomePage    https://github.com/axhlzy
  * @CreatedTime 2021/01/16 09:23
- * @UpdateTime  2022/05/23 11:53
+ * @UpdateTime  2022/07/08 16:41
  * @Des         frida hook u3d functions script
  */
 
@@ -709,7 +709,7 @@ var list_Methods = (klass, TYPE) => {
     try {
         while (method = il2cpp_class_get_methods(klass, iter)) {
             if (method == 0) break
-            if (klass != getClassAddrFromMethodInfo(method)) MethodInfoOffset = 0x1
+            // if (klass != getClassAddrFromMethodInfo(method)) MethodInfoOffset = 0x1
             let methodName = getMethodName(method)
             let retClass = il2cpp_class_from_type(getMethodReturnType(method))
             let retName = getClassName(retClass)
@@ -881,7 +881,7 @@ let addBreakPoints = imgOrCls => {
         try {
             while (method = il2cpp_class_get_methods(cls, iter)) {
                 if (method == 0) break
-                if (cls != getClassAddrFromMethodInfo(method)) MethodInfoOffset = 0x1
+                // if (Number(cls) != Number(getClassAddrFromMethodInfo(method))) MethodInfoOffset = 0x1
                 let methodName = get_method_des(method)
                 let methodAddr = method.readPointer()
                 if (methodAddr == 0) continue
@@ -1563,7 +1563,7 @@ const LogColor = {
 //     const Il2CppType * return_type;
 //     const Il2CppType ** parameters;
 
-var MethodInfoOffset = 0x0
+var MethodInfoOffset = 0x1
 
 var getClassName = klass => ptr(klass).add(p_size * 2).readPointer().readCString()
 
@@ -1617,10 +1617,10 @@ var setFunctionValue = (mPtr, value, index) => {
 function callFunction(value, ...args) {
     try {
         if (value == undefined || value == null || value == 0x0) return ptr(0x0)
-        for (let i = 1; i <= (arguments.length < 5 ? 5 : arguments.length) - 1; i++)
+        for (let i = 1; i <= (arguments.length < 7 ? 7 : arguments.length) - 1; i++)
             arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))
-        return new NativeFunction(checkPointer(value, true), 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
-            (arguments[1], arguments[2], arguments[3], arguments[4])
+        return new NativeFunction(checkPointer(value, true), 'pointer', ['pointer', 'pointer', 'pointer', 'pointer', 'pointer', 'pointer'])
+            (arguments[1], arguments[2], arguments[3], arguments[4], arguments[5], arguments[6])
     } catch (e) {
         LOG(e, LogColor.C95)
         return ptr(0)
@@ -2468,8 +2468,8 @@ function getApkInfo() {
     attachJava(() => {
         LOG(getLine(100), LogColor.C33)
 
-        let context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
-        let pkgInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0)
+        var context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
+        var pkgInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0)
         // var appInfo = context.getApplicationInfo()
         let appInfo = pkgInfo.applicationInfo.value
 
@@ -2482,9 +2482,10 @@ function getApkInfo() {
         let str_pkgName = context.getPackageName()
         LOG("\n[*]PkgName\t\t" + str_pkgName, LogColor.C36)
 
-        let verName = pkgInfo.versionName.value
-        let targetSdkVersion = pkgInfo.applicationInfo.value.targetSdkVersion.value
-        LOG("\n[*]Verison\t\t" + verName + " (targetSdkVersion:" + targetSdkVersion + ")", LogColor.C36)
+        var verName = pkgInfo.versionName.value
+        var verCode = pkgInfo.versionCode.value
+        var targetSdkVersion = pkgInfo.applicationInfo.value.targetSdkVersion.value
+        LOG("\n[*]Verison\t\t{ " + verName + " / " + verCode + " }\t(targetSdkVersion:" + targetSdkVersion + ")", LogColor.C36)
 
         let appSize = Java.use("java.io.File").$new(appInfo.sourceDir.value).length()
         LOG("\n[*]AppSize\t\t" + appSize + "\t(" + (appSize / 1024 / 1024).toFixed(2) + " MB)", LogColor.C36)
@@ -2868,7 +2869,7 @@ var SetString = (key, value) => callFunction(find_method("UnityEngine.CoreModule
 
 var GetInt = key => {
     let ret = callFunctionRI(find_method("UnityEngine.CoreModule", "PlayerPrefs", "GetInt", 2, true), allocUStr(key), 0)
-    LOG("\n[*] GetInt('" + key + "')\t--->\t" + ret.toInt32() + "\n", LogColor.C95)
+    LOG("\n[*] GetInt('" + key + "')\t--->\t" + ret + "\n", LogColor.C95)
 }
 
 var GetFloat = key => {
@@ -3069,6 +3070,15 @@ var SendMessageImpl = platform => {
         SendMessage("IronSourceEvents", "onRewardedVideoAdEnded", "")
         SendMessage("IronSourceEvents", "onRewardedVideoAdRewarded", "{'placement_reward_name':'Virtual Item','placement_name':'rewardedVideo','placement_reward_amount':'1','placement_id':'2'}")
         SendMessage("IronSourceEvents", "onRewardedVideoAdClosed", "")
+
+        SendMessage("IronSourceRewardedVideoAndroid", "onRewardedVideoAvailabilityChanged", "true")
+        SendMessage("IronSourceRewardedVideoAndroid", "onRewardedVideoAdShowFailedDemandOnly", "true")
+        SendMessage('IronSourceRewardedVideoAndroid', 'onInterstitialAdReady', '')
+        SendMessage("IronSourceRewardedVideoAndroid", "onRewardedVideoAdOpened", "")
+        SendMessage("IronSourceRewardedVideoAndroid", "onRewardedVideoAdStarted", "")
+        SendMessage("IronSourceRewardedVideoAndroid", "onRewardedVideoAdEnded", "")
+        SendMessage("IronSourceRewardedVideoAndroid", "OnRewardedVideoAdRewarded", "{'placement_reward_name':'Virtual Item','placement_name':'rewardedVideo','placement_reward_amount':'1','placement_id':'2'}")
+        SendMessage("IronSourceRewardedVideoAndroid", "onRewardedVideoAdClosed", "")
     }
 
     function MaxSdkCallbacks() {
@@ -3728,6 +3738,7 @@ var PrintHierarchy = (mPtr, level, inCall) => {
     if (level == 10) LOG(getLine(75) + "\n", LogColor.C33)
     // 当前level作为第一级
     let baseLevel = getLevel(transform)
+    LOGD((inCall ? "\t" : "") + getLine(0, "\t") + baseLevel)
     LOG((inCall != undefined ? "\t" : "") + getLine(0, "\t") + transform + " : " + getObjName(transform), LogColor.C36)
     getChild(transform)
 
@@ -4811,16 +4822,16 @@ var B_Text = () => {
     }
 
     function TMP_Text(showGobj) {
-        A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args) => {
+        A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args, ctx) => {
             let aimStr = "|" + readU16(callFunction(["Unity.TextMeshPro", "TMP_Text", "get_text", 0], args[0])) + "|"
             if (filterDuplicateOBJ(String(args[0]), 30) == -1) return
             worksWithText(args[0], "TMP_Text")
-            LOG("\n[TMP_Text]  " + args[0] + "\t" + aimStr, LogColor.C36)
+            LOGD("\n[TMP_Text]  " + args[0] + "\t" + aimStr + "\t" + ctx.lr)
             if (strMap.size != 0) {
                 let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
                     callFunction(["Unity.TextMeshPro", "TMP_Text", "set_text", 1], args[0], allocStr(repStr, ""))
-                    LOG(" \n\t {REP} " + aimStr + " ---> " + repStr, LogColor.C96)
+                    LOGH(" \n\t {REP} " + aimStr + " ---> " + repStr)
                 }
                 if (showGobj != undefined && showGobj == true) {
                     showGameObject(getGameObject(args[0]))
@@ -5127,10 +5138,10 @@ let interceptorStalker = (mPtr, range) => {
                 let subAddress = ptr(instruction.address).sub(soAddr)
                 if (range != undefined) {
                     if (Number(subAddress) > Number(range[0]) && Number(subAddress) < Number(range[1])) {
-                        LOGD(`[*] ${instruction.address} ( ${subAddress} ） ---> ${instruction.mnemonic} ${instruction.opStr}`)
+                        LOGD(`[*] ${instruction.address} ( ${subAddress} ) ---> ${instruction.mnemonic} ${instruction.opStr}`)
                     }
                 } else if (isModuleCode) {
-                    LOGD(`[*] ${instruction.address} ( ${subAddress} ） ---> ${instruction.mnemonic} ${instruction.opStr}`)
+                    LOGD(`[*] ${instruction.address} ( ${subAddress} ) ---> ${instruction.mnemonic} ${instruction.opStr}`)
                 }
                 do {
                     // if (isModuleCode) {
@@ -5163,6 +5174,17 @@ var hookT = () => {
     find_method("mscorlib", "String", "Concat", 2)
     // hook AndroidJavaObject (主要是 string 构造  配合 lr 查看位置)
     a(findClass("UnityEngine.AndroidJNIModule", "AndroidJavaObject"))
+}
+
+function createArray(length, ...items) {
+    if (length == 0 || items.length == 0) return
+    // public static Array CreateInstance(Type elementType, int length)
+    // 已知bug 这里需要的是第二个参数为 int 的重载，但是 find_method 总会找到最后一个重载
+    let ret = callFunction(find_method("mscorlib", "Array", "CreateInstance", 2), getType(items[0], 2)[1], length)
+    for (let index = 0; index < items.length; ++index) {
+        ret.add(p_size * (4 + index)).writePointer(items[index])
+    }
+    return ret
 }
 
 // todo
