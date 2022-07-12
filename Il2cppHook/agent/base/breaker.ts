@@ -296,6 +296,11 @@ class Breaker {
         if (reverse) filterArray.reverse()
         filterArray.forEach(LOGD)
     }
+
+    static printHistoryNum = (start: number = 0, end: number = 100, detachAll: boolean = false) => {
+        if (detachAll) D()
+        Breaker.array_methodValue_cache.slice(start, end).forEach(LOGD)
+    }
 }
 
 globalThis.getPlatform = (): string => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
@@ -305,6 +310,7 @@ globalThis.D = Breaker.clearBreak
 globalThis.DD = Breaker.clearBreakAll
 globalThis.B = Breaker.addBreakPoint
 globalThis.h = Breaker.printHistoryLog
+globalThis.hn = Breaker.printHistoryNum
 globalThis.b = (mPtr: NativePointer) => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     try {
@@ -331,6 +337,7 @@ globalThis.BF = (filterStr: string): void => {
 declare global {
     var b: (mPtr: NativePointer) => void
     var h: (filterStr?: string, countLogs?: number, reverse?: boolean, detachAll?: boolean) => void
+    var hn: (start?: number, end?: number) => void
     var B: (mPtr: NativePointer | number | string | SpecialClass) => void
     var D: () => void
     var DD: () => void
