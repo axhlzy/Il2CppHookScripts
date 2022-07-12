@@ -21,6 +21,18 @@ function callFunction(value: TYPE_CHECK_POINTER, ...args: any[]): NativePointer 
     }
 }
 
+function callFunctionWithOutError(value: TYPE_CHECK_POINTER, ...args: any[]): NativePointer {
+    try {
+        if (value == undefined) return ptr(0x0)
+        for (let i = 1; i <= (arguments.length < 5 ? 5 : arguments.length) - 1; i++)
+            arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))
+        return new NativeFunction(checkPointer(value, true), 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
+            (arguments[1], arguments[2], arguments[3], arguments[4])
+    } catch (e) {
+        return ptr(0)
+    }
+}
+
 // 返回 boolean
 const callFunctionRB = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): boolean => callFunctionRI(mPtr, ...args) == 1
 
@@ -48,14 +60,15 @@ const callFunctionRA = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): void => showA
 export { callFunction, callFunctionRB, callFunctionRI, callFunctionRS, callFunctionRF, callFunctionRUS, callFunctionRCS, callFunctionRA }
 
 declare global {
-    var callFunction: Function
-    var callFunctionRB: Function
-    var callFunctionRI: Function
-    var callFunctionRS: Function
-    var callFunctionRF: Function
-    var callFunctionRUS: Function
-    var callFunctionRCS: Function
-    var callFunctionRA: Function
+    var callFunction: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => NativePointer;
+    var callFunctionRB: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => boolean;
+    var callFunctionRI: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => number;
+    var callFunctionRS: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => number;
+    var callFunctionRF: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => number;
+    var callFunctionRUS: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => string;
+    var callFunctionRCS: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => string;
+    var callFunctionRA: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => void;
+    var callFunctionWithOutError: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => NativePointer;
 }
 
 globalThis.callFunction = callFunction
@@ -66,3 +79,4 @@ globalThis.callFunctionRF = callFunctionRF
 globalThis.callFunctionRUS = callFunctionRUS
 globalThis.callFunctionRCS = callFunctionRCS
 globalThis.callFunctionRA = callFunctionRA
+globalThis.callFunctionWithOutError = callFunctionWithOutError

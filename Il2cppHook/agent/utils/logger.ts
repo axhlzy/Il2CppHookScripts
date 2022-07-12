@@ -79,6 +79,7 @@ declare global {
     var LOGO: (msg: any) => void // LogColor.C33
     var LOGH: (msg: any) => void // LogColor.C96
     var LOGZ: (msg: any) => void // LogColor.C90
+    var NewLine: (lines?: number) => void
     var getLine: (length: number, fillStr?: string) => string
     var printLogColors: () => void
     var LogColor: any
@@ -95,3 +96,4 @@ globalThis.LOGZ = LOGZ
 globalThis.getLine = getLine
 globalThis.printLogColors = printLogColors
 globalThis.LogColor = LogColor
+globalThis.NewLine = (lines: number = 1) => LOG(getLine(lines, "\n"))

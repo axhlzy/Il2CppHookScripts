@@ -41,7 +41,6 @@ const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, show
 
     function calPointer(mPtr: NativePointer): NativePointer {
         if (mPtr.isNull() || !mPtr.compare(soAddr)) return mPtr
-        LOGE(mPtr)
         try {
             let tmpValue: Module | null = Process.findModuleByAddress(mPtr)
             if (tmpValue === null) {

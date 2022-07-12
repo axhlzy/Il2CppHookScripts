@@ -24,29 +24,43 @@ const readU16 = (mPtr: ARGM): string => {
     if (mPtr == undefined || mPtr == ptr(0)) return ""
     try {
         return mPtr.add(p_size * 2 + 4).readUtf16String()
-    } catch (e) {
+    } catch {
         return ""
     }
 }
 
-const showArray = (mPtr: ARGM): void => {
+// funcTransform 自定义解析函数
+const showArray = (mPtr: ARGM, funcTransform?: (itemPtr: NativePointer, objName: string) => string): void => {
 
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     if (mPtr == undefined || mPtr == ptr(0)) return
     let retPtr = mPtr
     let arrLength = retPtr.add(p_size * 3).readUInt()
-    LOGD("\n[*] Array length : " + arrLength + "  |  RET => " + retPtr + "\n")
+    LOGD(`\n[*] Array length : ${arrLength}  |  RET => ${retPtr}\n`)
     if (arrLength == 0) return
     seeHexA(retPtr.add(p_size * 4), (arrLength > 32 ? 32 : arrLength) * p_size, false, LogColor.C33)
-    LOG("\n")
+    NewLine()
     for (let i = 0; i < arrLength; ++i) {
-        let tmpPtr = retPtr.add(p_size * (4 + i))
-        let ObjToString = callFunctionRUS(find_method("mscorlib", "Object", "ToString", 0), tmpPtr.readPointer())
-        if (ObjToString == "UnityEngine.UI.Text")
-            ObjToString += ("\t" + callFunctionRUS(find_method("UnityEngine.UI", "Text", "get_text", 0), tmpPtr.readPointer()))
-        LOGD(String("[" + i + "]").padEnd(5, " ") + " " + tmpPtr + " ---> " + tmpPtr.readPointer() + "  |  " + ObjToString)
+        let tmpPtr = ptr(retPtr).add(p_size * (4 + i))
+        let relItem = tmpPtr.readPointer()
+        let ObjToString = ""
+        try {
+            ObjToString = `${getType(relItem).toString()} | ${new Il2Cpp.Object(relItem).toString()}`
+        } catch {
+            ObjToString = new Il2Cpp.Object(relItem).toString()
+        }
+        // 常用解析
+        if (ObjToString.indexOf("String"))
+            ObjToString += `\t|${readU16(relItem)}|`
+        if (ObjToString.indexOf("Text"))
+            ObjToString += `\t${callFunctionRUS(["UnityEngine.UI", "Text", "get_fontSize", 0])} ${relItem}`
+        if (ObjToString.indexOf("TermData") || ObjToString.indexOf("LanguageData"))
+            ObjToString += `\t | ${readU16(tmpPtr.readPointer().add(0x8).readPointer())}| `
+        LOGD(String("[" + i + "]").padEnd(5, " ") + " " + tmpPtr + " ---> " + relItem + "  |  " + ObjToString)
+        // 自定义解析
+        if (funcTransform != undefined && typeof funcTransform == "function") LOG("\t" + funcTransform(relItem, ObjToString), LogColor.C90)
     }
-    LOG("\n")
+    NewLine()
 }
 
 var seeHexR = (addr: PTR, length: number = 0x40, color: LogColor | undefined) => {
@@ -76,7 +90,7 @@ declare global {
     var readInt64: (value: NativePointer) => Int64
     var readUInt64: (value: NativePointer) => UInt64
     var readU16: (mPtr: ARGM) => string
-    var showArray: (mPtr: ARGM) => void
+    var showArray: (mPtr: ARGM, funcTransform?: (itemPtr: NativePointer, objName: string) => string) => void
     var seeHexR: (addr: PTR, length?: number, color?: LogColor | undefined) => void
     var seeHexA: (addr: PTR, length?: number, header?: boolean, color?: any | undefined) => void
     var getFloat: () => NativePointer
