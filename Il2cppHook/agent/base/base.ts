@@ -451,6 +451,7 @@ globalThis.i = HookerBase.showImages
 globalThis.c = HookerBase.showClasses
 globalThis.m = HookerBase.showMethods
 globalThis.f = HookerBase.showFields
+globalThis.F = HookerBase.listFieldsFromCls
 globalThis.fc = HookerBase.findClass
 globalThis.findClass = HookerBase.findClass
 globalThis.findMethod = HookerBase.findMethodNew
@@ -468,6 +469,7 @@ declare global {
     var c: (imageOrName: string | NativePointer, filter: string) => void
     var m: (klass: NativePointer) => void
     var f: (klass: NativePointer) => void
+    var F: (klass: NativePointer | number, instance: NativePointer | number) => void
     var findClass: (name: string, fromAssebly?: string[]) => NativePointer
     var fc: (name: string, fromAssebly?: string[]) => NativePointer
     var af: (className: string) => void
