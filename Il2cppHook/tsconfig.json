@@ -4,11 +4,13 @@
     "lib": [
       "es2020"
     ],
+    "resolveJsonModule": true,
     "experimentalDecorators": true,
     "module": "commonjs",
     "allowJs": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "strict": true
+    "strict": true,
+    "removeComments": true
   }
 }

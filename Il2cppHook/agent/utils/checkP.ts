@@ -2,11 +2,12 @@ import { TYPE_CHECK_POINTER } from "../base/globle"
 
 /**
  * 判断mPtr是不是ilbil2cpp.so中的地址,自动加上基址
- * 只会自动添加上属于libil2cpp的基地址
- * @param {Pointer} value
- * @returns ptr
+ * 只会自动添加上属于libil2cpp的基地址,没有找到的地址直接返回
+ * @param {TYPE_CHECK_POINTER} value
+ * @returns {NativePointer}
  */
 const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, showLog: boolean = false): NativePointer => {
+    if (Il2Cpp.module.base.isNull()) return ptr(value as unknown as number)
     if (typeof value === "number") {
         return calPointer(ptr(value))
     } else if (typeof value === "string") {
