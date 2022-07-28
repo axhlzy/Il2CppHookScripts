@@ -113,7 +113,7 @@ class Breaker {
                 onEnter: function (this: InvocationContext, args: InvocationArguments) {
                     if (!Breaker.needShowLOG(method, "onEnter")) return
                     if (!detailLog) {
-                        // 精简版 B() 针对单个classes/Images
+                        // 批量版 B() 针对单个classes/Images
                         let cacheID = `[${++Breaker.callTimesInline}|${new Date().toLocaleTimeString().split(" ")[0]}]`
                         this.passValue = new ValueResolve(cacheID, method).setArgs(args)
                         return LOGD((this.passValue as ValueResolve).toString())
