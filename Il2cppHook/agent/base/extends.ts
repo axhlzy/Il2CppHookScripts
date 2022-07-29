@@ -6,7 +6,6 @@ declare global {
     var protect: (mPtr: NativePointer) => void
     var watch: (mPtr: NativePointer, length?: number) => void
     var watchDisabled: () => void
-    var sqliteTest: () => void
     var patchTest: (mPtr: NativePointer, size?: number) => void
     var findInMemory: (typeStr: "Dex" | "Dex1" | "PNG" | "global-metadata.dat" | string, scanSync?: boolean) => void
     var getFileLenth: (path: string) => number
@@ -35,7 +34,8 @@ declare global {
      */
     var StalkerTracePath: (mPtr: NativePointer, range: NativePointer[] | undefined) => void
 
-    var cmdouleTest: Function
+    var cmdouleTest: () => void
+    var sqliteTest: () => void
 }
 
 globalThis.protect = (mPtr: NativePointer, size: number = 0x1000, protection: PageProtection = "rwx") => {
@@ -489,6 +489,7 @@ globalThis.StalkerTraceEvent = (mPtr: NativePointer, range: NativePointer[] | un
     }
 }
 
+// exp: StalkerTracePath(0x4CA23C,[0x4CA23C,0x4CA308])
 globalThis.StalkerTracePath = (mPtr: NativePointer, range: NativePointer[] | undefined) => {
     let src_mPtr = mPtr
     mPtr = checkPointer(mPtr)
