@@ -2,6 +2,10 @@ import { LogColor } from "../base/enum"
 
 class formartClass {
 
+    static printTitileA = (strTitle: string, color: LogColor = LogColor.C33): number => {
+        return formartClass.printTitile(strTitle, color, color, color)
+    }
+
     static printTitile = (strTitle: string, Line1: LogColor = LogColor.C33, Line2: LogColor = LogColor.C33, Line3: LogColor = LogColor.C33): number => {
         let len = strTitle.length + 2
         LOG(` ${getLine(len)} `, Line1)

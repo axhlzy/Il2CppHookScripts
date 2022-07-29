@@ -1,17 +1,16 @@
 import { TYPE_STR, EpFunc } from "../base/enum"
-import { GET_F, ONE_ARG_S } from "../base/globle"
 
 
 let allocStrInner = (str: string, type: TYPE_STR = TYPE_STR.C_STR): NativePointer => type == TYPE_STR.C_STR ?
     Memory.allocUtf8String(str) : Il2Cpp.Api._stringNew(Memory.allocUtf8String(str))
 
-const allocCStr = (str: string): NativePointer => allocStrInner(str, TYPE_STR.C_STR)
+globalThis.allocCStr = (str: string): NativePointer => allocStrInner(str, TYPE_STR.C_STR)
 
-const allocUStr = (str: string): NativePointer => allocStrInner(str, TYPE_STR.U_STR)
+globalThis.allocUStr = (str: string): NativePointer => allocStrInner(str, TYPE_STR.U_STR)
 
-const allocS = (size: number = Process.pointerSize): NativePointer => Memory.alloc(size)
+globalThis.allocP = (size: number = Process.pointerSize): NativePointer => Memory.alloc(size)
 
-const alloc = (size: number = 1): NativePointer => allocS(size * p_size)
+globalThis.alloc = (size: number = 1): NativePointer => allocP(size * p_size)
 
 /**
  * 创建一个vector2/vector3/vector4
@@ -31,7 +30,7 @@ function allocVector(x: number = 0, y: number = 0, z: number = 0, w?: number): N
     return temp_vector
 }
 
-export { alloc, allocS, allocCStr, allocUStr, allocVector }
+export { alloc, allocCStr, allocUStr, allocVector }
 
 declare global {
     var allocCStr: (str: string) => NativePointer
@@ -41,8 +40,4 @@ declare global {
     var allocP: (size: number) => NativePointer
 }
 
-globalThis.allocCStr = allocCStr
-globalThis.allocUStr = allocUStr
 globalThis.allocVector = allocVector
-globalThis.alloc = alloc
-globalThis.allocP = allocS

@@ -10,7 +10,7 @@ import "./base/breaker"
 import "./base/enum"
 import "./base/globle"
 import "./base/info"
-import "./base/patch"
+import "./base/extends"
 
 import "./bridge/expand/packer"
 import "./bridge/fix/apiFix"
