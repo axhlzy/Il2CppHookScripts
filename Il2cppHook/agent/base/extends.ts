@@ -91,6 +91,7 @@ pagesTotal:\t\t${this.pagesTotal}`
 
     // 监控一个或多个内存范围的访问情况, 并且在每个内存页第一次访问时触发回调函数 (onAccess)
     MemoryAccessMonitor.enable(new MenRange(mPtr, length), {
+        // tips：如果同时对一个地址attach和watch则运行到该点时会崩溃 使用watch时注意先detach掉这个点的hook
         onAccess: (access: MemoryAccessDetails) => LOGD(new MemoryDetails(access).tostring())
     })
 }
@@ -427,11 +428,11 @@ globalThis.findImport = (moduleName: string = "libc.so", importName: string = ""
 }
 
 globalThis.getFileLenth = (filePath: string): number => {
-    let file = callFunction(Module.findExportByName("libc.so", "fopen")!, allocCStr(filePath), allocCStr("rwx"))
+    let file = callFunctionWithOutError(Module.findExportByName("libc.so", "fopen")!, allocCStr(filePath), allocCStr("rwx"))
     if (file.isNull()) return 0
-    callFunction(Module.findExportByName("libc.so", "fseek")!, file, 0, 2)
+    callFunctionWithOutError(Module.findExportByName("libc.so", "fseek")!, file, 0, 2)
     let len = callFunctionRI(Module.findExportByName("libc.so", "ftell")!, file)
-    callFunction(Module.findExportByName("libc.so", "fclose")!, file)
+    callFunctionWithOutError(Module.findExportByName("libc.so", "fclose")!, file)
     return len
 }
 

@@ -37,13 +37,13 @@ function callFunctionWithOutError(value: TYPE_CHECK_POINTER, ...args: any[]): Na
 const callFunctionRB = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): boolean => callFunctionRI(mPtr, ...args) == 1
 
 // 返回值 toInt32
-const callFunctionRI = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): number => callFunction(mPtr, ...args).toInt32()
+const callFunctionRI = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): number => callFunctionWithOutError(mPtr, ...args).toInt32()
 
 // readSingle
-const callFunctionRS = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): number => readSingle(callFunction(mPtr, ...args))
+const callFunctionRS = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): number => readSingle(callFunctionWithOutError(mPtr, ...args))
 
 // readFloat
-const callFunctionRF = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): number => alloc(p_size * 2).writePointer(callFunction(mPtr, ...args)).readFloat()
+const callFunctionRF = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): number => alloc(p_size * 2).writePointer(callFunctionWithOutError(mPtr, ...args)).readFloat()
 
 // 返回值为 Unity String
 const callFunctionRUS = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): string => readU16(callFunction(mPtr, ...args))
@@ -55,7 +55,7 @@ const callFunctionRCS = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): string => {
 }
 
 // 返回值为 [] / display / hashset size off:0x10
-const callFunctionRA = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): void => showArray(callFunction(mPtr, ...args))
+const callFunctionRA = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): void => showArray(callFunctionWithOutError(mPtr, ...args))
 
 export { callFunction, callFunctionRB, callFunctionRI, callFunctionRS, callFunctionRF, callFunctionRUS, callFunctionRCS, callFunctionRA }
 

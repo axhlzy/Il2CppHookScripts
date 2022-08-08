@@ -5,15 +5,14 @@ setTimeout(() => main(), 0);
 
 function main() {
     const vm = new QBDI();
-    let a = vm.getModuleNames() as string[]
-    a.forEach(item => console.log(item))
-
+    let names = vm.getModuleNames() as string[]
+    names.forEach(item => console.log(item))
 }
 
-globalThis.eee = main
+globalThis.qbdi = main
 
 declare global {
-    var eee: Function
+    var qbdi: () => void
 }
 
 export { }

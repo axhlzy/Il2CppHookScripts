@@ -1,6 +1,3 @@
-
-
-
 Reflect.defineProperty(Il2Cpp.Class, "prettyString", {
     value: function () {
         var proto = Il2Cpp.Class.prototype;

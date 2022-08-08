@@ -1,6 +1,5 @@
 import { il2cppTabledefs } from "../../base/enum"
 
-
 // 解析 Method 的权限符
 export const getMethodModifier = (methodPtr: NativePointer | number | Il2Cpp.Method): string => {
     if (typeof methodPtr == "number") methodPtr = ptr(methodPtr)

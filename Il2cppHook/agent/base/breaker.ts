@@ -1,15 +1,31 @@
 import { closest } from "fastest-levenshtein";
-import { getMethodModifier, methodToString } from "../bridge/fix/il2cppMethod";
+import { getMethodModifier, methodToString } from "../bridge/fix/il2cppM";
 import { formartClass } from "../utils/formart";
 import { HookerBase } from "./base";
 import ValueResolve from "./valueResolve";
+
+export { Breaker }
+declare global {
+    var b: (mPtr: NativePointer) => void
+    var h: (filterStr?: string, countLogs?: number, reverse?: boolean, detachAll?: boolean) => void
+    var hn: (start?: number, end?: number) => void
+    var B: (mPtr: NativePointer | number | string | SpecialClass) => void
+    var D: () => void
+    var DD: () => void
+    var BF: (filterStr: string) => void
+    var getPlatform: () => string
+    var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
+    var maxCallTimes: number
+    var attathing: boolean
+    var printDesertedMethods: (filterName?: string) => void
+}
 
 type SpecialClass = "CommonClass" | "JNI" | "AUI" | "Soon"
 var CommonClass = ["Assembly-CSharp", "MaxSdk.Scripts", "Game", "Zenject", "UniRx", "Purchasing.Common", "UnityEngine.Purchasing"]
 class Breaker {
 
     public static maxCallTimes: number = 10     // 出现 ${maxCallTimes} 次后不再显示
-    public static detachTimes: number = 500     // 出现 ${detachTimes} 次后取消 hook
+    public static detachTimes: number = 500     // 出现 ${detachTimes}  次后取消 hook
     private static map_attachedMethodInfos: Map<Il2Cpp.Method, InvocationListener> = new Map()
     private static map_methodInfo_callTimes: Map<Il2Cpp.Method, number> = new Map()
     private static array_methodInfo_detached: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
@@ -56,8 +72,7 @@ class Breaker {
                     .forEach(Breaker.attachMethod)
             } else {
                 let classHandle = imgOrClsPtr
-                new Il2Cpp.Class(classHandle).methods
-                    .forEach(Breaker.attachMethod)
+                new Il2Cpp.Class(classHandle).methods.forEach(Breaker.attachMethod)
             }
             LOGO(`${getLine(40, "-")}\n Attached ${Breaker.map_attachedMethodInfos.size - lastSize} methods / All ${Breaker.map_attachedMethodInfos.size} methods\n${getLine(85, "-")}`)
         }
@@ -80,7 +95,7 @@ class Breaker {
                 innerImage(Il2Cpp.Domain.assembly("Assembly-CSharp").image.handle)
                 setTimeout(() => h("Update"), 3000)
             } else if (type == "Soon") {
-                //todo others
+                //TODO others
             } else {
                 throw new Error("checkSpecialClass : type error")
             }
@@ -311,6 +326,7 @@ globalThis.DD = Breaker.clearBreakAll
 globalThis.B = Breaker.addBreakPoint
 globalThis.h = Breaker.printHistoryLog
 globalThis.hn = Breaker.printHistoryNum
+
 globalThis.b = (mPtr: NativePointer) => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     try {
@@ -321,7 +337,9 @@ globalThis.b = (mPtr: NativePointer) => {
         Breaker.breakWithArgs(mPtr)
     }
 }
+
 globalThis.printDesertedMethods = Breaker.printDesertedMethods
+
 globalThis.BF = (filterStr: string): void => {
     if (typeof filterStr != "string") return
     DD()
@@ -333,20 +351,3 @@ globalThis.BF = (filterStr: string): void => {
         }
     })
 }
-
-declare global {
-    var b: (mPtr: NativePointer) => void
-    var h: (filterStr?: string, countLogs?: number, reverse?: boolean, detachAll?: boolean) => void
-    var hn: (start?: number, end?: number) => void
-    var B: (mPtr: NativePointer | number | string | SpecialClass) => void
-    var D: () => void
-    var DD: () => void
-    var BF: (filterStr: string) => void
-    var getPlatform: () => string
-    var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
-    var maxCallTimes: number
-    var attathing: boolean
-    var printDesertedMethods: (filterName?: string) => void
-}
-
-export { Breaker }

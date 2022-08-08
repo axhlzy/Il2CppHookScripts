@@ -27,6 +27,7 @@ var GetStackTraceN = (ctx: CpuContext, level: number = 6) => {
         // .map(symbol => `${getLine(level==undefined?0:level,"\n")}${symbol}\n`)
         .join("\n")
 }
+
 export { PrintStackTrace, PrintStackTraceN, GetStackTrace, GetStackTraceN }
 
 declare global {

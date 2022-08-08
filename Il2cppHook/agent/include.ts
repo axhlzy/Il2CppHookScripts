@@ -1,30 +1,11 @@
 import "frida-il2cpp-bridge"
 
-import "./API/list"
-import "./API/text"
-
+import "./API/include"
 import "./expand/include"
-
-import "./base/base"
-import "./base/breaker"
-import "./base/enum"
-import "./base/globle"
-import "./base/info"
-import "./base/extends"
-
-import "./bridge/expand/packer"
-import "./bridge/fix/apiFix"
-import "./bridge/fix/Il2cppClass"
-import "./bridge/fix/il2cppMethod"
-
+import "./base/include"
+import "./bridge/include"
 import "./java/include"
-
-import "./native/std/std_deque"
-import "./native/std/std_string"
-import "./native/std/std_vector"
-
-import "./utils/_include"
-
-import "./native/include"
+import "./utils/include"
+import "./plugin/include"
 
 import "./globel"

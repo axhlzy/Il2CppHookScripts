@@ -1,10 +1,8 @@
 import { cache } from "decorator-cache-getter";
-import "../bridge/fix/Il2cppClass"
-import { getMethodModifier } from "../bridge/fix/il2cppMethod";
+import { getMethodModifier } from "../bridge/fix/il2cppM";
 import { allocCStr } from "../utils/alloc";
 import { FieldAccess, LogColor } from "./enum";
 import { formartClass } from "../utils/formart";
-import { type } from "os";
 
 class HookerBase {
     constructor() { }

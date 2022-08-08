@@ -1,4 +1,4 @@
-import { methodToString } from "../bridge/fix/il2cppMethod";
+import { methodToString } from "../bridge/fix/il2cppM";
 import { ObjectIl2cpp_impl } from "../expand/TypeExtends/mscorlibObj/Object/class";
 import { ColorImpl } from "../expand/TypeExtends/mscorlibObj/ValueType/Color/class";
 import { formartClass } from "../utils/formart";

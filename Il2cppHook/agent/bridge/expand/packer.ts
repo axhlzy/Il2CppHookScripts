@@ -1,5 +1,3 @@
-import { cache } from "decorator-cache-getter";
-
 interface exFunc {
     methods: Il2Cpp.Method[]
     fields: Il2Cpp.Field[]
@@ -8,18 +6,13 @@ interface exFunc {
 class PackerObject extends Il2Cpp.Object implements exFunc {
     methods: Il2Cpp.Method<Il2Cpp.Method.ReturnType>[] = [];
     fields: Il2Cpp.Field<Il2Cpp.Field.Type>[] = [];
-    invoke(...args: any) {
-
-    }
+    invoke(...args: any) { }
 }
-
 
 class Packer extends Il2Cpp.Object implements exFunc {
     methods: Il2Cpp.Method<Il2Cpp.Method.ReturnType>[] = this.class.methods
     fields: Il2Cpp.Field<Il2Cpp.Field.Type>[] = this.class.fields
-
     pack(): PackerObject {
-
         return new Proxy<Il2Cpp.Class>(this.class, {
             get: (target, property) => {
                 Reflect.set(target, "methods", this.methods as Il2Cpp.Method[]);
@@ -28,7 +21,6 @@ class Packer extends Il2Cpp.Object implements exFunc {
             }
         }) as unknown as PackerObject
     }
-
 }
 
 function packPack(mPtr: NativePointer | number) {
@@ -45,3 +37,4 @@ declare global {
     var pack: (mPtr: NativePointer) => void
 }
 
+export { }
