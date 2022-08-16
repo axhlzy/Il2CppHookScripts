@@ -1,7 +1,7 @@
 {
   "name": "il2cpp-hooker",
   "version": "1.0.0",
-  "description": "Extended scripting based on frida-il2cpp-bridge",
+  "description": "Restructure Ufunc.js based on frida-il2cpp-bridge",
   "main": "agent/index.ts",
   "scripts": {
     "prepare": "npm run build",

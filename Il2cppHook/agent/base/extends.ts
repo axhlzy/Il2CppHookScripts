@@ -366,7 +366,9 @@ function printModule(md: Module, needIndex: boolean = false) {
     needIndex == true ? LOGD(`\n[${++index}]\t${md.name}`) : LOGD(`\n[*]\t${md.name}`)
     let fileLen = getFileLenth(md.path)
     let extendFileLen = fileLen == 0 ? "" : `| FILE: ${ptr(fileLen)} ( ${fileLen} B )`
-    LOGZ(`\t${md.base} - ${(md.base.add(md.size))}  | MEM: ${ptr(md.size)} ( ${md.size} B ) ${extendFileLen}`)
+    // 保留三位小数
+    let size = Math.round(md.size / 1024 / 1024 * 100) / 100
+    LOGZ(`\t${md.base} - ${(md.base.add(md.size))}  | MEM: ${ptr(md.size)} ( ${md.size} B = ${md.size / 1024} KB ≈ ${size} MB ) ${extendFileLen}`)
     LOGZ(`\t${md.path}\n`)
 }
 

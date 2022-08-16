@@ -1,6 +1,6 @@
 import { filterDuplicateOBJ, PassType } from "../../../../../utils/common"
 
-const HookSetActive = (defaltActive: number = 1) => {
+globalThis.HookSetActive = (defaltActive: number = 1) => {
     A(Il2Cpp.Api.GameObject._SetActive, (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
         if (args[0].isNull()) return
         let gameObject = new Il2Cpp.GameObject(args[0])
@@ -15,7 +15,7 @@ const HookSetActive = (defaltActive: number = 1) => {
     })
 }
 
-function showGameObject(mPtr: NativePointer) {
+globalThis.showGameObject = (mPtr: NativePointer) => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     let gameObject: Il2Cpp.GameObject
     if (getTypeName(mPtr) == "GameObject") {
@@ -43,12 +43,25 @@ function showGameObject(mPtr: NativePointer) {
     LOGD("hierarchy\t--->\t" + layerNames)
 }
 
-globalThis.HookSetActive = HookSetActive
-globalThis.showGameObject = showGameObject
-
-declare global {
-    var HookSetActive: (defaltActive?: number) => void;
-    var showGameObject: (gameObjOrTransform: NativePointer) => void;
+globalThis.getTransform = (mPtr: NativePointer) => {
+    if (typeof mPtr == "number") mPtr = ptr(mPtr)
+    let gameObject: Il2Cpp.GameObject
+    try {
+        if (getTypeName(mPtr) == "GameObject") {
+            gameObject = new Il2Cpp.GameObject(mPtr)
+        } else {
+            gameObject = new Il2Cpp.Component(mPtr).get_gameObject()
+        }
+    } catch {
+        throw new Error("getTransform: mPtr is not GameObject or Transform")
+    }
+    return gameObject.get_transform().handle
 }
 
-export { showGameObject } 
+declare global {
+    var HookSetActive: (defaltActive?: number) => void
+    var showGameObject: (gameObjOrTransform: NativePointer) => void
+    var getTransform: (gameObjOrComponent: NativePointer) => NativePointer
+}
+
+export { showGameObject, HookSetActive, getTransform } 

@@ -1,6 +1,6 @@
 import { TransformImpl } from "./class"
 
-const showTransform = (transform: NativePointer) => {
+globalThis.showTransform = (transform: NativePointer) => {
     if (typeof transform == "number") transform = ptr(transform)
     LOGO(`${getLine(15)} Transform ${getLine(15)}`)
     let trsIns = new Il2Cpp.Transform(transform)
@@ -18,7 +18,7 @@ const showTransform = (transform: NativePointer) => {
  * @param {Number} level 最大显示层级
  * @param {Boolean} inCall 内部调用，去掉LOG的相关判断
  */
-const PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boolean = false) => {
+globalThis.PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boolean = false) => {
 
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     if (mPtr.isNull()) return
@@ -62,7 +62,12 @@ const PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boolean 
     }
 }
 
-const getGameObject = (transform: NativePointer, inCall: boolean = false): undefined | NativePointer => {
+/**
+ * 获取/打印GameObject信息（从transform）
+ * @param {Number} transform Transform Pointer
+ * @param {Boolean} inCall true：不返回pointer而是直接showGameObject
+ **/
+globalThis.getGameObject = (transform: NativePointer, inCall: boolean = false): undefined | NativePointer => {
     if (typeof transform == "number") transform = ptr(transform)
     if (inCall) {
         showGameObject(transform)
@@ -71,14 +76,10 @@ const getGameObject = (transform: NativePointer, inCall: boolean = false): undef
     }
 }
 
-globalThis.showTransform = showTransform
-globalThis.PrintHierarchy = PrintHierarchy
-globalThis.getGameObject = getGameObject
-
 declare global {
-    var showTransform: (transform: NativePointer) => void;
-    var PrintHierarchy: (mPtr: NativePointer, level?: number, inCall?: boolean) => void;
-    var getGameObject: (transform: NativePointer) => undefined | NativePointer;
+    var showTransform: (transform: NativePointer) => void
+    var PrintHierarchy: (mPtr: NativePointer, level?: number, inCall?: boolean) => void
+    var getGameObject: (transform: NativePointer) => undefined | NativePointer
 }
 
 export { } 
