@@ -8,6 +8,7 @@ import { TYPE_CHECK_POINTER } from "../base/globle"
  */
 const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, showLog: boolean = false): NativePointer => {
     if (Il2Cpp.module.base.isNull()) return ptr(value as unknown as number)
+    if (Process.arch == 'arm64' && typeof value === "string" && value.trim().startsWith('0x')) value = Number(value)
     if (typeof value === "number") {
         return calPointer(ptr(value))
     } else if (typeof value === "string") {

@@ -62,17 +62,30 @@ class HookerBase {
     }
 
     static showClasses(imageOrName: string | NativePointer | number, filterNameSpace: string = "", filterClassName: string = "",): void {
-        let image: Il2Cpp.Image
-        if (typeof imageOrName == "string") {
-            image = Il2Cpp.Domain.assembly(imageOrName).image
-        } else if (typeof imageOrName == "number") {
-            image = new Il2Cpp.Image(ptr(imageOrName))
-        } else if (arguments[0] == undefined) {
-            LOGE("imageOrName can not be null")
-            return
-        } else {
-            LOGE("imageOrName must be string or number")
-            return
+        let image: Il2Cpp.Image = new Il2Cpp.Image(ptr(1))
+        try {
+            if (typeof imageOrName == "string") {
+                // 处理arm64以参数形式传递会出bug的问题,长十六进制参数用引号包裹起来当String传递
+                // 一般情况是在0x后面大于13个十六进制数就不能把他当成参数传递，否则入参都是错的 emmmm ...
+                if (imageOrName.startsWith("0x")) {
+                    image = new Il2Cpp.Image(ptr(imageOrName.trim()))
+                } else {
+                    //传递ImageName的情况
+                    image = Il2Cpp.Domain.assembly(imageOrName).image
+                }
+            } else if (typeof imageOrName == "number") {
+                // 按照以下写法在arm64上会有奇奇怪怪的bug (64位精度丢失)
+                // 这段代码也就在arm32上是没问题的
+                image = new Il2Cpp.Image(ptr(imageOrName))
+            } else if (arguments[0] == undefined) {
+                throw new Error("imageOrName can not be null")
+            } else {
+                throw new Error("imageOrName must be string or number")
+            }
+            if (image.handle.equals(1)) throw new Error("image handle can not be null")
+        } catch (error) {
+            LOGE(error)
+            throw new Error("Il2Cpp.Image can not be found")
         }
 
         let tMap = new Map<string, Array<Il2Cpp.Class>>()
@@ -86,7 +99,9 @@ class HookerBase {
             tMap.get(key)?.push(image.classes[i])
         }
 
-        let titleLen = formartClass.printTitile("List Classes { namespace {classPtr->filedsCount->methodsCount->enumClass->className} }")
+        LOG(`\n Current -> ${image.name} @ ${image.handle}\n`, LogColor.C104)
+        let titleLen = formartClass.printTitile("List Classes { namespace {classPtr->filedsCount->methodsCount->enumClass->className} }",
+            LogColor.C90, LogColor.C90, LogColor.C90)
         for (let key of tMap.keys()) {
             let nameSpace = key
             if (nameSpace != undefined) {
@@ -129,8 +144,8 @@ class HookerBase {
         return klass
     }
 
-    static showMethods(mPtr: NativePointer): void {
-        let klass: Il2Cpp.Class = HookerBase.checkType(mPtr)
+    static showMethods(mPtr: NativePointer | String | number): void {
+        let klass: Il2Cpp.Class = HookerBase.inputCheck(mPtr)
         if (klass.methods.length == 0) return
         formartClass.printTitile(`Found ${klass.fields.length} Fields ${klass.isEnum ? "(enum)" : ""} in class: ${klass.name} (${klass.handle})`)
         klass.methods.forEach((method: Il2Cpp.Method) => {
@@ -138,14 +153,31 @@ class HookerBase {
         })
     }
 
-    static showFields(mPtr: NativePointer): void {
-        let klass: Il2Cpp.Class = HookerBase.checkType(mPtr)
+    static showFields(mPtr: NativePointer | String | number): void {
+        let klass: Il2Cpp.Class = HookerBase.inputCheck(mPtr)
         if (klass.fields.length == 0) return
         formartClass.printTitile(`Found ${klass.fields.length} Fields ${klass.isEnum ? "(enum) " : ""}in class: ${klass.name} (${klass.handle})`)
         klass.fields.forEach((field: Il2Cpp.Field) => {
             LOGD(`[*] ${field.handle} ${field.type.name} ${field.toString()} [type:${field.type.class.handle}]`)
         })
         LOGO(``)
+    }
+
+    private static inputCheck(input: NativePointer | String | number): Il2Cpp.Class {
+        let klass: Il2Cpp.Class
+        if (input instanceof NativePointer) {
+            klass = HookerBase.checkType(input)
+        } else if (typeof input == "string") {
+            klass = HookerBase.checkType(ptr(input.trim()))
+        } else if (typeof input == "number") {
+            // arm64 使用 '0x...' (String(mPtr)这个参数本身就是错的，如果是正确的判断十三位十六进制数即可)
+            if (String(input).length > 18 && Process.arch == "arm64") throw ("please use '0x...' instead of number")
+            // arm32 使用 number
+            klass = HookerBase.checkType(ptr(input))
+        } else {
+            throw ("mPtr must be string('0x...') or NativePointer")
+        }
+        return klass
     }
 
     /** 优先从fromAssebly列表中去查找，找不到再查找其他Assebly */
@@ -429,8 +461,6 @@ class HookerBase {
             return outPut
         }
     }
-
-
 }
 
 function FackKnownType(...args: any[]) {

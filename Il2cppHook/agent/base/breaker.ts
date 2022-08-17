@@ -13,6 +13,9 @@ declare global {
     var D: () => void
     var DD: () => void
     var BF: (filterStr: string) => void
+    var breakWithArgs: (mPtr: NativePointer, argCount?: number) => void
+    var breakInline: (mPtr: NativePointer) => void
+    var breakWithStack: (mPtr: NativePointer) => void
     var getPlatform: () => string
     var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
     var maxCallTimes: number
@@ -251,8 +254,7 @@ class Breaker {
         })
     }
 
-    static breakInline = (mPtr: NativePointer, maxCount: number = 20) => {
-        if (maxCount == undefined) maxCount = 10
+    static breakInline = (mPtr: NativePointer) => {
         mPtr = checkPointer(mPtr)
         Interceptor.attach(mPtr, {
             onEnter(this: InvocationContext, args: InvocationArguments) {
@@ -326,9 +328,19 @@ globalThis.DD = Breaker.clearBreakAll
 globalThis.B = Breaker.addBreakPoint
 globalThis.h = Breaker.printHistoryLog
 globalThis.hn = Breaker.printHistoryNum
+globalThis.breakWithArgs = Breaker.breakWithArgs
+globalThis.breakWithStack = Breaker.breakWithStack
+globalThis.breakInline = Breaker.breakInline
 
-globalThis.b = (mPtr: NativePointer) => {
-    if (typeof mPtr == "number") mPtr = ptr(mPtr)
+globalThis.b = (mPtr: NativePointer | string | number) => {
+    if (typeof mPtr == "number") {
+        if (Process.arch != "arm64") mPtr = ptr(mPtr)
+        throw new Error("Not support parameter typed number at arm64")
+    } else if (typeof mPtr == "string") {
+        mPtr = mPtr.trim()
+        if (mPtr.startsWith("0x")) mPtr = ptr(mPtr)
+        else throw new Error("Only support String format (like '0x...')")
+    }
     try {
         new Il2Cpp.Method(mPtr).name // 用报错来判断是method指针还是一个普通的地址
         if (mPtr instanceof Il2Cpp.Method) return Breaker.attachMethodInfo(mPtr, true)
