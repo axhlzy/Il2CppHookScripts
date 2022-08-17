@@ -40,8 +40,10 @@ class Breaker {
         if (imgOrClsPtr instanceof NativePointer) {
             innerImage(imgOrClsPtr)
         } else if (typeof imgOrClsPtr == "number") {
+            if (Process.arch == "arm64") throw new Error("Use '0x..' instead of number")
             innerImage(ptr(imgOrClsPtr))
         } else if (typeof imgOrClsPtr == "string") {
+            if (Process.arch == "arm64" && imgOrClsPtr.trim().startsWith("0x")) return innerImage(ptr(imgOrClsPtr))
             if (imgOrClsPtr == "CommonClass" || imgOrClsPtr == "JNI" || imgOrClsPtr == "Soon") return checkSpecialClass(imgOrClsPtr)
             // is ImageName or className
             if (HookerBase._list_images_names.toString().includes(imgOrClsPtr)) { // is ImageName.dll / assemblyName
