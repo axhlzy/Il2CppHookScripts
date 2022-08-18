@@ -12,8 +12,8 @@ declare global {
     var fridaInfo: () => void
     var listThreads: (maxCountThreads?: number) => void
 
-    var listModules: () => void
-    var listModule: (moduleName: string) => void
+    var listModules: (filterName?: string) => void
+    var listModule: (moduleName: string, printItems?: number) => void
     /**
      * findExport 侧重点在定位一些我们只知道函数名不知道他在那个模块里面（用于定位导出函数）
      * 故exportName作为第一个参数，第二个参数用作筛选
@@ -307,12 +307,14 @@ globalThis.listThreads = (maxCountThreads: number = 20) => {
 }
 
 let index: number
-globalThis.listModules = () => {
+globalThis.listModules = (filterName: string = "") => {
     index = 0
-    Process.enumerateModules().forEach((md: Module) => printModule(md, true))
+    Process.enumerateModules().forEach((md: Module) => {
+        if (md.name.includes(filterName)) printModule(md, true)
+    })
 }
 
-globalThis.listModule = (moduleName: string, protection: PageProtection = "", printItems: number = 5) => {
+globalThis.listModule = (moduleName: string, printItems: number = 5) => {
 
     let md = Process.getModuleByName(moduleName)
     if (md == null) {
@@ -322,12 +324,13 @@ globalThis.listModule = (moduleName: string, protection: PageProtection = "", pr
     printModule(md, false)
     if (moduleName == "linker") return
 
+    let protection: PageProtection = "" // all , r , w , x
     let range = md.enumerateRanges(protection)
     if (range.length > 0) {
         LOGO(`\t[-] enumerateRanges ( ${range.length} )`)
         range.sort((f: RangeDetails, s: RangeDetails) => f.base.compare(s.base))
             .forEach((item: RangeDetails) => {
-                LOGZ(`\t\t${item.protection}\t${item.base} - ${item.base.add(item.size)} | 0x${item.size.toString(16).padEnd(p_size * 2, " ")} <- ${item.size}`)
+                LOGZ(`\t\t${item.protection}\t${item.base} - ${item.base.add(item.size)} | ${formartClass.alignStr(String(ptr(item.size)), p_size + 4)} <- ${item.size}`)
             })
         LOG("")
     }
@@ -335,9 +338,19 @@ globalThis.listModule = (moduleName: string, protection: PageProtection = "", pr
     let imp = md.enumerateImports()
     if (imp.length > 0) {
         LOGO(`\t[-] enumerateImports ( ${imp.length} )`)
+        let arrTmpRecord: Array<string> = []
         imp.sort((a: ModuleImportDetails, b: ModuleImportDetails) => a.name.length - b.name.length)
             .slice(0, printItems).forEach((item: ModuleImportDetails) => {
-                LOGZ(`\t\t${item.type}  ${item.name}  ${item.address}`)
+                let address = formartClass.alignStr(String(item.address), Process.pointerSize * 2)
+                let importFromDes: string = "\t<---\t"
+                try {
+                    let tmd = Process.findModuleByAddress(item.address!)! //this can throw exception
+                    let baseStr = ` @ ${tmd.base}`
+                    if (item.type == "function" || item.type == "variable") // not undefined
+                        importFromDes += `${tmd.name} ${arrTmpRecord.includes(tmd.name) ? formartClass.centerStr("...", baseStr.length) : baseStr}` //show base once
+                    arrTmpRecord.push(tmd.name)
+                } catch { importFromDes = "" }
+                LOGZ(`\t\t${item.type}   ${address}  ${item.name} ${importFromDes}`)
             })
         if (imp.length > printItems) LOGZ("\t\t......\n")
     }
@@ -347,7 +360,8 @@ globalThis.listModule = (moduleName: string, protection: PageProtection = "", pr
         LOGO(`\t[-] enumerateExports ( ${exp.length} )`)
         exp.sort((a: ModuleExportDetails, b: ModuleExportDetails) => a.name.length - b.name.length)
             .slice(0, printItems).forEach((item: ModuleExportDetails) => {
-                LOGZ(`\t\t${item.type}  ${item.name}  ${item.address}`)
+                let address = formartClass.alignStr(String(item.address), Process.pointerSize * 2)
+                LOGZ(`\t\t${item.type}   ${address}  ${item.name}`)
             })
         if (exp.length > printItems) LOGZ("\t\t......\n")
     }
@@ -545,6 +559,7 @@ globalThis.StalkerTracePath = (mPtr: NativePointer, range: NativePointer[] | und
     function stalkerExit(tid: ThreadId) {
         Stalker.unfollow()
         Stalker.garbageCollect()
+        LOGE("Stalker Exit : " + Process.getCurrentThreadId())
     }
 }
 

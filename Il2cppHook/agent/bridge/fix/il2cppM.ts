@@ -13,6 +13,10 @@ export const getMethodModifier = (methodPtr: NativePointer | number | Il2Cpp.Met
         localMethod = new Il2Cpp.Method(methodPtr)
     }
     let flags = localMethod.flags
+    return getModifier(flags)
+}
+
+export const getModifier = (flags: number): string => {
     let access = flags & il2cppTabledefs.METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK
     let ret_str = ""
     switch (access) {

@@ -3,6 +3,9 @@ import "./interface"
 
 class ResourcesApi_impl extends mscorlib_System_Type_impl implements ResourcesAPI_interface {
 
+    // s_DefaultAPI : ResourcesAPI
+    s_DefaultAPI: ResourcesApi_impl = new ResourcesApi_impl(lfv(this.handle, "s_DefaultAPI"))
+
     FindObjectsOfTypeAll(type: mscorlib.Type): Object[] {
         return mscorlib.Api.ResourcesAPI._FindObjectsOfTypeAll(this.handle, type);
     }

@@ -1,6 +1,10 @@
+import { FieldsParser } from "../../../../../../../../../bridge/fix/parseFields";
 import { SelectableImpl } from "../class";
 
+type ButtonClickedEvent = NativePointer // todo ...
 class ButtonImpl extends SelectableImpl implements Il2cppButton {
+
+    m_OnClick: ButtonClickedEvent = lfv(this.handle, "m_OnClick")
 
     ctor_0(): Il2Cpp.Button {
         return new ButtonImpl(Il2Cpp.Api.Button._ctor(alloc()));

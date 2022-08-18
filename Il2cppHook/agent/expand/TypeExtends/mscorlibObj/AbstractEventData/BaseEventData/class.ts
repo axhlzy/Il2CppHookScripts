@@ -3,6 +3,9 @@ import { GameObjectImpl } from "../../Object/GameObject/class";
 
 class BaseEventDataImpl extends mscorlib_System_Object_impl implements BaseEventData_Interface {
 
+    // m_EventSystem : EventSystem
+    m_EventSystem: NativePointer = lfv(this.handle, "m_EventSystem")
+
     ctor_1(): BaseEventData_Interface {
         return new BaseEventDataImpl(Il2Cpp.Api.BaseEventData._ctor_1(alloc()));
     }

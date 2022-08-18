@@ -4,6 +4,23 @@ import "./interface"
 
 class mscorlib_System_RuntimeType_impl extends mscorlib_System_Type_impl implements mscorlib_System_RuntimeType {
 
+    // DelegateType : RuntimeType
+    _DelegateType: mscorlib_System_Type_impl = new mscorlib_System_Type_impl(lfv(this.handle, "DelegateType"))
+    // EnumType : RuntimeType
+    _EnumType: mscorlib_System_Type_impl = new mscorlib_System_Type_impl(lfv(this.handle, "EnumType"))
+    // GenericCache : Object
+    GenericCache: NativePointer = lfv(this.handle, "GenericCache")
+    // m_serializationCtor : RuntimeConstructorInfo
+    m_serializationCtor: NativePointer = lfv(this.handle, "m_serializationCtor")
+    // ObjectType : RuntimeType
+    _ObjectType: mscorlib_System_Type_impl = new mscorlib_System_Type_impl(lfv(this.handle, "ObjectType"))
+    // StringType : RuntimeType
+    _StringType: mscorlib_System_Type_impl = new mscorlib_System_Type_impl(lfv(this.handle, "StringType"))
+    // type_info : MonoTypeInfo
+    type_info: NativePointer = lfv(this.handle, "type_info")
+    // ValueType : RuntimeType
+    _ValueType: mscorlib_System_Type_impl = new mscorlib_System_Type_impl(lfv(this.handle, "ValueType"))
+
     get_AssemblyQualifiedName(): string {
         return readU16(mscorlib.Api.RuntimeType._get_AssemblyQualifiedName(this.handle));
     }

@@ -100,8 +100,7 @@ class HookerBase {
         }
 
         LOG(`\n Current -> ${image.name} @ ${image.handle}\n`, LogColor.C104)
-        let titleLen = formartClass.printTitile("List Classes { namespace {classPtr->filedsCount->methodsCount->enumClass->className} }",
-            LogColor.C90, LogColor.C90, LogColor.C90)
+        let titleLen = formartClass.printTitileA("List Classes { namespace {classPtr->filedsCount->methodsCount->enumClass->className} }", LogColor.C90)
         for (let key of tMap.keys()) {
             let nameSpace = key
             if (nameSpace != undefined) {

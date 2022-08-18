@@ -2,9 +2,7 @@ import { LogColor } from "../base/enum"
 
 class formartClass {
 
-    static printTitileA = (strTitle: string, color: LogColor = LogColor.C33): number => {
-        return formartClass.printTitile(strTitle, color, color, color)
-    }
+    static printTitileA = (strTitle: string, color: LogColor = LogColor.C33): number => formartClass.printTitile(strTitle, color, color, color)
 
     static printTitile = (strTitle: string, Line1: LogColor = LogColor.C33, Line2: LogColor = LogColor.C33, Line3: LogColor = LogColor.C33): number => {
         let len = strTitle.length + 2
@@ -23,7 +21,8 @@ class formartClass {
         return tmpRet
     }
 
-    static alignStr(str: string, size: number = 13, fillStr: string = "."): string {
+    static alignStr(str: any, size: number = p_size * 2 + 3, fillStr: string = "."): string {
+        str = String(str)
         let srcSize = str.length
         if (srcSize >= size) {
             str = str.substring(0, size - 1)
@@ -61,6 +60,13 @@ class formartClass {
         if (str.length > size) return str.substring(0, size - 1) + "."
         for (let i = size - str.length; i > 0; i--) str += " "
         return `0x${str}`
+    }
+
+    // 居中字符串
+    static centerStr = (str: string = "...", size: number = Process.pointerSize + 2): string => {
+        if (size <= str.length) return str
+        let paddingNum: number = (size - str.length) / 2
+        return `${getLine(paddingNum, " ")}${str}${getLine(paddingNum, " ")}`
     }
 }
 

@@ -105,22 +105,23 @@ function OnPointerClick() {
 }
 
 const OnButtonClick = () => {
-    // A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
-    //     let current = args[0]
-    //     // addRuntimeType(current)
-    //     let ButtonClickedEvent = new ButtonImpl(current).get_onClick()
-    //     let ret_mCalls = getFieldInfoFromCls(findClass("UnityEventBase"), "m_Calls", ButtonClickedEvent)
-    //     let gObj = getGameObject(current)
-    //     let gtrs = f_getTransform(getGameObject(current))
-    //     LOG("\n[*] " + current + " ---> " + getObjName(current) + " { G:" + gObj + " | T:" + gtrs + " }", LogColor.C96)
-    //     LOG("    [-] " + ret_mCalls[3] + "(" + ret_mCalls[2] + ") " + ret_mCalls[0] + " " + ret_mCalls[5], LogColor.C33)
-    //     // 立即去获取是拿不到函数地址的,这里做一点点小延时
-    //     setTimeout(() => {
-    //         ansItems(ret_mCalls, "m_PersistentCalls")
-    //         ansItems(ret_mCalls, "m_RuntimeCalls")
-    //         ansItems(ret_mCalls, "m_ExecutingCalls")
-    //     }, 10);
-    // })
+    A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
+        let current = args[0]
+        // addRuntimeType(current)
+        let ButtonClickedEvent = new ButtonImpl(current).get_onClick()
+        new ButtonImpl(current).m_OnClick
+        // let ret_mCalls = getFieldInfoFromCls(findClass("UnityEventBase"), "m_Calls", ButtonClickedEvent)
+        // let gObj = getGameObject(current)
+        // let gtrs = f_getTransform(getGameObject(current))
+        // LOG("\n[*] " + current + " ---> " + getObjName(current) + " { G:" + gObj + " | T:" + gtrs + " }", LogColor.C96)
+        // LOG("    [-] " + ret_mCalls[3] + "(" + ret_mCalls[2] + ") " + ret_mCalls[0] + " " + ret_mCalls[5], LogColor.C33)
+        // // 立即去获取是拿不到函数地址的,这里做一点点小延时
+        // setTimeout(() => {
+        //     ansItems(ret_mCalls, "m_PersistentCalls")
+        //     ansItems(ret_mCalls, "m_RuntimeCalls")
+        //     ansItems(ret_mCalls, "m_ExecutingCalls")
+        // }, 10);
+    })
 }
 
 // /**

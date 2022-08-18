@@ -142,7 +142,7 @@ class Breaker {
                         let tmp_content = []
                         if (!method.isStatic) {
                             // 非static方法
-                            tmp_content[0] = `  inst\t| \t\t\t${args[0]}\t\t[ ${ValueResolve.fakeValue(args[0], new Il2Cpp.Type(ptr(1)), method)} ] ( ${method.class.handle} )`
+                            tmp_content[0] = `  inst\t| \t\t\t\t${args[0]}\t\t[ ${ValueResolve.fakeValue(args[0], new Il2Cpp.Type(ptr(1)), method)} ] ( ${method.class.handle} )`
                             for (let index = 1; index < method.parameterCount + 1; ++index) {
                                 let start = `  arg${index}  | `
                                 let mid = `${method.parameters[index - 1].name}\t--->\t\t${formartClass.getPtrFormart(args[index])}\t\t`
@@ -168,28 +168,25 @@ class Breaker {
                 },
                 onLeave: function (this: InvocationContext, retval: InvocationReturnValue) {
                     if (!Breaker.needShowLOG(method, "onLeave")) return
-                    if (!detailLog && this.passValue != undefined) {
+                    if (!detailLog && this.passValue != undefined)
                         Breaker.array_methodValue_cache.push((this.passValue as ValueResolve).setRetval(retval))
-                    }
                     if (this.content == null || this.disp_title == null) return
                     let start = `  ret\t| `
-                    let mid = `\t\t\t${formartClass.getPtrFormart(retval)}\t\t`
+                    let mid = `\t\t\t\t${formartClass.getPtrFormart(retval)}\t\t`
                     let end = `${method.returnType.name} (${method.returnType.class.handle})\t `
                     let res = `${new ValueResolve("", method).setRetval(retval).resolve(-1)}`
                     this.content[this.content.length] = `${start}${mid}${end}${res}`
-                    let lenMex = Math.max(...(this.content as Array<string>).map(item => item.length), this.disp_title.length)
-                    LOGO(`\n${getLine(lenMex)}`)
+                    let lenMax = Math.max(...(this.content as Array<string>).map(item => item.length), this.disp_title.length) + 6 // 黄线长度
+                    LOGO(`\n${getLine(lenMax)}`)
                     LOGD(this.disp_title);
                     LOGO(getLine(this.disp_title.length / 3))
                     this.content.forEach(LOGD)
-                    LOGO(getLine(lenMex))
+                    LOGO(getLine(lenMax))
                 }
             })
             LOGD(methodToString(method))
             Breaker.map_attachedMethodInfos.set(method, handleFunc)
-        } catch (error) {
-            catchError(method)
-        }
+        } catch { catchError(method) }
 
         function catchError(method: Il2Cpp.Method): void {
             LOGE(methodToString(method))
@@ -336,8 +333,9 @@ globalThis.breakInline = Breaker.breakInline
 
 globalThis.b = (mPtr: NativePointer | string | number) => {
     if (typeof mPtr == "number") {
-        if (Process.arch != "arm64") mPtr = ptr(mPtr)
-        throw new Error("Not support parameter typed number at arm64")
+        if (Process.arch == "arm") mPtr = ptr(mPtr)
+        else if (Process.arch == "arm64") throw new Error("Not support parameter typed number at arm64")
+        else mPtr = ptr(mPtr)
     } else if (typeof mPtr == "string") {
         mPtr = mPtr.trim()
         if (mPtr.startsWith("0x")) mPtr = ptr(mPtr)
