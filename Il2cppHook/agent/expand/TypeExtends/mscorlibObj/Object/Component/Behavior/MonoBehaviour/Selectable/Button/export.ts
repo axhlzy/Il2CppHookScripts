@@ -109,7 +109,14 @@ const OnButtonClick = () => {
         let current = args[0]
         // addRuntimeType(current)
         let ButtonClickedEvent = new ButtonImpl(current).get_onClick()
-        new ButtonImpl(current).m_OnClick
+        // 等价于
+        // let ButtonClickedEvent1 = lfv(current, "m_OnClick")
+        let ButtonClickedEvent2 = new ButtonImpl(current).m_OnClick
+        // let ButtonClickedEvent3 = new ButtonImpl(current).m_OnClick.m_Calls
+        // case to UnityEventBase
+
+        LOGD(" " + ButtonClickedEvent + " " + ButtonClickedEvent2)
+
         // let ret_mCalls = getFieldInfoFromCls(findClass("UnityEventBase"), "m_Calls", ButtonClickedEvent)
         // let gObj = getGameObject(current)
         // let gtrs = f_getTransform(getGameObject(current))

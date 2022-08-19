@@ -7,7 +7,7 @@ export class FieldsParser {
     private mClass: Il2Cpp.Class // not null
 
     // using instance ptr to parse fields
-    constructor(mPtr: NativePointer | Number | String) {
+    constructor(mPtr: NativePointer | Number | String, classHandle: NativePointer | string | object | number = 0) {
         if (typeof mPtr === "number") {
             this.mPtr = ptr(mPtr)
         } else if (typeof mPtr === "string") {
@@ -18,6 +18,7 @@ export class FieldsParser {
         } else {
             throw new Error("Input type is not support")
         }
+
         try {
             this.mClass = new Il2Cpp.Object(this.mPtr).class
             this.mClass.name // use to check if instance is valid
@@ -25,10 +26,19 @@ export class FieldsParser {
             this.mClass = new Il2Cpp.Class(this.mPtr)
             this.mPtr = ptr(0) // not instance need set it to null
         }
-    }
 
-    setClassHandle(handle: NativePointer) {
-        this.mClass = new Il2Cpp.Class(handle)
+        if (classHandle != 0) {
+            let clsPtr: NativePointer
+            if (typeof classHandle === "number") {
+                clsPtr = ptr(classHandle)
+            } else if (typeof classHandle === "string") {
+                if (classHandle.indexOf('0x') == 0) clsPtr = ptr(classHandle)
+                throw new Error("Input string like '0x...' ")
+            } else if (typeof classHandle === "object") {
+                clsPtr = ptr(String(classHandle))
+            } else throw new Error("Input type is not support")
+            this.mClass = new Il2Cpp.Class(clsPtr)
+        }
     }
 
     Offset(fieldName: string) {
@@ -116,7 +126,7 @@ const dealWithSpecialType = (field: Il2Cpp.Field, thisValue: NativePointer) => {
 
 declare global {
     var lf: (mPtr: NativePointer, classHandle?: NativePointer) => void
-    var lfv: (mPtr: NativePointer, fieldName: string) => NativePointer
+    var lfv: (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => NativePointer
 }
 
 /**
@@ -124,22 +134,7 @@ declare global {
  * @param mPtr 实例指针/class指针
  * @param classHandle 可空（默认为当前实例指针的class） 用classHandle来解析前面的实例
  */
-globalThis.lf = (mPtr: NativePointer, classHandle: NativePointer | string | object | number = 0) => {
-    let clsPtr: NativePointer
-    if (typeof classHandle === "number") {
-        clsPtr = ptr(classHandle)
-    } else if (typeof classHandle === "string") {
-        if (classHandle.indexOf('0x') == 0) clsPtr = ptr(classHandle)
-        throw new Error("Input string like '0x...' ")
-    } else if (typeof classHandle === "object") {
-        clsPtr = ptr(String(classHandle))
-    } else {
-        throw new Error("Input type is not support")
-    }
-    let parser = new FieldsParser(mPtr)
-    if (classHandle != 0x0) parser.setClassHandle(clsPtr)
-    parser.toShow()
-}
+globalThis.lf = (mPtr: NativePointer, classHandle: NativePointer | string | object | number = 0) => new FieldsParser(mPtr, classHandle).toShow()
 
 // 拿到实例指定的 field
-globalThis.lfv = (mPtr: NativePointer, fieldName: string) => new FieldsParser(mPtr).fieldValue(fieldName)
+globalThis.lfv = (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => new FieldsParser(mPtr, classHandle).fieldValue(fieldName)

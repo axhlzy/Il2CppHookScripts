@@ -1,10 +1,9 @@
-import { FieldsParser } from "../../../../../../../../../bridge/fix/parseFields";
+import { UnityEventBase_impl } from "../../../../../../UnityEventBase/class";
 import { SelectableImpl } from "../class";
 
-type ButtonClickedEvent = NativePointer // todo ...
 class ButtonImpl extends SelectableImpl implements Il2cppButton {
 
-    m_OnClick: ButtonClickedEvent = lfv(this.handle, "m_OnClick")
+    m_OnClick: UnityEventBase_impl = new UnityEventBase_impl(lfv(this.handle, "m_OnClick", findClass("Button")))
 
     ctor_0(): Il2Cpp.Button {
         return new ButtonImpl(Il2Cpp.Api.Button._ctor(alloc()));

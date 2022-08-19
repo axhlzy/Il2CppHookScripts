@@ -56,7 +56,6 @@ declare global {
     namespace Il2Cpp.Api {
         class il2cppObj extends il2cppObjAPI {
 
-
         }
     }
 }
