@@ -15,6 +15,8 @@ export const LOG = (str: any, type: LogColor = LogColor.WHITE): void => {
     }
 }
 
+export const LOGJSON = (obj: any, type: LogColor = LogColor.C36, lines: number = 1): void => LOG(JSON.stringify(obj, null, lines), type)
+
 const colorEndDes: string = "\x1b[0m"
 const colorStartDes = (color: LogColor): string => {
     return `\x1b[${color as number}m`
@@ -72,6 +74,7 @@ export const getLine = (length: number, fillStr: string = "-") => {
 
 declare global {
     var LOG: (str: any, type?: LogColor) => void
+    var LOGJSON: (obj: any, type?: LogColor, lines?: number) => void
     // var LOGS: (str: string, colorDescription: [number, number, LogColor][]) => void
     var LOGW: (msg: any) => void // LogColor.YELLOW
     var LOGE: (msg: any) => void // LogColor.RED
@@ -79,13 +82,14 @@ declare global {
     var LOGO: (msg: any) => void // LogColor.C33
     var LOGH: (msg: any) => void // LogColor.C96
     var LOGZ: (msg: any) => void // LogColor.C90
-    var NewLine: (lines?: number) => void
+    var newLine: (lines?: number) => void
     var getLine: (length: number, fillStr?: string) => string
     var printLogColors: () => void
     var LogColor: any
 }
 
 globalThis.LOG = LOG
+globalThis.LOGJSON = LOGJSON
 // globalThis.LOGS = LOGS
 globalThis.LOGW = LOGW
 globalThis.LOGE = LOGE
@@ -96,4 +100,4 @@ globalThis.LOGZ = LOGZ
 globalThis.getLine = getLine
 globalThis.printLogColors = printLogColors
 globalThis.LogColor = LogColor
-globalThis.NewLine = (lines: number = 1) => LOG(getLine(lines, "\n"))
+globalThis.newLine = (lines: number = 1) => LOG(getLine(lines, "\n"))

@@ -1,3 +1,4 @@
+import { mscorlib_System_Reflection_Module_impl } from "../Module/class";
 import { mscorlib_System_RuntimeTypeHandle_impl } from "../RuntimeTypeHandle/class";
 import { mscorlib_System_Type_impl } from "../Type/class";
 import "./interface"
@@ -25,11 +26,11 @@ class mscorlib_System_RuntimeType_impl extends mscorlib_System_Type_impl impleme
         return readU16(mscorlib.Api.RuntimeType._get_AssemblyQualifiedName(this.handle));
     }
 
-    get_BaseType(): mscorlib_System_Type_impl {
+    get_BaseType(): mscorlib.Type {
         return new mscorlib_System_Type_impl(mscorlib.Api.RuntimeType._get_BaseType(this.handle));
     }
 
-    get_DeclaringType(): mscorlib_System_Type_impl {
+    get_DeclaringType(): mscorlib.Type {
         return new mscorlib_System_Type_impl(mscorlib.Api.RuntimeType._get_DeclaringType(this.handle));
     }
 
@@ -57,21 +58,24 @@ class mscorlib_System_RuntimeType_impl extends mscorlib_System_Type_impl impleme
         return readU16(mscorlib.Api.RuntimeType._get_Namespace(this.handle));
     }
 
-    get_ReflectedType(): mscorlib_System_Type_impl {
+    get_ReflectedType(): mscorlib.Type {
         return new mscorlib_System_Type_impl(mscorlib.Api.RuntimeType._get_ReflectedType(this.handle));
     }
 
-    get_TypeHandle(): mscorlib_System_RuntimeTypeHandle {
+    get_TypeHandle(): mscorlib.RuntimeTypeHandle {
         return new mscorlib_System_RuntimeTypeHandle_impl(mscorlib.Api.RuntimeType._get_TypeHandle(this.handle));
     }
 
-    get_UnderlyingSystemType(): mscorlib_System_Type_impl {
+    get_UnderlyingSystemType(): mscorlib.Type {
         return new mscorlib_System_Type_impl(mscorlib.Api.RuntimeType._get_UnderlyingSystemType(this.handle));
+    }
+
+    get_Module(): mscorlib.Module {
+        return new mscorlib_System_Reflection_Module_impl(mscorlib.Api.RuntimeType._get_Module(this.handle));
     }
 }
 
 declare global {
-
     namespace mscorlib {
         class RuntimeType extends mscorlib_System_RuntimeType_impl { }
     }

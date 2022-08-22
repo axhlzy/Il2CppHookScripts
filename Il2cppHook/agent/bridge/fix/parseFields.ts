@@ -41,20 +41,26 @@ export class FieldsParser {
         }
     }
 
-    Offset(fieldName: string) {
-        return this.mClass.field(fieldName).offset
+    fieldInstance(fieldName: string): Il2Cpp.Field {
+        if (this.mPtr.isNull()) throw new Error("fieldInstance : Instance is null")
+        return this.mClass.field(fieldName)
     }
 
-    fieldValue(fieldName: string) {
-        if (this.mPtr.isNull()) return ptr(0)
-        let field = this.mClass.field(fieldName)
+    fieldValue(fieldName: string): NativePointer {
+        let field = this.fieldInstance(fieldName)
         if (field.isStatic) return this.fakeStaticField(field).readPointer()
-        return this.mPtr.add(this.Offset(fieldName)).readPointer()
+        return this.mPtr.add(this.fieldOffset(fieldName)).readPointer()
     }
 
-    toShow() {
-        NewLine()
-        LOGO(`Found ${this.mClass.fields.length} fields in class: ${this.mClass.name} (${this.mClass.handle})`)
+    fieldOffset(fieldName: string): number {
+        return this.fieldInstance(fieldName).offset
+    }
+
+    toShow(retB: Boolean = false) {
+        newLine()
+        let titile = `Found ${this.mClass.fields.length} fields in class: ${this.mClass.name} (${this.mClass.handle})`
+        this.mClass.fields.length == 0 ? LOGE(titile) : LOGO(titile)
+        if (this.mClass.fields.length == 0) return newLine()
         LOGO(getLine(50))
         let countNum: number = -1
         this.mClass.fields
@@ -96,7 +102,7 @@ export class FieldsParser {
                 }
                 // 对 class 只展示 fields，无法值解析
                 else { }
-                NewLine()
+                if (!retB) newLine()
             })
         LOGO(getLine(50))
     }
@@ -116,6 +122,8 @@ const dealWithSpecialType = (field: Il2Cpp.Field, thisValue: NativePointer) => {
     switch (field.type.class.name) {
         case "Boolean":
             return thisValue.isNull() ? "FALSE" : "TRUE"
+        case "Int32":
+            return thisValue.toInt32()
         // 此处拓展解析逻辑
 
         default:
@@ -125,8 +133,18 @@ const dealWithSpecialType = (field: Il2Cpp.Field, thisValue: NativePointer) => {
 }
 
 declare global {
-    var lf: (mPtr: NativePointer, classHandle?: NativePointer) => void
+    // list fields to show
+    var lfs: (mPtr: NativePointer, classHandle?: NativePointer) => void
+    // list filed contain parent class
+    var lfp: (mPtr: NativePointer) => void
+    // list filed to return field type
+    var lft: (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => Il2Cpp.Field
+    // list filed to return value
     var lfv: (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => NativePointer
+    // list fields to return whth try catch
+    var lfvt: (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => NativePointer
+    // list filedoffset to return
+    var lfo: (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => number
 }
 
 /**
@@ -134,7 +152,28 @@ declare global {
  * @param mPtr 实例指针/class指针
  * @param classHandle 可空（默认为当前实例指针的class） 用classHandle来解析前面的实例
  */
-globalThis.lf = (mPtr: NativePointer, classHandle: NativePointer | string | object | number = 0) => new FieldsParser(mPtr, classHandle).toShow()
+globalThis.lfs = (mPtr: NativePointer, classHandle: NativePointer | string | object | number = 0) => new FieldsParser(mPtr, classHandle).toShow()
 
-// 拿到实例指定的 field
+globalThis.lfp = (mPtr: NativePointer) => {
+    let classType: Array<mscorlib.Type> = getTypeParent(mPtr) as Array<mscorlib.Type>
+    classType.reverse().forEach(type => new FieldsParser(mPtr, type.class).toShow(true))
+    showTypeParent(mPtr)
+}
+
+// 拿到实例 field type
+globalThis.lft = (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => new FieldsParser(mPtr, classHandle).fieldInstance(fieldName)
+
+// 拿到实例 field
 globalThis.lfv = (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => new FieldsParser(mPtr, classHandle).fieldValue(fieldName)
+
+// 拿到实例 field offset
+globalThis.lfo = (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => new FieldsParser(mPtr, classHandle).fieldOffset(fieldName)
+
+// 拿到实例指定的 field 值 (try catch)
+globalThis.lfvt = (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => {
+    try {
+        return new FieldsParser(mPtr, classHandle).fieldValue(fieldName)
+    } catch {
+        return new NativePointer(0)
+    }
+}

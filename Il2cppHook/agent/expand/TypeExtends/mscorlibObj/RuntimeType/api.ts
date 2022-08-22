@@ -62,6 +62,11 @@ class mscorlibRuntimeTypeAPI {
     static get _get_UnderlyingSystemType() {
         return Il2Cpp.Api.t("mscorlib", "System.RuntimeType", "get_UnderlyingSystemType", 0, "pointer", ["pointer"]);
     }
+
+    @cache
+    static get _get_Module() {
+        return Il2Cpp.Api.t("mscorlib", "System.RuntimeType", "get_Module", 0, "pointer", ["pointer"]);
+    }
 }
 
 declare global {

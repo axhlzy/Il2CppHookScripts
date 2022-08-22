@@ -68,7 +68,7 @@ globalThis.PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boo
  * @param {Boolean} inCall true：不返回pointer而是直接showGameObject
  **/
 globalThis.getGameObject = (transform: NativePointer, inCall: boolean = false): undefined | NativePointer => {
-    if (typeof transform == "number") transform = ptr(transform)
+    transform = checkCmdInput(transform)
     if (inCall) {
         showGameObject(transform)
     } else {

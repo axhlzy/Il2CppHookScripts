@@ -8,11 +8,11 @@ type mscorlib_System_Reflection_MethodInfo = NativePointer
 export class UnityEventBase_impl extends mscorlib_System_Object_impl {
 
     // m_Calls : InvokableCallList
-    m_Calls: InvokableCallList_impl = new InvokableCallList_impl(lfv(this.handle, "m_Calls", findClass("UnityEventBase")))
+    m_Calls: InvokableCallList_impl = new InvokableCallList_impl(lfv(this.handle, "m_Calls", findClass("UnityEventBase", ['UnityEngine.CoreModule'])))
     // m_CallsDirty : Boolean
-    m_CallsDirty: boolean = lfv(this.handle, "m_CallsDirty", findClass("UnityEventBase")) as unknown as boolean
+    m_CallsDirty: boolean = lfv(this.handle, "m_CallsDirty", findClass("UnityEventBase", ['UnityEngine.CoreModule'])) as unknown as boolean
     // m_PersistentCalls : PersistentCallGroup
-    m_PersistentCalls: PersistentCallGroup = lfv(this.handle, "m_PersistentCalls", findClass("UnityEventBase"))
+    m_PersistentCalls: PersistentCallGroup = lfv(this.handle, "m_PersistentCalls", findClass("UnityEventBase", ['UnityEngine.CoreModule']))
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper);

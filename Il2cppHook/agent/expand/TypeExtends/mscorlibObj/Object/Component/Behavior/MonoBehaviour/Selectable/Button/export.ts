@@ -1,5 +1,5 @@
 import { PointerEventImpl } from "../../../../../../AbstractEventData/BaseEventData/PointerEventData/class"
-import { ButtonImpl } from "./class"
+import { ButtonClickedEvent, ButtonImpl } from "./class"
 
 function OnPointerClick() {
     let funcAddr: NativePointer | undefined = undefined
@@ -104,31 +104,37 @@ function OnPointerClick() {
     }
 }
 
+type PointerEventData = NativePointer
 const OnButtonClick = () => {
     A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
-        let current = args[0]
+        let current: PointerEventData = args[0]
         // addRuntimeType(current)
-        let ButtonClickedEvent = new ButtonImpl(current).get_onClick()
-        // 等价于
-        // let ButtonClickedEvent1 = lfv(current, "m_OnClick")
-        let ButtonClickedEvent2 = new ButtonImpl(current).m_OnClick
-        // let ButtonClickedEvent3 = new ButtonImpl(current).m_OnClick.m_Calls
-        // case to UnityEventBase
-
-        LOGD(" " + ButtonClickedEvent + " " + ButtonClickedEvent2)
-
-        // let ret_mCalls = getFieldInfoFromCls(findClass("UnityEventBase"), "m_Calls", ButtonClickedEvent)
-        // let gObj = getGameObject(current)
-        // let gtrs = f_getTransform(getGameObject(current))
-        // LOG("\n[*] " + current + " ---> " + getObjName(current) + " { G:" + gObj + " | T:" + gtrs + " }", LogColor.C96)
-        // LOG("    [-] " + ret_mCalls[3] + "(" + ret_mCalls[2] + ") " + ret_mCalls[0] + " " + ret_mCalls[5], LogColor.C33)
-        // // 立即去获取是拿不到函数地址的,这里做一点点小延时
-        // setTimeout(() => {
-        //     ansItems(ret_mCalls, "m_PersistentCalls")
-        //     ansItems(ret_mCalls, "m_RuntimeCalls")
-        //     ansItems(ret_mCalls, "m_ExecutingCalls")
-        // }, 10);
+        let ButtonClickedEvent = new Il2Cpp.Button(current).m_OnClick
+        // LOGJSON(ButtonClickedEvent) //debug commit
+        let gobj: NativePointer | undefined = getGameObject(current)
+        let gObjPack: Il2Cpp.GameObject
+        if (gobj != undefined) gObjPack = new Il2Cpp.GameObject(gobj)
+        else throw new Error("Il2Cpp.GameObject is null")
+        LOGH("\n[*] " + current + " ---> " + gObjPack.get_name() + " { G:" + gobj + " | T:" + gObjPack.get_transform().handle + " }")
+        LOGO("    [-] InvokableCallList(" + findClass("InvokableCallList") + ") m_Calls " + ButtonClickedEvent.m_Calls.handle)
+        setTimeout(() => ansItems(ButtonClickedEvent), 10);
     })
+
+    function ansItems(event: ButtonClickedEvent): void {
+        //  ps:暂时只是适配了arm32
+        if (Process.arch != "arm") return
+        // lf(event.m_Calls.m_PersistentCalls)
+        // lf(event.m_Calls.m_ExecutingCalls)
+        // lf(event.m_Calls.m_RuntimeCalls)
+
+        let persistentCalls = event.m_Calls.m_PersistentCalls
+        let executingCalls = event.m_Calls.m_ExecutingCalls
+        let runtimeCalls = event.m_Calls.m_RuntimeCalls
+
+        LOGD(`\t${parseList(persistentCalls).toSimpleString()}`)
+        LOGD(`\t${parseList(executingCalls).toSimpleString()}`)
+        LOGD(`\t${parseList(runtimeCalls).toSimpleString()}`)
+    }
 }
 
 // /**
@@ -137,8 +143,7 @@ const OnButtonClick = () => {
 //  * @param {*} itemStr 
 //  */
 // let ansItems = (ret_mCalls, itemStr) => {
-//     //  ps:暂时只是适配了arm32
-//     if (Process.arch != "arm") return
+
 //     let ret_itemCalls = getFieldInfoFromCls(ret_mCalls[2], itemStr, ret_mCalls[5])
 //     let m_size = getFieldInfoFromCls(ret_itemCalls[2], "_size", ret_itemCalls[5])[5]
 //     if (m_size != 0) {

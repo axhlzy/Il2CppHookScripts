@@ -6,22 +6,20 @@ type mscorlib_System_Reflection_MethodInfo = NativePointer
 
 export class InvokableCallList_impl extends mscorlib_System_Object_impl {
 
-    // m_Calls : InvokableCallList
-    m_Calls: InvokableCallList = lfv(this.handle, "m_Calls", findClass("UnityEventBase"))
     // m_ExecutingCalls : List<BaseInvokableCall>
-    m_ExecutingCalls: NativePointer = lfv(this.handle, "m_ExecutingCalls", findClass("UnityEventBase"))
+    m_ExecutingCalls: NativePointer = lfv(this.handle, "m_ExecutingCalls", findClass("InvokableCallList"))
     // m_NeedsUpdate : Boolean
-    m_NeedsUpdate: boolean = lfv(this.handle, "m_NeedsUpdate", findClass("UnityEventBase")) as unknown as boolean
+    m_NeedsUpdate: boolean = lfv(this.handle, "m_NeedsUpdate", findClass("InvokableCallList")) as unknown as boolean
     // m_PersistentCalls : List<BaseInvokableCall>
-    m_PersistentCalls: NativePointer = lfv(this.handle, "m_PersistentCalls", findClass("UnityEventBase"))
+    m_PersistentCalls: NativePointer = lfv(this.handle, "m_PersistentCalls", findClass("InvokableCallList"))
     // m_RuntimeCalls : List<BaseInvokableCall>
-    m_RuntimeCalls: NativePointer = lfv(this.handle, "m_RuntimeCalls", findClass("UnityEventBase"))
+    m_RuntimeCalls: NativePointer = lfv(this.handle, "m_RuntimeCalls", findClass("InvokableCallList"))
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
     }
 
-    ctor_0(): mscorlib.InvokableCallList {
+    static get ctor_0(): mscorlib.InvokableCallList {
         return new InvokableCallList_impl(mscorlib.Api.InvokableCallList._ctor_0(alloc()))
     }
 

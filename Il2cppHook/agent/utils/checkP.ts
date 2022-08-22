@@ -6,7 +6,7 @@ import { TYPE_CHECK_POINTER } from "../base/globle"
  * @param {TYPE_CHECK_POINTER} value
  * @returns {NativePointer}
  */
-const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, showLog: boolean = false): NativePointer => {
+export const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, showLog: boolean = false): NativePointer => {
     if (Il2Cpp.module.base.isNull()) return ptr(value as unknown as number)
     if (Process.arch == 'arm64' && typeof value === "string" && value.trim().startsWith('0x')) value = Number(value)
     if (typeof value === "number") {
@@ -75,10 +75,49 @@ const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, show
     }
 }
 
+
 declare global {
     var checkPointer: (args: NativePointer | number) => NativePointer
+    var checkCmdInput: (mPtr: NativePointer) => NativePointer
+    var getSubBasePtr: (mPtr: NativePointer, mdName?: string) => NativePointer
+    var getSubBaseDes: (mPtr: NativePointer, mdName?: string) => string
 }
 
 globalThis.checkPointer = checkPointer as any
 
-export { checkPointer }
+globalThis.checkCmdInput = (mPtr: NativePointer): NativePointer => {
+    if (typeof mPtr == "number") mPtr = ptr(mPtr)
+    if (typeof mPtr == "string" && (String(mPtr).startsWith("0x") || String(mPtr).startsWith("0X"))) mPtr = ptr(mPtr)
+    if (mPtr.isNull()) throw new Error("mPtr can't be null")
+    return mPtr
+}
+
+const getMD = (mdName: string | NativePointer = "libil2cpp.so"): Module => {
+    let md: Module = Process.findModuleByName("libil2cpp.so")!
+    if (typeof mdName === "string") {
+        try {
+            md = Process.findModuleByName(mdName)!
+        } catch (error) { throw error }
+    }
+    else if (typeof mdName === "number") {
+        try {
+            md = Process.getModuleByAddress(mdName)!
+        } catch (error) {
+            md = Process.findModuleByName(mdName)!
+        }
+    } else {
+        mdName = ptr(mdName as unknown as string)
+    }
+    if (md == null) throw new Error("getSubBasePtr: can't find module")
+    return md
+}
+
+globalThis.getSubBasePtr = (mPtr: NativePointer): NativePointer => {
+    let md: Module = getMD(mPtr)
+    return mPtr.sub(md.base)
+}
+
+globalThis.getSubBaseDes = (mPtr: NativePointer): string => {
+    let md: Module = getMD(mPtr)
+    return `${mPtr.sub(md.base)} <--- ${mPtr} @ ${md.name} (${md.base})`
+}

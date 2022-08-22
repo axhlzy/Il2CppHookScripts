@@ -39,7 +39,7 @@ const showArray = (mPtr: ARGM, funcTransform?: (itemPtr: NativePointer, objName:
     LOGD(`\n[*] Array length : ${arrLength}  |  RET => ${retPtr}\n`)
     if (arrLength == 0) return
     seeHexA(retPtr.add(p_size * 4), (arrLength > 32 ? 32 : arrLength) * p_size, false, LogColor.C33)
-    NewLine()
+    newLine()
     for (let i = 0; i < arrLength; ++i) {
         let tmpPtr = ptr(retPtr).add(p_size * (4 + i))
         let relItem = tmpPtr.readPointer()
@@ -60,7 +60,7 @@ const showArray = (mPtr: ARGM, funcTransform?: (itemPtr: NativePointer, objName:
         // 自定义解析
         if (funcTransform != undefined && typeof funcTransform == "function") LOG("\t" + funcTransform(relItem, ObjToString), LogColor.C90)
     }
-    NewLine()
+    newLine()
 }
 
 var seeHexR = (addr: PTR, length: number = 0x40, color: LogColor | undefined) => {

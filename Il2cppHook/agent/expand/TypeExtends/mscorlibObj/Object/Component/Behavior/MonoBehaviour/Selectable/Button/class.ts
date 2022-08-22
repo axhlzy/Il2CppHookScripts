@@ -1,12 +1,16 @@
 import { UnityEventBase_impl } from "../../../../../../UnityEventBase/class";
 import { SelectableImpl } from "../class";
 
+class ButtonClickedEvent extends UnityEventBase_impl {
+
+}
+
 class ButtonImpl extends SelectableImpl implements Il2cppButton {
 
-    m_OnClick: UnityEventBase_impl = new UnityEventBase_impl(lfv(this.handle, "m_OnClick", findClass("Button")))
+    m_OnClick: ButtonClickedEvent = new ButtonClickedEvent(lfv(this.handle, "m_OnClick"))
 
     ctor_0(): Il2Cpp.Button {
-        return new ButtonImpl(Il2Cpp.Api.Button._ctor(alloc()));
+        return new Il2Cpp.Button(Il2Cpp.Api.Button._ctor(alloc()));
     }
 
     OnFinishSubmit() {
@@ -42,4 +46,4 @@ declare global {
 
 Il2Cpp.Button = ButtonImpl;
 
-export { ButtonImpl }
+export { ButtonImpl, ButtonClickedEvent }
