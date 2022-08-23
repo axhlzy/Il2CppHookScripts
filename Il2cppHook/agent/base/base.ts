@@ -179,13 +179,17 @@ class HookerBase {
         return klass
     }
 
-    /** 优先从fromAssebly列表中去查找，找不到再查找其他Assebly */
+    /** 优先从fromAssebly列表中去查找，找不到再查找其他Assebly 
+     *  fromCache 是否使用cache (tips: Class -> UnityEngine.CoreModule.Object/mscorlib.Object 得取消cache，指定fromAssebly)
+    */
     private static map_cache_class = new Map<string, Il2Cpp.Class>()
-    static findClass(searchClassName: string, fromAssebly: string[] = ["Assembly-CSharp", "MaxSdk.Scripts", "mscorlib"]): NativePointer {
+    static findClass(searchClassName: string, fromAssebly: string[] = ["Assembly-CSharp", "MaxSdk.Scripts", "mscorlib"], fromCache: boolean = true): NativePointer {
         if (searchClassName == undefined) throw ("Search name can not be null or undefined")
         if (typeof searchClassName != "string") throw ("findClass need a string value")
-        let cache: Il2Cpp.Class | undefined = HookerBase.map_cache_class.get(searchClassName)
-        if (cache != undefined) return cache.handle
+        if (fromCache) {
+            let cache: Il2Cpp.Class | undefined = HookerBase.map_cache_class.get(searchClassName)
+            if (cache != undefined) return cache.handle
+        }
         let assemblies = Il2Cpp.Domain.assemblies
         for (let index = 0; index < assemblies.length; index++) {
             if (fromAssebly.includes(assemblies[index].name)) {
@@ -497,7 +501,7 @@ declare global {
     var m: (klass: NativePointer) => void
     var f: (klass: NativePointer) => void
     var F: (klass: NativePointer | number, instance: NativePointer | number) => void
-    var findClass: (name: string, fromAssebly?: string[]) => NativePointer
+    var findClass: (name: string, fromAssebly?: string[], fromCache?: boolean) => NativePointer
     var fc: (name: string, fromAssebly?: string[]) => NativePointer
     var af: (className: string) => void
     var aui: () => void

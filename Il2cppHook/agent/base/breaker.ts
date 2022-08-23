@@ -1,8 +1,8 @@
-import { closest } from "fastest-levenshtein";
-import { getMethodModifier, methodToString } from "../bridge/fix/il2cppM";
-import { formartClass } from "../utils/formart";
-import { HookerBase } from "./base";
-import ValueResolve from "./valueResolve";
+import { getMethodModifier, methodToString } from "../bridge/fix/il2cppM"
+import { closest } from "fastest-levenshtein"
+import { formartClass } from "../utils/formart"
+import { HookerBase } from "./base"
+import ValueResolve from "./valueResolve"
 
 export { Breaker }
 declare global {
@@ -272,7 +272,7 @@ class Breaker {
     }
 
     static clearBreakAll = () => {
-        Breaker.clearBreak();
+        Breaker.clearBreak()
         Breaker.array_methodValue_cache = []
         Breaker.array_attach_failed = []
     }

@@ -18,7 +18,7 @@ declare global {
      * findExport 侧重点在定位一些我们只知道函数名不知道他在那个模块里面（用于定位导出函数）
      * 故exportName作为第一个参数，第二个参数用作筛选
      */
-    var findExport: (exportName: string, moduleName?: string) => void
+    var findExport: (exportName: string, moduleName?: string, callback?: (exp: ModuleExportDetails) => void) => void
     /**
      * findImport 侧重点在像IDA一样方便的查看指定Module的导入函数
      * 故ModuleName作为第一个参数，第二个参数用作筛选
@@ -386,24 +386,25 @@ function printModule(md: Module, needIndex: boolean = false) {
     LOGZ(`\t${md.path}\n`)
 }
 
-globalThis.findExport = (exportName: string, moduleName: string | undefined) => {
+globalThis.findExport = (exportName: string, moduleName: string | undefined, callback?: (exp: ModuleExportDetails) => void) => {
+    // 未填写回调函数就直接用默认回调函数来展示导出函数的详细信息
+    if (callback == undefined) callback = showDetails
     if (moduleName == undefined) {
+        // 遍历所有Module的导出函数
         Process.enumerateModules().forEach((md: Module) => {
             md.enumerateExports().forEach((exp: ModuleExportDetails) => {
-                if (exp.name.indexOf(exportName) != -1) showDetails(exp)
+                if (exp.name.indexOf(exportName) != -1) callback!(exp)
             })
         })
     } else {
+        // 遍历指定Module下的导出函数
         let md: Module | null = Process.findModuleByName(moduleName)
-        if (md == null) {
-            LOGE("NOT FOUND Module : " + moduleName)
-            return
-        }
+        if (md == null) throw new Error("NOT FOUND Module : " + moduleName)
         md.enumerateExports().forEach((exp: ModuleExportDetails) => {
-            if (exp.name.indexOf(exportName) != -1) showDetails(exp)
+            if (exp.name.indexOf(exportName) != -1) callback!(exp)
         })
     }
-    LOG("")
+    newLine()
 
     function showDetails(exp: ModuleExportDetails) {
         try {

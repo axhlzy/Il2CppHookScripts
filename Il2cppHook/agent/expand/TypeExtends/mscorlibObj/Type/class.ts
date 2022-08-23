@@ -70,7 +70,6 @@ class mscorlib_System_Type_impl extends mscorlib_System_Object_impl implements m
     get caseToRuntimeType(): mscorlib.RuntimeType {
         return new mscorlib.RuntimeType(this.handle)
     }
-
 }
 
 declare global {

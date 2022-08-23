@@ -12,12 +12,11 @@ export class FieldsParser {
             this.mPtr = ptr(mPtr)
         } else if (typeof mPtr === "string") {
             if (mPtr.indexOf('0x') == 0) this.mPtr = ptr(mPtr)
-            throw new Error("Input string like '0x...' ")
-        } else if (mPtr instanceof NativePointer) {
-            this.mPtr = mPtr
-        } else {
-            throw new Error("Input type is not support")
+            else this.mPtr = findClass(mPtr)
+            if (this.mPtr.isNull()) throw new Error("FieldsParser : Class not found")
         }
+        else if (mPtr instanceof NativePointer) this.mPtr = mPtr
+        else throw new Error("Input type is not support")
 
         try {
             this.mClass = new Il2Cpp.Object(this.mPtr).class
@@ -34,9 +33,9 @@ export class FieldsParser {
             } else if (typeof classHandle === "string") {
                 if (classHandle.indexOf('0x') == 0) clsPtr = ptr(classHandle)
                 throw new Error("Input string like '0x...' ")
-            } else if (typeof classHandle === "object") {
-                clsPtr = ptr(String(classHandle))
-            } else throw new Error("Input type is not support")
+            }
+            else if (typeof classHandle === "object") clsPtr = ptr(String(classHandle))
+            else throw new Error("Input type is not support")
             this.mClass = new Il2Cpp.Class(clsPtr)
         }
     }
