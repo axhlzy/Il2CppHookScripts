@@ -143,20 +143,41 @@ class HookerBase {
         return klass
     }
 
-    static showMethods(mPtr: NativePointer | String | number): void {
+    static showMethods(mPtr: NativePointer | String | number, detailed: boolean = false): void {
         let klass: Il2Cpp.Class = HookerBase.inputCheck(mPtr)
         if (klass.methods.length == 0) return
         newLine()
         formartClass.printTitile(`Found ${klass.methods.length} Methods ${klass.isEnum ? "(enum) " : ""} in class: ${klass.name} @ ${klass.handle}`)
-        klass.methods.forEach((method: Il2Cpp.Method) => {
-            LOGD(`[*] ${method.handle} ---> ${method.virtualAddress} ---> ${method.relativeVirtualAddress}\t|  ${getMethodDesFromMethodInfo(method)}`)
-        })
-        newLine()
+        if (detailed) {
+            let maxStrLen: number = 0
+            klass.methods.forEach((method: Il2Cpp.Method) => {
+                LOGD(`\n[*] ${method.handle} ---> ${method.virtualAddress} ---> ${method.relativeVirtualAddress}`)
+                let methodInfoDes = `\t${getMethodDesFromMethodInfo(method)}`
+                LOGD(methodInfoDes)
+                maxStrLen = Math.max(maxStrLen, methodInfoDes.length)
+                let countArgs: number = -1
+                method.parameters
+                    .map((param: Il2Cpp.Parameter) => `\t\t---> args[${++countArgs}]\t${param.type.handle}  <-  ${param.type.name}`)
+                    .forEach(LOGZ)
+                LOGZ(`\t\t---> retval\t${method.returnType.class.handle}  <-  ${method.returnType.class.name}`)
+            })
+            newLine()
+            LOGO(getLine(maxStrLen))
+        } else {
+            klass.methods.forEach((method: Il2Cpp.Method) => {
+                LOGD(`[*] ${method.handle} ---> ${method.virtualAddress} ---> ${method.relativeVirtualAddress}\t|  ${getMethodDesFromMethodInfo(method)}`)
+            })
+            newLine()
+        }
     }
 
     static showFields(mPtr: NativePointer | String | number): void {
         let klass: Il2Cpp.Class = HookerBase.inputCheck(mPtr)
-        if (klass.fields.length == 0) return
+        if (klass.fields.length == 0) {
+            LOGZ(`\n${klass.toString()}`)
+            LOGE(`\n[!] ${klass.assemblyName}.${klass.namespace}.${klass.name} @ ${klass.handle} has no fields\n`)
+            return
+        }
         formartClass.printTitile(`Found ${klass.fields.length} Fields ${klass.isEnum ? "(enum) " : ""}in class: ${klass.name} (${klass.handle})`)
         klass.fields.forEach((field: Il2Cpp.Field) => {
             LOGD(`[*] ${field.handle} ${field.type.name} ${field.toString()} [type:${field.type.class.handle}]`)
@@ -500,7 +521,7 @@ declare global {
     }
     var i: (filter?: string, sort?: boolean) => void
     var c: (imageOrName: string | NativePointer, filter: string) => void
-    var m: (klass: NativePointer) => void
+    var m: (klass: NativePointer, detailed?: boolean) => void
     var f: (klass: NativePointer) => void
     var F: (klass: NativePointer | number, instance: NativePointer | number) => void
     var findClass: (name: string, fromAssebly?: string[], fromCache?: boolean) => NativePointer
