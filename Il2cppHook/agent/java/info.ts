@@ -1,5 +1,4 @@
-import { closest, distance } from "fastest-levenshtein"
-import { soName } from "../base/globle"
+import { distance } from "fastest-levenshtein"
 import { formartClass } from "../utils/formart"
 
 /**
@@ -395,59 +394,91 @@ function getUnityInfo() {
 }
 
 // filter and show useful address
-const printExp = (filter: string = "") => {
+let allMethodsArray: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>() // all methods cache
+const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine: number = -1) => {
 
     let countIndex: number = -1
     let arr_result: Array<string> = []
+    let enterTime: number = Date.now()
 
     // libil2cpp.so common export function
     findExport("il2cpp_", "libil2cpp.so", (item: ModuleExportDetails) => {
-        if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) showDetails_MED(item)
+        if (item.type == "function" && item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveModuleDetails(item)
     })
 
-    new Il2Cpp.Class(findClass("Text")).methods.forEach((item: Il2Cpp.Method) => {
-        if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) showDetails_CLSM(item)
+    findExport("", "libunity.so", (item: ModuleExportDetails) => {
+        if (item.type == "function" && item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveModuleDetails(item)
     })
 
-    new Il2Cpp.Class(findClass("Transform")).methods.forEach((item: Il2Cpp.Method) => {
-        if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) showDetails_CLSM(item)
-    })
+    // 查找所有函数
+    if (findAll) {
+        if (allMethodsArray.length == 0) {
+            Il2Cpp.Domain.assemblies.forEach((assembly: Il2Cpp.Assembly) => {
+                assembly.image.classes.forEach((klass: Il2Cpp.Class) => {
+                    klass.methods.forEach((item: Il2Cpp.Method) => {
+                        allMethodsArray.push(item)
+                        if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
+                    })
+                })
+            })
+        } else {
+            allMethodsArray
+                .filter((item: Il2Cpp.Method) => item.name.toLocaleLowerCase().includes(filter.toLowerCase()))
+                .forEach(formartAndSaveIl2cppMehods)
+        }
+    }
+    // 查找常用的一些函数
+    else {
+        new Il2Cpp.Class(findClass("Text")).methods.forEach((item: Il2Cpp.Method) => {
+            if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
+        })
 
-    new Il2Cpp.Class(findClass("GameObject")).methods.forEach((item: Il2Cpp.Method) => {
-        if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) showDetails_CLSM(item)
-    })
+        new Il2Cpp.Class(findClass("Transform")).methods.forEach((item: Il2Cpp.Method) => {
+            if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
+        })
 
-    new Il2Cpp.Class(findClass("Application")).methods.forEach((item: Il2Cpp.Method) => {
-        if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) showDetails_CLSM(item)
-    })
+        new Il2Cpp.Class(findClass("GameObject")).methods.forEach((item: Il2Cpp.Method) => {
+            if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
+        })
 
-    new Il2Cpp.Class(findClass("Input")).methods.forEach((item: Il2Cpp.Method) => {
-        if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) showDetails_CLSM(item)
-    })
+        new Il2Cpp.Class(findClass("Application")).methods.forEach((item: Il2Cpp.Method) => {
+            if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
+        })
 
-    new Il2Cpp.Class(findClass("PlayerPrefs")).methods.forEach((item: Il2Cpp.Method) => {
-        if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) showDetails_CLSM(item)
-    })
+        new Il2Cpp.Class(findClass("Input")).methods.forEach((item: Il2Cpp.Method) => {
+            if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
+        })
 
-    new Il2Cpp.Class(findClass("Object", ["UnityEngine.CoreModule"], false)).methods.forEach((item: Il2Cpp.Method) => {
-        if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) showDetails_CLSM(item)
-    })
+        new Il2Cpp.Class(findClass("PlayerPrefs")).methods.forEach((item: Il2Cpp.Method) => {
+            if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
+        })
 
-    new Il2Cpp.Class(findClass("Object", ["mscorlib"], false)).methods.forEach((item: Il2Cpp.Method) => {
-        if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) showDetails_CLSM(item)
-    })
+        new Il2Cpp.Class(findClass("Object", ["UnityEngine.CoreModule"], false)).methods.forEach((item: Il2Cpp.Method) => {
+            if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
+        })
 
-    arr_result.sort(distance).forEach(LOGD)
-    newLine(1)
-
-    function showDetails_MED(item: ModuleExportDetails) {
-        let index = formartClass.alignStr(`[${++countIndex}]`, 5)
-        arr_result.push(`${index} ${item.address}  --->   ${item.address.sub(soAddr)}\t${item.name}`)
+        new Il2Cpp.Class(findClass("Object", ["mscorlib"], false)).methods.forEach((item: Il2Cpp.Method) => {
+            if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
+        })
     }
 
-    function showDetails_CLSM(item: Il2Cpp.Method) {
+    arr_result.sort(distance).forEach(LOGD)
+    LOGZ(`\nTake ${Date.now() - enterTime}ms to find ${arr_result.length} ${arr_result.length <= 1 ? "result" : "results"}`)
+    if (formartMaxLine != -1 && formartMaxLine < 100) LOGZ(`\n${formartMaxLine} lines of results are shown recommended to be greater than 100`)
+    newLine(1)
+
+    function formartAndSaveModuleDetails(item: ModuleExportDetails) {
         let index = formartClass.alignStr(`[${++countIndex}]`, 5)
-        arr_result.push(`${index} ${item.handle}  --->   ${item.relativeVirtualAddress}\t${item.class.name} | ${item}`)
+        let result = `${index} ${item.address}  --->   ${item.address.sub(soAddr)}\t${item.name}`
+        if (formartMaxLine != -1 && formartMaxLine > 10) result = formartClass.alignStr(result, formartMaxLine)
+        arr_result.push(result)
+    }
+
+    function formartAndSaveIl2cppMehods(item: Il2Cpp.Method) {
+        let index = formartClass.alignStr(`[${++countIndex}]`, 5)
+        let result = `${index} ${item.handle}  --->   ${item.relativeVirtualAddress}\t${item.class.name} | ${item}`
+        if (formartMaxLine != -1 && formartMaxLine > 10) result = formartClass.alignStr(result, formartMaxLine)
+        arr_result.push(result)
     }
 }
 
@@ -470,6 +501,6 @@ Reflect.set(globalThis, "getUnityInfo", getUnityInfo)
 declare global {
     var launchApp: (pkgName: string) => void
     var getApkInfo: () => void
-    var printExp: (filter: string) => void
+    var printExp: (filter: string, findAll?: boolean, formartMaxLine?: number) => void
     var getUnityInfo: () => void
 }
