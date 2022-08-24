@@ -1,5 +1,5 @@
 import { cache } from "decorator-cache-getter";
-import { getMethodModifier } from "../bridge/fix/il2cppM";
+import { getMethodDesFromMethodInfo, getMethodModifier } from "../bridge/fix/il2cppM";
 import { allocCStr } from "../utils/alloc";
 import { FieldAccess, LogColor } from "./enum";
 import { formartClass } from "../utils/formart";
@@ -146,10 +146,12 @@ class HookerBase {
     static showMethods(mPtr: NativePointer | String | number): void {
         let klass: Il2Cpp.Class = HookerBase.inputCheck(mPtr)
         if (klass.methods.length == 0) return
-        formartClass.printTitile(`Found ${klass.fields.length} Fields ${klass.isEnum ? "(enum)" : ""} in class: ${klass.name} (${klass.handle})`)
+        newLine()
+        formartClass.printTitile(`Found ${klass.methods.length} Methods ${klass.isEnum ? "(enum) " : ""} in class: ${klass.name} @ ${klass.handle}`)
         klass.methods.forEach((method: Il2Cpp.Method) => {
-            LOGD(`[*] ${method.toString()}`)
+            LOGD(`[*] ${method.handle} ---> ${method.virtualAddress} ---> ${method.relativeVirtualAddress}\t|  ${getMethodDesFromMethodInfo(method)}`)
         })
+        newLine()
     }
 
     static showFields(mPtr: NativePointer | String | number): void {

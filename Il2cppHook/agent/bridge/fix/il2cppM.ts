@@ -64,7 +64,7 @@ export const getModifier = (flags: number): string => {
     return ret_str
 }
 
-export const getMethodDesFromMethodPtr = (methodPtr: NativePointer | number | Il2Cpp.Method, simpleType = true): string => {
+export const getMethodDesFromMethodInfo = (methodPtr: NativePointer | number | Il2Cpp.Method, simpleType = true): string => {
     if (typeof methodPtr == "number") methodPtr = ptr(methodPtr)
     if (methodPtr == null || methodPtr.isNull()) throw new Error("getMethodDesFromMethodPtr: methodPtr can't be null")
     let localMethod: Il2Cpp.Method = methodPtr instanceof Il2Cpp.Method ? methodPtr : new Il2Cpp.Method(methodPtr)
@@ -109,7 +109,7 @@ export const methodToArray = (method: Il2Cpp.Method | NativePointer | number): A
         ret_arr.push(method.handle)                     // 0
         ret_arr.push(method.virtualAddress)             // 1
         ret_arr.push(method.virtualAddress.isNull() ? ptr(0) : method.relativeVirtualAddress)     // 2
-        ret_arr.push(getMethodDesFromMethodPtr(method)) // 3
+        ret_arr.push(getMethodDesFromMethodInfo(method)) // 3
         ret_arr.push(method.class.handle)               // 4
         ret_arr.push(method.class.name)                 // 5
         map_cache_method_des.set(method, ret_arr)
