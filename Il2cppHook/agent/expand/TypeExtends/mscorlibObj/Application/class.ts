@@ -187,7 +187,7 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
     }
 
     static OpenURL(url: string): void {
-        return Il2Cpp.Api.Application._OpenURL(url)
+        return Il2Cpp.Api.Application._OpenURL(allocUStr(url))
     }
 
     static targetFrameRate(value: number): void {
@@ -218,24 +218,24 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
         return Il2Cpp.Api.Application._CallLowMemory()
     }
 
-    static add_logMessageReceived(value: any): void {
+    static add_logMessageReceived(value: LogCallback): void {
         return Il2Cpp.Api.Application._add_logMessageReceived(value)
     }
 
-    static remove_logMessageReceived(value: any): void {
+    static remove_logMessageReceived(value: LogCallback): void {
         return Il2Cpp.Api.Application._remove_logMessageReceived(value)
     }
 
-    static add_logMessageReceivedThreaded(value: any): void {
+    static add_logMessageReceivedThreaded(value: LogCallback): void {
         return Il2Cpp.Api.Application._add_logMessageReceivedThreaded(value)
     }
 
-    static remove_logMessageReceivedThreaded(value: any): void {
+    static remove_logMessageReceivedThreaded(value: LogCallback): void {
         return Il2Cpp.Api.Application._remove_logMessageReceivedThreaded(value)
     }
 
     static CallLogCallback(logString: string, stackTrace: string, type: number, invokedOnMainThread: boolean): void {
-        return Il2Cpp.Api.Application._CallLogCallback(logString, stackTrace, type, invokedOnMainThread)
+        return Il2Cpp.Api.Application._CallLogCallback(allocUStr(logString), allocUStr(stackTrace), type, invokedOnMainThread)
     }
 
     static Internal_ApplicationWantsToQuit(): boolean {
@@ -259,7 +259,7 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
     }
 
     static InvokeDeepLinkActivated(url: string): void {
-        return Il2Cpp.Api.Application._InvokeDeepLinkActivated(url)
+        return Il2Cpp.Api.Application._InvokeDeepLinkActivated(allocUStr(url))
     }
 
     static RegisterLogCallback_1(handler: any): void {
@@ -276,26 +276,6 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
 
     static GetStackTraceLogType_1(logType: LogType): StackTraceLogType {
         return Il2Cpp.Api.Application._GetStackTraceLogType(logType)
-    }
-
-    // add_logMessageReceivedThreaded(LogCallback) : Void
-    static add_logMessageReceivedThreaded_1(value: LogCallback): void {
-        return Il2Cpp.Api.Application._add_logMessageReceivedThreaded(value)
-    }
-
-    // remove_logMessageReceivedThreaded(LogCallback) : Void
-    static remove_logMessageReceivedThreaded_1(value: LogCallback): void {
-        return Il2Cpp.Api.Application._remove_logMessageReceivedThreaded(value)
-    }
-
-    // add_logMessageReceived(LogCallback) : Void
-    static add_logMessageReceived_1(value: LogCallback): void {
-        return Il2Cpp.Api.Application._add_logMessageReceived(value)
-    }
-
-    // remove_logMessageReceived(LogCallback) : Void
-    static remove_logMessageReceived_1(value: LogCallback): void {
-        return Il2Cpp.Api.Application._remove_logMessageReceived(value)
     }
 }
 
