@@ -97,12 +97,25 @@ function getUnityInfo() {
     let line20 = getLine(20)
     let retStr = undefined
 
-    // Application()
+    Application()
     // SystemInfo()
     // Time()
     // Environment()
 
     // LOG(getLine(60), LogColor.RED)
+
+    function Application() {
+        LOGE(`${line20} Application ${line20}`)
+        LOGD(`Application.dataPath\t\t${Il2Cpp.Application.dataPath}`)
+        LOGD(`Application.persistentDataPath\t${Il2Cpp.Application.persistentDataPath}`)
+        LOGD(`Application.streamingAssetsPath\t${Il2Cpp.Application.streamingAssetsPath}`)
+        LOGD(`Application.temporaryCachePath\t${Il2Cpp.Application.temporaryCachePath}`)
+        LOGD(`Application.unityVersion\t\t${Il2Cpp.Application.unityVersion}`)
+        LOGD(`Application.version\t\t${Il2Cpp.Application.version}`)
+        LOGD(`Application.identifier\t\t${Il2Cpp.Application.identifier}`)
+        LOGD(`Application.companyName\t\t${Il2Cpp.Application.companyName}`)
+        LOGD(`Application.productName\t\t${Il2Cpp.Application.productName}`)
+    }
 
     // function Application() {
 
@@ -394,7 +407,7 @@ function getUnityInfo() {
 }
 
 // filter and show useful address
-let allMethodsArray: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>() // all methods cache
+let allMethodsCacheArray: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>() // all methods cache
 const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine: number = -1) => {
 
     let countIndex: number = -1
@@ -412,17 +425,17 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
 
     // 查找所有函数
     if (findAll) {
-        if (allMethodsArray.length == 0) {
+        if (allMethodsCacheArray.length == 0) {
             Il2Cpp.Domain.assemblies.forEach((assembly: Il2Cpp.Assembly) => {
                 assembly.image.classes.forEach((klass: Il2Cpp.Class) => {
                     klass.methods.forEach((item: Il2Cpp.Method) => {
-                        allMethodsArray.push(item)
+                        allMethodsCacheArray.push(item)
                         if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
                     })
                 })
             })
         } else {
-            allMethodsArray
+            allMethodsCacheArray
                 .filter((item: Il2Cpp.Method) => item.name.toLocaleLowerCase().includes(filter.toLowerCase()))
                 .forEach(formartAndSaveIl2cppMehods)
         }

@@ -6,6 +6,20 @@ export enum NetworkReachability {
     ReachableViaLocalAreaNetwork = 2
 }
 
+export enum StackTraceLogType {
+    None = 0,
+    ScriptOnly = 1,
+    Full = 2
+}
+
+export enum LogType {
+    Error = 0,
+    Assert = 1,
+    Warning = 2,
+    Log = 3,
+    Exception = 4
+}
+
 export enum RuntimePlatform {
     Android = 11,
     BlackBerryPlayer = 0x16,
@@ -49,6 +63,52 @@ export enum RuntimePlatform {
     XboxOne = 0x1b,
 }
 
+export enum SystemLanguage {
+    Afrikaans = 0,
+    Arabic = 1,
+    Basque = 2,
+    Belarusian = 3,
+    Bulgarian = 4,
+    Catalan = 5,
+    Chinese = 6,
+    ChineseSimplified = 40,
+    ChineseTraditional = 41,
+    Czech = 7,
+    Danish = 8,
+    Dutch = 9,
+    English = 10,
+    Estonian = 11,
+    Faroese = 12,
+    Finnish = 13,
+    French = 14,
+    German = 15,
+    Greek = 16,
+    Hebrew = 17,
+    Hungarian = 18,
+    Icelandic = 19,
+    Indonesian = 20,
+    Italian = 21,
+    Japanese = 22,
+    Korean = 23,
+    Latvian = 24,
+    Lithuanian = 25,
+    Norwegian = 26,
+    Polish = 27,
+    Portuguese = 28,
+    Romanian = 29,
+    Russian = 30,
+    SerboCroatian = 31,
+    Slovak = 32,
+    Slovenian = 33,
+    Spanish = 34,
+    Swedish = 35,
+    Thai = 36,
+    Turkish = 37,
+    Ukrainian = 38,
+    Unknown = 42,
+    Vietnamese = 39,
+}
+
 type LogCallback = NativePointer
 
 class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
@@ -70,80 +130,172 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
     // wantsToQuit : Func<Boolean>
     wantsToQuit = lfv(this.handle, "wantsToQuit")
 
-    CallLogCallback(logString: NativePointer, stackTrace: NativePointer, type: NativePointer): void {
-        return Il2Cpp.Api.Application._CallLogCallback(this.handle, logString, stackTrace, type)
+    static get Quit_1(): void {
+        return Il2Cpp.Api.Application._Quit_1()
     }
 
-    CallLowMemory(): void {
-        return Il2Cpp.Api.Application._CallLowMemory(this.handle)
+    static get Quit(): void {
+        return Il2Cpp.Api.Application._Quit()
     }
 
-    get cloudProjectId(): string {
-        return readU16(Il2Cpp.Api.Application._get_cloudProjectId(this.handle))
+    static get isPlaying(): boolean {
+        return Il2Cpp.Api.Application._get_isPlaying()
     }
 
-    get dataPath(): string {
-        return readU16(Il2Cpp.Api.Application._get_dataPath(this.handle))
+    static get dataPath(): string {
+        return readU16(Il2Cpp.Api.Application._get_dataPath())
     }
 
-    get identifier(): string {
-        return readU16(Il2Cpp.Api.Application._get_identifier(this.handle))
+    static get streamingAssetsPath(): string {
+        return readU16(Il2Cpp.Api.Application._get_streamingAssetsPath())
     }
 
-    get internetReachability(): NetworkReachability {
-        return Il2Cpp.Api.Application._get_internetReachability(this.handle)
+    static get persistentDataPath(): string {
+        return readU16(Il2Cpp.Api.Application._get_persistentDataPath())
     }
 
-    get isEditor(): boolean {
-        return Il2Cpp.Api.Application._get_isEditor(this.handle).toInt32() === 1
+    static get temporaryCachePath(): string {
+        return readU16(Il2Cpp.Api.Application._get_temporaryCachePath())
     }
 
-    get isMobilePlatform(): boolean {
-        return Il2Cpp.Api.Application._get_isMobilePlatform(this.handle).toInt32() === 1
+    static get unityVersion(): string {
+        return readU16(Il2Cpp.Api.Application._get_unityVersion())
     }
 
-    get isPlaying(): boolean {
-        return Il2Cpp.Api.Application._get_isPlaying(this.handle).toInt32() === 1
+    static get version(): string {
+        return readU16(Il2Cpp.Api.Application._get_version())
     }
 
-    get persistentDataPath(): string {
-        return readU16(Il2Cpp.Api.Application._get_persistentDataPath(this.handle))
+    static get identifier(): string {
+        return readU16(Il2Cpp.Api.Application._get_identifier())
     }
 
-    get platform(): RuntimePlatform {
-        return Il2Cpp.Api.Application._get_platform(this.handle)
+    static get productName(): string {
+        return readU16(Il2Cpp.Api.Application._get_productName())
     }
 
-    set runInBackground(value: boolean) {
-        Il2Cpp.Api.Application._set_runInBackground(this.handle, value)
+    static get companyName(): string {
+        return readU16(Il2Cpp.Api.Application._get_companyName())
     }
 
-    get streamingAssetsPath(): string {
-        return readU16(Il2Cpp.Api.Application._get_streamingAssetsPath(this.handle))
+    static get cloudProjectId(): string {
+        return readU16(Il2Cpp.Api.Application._get_cloudProjectId())
     }
 
-    set targetFrameRate(value: number) {
-        Il2Cpp.Api.Application._set_targetFrameRate(this.handle, value)
+    static get_internetReachability(): NetworkReachability {
+        return Il2Cpp.Api.Application._get_internetReachability()
     }
 
-    get unityVersion(): string {
-        return readU16(Il2Cpp.Api.Application._get_unityVersion(this.handle))
+    static OpenURL(url: string): void {
+        return Il2Cpp.Api.Application._OpenURL(url)
     }
 
-    addLogMessageReceived(callback: LogCallback): void {
-        Il2Cpp.Api.Application._add_logMessageReceived(this.handle, callback)
+    static targetFrameRate(value: number): void {
+        return Il2Cpp.Api.Application._set_targetFrameRate(value)
     }
 
-    removeLogMessageReceived(callback: LogCallback): void {
-        Il2Cpp.Api.Application._remove_logMessageReceived(this.handle, callback)
+    static SetLogCallbackDefined(defined: boolean): void {
+        return Il2Cpp.Api.Application._SetLogCallbackDefined(defined)
     }
 
-    addLogMessageReceivedThreaded(callback: LogCallback): void {
-        Il2Cpp.Api.Application._add_logMessageReceivedThreaded(this.handle, callback)
+    static GetStackTraceLogType(logType: number): number {
+        return Il2Cpp.Api.Application._GetStackTraceLogType(logType)
     }
 
-    removeLogMessageReceivedThreaded(callback: LogCallback): void {
-        Il2Cpp.Api.Application._remove_logMessageReceivedThreaded(this.handle, callback)
+    static get platform(): RuntimePlatform {
+        return Il2Cpp.Api.Application._get_platform()
+    }
+
+    static get systemLanguage(): SystemLanguage {
+        return Il2Cpp.Api.Application._get_platform() as SystemLanguage
+    }
+
+    static get internetReachability(): number {
+        return Il2Cpp.Api.Application._get_internetReachability()
+    }
+
+    static CallLowMemory(): void {
+        return Il2Cpp.Api.Application._CallLowMemory()
+    }
+
+    static add_logMessageReceived(value: any): void {
+        return Il2Cpp.Api.Application._add_logMessageReceived(value)
+    }
+
+    static remove_logMessageReceived(value: any): void {
+        return Il2Cpp.Api.Application._remove_logMessageReceived(value)
+    }
+
+    static add_logMessageReceivedThreaded(value: any): void {
+        return Il2Cpp.Api.Application._add_logMessageReceivedThreaded(value)
+    }
+
+    static remove_logMessageReceivedThreaded(value: any): void {
+        return Il2Cpp.Api.Application._remove_logMessageReceivedThreaded(value)
+    }
+
+    static CallLogCallback(logString: string, stackTrace: string, type: number, invokedOnMainThread: boolean): void {
+        return Il2Cpp.Api.Application._CallLogCallback(logString, stackTrace, type, invokedOnMainThread)
+    }
+
+    static Internal_ApplicationWantsToQuit(): boolean {
+        return Il2Cpp.Api.Application._Internal_ApplicationWantsToQuit()
+    }
+
+    static Internal_ApplicationQuit(): void {
+        return Il2Cpp.Api.Application._Internal_ApplicationQuit()
+    }
+
+    static Internal_ApplicationUnload(): void {
+        return Il2Cpp.Api.Application._Internal_ApplicationUnload()
+    }
+
+    static InvokeOnBeforeRender(): void {
+        return Il2Cpp.Api.Application._InvokeOnBeforeRender()
+    }
+
+    static InvokeFocusChanged(focus: boolean): void {
+        return Il2Cpp.Api.Application._InvokeFocusChanged(focus)
+    }
+
+    static InvokeDeepLinkActivated(url: string): void {
+        return Il2Cpp.Api.Application._InvokeDeepLinkActivated(url)
+    }
+
+    static RegisterLogCallback_1(handler: any): void {
+        return Il2Cpp.Api.Application._RegisterLogCallback(handler)
+    }
+
+    static RegisterLogCallback_2(handler: any, threaded: boolean): void {
+        return Il2Cpp.Api.Application._RegisterLogCallback(handler, threaded)
+    }
+
+    static get isEditor(): boolean {
+        return Il2Cpp.Api.Application._get_isEditor()
+    }
+
+    static GetStackTraceLogType_1(logType: LogType): StackTraceLogType {
+        return Il2Cpp.Api.Application._GetStackTraceLogType(logType)
+    }
+
+    // add_logMessageReceivedThreaded(LogCallback) : Void
+    static add_logMessageReceivedThreaded_1(value: LogCallback): void {
+        return Il2Cpp.Api.Application._add_logMessageReceivedThreaded(value)
+    }
+
+    // remove_logMessageReceivedThreaded(LogCallback) : Void
+    static remove_logMessageReceivedThreaded_1(value: LogCallback): void {
+        return Il2Cpp.Api.Application._remove_logMessageReceivedThreaded(value)
+    }
+
+    // add_logMessageReceived(LogCallback) : Void
+    static add_logMessageReceived_1(value: LogCallback): void {
+        return Il2Cpp.Api.Application._add_logMessageReceived(value)
+    }
+
+    // remove_logMessageReceived(LogCallback) : Void
+    static remove_logMessageReceived_1(value: LogCallback): void {
+        return Il2Cpp.Api.Application._remove_logMessageReceived(value)
     }
 }
 
