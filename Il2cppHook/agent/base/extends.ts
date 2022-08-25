@@ -8,7 +8,6 @@ declare global {
     var watchDisabled: () => void
     var patchTest: (mPtr: NativePointer, size?: number) => void
     var findInMemory: (typeStr: "Dex" | "Dex1" | "PNG" | "global-metadata.dat" | string, scanSync?: boolean) => void
-    var getFileLenth: (path: string) => number
     var fridaInfo: () => void
     var listThreads: (maxCountThreads?: number) => void
 
@@ -444,7 +443,7 @@ globalThis.findImport = (moduleName: string = "libc.so", importName: string = ""
     LOG("")
 }
 
-globalThis.getFileLenth = (filePath: string): number => {
+const getFileLenth = (filePath: string): number => {
     let file = callFunctionWithOutError(Module.findExportByName("libc.so", "fopen")!, allocCStr(filePath), allocCStr("rwx"))
     if (file.isNull()) return 0
     callFunctionWithOutError(Module.findExportByName("libc.so", "fseek")!, file, 0, 2)

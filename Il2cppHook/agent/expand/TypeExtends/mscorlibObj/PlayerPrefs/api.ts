@@ -66,7 +66,6 @@ class PlayerPrefsAPI {
     static get _SetString() {
         return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.PlayerPrefs", "SetString", 2, "pointer", ["pointer", "pointer", "pointer"]);
     }
-
 }
 
 declare global {
