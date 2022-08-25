@@ -14,7 +14,7 @@ declare global {
     var DD: () => void
     var BF: (filterStr: string) => void
     var breakWithArgs: (mPtr: NativePointer, argCount?: number) => void
-    var breakInline: (mPtr: NativePointer) => void
+    var breakInline: (mPtr: NativePointer, callback?: (value: InvocationContext) => void) => void
     var breakWithStack: (mPtr: NativePointer) => void
     var getPlatform: () => string
     var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
@@ -253,13 +253,14 @@ class Breaker {
         })
     }
 
-    static breakInline = (mPtr: NativePointer) => {
+    static breakInline = (mPtr: NativePointer, callback: (value: InvocationContext) => void) => {
         mPtr = checkPointer(mPtr)
         Interceptor.attach(mPtr, {
             onEnter(this: InvocationContext, args: InvocationArguments) {
                 LOGO("\n" + getLine(65))
                 LOGH("Called from " + mPtr + " ---> " + mPtr.sub(soAddr) + "\n")
                 LOGD(JSON.stringify(this.context))
+                callback(this)
             }
         })
     }
@@ -329,7 +330,7 @@ globalThis.h = Breaker.printHistoryLog
 globalThis.hn = Breaker.printHistoryNum
 globalThis.breakWithArgs = Breaker.breakWithArgs
 globalThis.breakWithStack = Breaker.breakWithStack
-globalThis.breakInline = Breaker.breakInline
+globalThis.breakInline = Breaker.breakInline as any
 
 globalThis.b = (mPtr: NativePointer | string | number) => {
     if (typeof mPtr == "number") {

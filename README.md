@@ -29,6 +29,12 @@ $ frida -U --no-pause -f com.xxx.xxx -l  ../_Ufunc.js
 - f() == list_fields 列出所有的 Fields
     ![test](img/list_fields.png)
 
+- findClass(className) 查找类,一般配合 m() 使用 , m(findClass('className')) === m('className')
+    ![test](img/findClass.png)
+
+- findMethod 新版 / find_method 旧版
+    ![test](img/findMethod.png)
+    
 ...
 
 #### Commit

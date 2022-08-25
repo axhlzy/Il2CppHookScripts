@@ -190,7 +190,7 @@ class HookerBase {
         if (input instanceof NativePointer) {
             klass = HookerBase.checkType(input)
         } else if (typeof input == "string") {
-            klass = HookerBase.checkType(ptr(input.trim()))
+            klass = HookerBase.checkType(input.trim())
         } else if (typeof input == "number") {
             // arm64 使用 '0x...' (String(mPtr)这个参数本身就是错的，如果是正确的判断十三位十六进制数即可)
             if (String(input).length > 18 && Process.arch == "arm64") throw ("please use '0x...' instead of number")
