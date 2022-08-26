@@ -39,6 +39,8 @@ $ frida -U --no-pause -f com.xxx.xxx -l  ../_Ufunc.js
      * [HookOnPointerClick ：Hook 点击事件](#HookOnPointerClick)
      * [HookDebugLog : Hook Debug.Log](#HookDebugLog)
      * [HookSetActive : Hook SetActive](#HookSetActive)
+  
+  ...
 
 --- 
 
