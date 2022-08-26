@@ -36,6 +36,7 @@ export const LOGS = (str: string, colorDescription: [number, number, LogColor][]
 
 export const LOGW = (msg: any): void => LOG(msg, LogColor.YELLOW)
 export const LOGE = (msg: any): void => LOG(msg, LogColor.RED)
+export const LOGG = (msg: any): void => LOG(msg, LogColor.C32)
 export const LOGD = (msg: any): void => LOG(msg, LogColor.C36)
 export const LOGO = (msg: any): void => LOG(msg, LogColor.C33)
 export const LOGH = (msg: any): void => LOG(msg, LogColor.C96)
@@ -79,6 +80,7 @@ declare global {
     var LOGW: (msg: any) => void // LogColor.YELLOW
     var LOGE: (msg: any) => void // LogColor.RED
     var LOGD: (msg: any) => void // LogColor.C36
+    var LOGG: (msg: any) => void // LogColor.C32
     var LOGO: (msg: any) => void // LogColor.C33
     var LOGH: (msg: any) => void // LogColor.C96
     var LOGZ: (msg: any) => void // LogColor.C90
@@ -93,6 +95,7 @@ globalThis.LOGJSON = LOGJSON
 // globalThis.LOGS = LOGS
 globalThis.LOGW = LOGW
 globalThis.LOGE = LOGE
+globalThis.LOGG = LOGG
 globalThis.LOGD = LOGD
 globalThis.LOGO = LOGO
 globalThis.LOGH = LOGH

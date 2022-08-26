@@ -145,7 +145,8 @@ class Breaker {
                             tmp_content[0] = `  inst\t| \t\t\t\t${args[0]}\t\t[ ${ValueResolve.fakeValue(args[0], new Il2Cpp.Type(ptr(1)), method)} ] ( ${method.class.handle} )`
                             for (let index = 1; index < method.parameterCount + 1; ++index) {
                                 let start = `  arg${index}  | `
-                                let mid = `${method.parameters[index - 1].name}\t--->\t\t${formartClass.getPtrFormart(args[index])}\t\t`
+                                let parameterName = formartClass.alignStr(`${method.parameters[index - 1].name}`, 10)
+                                let mid = `${parameterName}\t--->\t\t${formartClass.getPtrFormart(args[index])}\t\t`
                                 let end = `${method.parameters[index - 1].type.name} (${method.parameters[index - 1].type.class.handle})`
                                 let res = `\t ${ValueResolve.fakeValue(args[index], method.parameters[index - 1].type, method)}`
                                 tmp_content[tmp_content.length] = `${start}${mid}${end}${res}`
@@ -154,7 +155,8 @@ class Breaker {
                             // static方法
                             for (let index = 0; index < method.parameterCount; ++index) {
                                 let start = `  arg${index}  | `
-                                let mid = `${method.parameters[index].name}\t--->\t\t${formartClass.getPtrFormart(args[index])}\t\t`
+                                let parameterName = formartClass.alignStr(`${method.parameters[index - 1].name}`, 10)
+                                let mid = `${parameterName}\t--->\t\t${formartClass.getPtrFormart(args[index])}\t\t`
                                 let end = `${method.parameters[index].type.name} (${method.parameters[index].type.class.handle})\t `
                                 let res = `${ValueResolve.fakeValue(args[index], method.parameters[index].type, method)}`
                                 tmp_content[tmp_content.length] = `${start}${mid}${end}${res}`
@@ -260,7 +262,7 @@ class Breaker {
                 LOGO("\n" + getLine(65))
                 LOGH("Called from " + mPtr + " ---> " + mPtr.sub(soAddr) + "\n")
                 LOGD(JSON.stringify(this.context))
-                callback(this)
+                if (callback != undefined) callback(this)
             }
         })
     }
