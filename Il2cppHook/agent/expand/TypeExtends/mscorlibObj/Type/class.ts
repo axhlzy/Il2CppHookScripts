@@ -16,46 +16,46 @@ class mscorlib_System_Type_impl extends mscorlib_System_Object_impl implements m
     // FilterNameIgnoreCase : MemberFilter
     FilterNameIgnoreCase: NativePointer = lfvt(this.handle, "FilterNameIgnoreCase", findClass("Type"))
     // Missing : Object
-    Missing: mscorlib.Object = new mscorlib.Object(lfvt(this.handle, "Missing", findClass("Type")))
+    Missing: Il2cpp.Object = new Il2cpp.Object(lfvt(this.handle, "Missing", findClass("Type")))
 
     Equals_obj(obj: any): boolean {
-        return mscorlib.Api.Type._Equals_obj(this.handle, obj);
+        return Il2cpp.Api.Type._Equals_obj(this.handle, obj);
     }
 
     Equals_type(type: mscorlib_System_Type_impl): boolean {
-        return mscorlib.Api.Type._Equals_type(this.handle, type.handle);
+        return Il2cpp.Api.Type._Equals_type(this.handle, type.handle);
     }
 
     GetArrayRank(): number {
-        return mscorlib.Api.Type._GetArrayRank(this.handle).toInt32();
+        return Il2cpp.Api.Type._GetArrayRank(this.handle).toInt32();
     }
 
     GetConstructor(types: mscorlib_System_Type_impl[]) {
-        return mscorlib.Api.Type._GetConstructor(this.handle, types[0].handle);
+        return Il2cpp.Api.Type._GetConstructor(this.handle, types[0].handle);
     }
 
     GetEnumName(obj: any): string {
-        return readU16(mscorlib.Api.Type._GetEnumName(this.handle, obj));
+        return readU16(Il2cpp.Api.Type._GetEnumName(this.handle, obj));
     }
 
     GetEnumNames(): string[] {
-        return mscorlib.Api.Type._GetEnumNames(this.handle);
+        return Il2cpp.Api.Type._GetEnumNames(this.handle);
     }
 
     GetHashCode(): number {
-        return mscorlib.Api.Type._GetHashCode(this.handle).toInt32();
+        return Il2cpp.Api.Type._GetHashCode(this.handle).toInt32();
     }
 
     GetType_0(): mscorlib_System_Type {
-        return new mscorlib_System_Type_impl(mscorlib.Api.Type._GetType_0(this.handle));
+        return new mscorlib_System_Type_impl(Il2cpp.Api.Type._GetType_0(this.handle));
     }
 
     GetType_1(typeName: string): mscorlib_System_Type {
-        return new mscorlib_System_Type_impl(mscorlib.Api.Type._GetType_1(this.handle, typeName));
+        return new mscorlib_System_Type_impl(Il2cpp.Api.Type._GetType_1(this.handle, typeName));
     }
 
     toString(): string {
-        return readU16(mscorlib.Api.Type._ToString(this.handle));
+        return readU16(Il2cpp.Api.Type._ToString(this.handle));
     }
 
     get name(): string {
@@ -67,17 +67,17 @@ class mscorlib_System_Type_impl extends mscorlib_System_Object_impl implements m
     }
 
     // mscorlib.Type case to mscorlib.RuntimeType
-    get caseToRuntimeType(): mscorlib.RuntimeType {
-        return new mscorlib.RuntimeType(this.handle)
+    get caseToRuntimeType(): Il2cpp.RuntimeType {
+        return new Il2cpp.RuntimeType(this.handle)
     }
 }
 
 declare global {
-    namespace mscorlib {
+    namespace Il2cpp {
         class Type extends mscorlib_System_Type_impl { }
     }
 }
 
-mscorlib.Type = mscorlib_System_Type_impl;
+Il2cpp.Type = mscorlib_System_Type_impl;
 
 export { mscorlib_System_Type_impl }

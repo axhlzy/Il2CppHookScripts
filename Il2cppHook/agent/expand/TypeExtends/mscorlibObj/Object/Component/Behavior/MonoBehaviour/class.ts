@@ -6,7 +6,7 @@ type Graphic = NativePointer
 type SpriteState = NativePointer
 type Navigation = NativePointer
 type ColorBlock = NativePointer
-class MonoBehaviourImpl extends ComponentImpl implements Il2cppMonoBehaviour {
+class UnityEngine_MonoBehaviour_Impl extends Il2Cpp.Component implements UnityEngine_MonoBehaviour_Interface {
 
     // m_Transition : Transition
     m_Transition: Transition = lfv(this.handle, "m_Transition")
@@ -33,8 +33,8 @@ class MonoBehaviourImpl extends ComponentImpl implements Il2cppMonoBehaviour {
     // m_CanvasGroupCache : List<CanvasGroup>
     m_CanvasGroupCache: NativePointer = lfv(this.handle, "m_CanvasGroupCache")
 
-    ctor_0(): Il2cppMonoBehaviour {
-        return new MonoBehaviourImpl(Il2Cpp.Api.MonoBehaviour._ctor(alloc()));
+    ctor_0(): UnityEngine_MonoBehaviour_Interface {
+        return new UnityEngine_MonoBehaviour_Impl(Il2Cpp.Api.MonoBehaviour._ctor(alloc()));
     }
 
     CancelInvoke_0(): void {
@@ -108,10 +108,10 @@ class MonoBehaviourImpl extends ComponentImpl implements Il2cppMonoBehaviour {
 
 declare global {
     namespace Il2Cpp {
-        class MonoBehaviour extends MonoBehaviourImpl { }
+        class MonoBehaviour extends UnityEngine_MonoBehaviour_Impl { }
     }
 }
 
-Il2Cpp.MonoBehaviour = MonoBehaviourImpl;
+Il2Cpp.MonoBehaviour = UnityEngine_MonoBehaviour_Impl;
 
-export { MonoBehaviourImpl }
+export { UnityEngine_MonoBehaviour_Impl as MonoBehaviourImpl }

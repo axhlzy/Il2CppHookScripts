@@ -70,11 +70,11 @@ class mscorlibRuntimeTypeAPI {
 }
 
 declare global {
-    namespace mscorlib.Api {
+    namespace Il2cpp.Api {
         class RuntimeType extends mscorlibRuntimeTypeAPI { }
     }
 }
 
-mscorlib.Api.RuntimeType = mscorlibRuntimeTypeAPI;
+Il2cpp.Api.RuntimeType = mscorlibRuntimeTypeAPI;
 
 export { }

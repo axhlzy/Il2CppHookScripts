@@ -100,11 +100,11 @@ class ModuleApi {
 }
 
 declare global {
-    namespace mscorlib.Api {
+    namespace Il2cpp.Api {
         class Module extends ModuleApi { }
     }
 }
 
-mscorlib.Api.Module = ModuleApi;
+Il2cpp.Api.Module = ModuleApi;
 
 export { }

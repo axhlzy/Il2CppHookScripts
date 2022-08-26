@@ -1,7 +1,7 @@
-interface Il2cppMonoBehaviour {
+interface UnityEngine_MonoBehaviour_Interface {
 
     // .ctor()
-    ctor_0(): Il2cppMonoBehaviour;
+    ctor_0(): UnityEngine_MonoBehaviour_Interface;
 
     // CancelInvoke() : Void
     CancelInvoke_0(): void;

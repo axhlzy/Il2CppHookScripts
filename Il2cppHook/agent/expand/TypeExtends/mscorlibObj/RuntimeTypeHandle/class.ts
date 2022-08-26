@@ -10,12 +10,12 @@ class mscorlib_System_RuntimeTypeHandle_impl extends mscorlib_System_Object_impl
 
 declare global {
 
-    namespace mscorlib {
+    namespace Il2cpp {
         class RuntimeTypeHandle extends mscorlib_System_RuntimeTypeHandle_impl { }
     }
 }
 
 
-mscorlib.RuntimeTypeHandle = mscorlib_System_RuntimeTypeHandle_impl;
+Il2cpp.RuntimeTypeHandle = mscorlib_System_RuntimeTypeHandle_impl;
 
 export { mscorlib_System_RuntimeTypeHandle_impl };

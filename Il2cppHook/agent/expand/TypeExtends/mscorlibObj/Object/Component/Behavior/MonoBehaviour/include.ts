@@ -1,4 +1,5 @@
 import './Selectable/include'
+import './UIBehaviour/include'
 
 import './api'
 import './class'

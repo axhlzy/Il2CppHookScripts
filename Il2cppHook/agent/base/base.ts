@@ -164,8 +164,16 @@ class HookerBase {
             newLine()
             LOGO(getLine(maxStrLen))
         } else {
+            let empMethod = new Array<Il2Cpp.Method>()
             klass.methods.forEach((method: Il2Cpp.Method) => {
-                LOGD(`[*] ${method.handle} ---> ${method.virtualAddress} ---> ${method.relativeVirtualAddress}\t|  ${getMethodDesFromMethodInfo(method)}`)
+                let midStr = `---> ${method.virtualAddress} ---> ${method.relativeVirtualAddress}`
+                if (method.virtualAddress.isNull()) empMethod.push(method)
+                else LOGD(`[*] ${method.handle} ${midStr}\t|  ${getMethodDesFromMethodInfo(method)}`)
+            })
+            // 单独处理一下虚方法（和上面正常的方法放在一起现实会显得很乱）
+            empMethod.forEach((method: Il2Cpp.Method) => {
+                let midStr = `---> ${method.virtualAddress}`
+                LOGZ(`[*] ${method.handle} ${midStr}\t|  ${getMethodDesFromMethodInfo(method)}`)
             })
             newLine()
         }
@@ -369,18 +377,6 @@ class HookerBase {
         LOGD("methodPointer\t---->\t" + method.virtualAddress + "\t===>\t" + method.relativeVirtualAddress)
         LOGW(getLine(lineLen, "-"))
     }
-
-    // static getFieldOffFromCls(clsptr: NativePointer, fieldName: string): NativePointer {
-    //     if (arguments[2] == undefined) return HookerBase.listFieldsFromCls(clsptr, 0, 2, fieldName)
-    //     return HookerBase.listFieldsFromCls(clsptr, ptr(arguments[2]), 1, fieldName)
-    // }
-
-    // static getFieldInfoFromCls(clsptrOrName: string | NativePointer | number, fieldName: string) {
-    //     if (typeof clsptrOrName == "string") clsptrOrName = findClass(clsptrOrName)
-    //     if (typeof clsptrOrName == "number") clsptrOrName = ptr(clsptrOrName)
-    //     if (arguments[2] == undefined) return listFieldsFromCls(clsptrOrName, 0, 2, fieldName)
-    //     return HookerBase.listFieldsFromCls(clsptrOrName, ptr(arguments[2]), 2, fieldName)
-    // }
 
     static listFieldsFromCls(klass: NativePointer | number, instance: NativePointer | number) {
         if (klass == undefined || klass == null) return

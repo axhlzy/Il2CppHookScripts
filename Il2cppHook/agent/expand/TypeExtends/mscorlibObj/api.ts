@@ -40,19 +40,19 @@ class mscorlibObjAPI {
 }
 
 declare global {
-    class mscorlib { }
+    class Il2cpp { }
 
-    namespace mscorlib {
+    namespace Il2cpp {
         class Api { }
     }
-    namespace mscorlib.Api {
+    namespace Il2cpp.Api {
         class mscorlibObj extends mscorlibObjAPI { }
     }
 }
 
 Reflect.set(globalThis, "mscorlib", class { });
-Reflect.set(mscorlib, "Api", class { });
+Reflect.set(Il2cpp, "Api", class { });
 
-mscorlib.Api.mscorlibObj = mscorlibObjAPI;
+Il2cpp.Api.mscorlibObj = mscorlibObjAPI;
 
 export { }

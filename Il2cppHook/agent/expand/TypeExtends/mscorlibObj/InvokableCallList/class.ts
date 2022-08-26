@@ -19,34 +19,34 @@ export class InvokableCallList_impl extends mscorlib_System_Object_impl {
         super(handleOrWrapper)
     }
 
-    static get ctor_0(): mscorlib.InvokableCallList {
-        return new InvokableCallList_impl(mscorlib.Api.InvokableCallList._ctor_0(alloc()))
+    static get ctor_0(): Il2cpp.InvokableCallList {
+        return new InvokableCallList_impl(Il2cpp.Api.InvokableCallList._ctor_0(alloc()))
     }
 
     AddListener(call: BaseInvokableCall): void {
-        return new mscorlib.Api.InvokableCallList._AddListener(this.handle, call)
+        return new Il2cpp.Api.InvokableCallList._AddListener(this.handle, call)
     }
 
     ClearPersistent(): void {
-        return new mscorlib.Api.InvokableCallList._ClearPersistent(this.handle)
+        return new Il2cpp.Api.InvokableCallList._ClearPersistent(this.handle)
     }
 
     PrepareInvoke(): void {
-        return new mscorlib.Api.InvokableCallList._PrepareInvoke(this.handle)
+        return new Il2cpp.Api.InvokableCallList._PrepareInvoke(this.handle)
     }
 
     // RemoveListener(Object, MethodInfo) : Void
     RemoveListener_2(target: mscorlib_System_Object_impl, method: mscorlib_System_Reflection_MethodInfo): void {
-        return new mscorlib.Api.InvokableCallList._RemoveListener(this.handle, target, method)
+        return new Il2cpp.Api.InvokableCallList._RemoveListener(this.handle, target, method)
     }
 }
 
 declare global {
-    namespace mscorlib {
+    namespace Il2cpp {
         class InvokableCallList extends InvokableCallList_impl { }
     }
 }
 
-mscorlib.InvokableCallList = InvokableCallList_impl;
+Il2cpp.InvokableCallList = InvokableCallList_impl;
 
 export { mscorlib_System_Object_impl };

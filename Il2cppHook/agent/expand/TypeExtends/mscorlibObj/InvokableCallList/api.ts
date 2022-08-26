@@ -40,11 +40,11 @@ class InvokableCallListAPI {
 }
 
 declare global {
-    namespace mscorlib.Api {
+    namespace Il2cpp.Api {
         class InvokableCallList extends InvokableCallListAPI { }
     }
 }
 
-mscorlib.Api.InvokableCallList = InvokableCallListAPI;
+Il2cpp.Api.InvokableCallList = InvokableCallListAPI;
 
 export { }

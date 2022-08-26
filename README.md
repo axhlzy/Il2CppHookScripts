@@ -7,6 +7,7 @@
 - 解析 `Unity` 的方法 / 类 / 字段
 - 解析 `运行时` 方法参数
 - 常用函数的 `（批量）断点`（参数值 / 返回值 查看）
+- 更方便的查看以及调用函数 (#list_images)
 
 #### Usage
 ```sh
@@ -24,7 +25,7 @@ $ frida -FU -l ../_Ufunc.js
 ##### Contents
 
 
-  1. 获取基本信息 
+  1. 基础函数
      * [i() == list_images : 列出所有的 Images](#list_images)
      * [c() == list_classes : 列出所有的 Classes](#list_classes)
      * [m() == list_methods : 列出所有的 Methods](#list_methods)
@@ -33,6 +34,7 @@ $ frida -FU -l ../_Ufunc.js
      * [findMethod / find_method : 根据类名查找相关的函数](#findMethod)
      * [printExp : 查找名称为参数的函数,比较慢，但是方便](#printExp)
      * [getApkInfo : 获取 apk 信息](#getApkInfo)
+     * [callFunction / 静态调用 : 函数调用](#callFunction)
   2. 断点函数
      * [B : breakPoint 断点函数类 / b : 断点指定的一个函数](#bp)
      * [n/nn : nop 指定的一个函数](#np)
@@ -40,15 +42,26 @@ $ frida -FU -l ../_Ufunc.js
      * [breakWithArgs : 带参数断点](#breakWithArgs)
      * [breakWithStack : 带堆栈断点](#breakWithStack)
      * [watch/watchDisabled : MemoryAccessMonitor的简单封装（arm32易崩）](#watch)
+     * [StalkerTracePath : StalkerTrace封装,分析调用顺序](#StalkerTracePath)
+     * [StalkerTraceEvent : StalkerTraceEvent,分析事件](#StalkerTraceEvent)
   3. 常用函数Hook的封装
      * [HookOnPointerClick ：Hook 点击事件](#HookOnPointerClick)
      * [HookDebugLog : Hook Debug.Log](#HookDebugLog)
      * [HookSetActive : Hook SetActive](#HookSetActive)
-  
+     * [HookPlayerPrefs : Hook PlayerPrefs](#HookPlayerPrefs)
+     * ...
+  4. Module/Thread相关
+     * [listModule : (filterName?: string) => void](#listModule)
+     * [listModules : (moduleName: string, printItems?: number) => void](#listModules)
+     * [listThreads : (maxCountThreads?: number) => void](#listThreads)
+     * [attachCurrentThread : Il2Cpp.Api._threadCurrent()](#attachCurrentThread)
+     * [findExport : (exportName: string, moduleName?: string, callback?: (exp: ModuleExportDetails) => void) => void](#findExport)
+     * [findImport : (moduleName: string, importName?: string) => void](#findImport)
+
   ...
 
 --- 
-#### Usage
+#### Examples
 
 - **i() == list_images 不带参数即列出所有的 Images** <a id="list_images"></a>
   
@@ -118,6 +131,14 @@ $ frida -FU -l ../_Ufunc.js
   
     ![watch](img/watch.png)
 
+- **StalkerTracePath StalkerTrace封装,分析调用顺序** <a id="StalkerTracePath"></a>
+    
+    ![StalkerTracePath](img/StalkerTracePath.png)
+
+- **StalkerTraceEvent StalkerTraceEvent,分析事件** <a id="StalkerTraceEvent"></a>
+    
+    ![StalkerTraceEvent](img/StalkerTraceEvent.png)
+
 - **HookOnPointerClick ：Hook 点击事件** <a id="HookOnPointerClick"></a>
   
     ![HookOnPointerClick](img/HookOnPointerClick.png)
@@ -129,6 +150,31 @@ $ frida -FU -l ../_Ufunc.js
 - **HookSetActive : Hook SetActive** <a id="HookSetActive"></a>
     
     ![HookSetActive](img/HookSetActive.png)
+
+- **HookPlayerPrefs : Hook PlayerPrefs** <a id="HookPlayerPrefs"></a>
+    
+    ![HookPlayerPrefs](img/HookPlayerPrefs.png)
+
+- **listModule (filterName: string) => void** <a id="listModule"></a>
+  
+    ![listModule](img/listModule.png)
+
+- **listModules (moduleName: string, printItems?: number) => void** <a id="listModules"></a>
+  
+    ![listModules](img/listModules.png)
+
+- **listThreads (maxCountThreads?: number) => void** <a id="listThreads"></a>
+  
+    ![listThreads](img/listThreads.png)
+
+- **findExport (exportName: string, moduleName?: string, callback?: (exp: ModuleExportDetails) => void) => void** <a id="findExport"></a>
+  
+    ![findExport](img/findExport.png)
+
+- **findImport (moduleName: string, importName?: string) => void** <a id="findImport"></a>
+
+    ![findImport](img/findImport.png)
+
 
 ...
 

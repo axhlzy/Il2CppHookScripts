@@ -1,19 +1,19 @@
-interface Il2cppComponent {
+interface UnityEngine_Component_Interface {
 
     // public Component()
-    __ctor__(): Il2cppComponent;
+    __ctor__(): UnityEngine_Component_Interface;
 
     // public bool CompareTag(string tag)
     CompareTag(tag: string): boolean;
 
     // public Component GetComponent(Type type)
-    GetComponent(type: Il2Cpp.Type): Il2cppComponent;
+    GetComponent(type: Il2Cpp.Type): UnityEngine_Component_Interface;
 
     // public Component GetComponentInChildren(Type t, bool includeInactive)
-    GetComponentInChildren(t: Il2Cpp.Type, includeInactive: boolean): Il2cppComponent;
+    GetComponentInChildren(t: Il2Cpp.Type, includeInactive: boolean): UnityEngine_Component_Interface;
 
     // public Component GetComponentInParent(Type t) 
-    GetComponentInParent(t: Il2Cpp.Type): Il2cppComponent;
+    GetComponentInParent(t: Il2Cpp.Type): UnityEngine_Component_Interface;
 
     // public void GetComponents(Type type, List<Component> results)
     GetComponents(type: Il2Cpp.Type, results: any): void;

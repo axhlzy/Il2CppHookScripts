@@ -133,11 +133,11 @@ class DelegateAPI {
 }
 
 declare global {
-    namespace mscorlib.Api {
+    namespace Il2cpp.Api {
         class Delegate extends DelegateAPI { }
     }
 }
 
-mscorlib.Api.Delegate = DelegateAPI;
+Il2cpp.Api.Delegate = DelegateAPI;
 
 export { }

@@ -46,14 +46,14 @@ const attachNative = (mPtr: ARGM, mOnEnter?: OnEnterType, mOnLeave?: OnExitType,
 // 用来记录已经被 replace 的函数地址
 let arr_nop_addr = new Array()
 // nop 指定函数
-var nopFunction = (mPtr: ARGM): void => {
+const nopFunction = (mPtr: ARGM): void => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     if (mPtr == undefined) return
     replaceFunction(mPtr, () => ptr(0), true)
 }
 
 // 取消被 nop 的函数
-var cancelNop = (mPtr: ARGM): void => {
+const cancelNop = (mPtr: ARGM): void => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     if (mPtr == ptr(0)) return
     mPtr = checkPointer(mPtr)
@@ -66,7 +66,7 @@ var cancelNop = (mPtr: ARGM): void => {
 }
 
 // 取消所有已经Replace的函数
-var cancelAllNopedFunction = () => arr_nop_addr.forEach((addr) => Interceptor.revert(addr))
+const cancelAllNopedFunction = () => arr_nop_addr.forEach((addr) => Interceptor.revert(addr))
 
 //detach ---> A(mPtr)
 const detachAll = (mPtr?: ARGM) => {
@@ -165,7 +165,7 @@ const mapValueToArray = (map: Map<any, any>) => {
     return list
 }
 
-var runOnMain = (UpDatePtr: NativePointer, Callback: Function) => {
+const runOnMain = (UpDatePtr: NativePointer, Callback: Function) => {
     if (Callback == undefined) return
     if (typeof (UpDatePtr) == "function") {
         Callback = UpDatePtr
@@ -183,7 +183,7 @@ var runOnMain = (UpDatePtr: NativePointer, Callback: Function) => {
     })
 }
 
-var SendMessage = (str0: string, str1: string, str2: string = ""): void => {
+const SendMessage = (str0: string, str1: string, str2: string = ""): void => {
     // Java 
     Java.perform(() => Java.use("com.unity3d.player.UnityPlayer").UnitySendMessage(str0, str1, str2))
 
@@ -191,7 +191,7 @@ var SendMessage = (str0: string, str1: string, str2: string = ""): void => {
     // callFunction(Module.findExportByName("libunity.so","UnitySendMessage"),allocStr(str0,1),allocStr(str1,1),allocStr(str2,1))
 }
 
-var SendMessageImpl = (platform: string | "IronSource" | "MaxSdkCallbacks" | "MoPubManager" | "TPluginsGameObject"): void => {
+const SendMessageImpl = (platform: string | "IronSource" | "MaxSdkCallbacks" | "MoPubManager" | "TPluginsGameObject"): void => {
 
     switch (platform) {
         case "IronSource":
@@ -306,14 +306,7 @@ const filterDuplicateOBJ = (objstr: string, maxCount: number = 10) => {
     return (count >= maxCount) ? -1 : count
 }
 
-(Number as any).prototype.add = (num: string | number) => {
-    return Number(this) + Number(num)
-}
-
-export {
-    attachNative, detachAll, replaceFunction, nopFunction, cancelNop, cancelAllNopedFunction, checkCtx,
-    filterDuplicateOBJ, PTR2NativePtr, mapValueToArray, getJclassName
-}
+(Number as any).prototype.add = (num: string | number) => Number(this) + Number(num)
 
 declare global {
     var d: () => void
@@ -342,3 +335,9 @@ globalThis.checkCtx = checkCtx
 globalThis.runOnMain = runOnMain
 globalThis.SendMessage = SendMessage
 globalThis.SendMessageImpl = SendMessageImpl
+
+
+export {
+    attachNative, detachAll, replaceFunction, nopFunction, cancelNop, cancelAllNopedFunction, checkCtx,
+    filterDuplicateOBJ, PTR2NativePtr, mapValueToArray, getJclassName
+}

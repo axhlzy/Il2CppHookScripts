@@ -1,6 +1,6 @@
 import { cache } from "decorator-cache-getter";
 
-class il2cppObjAPI_impl extends Il2Cpp.Object implements CoreModule_Object {
+class UnityEngine_Object_Impl extends Il2Cpp.Object implements CoreModule_Object {
 
     // m_CachedPtr : IntPtr
     // m_CachedPtr: NativePointer = lfv(this.handle, "m_CachedPtr")
@@ -9,7 +9,7 @@ class il2cppObjAPI_impl extends Il2Cpp.Object implements CoreModule_Object {
         return Il2Cpp.Api.il2cppObj._ctor_0(allocP(1));
     }
 
-    Equals(other: il2cppObjAPI_impl): boolean {
+    Equals(other: UnityEngine_Object_Impl): boolean {
         return Il2Cpp.Api.il2cppObj._Equals(this.handle, other.handle);
     }
 
@@ -46,8 +46,8 @@ class il2cppObjAPI_impl extends Il2Cpp.Object implements CoreModule_Object {
     }
 }
 
-class ObjectIl2cpp_impl extends il2cppObjAPI_impl {
+class UnityEngine_Object_Base extends UnityEngine_Object_Impl {
 
 }
 
-export { ObjectIl2cpp_impl };
+export { UnityEngine_Object_Base };

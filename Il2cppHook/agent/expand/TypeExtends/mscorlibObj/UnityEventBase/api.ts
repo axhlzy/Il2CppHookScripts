@@ -63,11 +63,11 @@ class UnityEventBaseAPI {
 }
 
 declare global {
-    namespace mscorlib.Api {
+    namespace Il2cpp.Api {
         class UnityEventBase extends UnityEventBaseAPI { }
     }
 }
 
-mscorlib.Api.UnityEventBase = UnityEventBaseAPI;
+Il2cpp.Api.UnityEventBase = UnityEventBaseAPI;
 
 export { }

@@ -68,11 +68,11 @@ class ResourcesAPI_API {
 }
 
 declare global {
-    namespace mscorlib.Api {
+    namespace Il2cpp.Api {
         class ResourcesAPI extends ResourcesAPI_API { }
     }
 }
 
-mscorlib.Api.ResourcesAPI = ResourcesAPI_API;
+Il2cpp.Api.ResourcesAPI = ResourcesAPI_API;
 
 export { }

@@ -306,14 +306,22 @@ globalThis.listThreads = (maxCountThreads: number = 20) => {
 }
 
 let index: number
-globalThis.listModules = (filterName: string = "") => {
+globalThis.listModules = (filterName: string | Array<string> = "") => {
     index = 0
     Process.enumerateModules().forEach((md: Module) => {
-        if (md.name.includes(filterName)) printModule(md, true)
+        if (typeof filterName == "string") {
+            if (md.name.includes(filterName)) printModule(md, true)
+        } else if (filterName instanceof Array) {
+            filterName.forEach((name) => {
+                if (md.name.includes(name)) printModule(md, true)
+            })
+        } else {
+            throw new Error("filterName must be string or Array<string>")
+        }
     })
 }
 
-globalThis.listModule = (moduleName: string, printItems: number = 5) => {
+globalThis.listModule = (moduleName: string = "libc.so", printItems: number = 5) => {
 
     let md = Process.getModuleByName(moduleName)
     if (md == null) {
@@ -403,7 +411,7 @@ globalThis.findExport = (exportName: string, moduleName: string | undefined, cal
             if (exp.name.indexOf(exportName) != -1) callback!(exp)
         })
     }
-    newLine()
+    if (callback === showDetails) newLine()
 
     function showDetails(exp: ModuleExportDetails) {
         try {
@@ -429,18 +437,22 @@ globalThis.findExport = (exportName: string, moduleName: string | undefined, cal
 
 globalThis.findImport = (moduleName: string = "libc.so", importName: string = "") => {
     let md = Process.findModuleByName(moduleName)
-    if (md == null) {
-        LOGE("NOT FOUND Module : " + moduleName)
-        return
-    }
+    if (md == null) throw new Error("NOT FOUND Module : " + moduleName)
     md.enumerateImports().forEach((imp: ModuleImportDetails) => {
         if (!imp.name.includes(importName)) return
-        let subAddr = (imp == undefined || imp!.address == null) ? "" : ` ( ${imp!.address!.sub(Process.findModuleByAddress(imp!.address)!.base)} )`
+        let subAddr: string
+        try {
+            subAddr = (imp == undefined || imp!.address == null) ? "" : ` ( ${imp!.address!.sub(Process.findModuleByAddress(imp!.address)!.base)} )`
+        } catch { subAddr = "" }
         LOGD(`\n[*] ${imp.type} -> address: ${imp.address}${subAddr}  | name: ${imp.name}`)
-        let impMdBase = Process.findModuleByName(imp!.module!)?.base
+        let impMdBase
+        try {
+            impMdBase = Process.findModuleByName(imp!.module!)?.base
+        } catch { impMdBase = ptr(0) }
+
         LOGZ(`\t${imp.module == undefined ? "" : (imp.module + " ( " + impMdBase + " ) ")} \t ${imp.slot == undefined ? "" : imp.slot}`)
     })
-    LOG("")
+    newLine()
 }
 
 const getFileLenth = (filePath: string): number => {
