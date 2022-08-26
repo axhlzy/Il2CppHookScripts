@@ -1,4 +1,4 @@
-import { getMethodModifier, methodToString } from "../bridge/fix/il2cppM"
+import { getMethodMaxArgNameLength, getMethodModifier, methodToString } from "../bridge/fix/il2cppM"
 import { closest } from "fastest-levenshtein"
 import { formartClass } from "../utils/formart"
 import { HookerBase } from "./base"
@@ -107,7 +107,7 @@ class Breaker {
         }
     }
 
-    private static attachMethod(method: Il2Cpp.Method): void {
+    static attachMethod(method: Il2Cpp.Method): void {
 
         attachMethodInner(method)
 
@@ -139,13 +139,18 @@ class Breaker {
                         return LOGD((this.passValue as ValueResolve).toString())
                     } else {
                         // 详细版 b() 针对单个函数
-                        let tmp_content = []
+                        let tmp_content: Array<string> = new Array<string>()
+                        let parameterNameMax: number = getMethodMaxArgNameLength(method) + 1
+                        this.passParameterNameMaxStr = getLine(parameterNameMax, " ")
                         if (!method.isStatic) {
                             // 非static方法
-                            tmp_content[0] = `  inst\t| \t\t\t\t${args[0]}\t\t[ ${ValueResolve.fakeValue(args[0], new Il2Cpp.Type(ptr(1)), method)} ] ( ${method.class.handle} )`
+                            tmp_content[0] = `  inst\t|${this.passParameterNameMaxStr}\t\t\t${args[0]}\t\t[ ${ValueResolve.fakeValue(args[0], new Il2Cpp.Type(ptr(1)), method)} ] ( ${method.class.handle} )`
                             for (let index = 1; index < method.parameterCount + 1; ++index) {
                                 let start = `  arg${index}  | `
-                                let parameterName = formartClass.alignStr(`${method.parameters[index - 1].name}`, 10)
+                                let parameterName: string
+                                try {
+                                    parameterName = formartClass.alignStr(`${method.parameters[index - 1].name}`, parameterNameMax)
+                                } catch { parameterName = formartClass.alignStr(` `, parameterNameMax) }
                                 let mid = `${parameterName}\t--->\t\t${formartClass.getPtrFormart(args[index])}\t\t`
                                 let end = `${method.parameters[index - 1].type.name} (${method.parameters[index - 1].type.class.handle})`
                                 let res = `\t ${ValueResolve.fakeValue(args[index], method.parameters[index - 1].type, method)}`
@@ -155,7 +160,10 @@ class Breaker {
                             // static方法
                             for (let index = 0; index < method.parameterCount; ++index) {
                                 let start = `  arg${index}  | `
-                                let parameterName = formartClass.alignStr(`${method.parameters[index - 1].name}`, 10)
+                                let parameterName: string
+                                try {
+                                    parameterName = formartClass.alignStr(`${method.parameters[index - 1].name}`, parameterNameMax)
+                                } catch { parameterName = formartClass.alignStr(` `, parameterNameMax) }
                                 let mid = `${parameterName}\t--->\t\t${formartClass.getPtrFormart(args[index])}\t\t`
                                 let end = `${method.parameters[index].type.name} (${method.parameters[index].type.class.handle})\t `
                                 let res = `${ValueResolve.fakeValue(args[index], method.parameters[index].type, method)}`
@@ -163,7 +171,8 @@ class Breaker {
                             }
                         }
                         this.content = tmp_content
-                        let classTitle = `${method.class.namespace}.${method.class.name}`
+                        let clsStr = `${method.class.namespace}`
+                        let classTitle = `${clsStr.length == 0 ? "" : clsStr + "."}${method.class.name}`
                         let disptitle = `${classTitle} | ${methodToString(method, true)}\t [${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress}] | ${new Date().toLocaleTimeString().split(" ")[0]}`
                         this.disp_title = disptitle
                     }
@@ -174,16 +183,16 @@ class Breaker {
                         Breaker.array_methodValue_cache.push((this.passValue as ValueResolve).setRetval(retval))
                     if (this.content == null || this.disp_title == null) return
                     let start = `  ret\t| `
-                    let mid = `\t\t\t\t${formartClass.getPtrFormart(retval)}\t\t`
+                    let mid = `${this.passParameterNameMaxStr}\t\t\t${formartClass.getPtrFormart(retval)}\t\t`
                     let end = `${method.returnType.name} (${method.returnType.class.handle})\t `
                     let res = `${new ValueResolve("", method).setRetval(retval).resolve(-1)}`
                     this.content[this.content.length] = `${start}${mid}${end}${res}`
                     let lenMax = Math.max(...(this.content as Array<string>).map(item => item.length), this.disp_title.length) + 6 // 黄线长度
-                    LOGO(`\n${getLine(lenMax)}`)
-                    LOGD(this.disp_title);
-                    LOGO(getLine(this.disp_title.length / 3))
-                    this.content.forEach(LOGD)
-                    LOGO(getLine(lenMax))
+                    LOGO(`\n${getLine(lenMax)}`)                // 长线 ------------------
+                    LOGD(this.disp_title)                       // 标题 className | methodToString | address | time
+                    LOGO(getLine(this.disp_title.length / 3))   // 短线 ----
+                    this.content.forEach(LOGD)                  // 内容 ins, arg, ret
+                    LOGO(getLine(lenMax))                       // 长线 ------------------
                 }
             })
             LOGD(methodToString(method))

@@ -1,4 +1,5 @@
 import { distance } from "fastest-levenshtein"
+import { Breaker } from "../base/breaker"
 import { formartClass } from "../utils/formart"
 
 /**
@@ -408,10 +409,11 @@ function getUnityInfo() {
 
 // filter and show useful address
 let allMethodsCacheArray: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>() // all methods cache
-const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine: number = -1) => {
+const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine: number = -1, retArr: boolean = false): void | Array<Il2Cpp.Method> => {
 
     let countIndex: number = -1
-    let arr_result: Array<string> = []
+    let arrStrResult: Array<string> = new Array<string>()
+    let arrPtrResult: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
     let enterTime: number = Date.now()
 
     // libil2cpp.so common export function
@@ -475,23 +477,30 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
         })
     }
 
-    arr_result.sort(distance).forEach(LOGD)
-    LOGZ(`\nTake ${Date.now() - enterTime}ms to find ${arr_result.length} ${arr_result.length <= 1 ? "result" : "results"}`)
+    if (retArr) return arrPtrResult
+
+    arrStrResult.sort(distance).forEach(LOGD)
+    LOGZ(`\nTake ${Date.now() - enterTime}ms to find ${arrStrResult.length} ${arrStrResult.length <= 1 ? "result" : "results"}`)
     if (formartMaxLine != -1 && formartMaxLine < 100) LOGZ(`\n${formartMaxLine} lines of results are shown recommended to be greater than 100`)
     newLine(1)
 
     function formartAndSaveModuleDetails(item: ModuleExportDetails) {
-        let index = formartClass.alignStr(`[${++countIndex}]`, 5)
+        if (retArr) return
+        let index = formartClass.alignStr(`[${++countIndex}]`, 6)
         let result = `${index} ${item.address}  --->   ${item.address.sub(soAddr)}\t${item.name}`
         if (formartMaxLine != -1 && formartMaxLine > 10) result = formartClass.alignStr(result, formartMaxLine)
-        arr_result.push(result)
+        arrStrResult.push(result)
     }
 
     function formartAndSaveIl2cppMehods(item: Il2Cpp.Method) {
-        let index = formartClass.alignStr(`[${++countIndex}]`, 5)
+        if (retArr) {
+            arrPtrResult.push(item)
+            return
+        }
+        let index = formartClass.alignStr(`[${++countIndex}]`, 6)
         let result = `${index} ${item.handle}  --->   ${item.relativeVirtualAddress}\t${item.class.name} | ${item}`
         if (formartMaxLine != -1 && formartMaxLine > 10) result = formartClass.alignStr(result, formartMaxLine)
-        arr_result.push(result)
+        arrStrResult.push(result)
     }
 }
 
@@ -504,6 +513,13 @@ const launchApp = (pkgName: string): void => Java.perform(() => {
     context.startActivity(Java.use("android.content.Intent").$new(context.getPackageManager().getLaunchIntentForPackage(pkgName)));
 })
 
+globalThis.bp = (filterName: string, breakMethodInfo: boolean = false) => {
+    (printExp(filterName, true, -1, true) as Array<Il2Cpp.Method>)
+        .forEach((item: Il2Cpp.Method) => {
+            if (!item.virtualAddress.isNull()) breakMethodInfo ? b(item.handle) : Breaker.attachMethod(item)
+        })
+}
+
 export { getApkInfo, launchApp }
 
 Reflect.set(globalThis, "launchApp", launchApp)
@@ -514,6 +530,7 @@ Reflect.set(globalThis, "getUnityInfo", getUnityInfo)
 declare global {
     var launchApp: (pkgName: string) => void
     var getApkInfo: () => void
-    var printExp: (filter: string, findAll?: boolean, formartMaxLine?: number) => void
+    var printExp: (filter: string, findAll?: boolean, formartMaxLine?: number) => void | Array<Il2Cpp.Method>
     var getUnityInfo: () => void
+    var bp: (filterName: string, breakMethodInfo?: boolean) => void
 }

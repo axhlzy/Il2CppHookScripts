@@ -132,6 +132,14 @@ export const methodToString = (method: Il2Cpp.Method, simple: boolean = false): 
     return displayStr
 }
 
+export const getMethodMaxArgNameLength = (method: Il2Cpp.Method): number => {
+    let max: number = 0
+    method.parameters.forEach((paramter: Il2Cpp.Parameter) => {
+        paramter.name.length > max ? max = paramter.name.length : max
+    })
+    return max
+}
+
 globalThis.methodToArray = methodToArray as any
 declare global {
     var methodToArray: (method: Il2Cpp.Method | NativePointer | number) => Array<string | NativePointer>

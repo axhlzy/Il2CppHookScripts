@@ -1,23 +1,28 @@
 ## Il2cppHook
 
 ### 基于 frida 的 libil2cpp.so 运行时解析脚本
+ 
+#### Features 
 
-#### 特性
 - 解析 `Unity` 的方法 / 类 / 字段
 - 解析 `运行时` 方法参数
 - 常用函数的 `（批量）断点`（参数值 / 返回值 查看）
 
-#### 使用
+#### Usage
 ```sh
 $ git clone https://github.com/axhlzy/Il2CppHookScripts.git
 $ cd Il2cppHook/
 $ npm install
+
 $ frida -U --no-pause -f com.xxx.xxx -l  ../_Ufunc.js
+OR
+$ frida -FU -l ../_Ufunc.js
 ```
 
 #### API
 
-##### 目录
+##### Contents
+
 
   1. 获取基本信息 
      * [i() == list_images : 列出所有的 Images](#list_images)
@@ -26,7 +31,7 @@ $ frida -U --no-pause -f com.xxx.xxx -l  ../_Ufunc.js
      * [f() == list_fields : 列出所有的 Fields](#list_fields)
      * [findClass(className) : 查找类,一般配合 m() 使用 , m(findClass('className')) === m('className')](#findClass)
      * [findMethod / find_method : 根据类名查找相关的函数](#findMethod)
-     * [printExp : 查找名称为参数的函数,比较慢，但是方便](#findMethod)
+     * [printExp : 查找名称为参数的函数,比较慢，但是方便](#printExp)
      * [getApkInfo : 获取 apk 信息](#getApkInfo)
   2. 断点函数
      * [B : breakPoint 断点函数类 / b : 断点指定的一个函数](#bp)
@@ -43,12 +48,13 @@ $ frida -U --no-pause -f com.xxx.xxx -l  ../_Ufunc.js
   ...
 
 --- 
+#### Usage
 
-- **i() == list_images 列出所有的 Images** <a id="list_images"></a>
+- **i() == list_images 不带参数即列出所有的 Images** <a id="list_images"></a>
   
     ![list_images](img/list_images.png)
 
-- **c() == list_classes 列出所有的 Classes** <a id="list_classes"></a>
+- **c() == list_classes 列出所有的 Classes list_classes(ptr/strFilter)** <a id="list_classes"></a>
   
     ![list_classes](img/list_classes.png)
 
@@ -88,6 +94,7 @@ $ frida -U --no-pause -f com.xxx.xxx -l  ../_Ufunc.js
     ![breakPoint_b](img/breakPoint_b_1.png)
 
   - d / D : d === detachAll and d(ptr) === detach(ptr) / D()  === detachAll + clear list cache
+  - bp('filterMethodName') 断点包含 指定的函数名(filterMethodName)  的所有函数
 
 - **n/nn nop Function** <a id="np"></a>
   
@@ -140,6 +147,11 @@ $ frida -U --no-pause -f com.xxx.xxx -l  ../_Ufunc.js
   - export.ts
     - 主要用作拓展类的一些导出方法
 - TODO 按照这个文件结构可以拓展到整个UnityAPI
+
+#### Tips
+- 由于JS特性的问题，再arm64下的指针大小是8字节，存在计算精度的问题，所以arm64下控制台传参指针值的时候建议使用string类型 
+    use "0x12345678" instead of 0x12345678 or ptr(0x12345678)
+    这部分后续发现了问题，但是还没做好优化
 
 <!--
         QQ群    :  992091014 
