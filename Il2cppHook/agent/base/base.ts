@@ -354,6 +354,22 @@ class HookerBase {
         LOGO(getLine(85))
     }
 
+    static MethodToShow(method: Il2Cpp.Method): void {
+        let methodDes = getMethodDesFromMethodInfo(method)
+        let nameSpace = method.class.namespace
+        let classBelow = `${nameSpace.length == 0 ? '' : nameSpace + '.'}${method.class.name}`
+        let title = `${classBelow}\t${methodDes}`
+        let lineLen = title.length + 0x10
+        LOGW(getLine(lineLen, "-"))
+        LOGE(title)
+        LOGW(getLine(lineLen / 2, "-"))
+        LOGZ("Il2CppImage\t---->\t" + method.class.image.handle)
+        LOGZ("Il2CppClass\t---->\t" + method.class.handle)
+        LOGZ("MethodInfo\t---->\t" + method.handle)
+        LOGD("methodPointer\t---->\t" + method.virtualAddress + "\t===>\t" + method.relativeVirtualAddress)
+        LOGW(getLine(lineLen, "-"))
+    }
+
     // static getFieldOffFromCls(clsptr: NativePointer, fieldName: string): NativePointer {
     //     if (arguments[2] == undefined) return HookerBase.listFieldsFromCls(clsptr, 0, 2, fieldName)
     //     return HookerBase.listFieldsFromCls(clsptr, ptr(arguments[2]), 1, fieldName)
@@ -510,6 +526,7 @@ globalThis.fc = HookerBase.findClass
 globalThis.findClass = HookerBase.findClass
 globalThis.findMethod = HookerBase.findMethodNew
 globalThis.find_method = HookerBase.findMethodSync as find_MethodType
+globalThis.MethodToShow = HookerBase.MethodToShow
 globalThis.af = (className: string) => B(findClass(className))
 globalThis.aui = () => B("AUI")
 
@@ -530,5 +547,6 @@ declare global {
     var aui: () => void
     var findMethod: findMethodType
     var find_method: find_MethodType
+    var MethodToShow: (methodInfo: Il2Cpp.Method) => void
     var soAddr: NativePointerValue
 }

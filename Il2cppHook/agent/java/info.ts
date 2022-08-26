@@ -1,5 +1,7 @@
 import { distance } from "fastest-levenshtein"
+import { HookerBase } from "../base/base"
 import { Breaker } from "../base/breaker"
+import { getMethodDesFromMethodInfo } from "../bridge/fix/il2cppM"
 import { formartClass } from "../utils/formart"
 
 /**
@@ -407,8 +409,19 @@ function getUnityInfo() {
     // }
 }
 
-// filter and show useful address
 let allMethodsCacheArray: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>() // all methods cache
+const cacheMethods = () => {
+    LOGZ("Caching methods ...")
+    let timeCurrent = Date.now()
+    Il2Cpp.Domain.assemblies.forEach((assembly: Il2Cpp.Assembly) => {
+        assembly.image.classes.forEach((klass: Il2Cpp.Class) => {
+            klass.methods.forEach((item: Il2Cpp.Method) => allMethodsCacheArray.push(item))
+        })
+    })
+    LOGZ(`Caching methods done. ${allMethodsCacheArray.length} Methods . cost ${Date.now() - timeCurrent} ms\n`)
+}
+
+// filter and show useful address
 const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine: number = -1, retArr: boolean = false): void | Array<Il2Cpp.Method> => {
 
     let countIndex: number = -1
@@ -427,20 +440,10 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
 
     // 查找所有函数
     if (findAll) {
-        if (allMethodsCacheArray.length == 0) {
-            Il2Cpp.Domain.assemblies.forEach((assembly: Il2Cpp.Assembly) => {
-                assembly.image.classes.forEach((klass: Il2Cpp.Class) => {
-                    klass.methods.forEach((item: Il2Cpp.Method) => {
-                        allMethodsCacheArray.push(item)
-                        if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
-                    })
-                })
-            })
-        } else {
-            allMethodsCacheArray
-                .filter((item: Il2Cpp.Method) => item.name.toLocaleLowerCase().includes(filter.toLowerCase()))
-                .forEach(formartAndSaveIl2cppMehods)
-        }
+        if (allMethodsCacheArray.length == 0) cacheMethods()
+        allMethodsCacheArray
+            .filter((item: Il2Cpp.Method) => item.name.toLocaleLowerCase().includes(filter.toLowerCase()))
+            .forEach(formartAndSaveIl2cppMehods)
     }
     // 查找常用的一些函数
     else {
@@ -504,6 +507,36 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
     }
 }
 
+const AddressToMethod = (mPtr: NativePointer): Il2Cpp.Method => {
+    allMethodsCacheArray.length == 0 ? cacheMethods() : null
+    if (typeof mPtr == "string" && String(mPtr).startsWith("0x")) mPtr = ptr(mPtr)
+    if (typeof mPtr == "number") mPtr = ptr(mPtr)
+    let result = allMethodsCacheArray.find((item: Il2Cpp.Method) => item.virtualAddress.equals(mPtr) || item.relativeVirtualAddress.equals(mPtr))
+    if (result) return result
+    throw new Error(`Can't find method by address ${mPtr}`)
+}
+
+const AddressToMethodToString = (mPtr: NativePointer, simple: boolean = true): void => {
+    if (simple) return HookerBase.MethodToShow(AddressToMethod(mPtr))
+    let method: Il2Cpp.Method = AddressToMethod(mPtr)
+    let ImageName = method.class.image.name
+    let NameSpace = method.class.namespace
+    let MethodName = method.class.name
+    let maxLen = Math.max(ImageName.length, NameSpace.length, MethodName.length) + 1
+    ImageName = formartClass.alignStr(ImageName, maxLen)
+    NameSpace = formartClass.alignStr(NameSpace, maxLen)
+    MethodName = formartClass.alignStr(MethodName, maxLen)
+    let line1 = `image\t\t${ImageName} @ ${method.class.image.handle}`
+    let line2 = `namespace\t${NameSpace.trim().length == 0 ? formartClass.centerStr("---", maxLen) : NameSpace} @ ${method.class.handle}`
+    let line3 = `class\t\t${MethodName} @ ${method.class.handle}`
+    let line4 = `methodInfo\t${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress}`
+    let line5 = `methodName\t${getMethodDesFromMethodInfo(method)}`
+    let maxDispLen = Math.max(line1.length, line2.length, line3.length, line4.length, line5.length) + 4
+    LOGW(getLine(maxDispLen))
+    LOGD(`${line1}\n${line2}\n${line3}\n${line4}\n${line5}`)
+    LOGW(getLine(maxDispLen))
+}
+
 /**
  * 用包名启动 APK
  * @param {String} pkgName 
@@ -526,6 +559,8 @@ Reflect.set(globalThis, "launchApp", launchApp)
 Reflect.set(globalThis, "getApkInfo", getApkInfo)
 Reflect.set(globalThis, "printExp", printExp)
 Reflect.set(globalThis, "getUnityInfo", getUnityInfo)
+Reflect.set(globalThis, "AddressToMethod", AddressToMethod)
+Reflect.set(globalThis, "AddressToMethodToString", AddressToMethodToString)
 
 declare global {
     var launchApp: (pkgName: string) => void
@@ -533,4 +568,6 @@ declare global {
     var printExp: (filter: string, findAll?: boolean, formartMaxLine?: number) => void | Array<Il2Cpp.Method>
     var getUnityInfo: () => void
     var bp: (filterName: string, breakMethodInfo?: boolean) => void
+    var AddressToMethod: (mPtr: NativePointer) => Il2Cpp.Method
+    var AddressToMethodToString: (mPtr: NativePointer) => void
 }
