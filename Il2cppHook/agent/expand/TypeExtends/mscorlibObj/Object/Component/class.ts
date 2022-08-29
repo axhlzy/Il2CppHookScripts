@@ -1,8 +1,8 @@
 import { ObjectIl2cpp_impl } from "../class";
 
-class ComponentImpl extends ObjectIl2cpp_impl implements Il2cppComponent {
+class UnityEngine_Component_Impl extends ObjectIl2cpp_impl implements Il2cppComponent {
 
-    __ctor__(): ComponentImpl {
+    __ctor__(): UnityEngine_Component_Impl {
         return new Il2Cpp.Component(Il2Cpp.Api.Component._ctor_0(this.handle, allocP(1)))
     }
 
@@ -41,10 +41,10 @@ class ComponentImpl extends ObjectIl2cpp_impl implements Il2cppComponent {
 
 declare global {
     namespace Il2Cpp {
-        class Component extends ComponentImpl { }
+        class Component extends UnityEngine_Component_Impl { }
     }
 }
 
-Il2Cpp.Component = ComponentImpl;
+Il2Cpp.Component = UnityEngine_Component_Impl;
 
-export { ComponentImpl }
+export { UnityEngine_Component_Impl }

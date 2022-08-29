@@ -22,7 +22,7 @@
 		"scope": "typescript",
 		"prefix": "newapi",
 		"body": [
-			"import { cache } from \"decorator-cache-getter\"",
+			"import { cache } from \"decorator-cache-getter\"\n",
 			"class ${1:UnityEngine_UI}_${2:Text}_API {",
 			"\t@cache",
 			"\tstatic get _Awake() {",

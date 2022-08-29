@@ -1,6 +1,7 @@
-import { MonoBehaviourImpl } from "../class";
+import { UnityEngine_MonoBehaviour_Impl } from "../class";
 
-class SelectableImpl extends MonoBehaviourImpl implements Il2cppSelectable {
+
+class SelectableImpl extends UnityEngine_MonoBehaviour_Impl implements Il2cppSelectable {
 
     Awake(): void {
         return Il2Cpp.Api.Selectable._Awake(this.handle)

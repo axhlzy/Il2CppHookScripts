@@ -1,5 +1,5 @@
 import { PointerEventImpl } from "../../../../../../AbstractEventData/BaseEventData/PointerEventData/class"
-import { ButtonClickedEvent, ButtonImpl } from "./class"
+import { ButtonClickedEvent } from "./class"
 
 function OnPointerClick() {
     let funcAddr: NativePointer | undefined = undefined

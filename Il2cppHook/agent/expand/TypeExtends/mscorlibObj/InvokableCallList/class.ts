@@ -1,6 +1,5 @@
 import { mscorlib_System_Object_impl } from "../class"
 
-type InvokableCallList = NativePointer
 type BaseInvokableCall = NativePointer
 type mscorlib_System_Reflection_MethodInfo = NativePointer
 
@@ -47,6 +46,6 @@ declare global {
     }
 }
 
-mscorlib.InvokableCallList = InvokableCallList_impl;
+mscorlib.InvokableCallList = InvokableCallList_impl
 
-export { mscorlib_System_Object_impl };
+export { mscorlib_System_Object_impl }

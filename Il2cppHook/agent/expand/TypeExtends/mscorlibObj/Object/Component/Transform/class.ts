@@ -1,5 +1,5 @@
 import { Vector3Impl } from "../../../ValueType/Vector3/class";
-import { ComponentImpl } from "../class";
+import { UnityEngine_Component_Impl as ComponentImpl } from "../class";
 
 class TransformImpl extends ComponentImpl implements Il2cppTransform {
 
