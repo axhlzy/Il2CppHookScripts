@@ -1,4 +1,4 @@
-import { UnityEngine_Component_Impl } from "../../class";
+import { UnityEngine_Behaviour_Impl } from "../class";
 
 type Transition = NativePointer
 type Selectable = NativePointer
@@ -6,7 +6,7 @@ type Graphic = NativePointer
 type SpriteState = NativePointer
 type Navigation = NativePointer
 type ColorBlock = NativePointer
-class UnityEngine_MonoBehaviour_Impl extends UnityEngine_Component_Impl implements Il2cppMonoBehaviour {
+class UnityEngine_MonoBehaviour_Impl extends UnityEngine_Behaviour_Impl implements UnityEngine_MonoBehaviour_Interface {
 
     // m_Transition : Transition
     m_Transition: Transition = lfv(this.handle, "m_Transition")
@@ -33,7 +33,7 @@ class UnityEngine_MonoBehaviour_Impl extends UnityEngine_Component_Impl implemen
     // m_CanvasGroupCache : List<CanvasGroup>
     m_CanvasGroupCache: NativePointer = lfv(this.handle, "m_CanvasGroupCache")
 
-    ctor_0(): Il2cppMonoBehaviour {
+    ctor_0(): UnityEngine_MonoBehaviour_Impl {
         return new UnityEngine_MonoBehaviour_Impl(Il2Cpp.Api.MonoBehaviour._ctor(alloc()));
     }
 

@@ -2,6 +2,10 @@ import { UnityEngine_MonoBehaviour_Impl } from "../class"
 
 class UnityEngine_EventSystems_UIBehaviour_Impl extends UnityEngine_MonoBehaviour_Impl {
 
+    constructor(handle: NativePointerValue) {
+        super(handle)
+    }
+
     Awake(): void {
         return Il2Cpp.Api.UIBehaviour._Awake(this.handle)
     }

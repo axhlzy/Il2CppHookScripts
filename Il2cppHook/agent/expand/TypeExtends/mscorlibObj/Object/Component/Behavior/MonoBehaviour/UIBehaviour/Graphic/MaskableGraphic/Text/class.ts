@@ -1,6 +1,6 @@
+import { UnityEngine_UI_FontData_Impl } from "../../../../../../../../FontData/class"
 import { UnityEngine_UI_MaskableGraphic_Impl } from "../class"
 
-type UnityEngine_UI_FontData = NativePointer
 type UnityEngine_TextGenerator = NativePointer
 type UnityEngine_Material = NativePointer
 type UnityEngine_UIVertex = NativePointer
@@ -16,14 +16,13 @@ type UnityEngine_UI_VertexHelper = NativePointer
 
 class UnityEngine_UI_Text_Impl extends UnityEngine_UI_MaskableGraphic_Impl {
 
-    m_FontData: UnityEngine_UI_FontData = lfv(this.handle, "m_FontData") as unknown as UnityEngine_UI_FontData
+    m_FontData: UnityEngine_UI_FontData_Impl = lfv(this.handle, "m_FontData") as unknown as UnityEngine_UI_FontData_Impl
     m_Text: string = readU16(lfv(this.handle, "m_Text"))
     m_TextCache: UnityEngine_TextGenerator = lfv(this.handle, "m_TextCache") as unknown as UnityEngine_TextGenerator
     m_TextCacheForLayout: UnityEngine_TextGenerator = lfv(this.handle, "m_TextCacheForLayout") as unknown as UnityEngine_TextGenerator
     s_DefaultText: UnityEngine_Material = lfv(this.handle, "s_DefaultText") as unknown as UnityEngine_Material
     m_DisableFontTextureRebuiltCallback: boolean = lfv(this.handle, "m_DisableFontTextureRebuiltCallback") as unknown as boolean
     m_TempVerts: UnityEngine_UIVertex[] = lfv(this.handle, "m_TempVerts") as unknown as UnityEngine_UIVertex[]
-
 
     _ctor(): void {
         return Il2Cpp.Api.Text.__ctor(this.handle)

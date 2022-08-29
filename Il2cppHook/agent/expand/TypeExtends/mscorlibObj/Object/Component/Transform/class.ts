@@ -1,4 +1,4 @@
-import { Vector3Impl } from "../../../ValueType/Vector3/class";
+import { UnityEngine_Vector3_Impl as Vector3Impl } from "../../../ValueType/Vector3/class";
 import { UnityEngine_Component_Impl as ComponentImpl } from "../class";
 
 class TransformImpl extends ComponentImpl implements Il2cppTransform {
@@ -174,7 +174,7 @@ class TransformImpl extends ComponentImpl implements Il2cppTransform {
     get_position(): Il2Cpp.Vector3 {
         let allocMem = allocVector(0, 0, 0);
         Il2Cpp.Api.Transform._get_position(allocMem, this.handle)
-        return new Vector3Impl(allocMem, 2);
+        return new Vector3Impl(allocMem);
     }
 
     set_position(value: Il2Cpp.Vector3): void {

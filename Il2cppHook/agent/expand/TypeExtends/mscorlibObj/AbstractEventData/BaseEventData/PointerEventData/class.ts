@@ -1,5 +1,5 @@
 import { GameObjectImpl } from "../../../Object/GameObject/class";
-import { Vector3Impl } from "../../../ValueType/Vector3/class";
+import { UnityEngine_Vector3_Impl as Vector3Impl } from "../../../ValueType/Vector3/class";
 import { BaseEventDataImpl } from "../class";
 
 class PointerEventImpl extends BaseEventDataImpl implements PointerEventDataInterface {

@@ -19,8 +19,16 @@ const generateClass = (className: string) => {
 
     newLine()
 
+    // constructor(handleOrWrapper: NativePointer) {
+    //     super(handleOrWrapper)
+    // }
+    LOGD('\tconstructor(handleOrWrapper: NativePointer) {')
+    LOGD('\t\t super(handleOrWrapper)')
+    LOGD('\t}\n')
+
     // gen methods
     let methods = clsInstance.methods
+    let names = new Array<string>()
     methods.forEach((method: Il2Cpp.Method) => {
         // CancelInvoke_methodName(methodName: string): void {
         //     return Il2Cpp.Api.MonoBehaviour._CancelInvoke_String(this.handle, allocCStr(methodName));
@@ -32,8 +40,11 @@ const generateClass = (className: string) => {
             return param.name
         }).join(', ')
 
-        let line1 = `\t${method.name.replace('.', '_')}(${params}): ${method.returnType.name.replace('.', '_')} {`
+        let staticStr = method.isStatic ? "static " : ""
+        let sameNameFix = names.includes(method.name) ? `_${method.parameterCount}` : ""
+        let line1 = `\t${staticStr}${method.name.replace('.', '_')}${sameNameFix}(${params}): ${repStr(method.returnType.name.replace('.', '_'))} {`
         line1 = repStr(line1)
+
         let firstParam = method.isStatic ? '' : (method.parameters.length == 0 ? 'this.handle' : 'this.handle , ')
 
         let methodName = '_' + method.name.replace('.', '_')
@@ -42,6 +53,7 @@ const generateClass = (className: string) => {
         let line2 = `\t\treturn ${retValue}`
         let line3 = '\t}'
         LOGD(`${line1} \n ${line2} \n ${line3} \n`)
+        names.push(method.name)
     })
     LOGD('}\n')
 
@@ -54,6 +66,8 @@ const generateClass = (className: string) => {
     // }
 
     // export { UnityEngine_MonoBehaviour_Impl }
+
+    LOGD(`${incorLib(className) ? "mscorlib" : "Il2Cpp"}.${className} = ${clsName}\n`)
 
     LOGD('declare global {')
     LOGD(`\tnamespace ${incorLib(className) ? "mscorlib" : "Il2Cpp"}{`)
@@ -133,12 +147,12 @@ const generateApi = (className: string) => {
         else retName = 'pointer'
         let classNameSpace = method.class.namespace.length == 0 ? "" : `${method.class.namespace}.`
         if (!names.includes(method.name)) {
-            LOGD(`\t\treturn Il2Cpp.Api.t("${method.class.image.assembly.name}", "${classNameSpace}${className}", "${method.name}", ${method.parameters.length}, "${retName}", ${param});`)
+            LOGD(`\t\treturn Il2Cpp.Api.t("${method.class.image.assembly.name}", "${classNameSpace}${className}", "${method.name}", ${method.parameters.length}, "${retName}", ${param})`)
         } else {
             // 重名函数
             // return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.MonoBehaviour", "StartCoroutine", 1, ["System.Collections.IEnumerator"], "pointer", ["pointer", "pointer"]);
             let paramTypes = `[${method.parameters.map((param: Il2Cpp.Parameter) => `"${param.type.name}"`).join(',')}]`
-            LOGD(`\t\treturn Il2Cpp.Api.o("${method.class.image.assembly.name}", "${classNameSpace}${className}", "${method.name}", ${method.parameters.length}, ${paramTypes}, "${retName}", ${param});`)
+            LOGD(`\t\treturn Il2Cpp.Api.o("${method.class.image.assembly.name}", "${classNameSpace}${className}", "${method.name}", ${method.parameters.length}, ${paramTypes}, "${retName}", ${param})`)
         }
         LOGD('\t}\n')
 
@@ -156,12 +170,14 @@ const generateApi = (className: string) => {
 
     // export { }
 
+
+    LOGE(`Il2Cpp.Api.${className} = ${clsName}\n`)
+
     LOGD('declare global {')
     LOGD(`\tnamespace ${incorLib(className) ? "mscorlib" : "Il2Cpp"}.Api{`)
     LOGD(`\t\tclass ${className} extends ${clsName} { }`)
     LOGD('\t}')
     LOGD('}\n')
-    LOGD(`Il2Cpp.Api.${className} = ${clsName};\n`)
     LOGD(`export { }\n`)
 
     LOGW(getLine(80))
