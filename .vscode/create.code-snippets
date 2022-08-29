@@ -1,0 +1,64 @@
+{
+	"create unity class": {
+		"scope": "typescript",
+		"prefix": "newclass",
+		"body": [
+			"class ${1:UnityEngine_UI}_${2:Text}_Impl extends ${3:Il2Cpp.MaskableGraphic} {",
+			"\tm_Transition: NativePointer = lfv(this.handle, \"m_Transition\")",
+			"\tctor_0(): void {",
+			"\t\t// return new UnityEngine_MonoBehaviour_Impl(Il2Cpp.Api.MonoBehaviour._ctor(alloc()));",
+			"\t}",
+			"}\n",
+			"declare global {",
+			"\tnamespace Il2Cpp {",
+			"\t\tclass ${2:Text} extends ${3:Il2Cpp.MaskableGraphic} { }",
+			"\t}",
+			"}\n",
+			"Il2Cpp.${2:Text} = ${1:UnityEngine_UI}_${2:Text}_Impl\n",
+			"export { ${1:UnityEngine_UI}_${2:Text}_Impl }"
+		]
+	},
+		"create unity api": {
+		"scope": "typescript",
+		"prefix": "newapi",
+		"body": [
+			"import { cache } from \"decorator-cache-getter\"",
+			"class ${1:UnityEngine_UI}_${2:Text}_API {",
+			"\t@cache",
+			"\tstatic get _Awake() {",
+			"\t\treturn Il2Cpp.Api.t(\"UnityEngine.CoreModule\", \"UnityEngine.${1:UI}_${2:Text}\", \"Awake\", 0, \"pointer\", [\"pointer\"]);",
+			"\t}",
+			"}\n",
+			"declare global {",
+			"\tnamespace Il2Cpp {",
+			"\t\tclass ${2:Text} extends ${3:Il2Cpp.MaskableGraphic} { }",
+			"\t}",
+			"}\n",
+			"Il2Cpp.${2:Text} = ${1:UnityEngine_UI}_${2:Text}_API\n",
+			"export { ${1:UnityEngine_UI}_${2:Text}_API }"
+		]
+	},
+	"create unity export": {
+		"scope": "typescript",
+		"prefix": "newexport",
+		"body": [
+			"const setXXX = (mPtr: NativePointer, value: string): void => {",
+			"\treturn",
+			"}\n",
+			"export { setXXX }",
+			"declare global {",
+			"\tvar setXXX: (mPtr: NativePointer, value: string) => void",
+			"}\n",
+			"globalThis.setXXX = setXXX"
+		]
+	},
+	"create unity include": {
+		"scope": "typescript",
+		"prefix": "newInclude",
+		"body": [
+			"import './api'",
+			"import './class'",
+			"import './export'",
+		]
+	}
+}
