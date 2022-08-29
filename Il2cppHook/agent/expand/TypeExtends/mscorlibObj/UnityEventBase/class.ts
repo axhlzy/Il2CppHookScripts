@@ -5,7 +5,7 @@ type PersistentCallGroup = NativePointer
 type BaseInvokableCall = NativePointer
 type mscorlib_System_Reflection_MethodInfo = NativePointer
 
-export class UnityEngine_Events_UnityEventBase_Impl extends mscorlib_System_Object_impl {
+export class UnityEventBase_impl extends mscorlib_System_Object_impl {
 
     // m_Calls : InvokableCallList
     m_Calls: InvokableCallList_impl = new InvokableCallList_impl(lfv(this.handle, "m_Calls", findClass("UnityEventBase", ['UnityEngine.CoreModule'])))
@@ -18,33 +18,33 @@ export class UnityEngine_Events_UnityEventBase_Impl extends mscorlib_System_Obje
         super(handleOrWrapper);
     }
 
-    ctor_0(): Il2Cpp.UnityEventBase {
-        return new UnityEngine_Events_UnityEventBase_Impl(Il2cpp.Api.UnityEventBase._ctor_0(alloc()))
+    ctor_0(): mscorlib.UnityEventBase {
+        return new UnityEventBase_impl(mscorlib.Api.UnityEventBase._ctor_0(alloc()))
     }
 
     AddListener(call: BaseInvokableCall): void {
-        return Il2cpp.Api.UnityEventBase._AddCall(this.handle, call)
+        return mscorlib.Api.UnityEventBase._AddCall(this.handle, call)
     }
 
     DirtyPersistentCalls(): void {
-        return Il2cpp.Api.UnityEventBase._DirtyPersistentCalls(this.handle)
+        return mscorlib.Api.UnityEventBase._DirtyPersistentCalls(this.handle)
     }
 
     Findmethod(target: mscorlib_System_Object_impl, method: mscorlib_System_Reflection_MethodInfo): void {
-        return Il2cpp.Api.UnityEventBase._FindMethod(this.handle, target, method)
+        return mscorlib.Api.UnityEventBase._FindMethod(this.handle, target, method)
     }
 
     Findmethod_2(target: mscorlib_System_Object_impl, method: mscorlib_System_Reflection_MethodInfo): void {
-        return Il2cpp.Api.UnityEventBase._FindMethod_2(this.handle, target, method)
+        return mscorlib.Api.UnityEventBase._FindMethod_2(this.handle, target, method)
     }
 }
 
 declare global {
-    namespace Il2Cpp {
-        class UnityEventBase extends UnityEngine_Events_UnityEventBase_Impl { }
+    namespace mscorlib {
+        class UnityEventBase extends UnityEventBase_impl { }
     }
 }
 
-Il2Cpp.UnityEventBase = UnityEngine_Events_UnityEventBase_Impl;
+mscorlib.UnityEventBase = UnityEventBase_impl;
 
 export { mscorlib_System_Object_impl };

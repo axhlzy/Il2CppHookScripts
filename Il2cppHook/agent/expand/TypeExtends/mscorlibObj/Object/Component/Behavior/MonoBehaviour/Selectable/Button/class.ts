@@ -1,7 +1,7 @@
-import { UnityEngine_Events_UnityEventBase_Impl } from "../../../../../../UnityEventBase/class";
+import { UnityEventBase_impl } from "../../../../../../UnityEventBase/class";
 import { SelectableImpl } from "../class";
 
-class ButtonClickedEvent extends UnityEngine_Events_UnityEventBase_Impl {
+class ButtonClickedEvent extends UnityEventBase_impl {
 
 }
 

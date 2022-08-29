@@ -1,7 +1,7 @@
 import { cache } from "decorator-cache-getter"
 import "./interface"
 
-class UnityEngine_MonoBehaviour_API {
+class MonoBehaviourAPI {
 
     @cache
     static get _ctor() {
@@ -114,10 +114,10 @@ class UnityEngine_MonoBehaviour_API {
 
 declare global {
     namespace Il2Cpp.Api {
-        class MonoBehaviour extends UnityEngine_MonoBehaviour_API { }
+        class MonoBehaviour extends MonoBehaviourAPI { }
     }
 }
 
-Il2Cpp.Api.MonoBehaviour = UnityEngine_MonoBehaviour_API;
+Il2Cpp.Api.MonoBehaviour = MonoBehaviourAPI;
 
 export { }

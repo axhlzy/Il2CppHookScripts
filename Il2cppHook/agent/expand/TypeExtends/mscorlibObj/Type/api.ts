@@ -55,11 +55,11 @@ class mscorlibTypeAPI {
 }
 
 declare global {
-    namespace Il2cpp.Api {
+    namespace mscorlib.Api {
         class Type extends mscorlibTypeAPI { }
     }
 }
 
-Il2cpp.Api.Type = mscorlibTypeAPI;
+mscorlib.Api.Type = mscorlibTypeAPI;
 
 export { }

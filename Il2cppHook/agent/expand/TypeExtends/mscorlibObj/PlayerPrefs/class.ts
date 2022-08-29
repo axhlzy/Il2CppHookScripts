@@ -1,6 +1,6 @@
-import { UnityEngine_Object_Base } from "../Object/class";
+import { ObjectIl2cpp_impl } from "../Object/class";
 
-class PlayerPrefsImpl extends UnityEngine_Object_Base implements PlayerPrefs_Interface {
+class PlayerPrefsImpl extends ObjectIl2cpp_impl implements PlayerPrefs_Interface {
 
     DeleteAll(): void {
         return Il2Cpp.Api.PlayerPrefs._DeleteAll(this.handle);

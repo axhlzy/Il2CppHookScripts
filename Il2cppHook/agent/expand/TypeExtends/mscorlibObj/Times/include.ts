@@ -1,2 +1,0 @@
-import "./api"
-import "./class"

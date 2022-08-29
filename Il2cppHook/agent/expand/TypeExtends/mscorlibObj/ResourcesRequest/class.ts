@@ -7,11 +7,11 @@ class ResourcesRequest_impl extends mscorlib_System_Type_impl {
 
 declare global {
 
-    namespace Il2cpp {
+    namespace mscorlib {
         class ResourcesRequest extends ResourcesRequest_impl { }
     }
 }
 
-Il2cpp.ResourcesRequest = ResourcesRequest_impl;
+mscorlib.ResourcesRequest = ResourcesRequest_impl;
 
 export { ResourcesRequest_impl };

@@ -1,4 +1,4 @@
-class UnityEngine_Time_impl extends Il2cpp.Object {
+class UnityEngine_Time_impl extends Il2Cpp.Object {
 
     static get get_time(): number {
         return Il2Cpp.Api.Time._get_time()

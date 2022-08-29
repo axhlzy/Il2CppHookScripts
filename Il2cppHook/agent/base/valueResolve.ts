@@ -1,5 +1,5 @@
 import { methodToString } from "../bridge/fix/il2cppM";
-import { UnityEngine_Object_Base } from "../expand/TypeExtends/mscorlibObj/Object/class";
+import { ObjectIl2cpp_impl } from "../expand/TypeExtends/mscorlibObj/Object/class";
 import { ColorImpl } from "../expand/TypeExtends/mscorlibObj/ValueType/Color/class";
 import { formartClass } from "../utils/formart";
 import { readInt, readInt64, readSingle, readU16, readUInt } from "../utils/reader";
@@ -139,7 +139,7 @@ class ValueResolve {
                 case "System.Object":
                     return getObjName(insPtr)
                 case "System.UnityEngine":
-                    return new UnityEngine_Object_Base(insPtr).get_name()
+                    return new ObjectIl2cpp_impl(insPtr).get_name()
                 case "UnityEngine.Color":
                     return new ColorImpl(insPtr).toString()
                 case "Vector2":

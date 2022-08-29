@@ -24,11 +24,11 @@ class ResourcesRequest_API {
 }
 
 declare global {
-    namespace Il2cpp.Api {
+    namespace mscorlib.Api {
         class ResourcesRequest extends ResourcesRequest_API { }
     }
 }
 
-Il2cpp.Api.ResourcesRequest = ResourcesRequest_API;
+mscorlib.Api.ResourcesRequest = ResourcesRequest_API;
 
 export { }

@@ -1,6 +1,6 @@
 import { cache } from "decorator-cache-getter"
 
-class UnityEngine_SystemInfo_API {
+class SystemInfoApi {
 
     // GetCompatibleFormat(GraphicsFormat, FormatUsage) : GraphicsFormat
     @cache
@@ -353,10 +353,10 @@ class UnityEngine_SystemInfo_API {
 
 declare global {
     namespace Il2Cpp.Api {
-        class SystemInfo extends UnityEngine_SystemInfo_API { }
+        class SystemInfo extends SystemInfoApi { }
     }
 }
 
-Il2Cpp.Api.SystemInfo = UnityEngine_SystemInfo_API;
+Il2Cpp.Api.SystemInfo = SystemInfoApi;
 
 export { }

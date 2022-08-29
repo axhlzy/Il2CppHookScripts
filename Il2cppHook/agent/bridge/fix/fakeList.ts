@@ -7,17 +7,17 @@ interface list_impl {
     _items: NativePointer
     _size: number
     _version: number
-    _syncRoot: Il2cpp.Object
+    _syncRoot: mscorlib.Object
 }
 
-export class parseList extends Il2cpp.Object implements list_impl {
+export class parseList extends mscorlib.Object implements list_impl {
 
     public _defaultCapacity: number = lfv(this.handle, "_defaultCapacity").toInt32()
     public _emptyArray: NativePointer = lfv(this.handle, "_emptyArray")
     public _items: NativePointer = lfv(this.handle, "_items")
     public _size: number = lfv(this.handle, "_size").toInt32()
     public _version: number = lfv(this.handle, "_version").toInt32()
-    public _syncRoot: Il2cpp.Object = new Il2cpp.Object(lfv(this.handle, "_syncRoot"))
+    public _syncRoot: mscorlib.Object = new mscorlib.Object(lfv(this.handle, "_syncRoot"))
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
@@ -25,7 +25,7 @@ export class parseList extends Il2cpp.Object implements list_impl {
 
     toShow(): void {
         newLine()
-        formartClass.printTitileA(`${new Il2cpp.Object(this.handle).toString()} @ ${this.handle}`)
+        formartClass.printTitileA(`${new mscorlib.Object(this.handle).toString()} @ ${this.handle}`)
         LOGJSON(this)
     }
 
@@ -55,7 +55,7 @@ export class parseList extends Il2cpp.Object implements list_impl {
     toSimpleString(): string {
         return this.toArray().map(item => {
             let action = item.add(p_size * 2).readPointer()
-            let method = new Il2cpp.Delegate(action).method
+            let method = new mscorlib.Delegate(action).method
             LOGE(`\t${method.readPointer().readPointer().sub(soAddr)}`)
             return `${getLine(4, " ")}${item} ("${new Il2Cpp.Object(item).toString()}")`
         }).join(getLine(4, " "))

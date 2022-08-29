@@ -3,19 +3,19 @@ type Shader = NativePointer
 interface ResourcesAPI_interface {
 
     // FindObjectsOfTypeAll(Type) : Object[]
-    FindObjectsOfTypeAll(type: Il2cpp.Type): Object[];
+    FindObjectsOfTypeAll(type: mscorlib.Type): Object[];
 
     // FindShaderByName(String) : Shader
     FindShaderByName(name: string): Shader;
 
     // Load(String, Type) : Object
-    Load(name: string, type: Il2cpp.Type): Object;
+    Load(name: string, type: mscorlib.Type): Object;
 
     // LoadAll(String, Type) : Object[]
-    LoadAll(name: string, type: Il2cpp.Type): Object[];
+    LoadAll(name: string, type: mscorlib.Type): Object[];
 
     // LoadAsync(String, Type) : ResourceRequest
-    LoadAsync(name: string, type: Il2cpp.Type): Il2cpp.ResourcesRequest;
+    LoadAsync(name: string, type: mscorlib.Type): mscorlib.ResourcesRequest;
 
     // UnloadAsset(Object) : Void
     UnloadAsset(asset: Object): void;

@@ -1,6 +1,6 @@
-import { UnityEngine_Object_Base } from "../class"
+import { ObjectIl2cpp_impl } from "../class"
 
-class GameObjectImpl extends UnityEngine_Object_Base implements Il2cppGameObject {
+class GameObjectImpl extends ObjectIl2cpp_impl implements Il2cppGameObject {
 
     constructor(handle: NativePointer) {
         super(handle)

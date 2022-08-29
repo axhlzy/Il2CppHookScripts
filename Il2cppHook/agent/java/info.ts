@@ -481,11 +481,11 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
     }
 
     if (retArr) return arrPtrResult
-    newLine()
+
     arrStrResult.sort(distance).forEach(LOGD)
     LOGZ(`\nTake ${Date.now() - enterTime}ms to find ${arrStrResult.length} ${arrStrResult.length <= 1 ? "result" : "results"}`)
     if (formartMaxLine != -1 && formartMaxLine < 100) LOGZ(`\n${formartMaxLine} lines of results are shown recommended to be greater than 100`)
-    newLine()
+    newLine(1)
 
     function formartAndSaveModuleDetails(item: ModuleExportDetails) {
         if (retArr) return
@@ -516,8 +516,8 @@ const AddressToMethod = (mPtr: NativePointer): Il2Cpp.Method => {
     throw new Error(`Can't find method by address ${mPtr}`)
 }
 
-const AddressToMethodToString = (mPtr: NativePointer, formart: number = 1): void => {
-    if (formart == 1) return HookerBase.MethodToShow(AddressToMethod(mPtr))
+const AddressToMethodToString = (mPtr: NativePointer, simple: boolean = true): void => {
+    if (simple) return HookerBase.MethodToShow(AddressToMethod(mPtr))
     let method: Il2Cpp.Method = AddressToMethod(mPtr)
     let ImageName = method.class.image.name
     let NameSpace = method.class.namespace

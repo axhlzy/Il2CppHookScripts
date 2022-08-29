@@ -166,88 +166,88 @@ export class mscorlib_System_Delegate_impl extends mscorlib_System_Object_impl {
      */
 
     Clone_0(): mscorlib_System_Delegate_impl {
-        return new Il2cpp.Api.Delegate._Clone_0(this.handle)
+        return new mscorlib.Api.Delegate._Clone_0(this.handle)
     }
 
     Combine_1(arg0: mscorlib_System_Delegate_impl): mscorlib_System_Delegate_impl {
-        return new Il2cpp.Api.Delegate._Combine_1(this.handle, arg0.handle)
+        return new mscorlib.Api.Delegate._Combine_1(this.handle, arg0.handle)
     }
 
     Combine_2(arg0: mscorlib_System_Delegate_impl, arg1: mscorlib_System_Delegate_impl): mscorlib_System_Delegate_impl {
-        return new Il2cpp.Api.Delegate._Combine_2(this.handle, arg0.handle, arg1.handle)
+        return new mscorlib.Api.Delegate._Combine_2(this.handle, arg0.handle, arg1.handle)
     }
 
     CreateDelegate_3(arg0: NativePointer, arg1: NativePointer): mscorlib_System_Delegate_impl {
-        return new Il2cpp.Api.Delegate._CreateDelegate_3(this.handle, arg0, arg1)
+        return new mscorlib.Api.Delegate._CreateDelegate_3(this.handle, arg0, arg1)
     }
 
     DynamicInvoke(arg0: mscorlib_System_Object_impl[]): mscorlib_System_Object_impl {
-        return new Il2cpp.Api.Delegate._DynamicInvoke(this.handle, arg0)
+        return new mscorlib.Api.Delegate._DynamicInvoke(this.handle, arg0)
     }
 
     DynamicInvokeImpl(arg0: mscorlib_System_Object_impl[]): mscorlib_System_Object_impl {
-        return new Il2cpp.Api.Delegate._DynamicInvokeImpl(this.handle, arg0)
+        return new mscorlib.Api.Delegate._DynamicInvokeImpl(this.handle, arg0)
     }
 
     Equals(arg0: mscorlib_System_Object_impl): boolean {
-        return new Il2cpp.Api.Delegate._Equals(this.handle, arg0.handle)
+        return new mscorlib.Api.Delegate._Equals(this.handle, arg0.handle)
     }
 
     GetHashCode(): number {
-        return new Il2cpp.Api.Delegate._GetHashCode(this.handle)
+        return new mscorlib.Api.Delegate._GetHashCode(this.handle)
     }
 
     GetInvocationList(): mscorlib_System_Delegate_impl[] {
-        return new Il2cpp.Api.Delegate._GetInvocationList(this.handle)
+        return new mscorlib.Api.Delegate._GetInvocationList(this.handle)
     }
 
     GetMethodImpl(): mscorlib_System_Reflection_MethodInfo_impl {
-        return new Il2cpp.Api.Delegate._GetMethodImpl(this.handle)
+        return new mscorlib.Api.Delegate._GetMethodImpl(this.handle)
     }
 
     GetObjectData(arg0: mscorlib_System_Runtime_Serialization_SerializationInfo_impl, arg1: mscorlib_System_Runtime_Serialization_StreamingContext_impl): void {
-        return new Il2cpp.Api.Delegate._GetObjectData(this.handle, arg0, arg1)
+        return new mscorlib.Api.Delegate._GetObjectData(this.handle, arg0, arg1)
     }
 
     GetVirtualMethod_internal(): mscorlib_System_Reflection_MethodInfo_impl {
-        return new Il2cpp.Api.Delegate._GetVirtualMethod_internal(this.handle)
+        return new mscorlib.Api.Delegate._GetVirtualMethod_internal(this.handle)
     }
 
     op_Equality(arg0: mscorlib_System_Delegate_impl, arg1: mscorlib_System_Delegate_impl): boolean {
-        return new Il2cpp.Api.Delegate._op_Equality(this.handle, arg0.handle, arg1.handle)
+        return new mscorlib.Api.Delegate._op_Equality(this.handle, arg0.handle, arg1.handle)
     }
 
     op_Inequality(arg0: mscorlib_System_Delegate_impl, arg1: mscorlib_System_Delegate_impl): boolean {
-        return new Il2cpp.Api.Delegate._op_Inequality(this.handle, arg0.handle, arg1.handle)
+        return new mscorlib.Api.Delegate._op_Inequality(this.handle, arg0.handle, arg1.handle)
     }
 
     Remove(arg0: mscorlib_System_Delegate_impl, arg1: mscorlib_System_Delegate_impl): mscorlib_System_Delegate_impl {
-        return new Il2cpp.Api.Delegate._Remove(this.handle, arg0.handle, arg1.handle)
+        return new mscorlib.Api.Delegate._Remove(this.handle, arg0.handle, arg1.handle)
     }
 
     RemoveImpl(arg0: mscorlib_System_Delegate_impl): mscorlib_System_Delegate_impl {
-        return new Il2cpp.Api.Delegate._RemoveImpl(this.handle, arg0.handle)
+        return new mscorlib.Api.Delegate._RemoveImpl(this.handle, arg0.handle)
     }
 
     return_type_match(arg0: mscorlib_System_Type_impl, arg1: mscorlib_System_Type_impl): boolean {
-        return new Il2cpp.Api.Delegate._return_type_match(this.handle, arg0.handle, arg1.handle)
+        return new mscorlib.Api.Delegate._return_type_match(this.handle, arg0.handle, arg1.handle)
     }
 
     get_Method(): mscorlib_System_Reflection_MethodInfo_impl {
-        return new Il2cpp.Api.Delegate._get_Method(this.handle)
+        return new mscorlib.Api.Delegate._get_Method(this.handle)
     }
 
     get_Target(): mscorlib_System_Object_impl {
-        return new Il2cpp.Api.Delegate._get_Target(this.handle)
+        return new mscorlib.Api.Delegate._get_Target(this.handle)
     }
 }
 
 declare global {
-    namespace Il2cpp {
+    namespace mscorlib {
         class Delegate extends mscorlib_System_Delegate_impl { }
     }
 }
 
-Il2cpp.Delegate = mscorlib_System_Delegate_impl;
+mscorlib.Delegate = mscorlib_System_Delegate_impl;
 
 export { mscorlib_System_Object_impl };

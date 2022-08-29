@@ -154,7 +154,7 @@ declare global {
 globalThis.lfs = (mPtr: NativePointer, classHandle: NativePointer | string | object | number = 0) => new FieldsParser(mPtr, classHandle).toShow()
 
 globalThis.lfp = (mPtr: NativePointer) => {
-    let classType: Array<Il2cpp.Type> = getTypeParent(mPtr) as Array<Il2cpp.Type>
+    let classType: Array<mscorlib.Type> = getTypeParent(mPtr) as Array<mscorlib.Type>
     classType.reverse().forEach(type => new FieldsParser(mPtr, type.class).toShow(true))
     showTypeParent(mPtr)
 }

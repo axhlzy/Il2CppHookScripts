@@ -1,5 +1,5 @@
 import { mscorlib_System_Object_impl } from "../class"
-import { UnityEngine_Object_Base } from "./class"
+import { ObjectIl2cpp_impl } from "./class"
 
 const getObjName = (mPtr: NativePointer): string => {
     if (mPtr instanceof NativePointer && !mPtr.isNull()) {
@@ -12,7 +12,7 @@ const getObjName = (mPtr: NativePointer): string => {
 
 const getObjClass = (mPtr: NativePointer): NativePointer => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
-    let obj = new UnityEngine_Object_Base(mPtr)
+    let obj = new ObjectIl2cpp_impl(mPtr)
     return obj.class.handle
 }
 
