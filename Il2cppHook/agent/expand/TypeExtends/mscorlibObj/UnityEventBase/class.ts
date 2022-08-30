@@ -45,6 +45,6 @@ declare global {
     }
 }
 
-mscorlib.UnityEventBase = UnityEventBase_impl;
+mscorlib.UnityEventBase = UnityEventBase_impl
 
-export { mscorlib_System_Object_impl };
+export { mscorlib_System_Object_impl }

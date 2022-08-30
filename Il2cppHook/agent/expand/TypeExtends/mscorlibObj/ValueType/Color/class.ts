@@ -1,4 +1,4 @@
-import { ObjectIl2cpp_impl } from "../../Object/class"
+import { UnityEngine_Object } from "../../Object/class"
 import { System_ValueType_Impl } from "../class"
 
 
@@ -37,7 +37,7 @@ class UnityEngine_Color_Impl extends System_ValueType_Impl {
         return Il2Cpp.Api.Color._GetHashCode(this.handle)
     }
 
-    Equals_obj(other: ObjectIl2cpp_impl): boolean {
+    Equals_obj(other: UnityEngine_Object): boolean {
         return Il2Cpp.Api.Color._Equals(this.handle, other)
     }
 

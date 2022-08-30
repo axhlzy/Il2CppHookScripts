@@ -1,27 +1,41 @@
-import { mscorlib_System_Object_impl } from "../../class";
-import { GameObjectImpl } from "../../Object/GameObject/class";
+import { GameObjectImpl as UnityEngine_GameObject } from "../../Object/GameObject/class"
+import { UnityEngine_EventSystems_AbstractEventData_Impl } from "../class"
 
-class BaseEventDataImpl extends mscorlib_System_Object_impl implements BaseEventData_Interface {
+type UnityEngine_EventSystems_EventSystem = NativePointer
+type UnityEngine_EventSystems_BaseInputModule = NativePointer
 
-    // m_EventSystem : EventSystem
-    m_EventSystem: NativePointer = lfv(this.handle, "m_EventSystem")
+class UnityEngine_EventSystems_BaseEventData_Impl extends UnityEngine_EventSystems_AbstractEventData_Impl {
 
-    ctor_1(): BaseEventData_Interface {
-        return new BaseEventDataImpl(Il2Cpp.Api.BaseEventData._ctor_1(alloc()));
+    m_EventSystem: UnityEngine_EventSystems_EventSystem = lfv(this.handle, "m_EventSystem") as unknown as UnityEngine_EventSystems_EventSystem
+
+    constructor(handleOrWrapper: NativePointer) {
+        super(handleOrWrapper)
     }
 
-    get_currentInputModule(): NativePointer {
-        return Il2Cpp.Api.BaseEventData._get_currentInputModule(this.handle);
+    __ctor(eventSystem: UnityEngine_EventSystems_EventSystem): void {
+        return Il2Cpp.Api.BaseEventData.__ctor(this.handle, eventSystem)
     }
 
-    set_selectedObject(gameObject: GameObjectImpl): void {
-        return Il2Cpp.Api.BaseEventData._set_selectedObject(this.handle, gameObject.handle)
+    get_currentInputModule(): UnityEngine_EventSystems_BaseInputModule {
+        return Il2Cpp.Api.BaseEventData._get_currentInputModule(this.handle)
     }
 
-    get_selectedObject(): GameObjectImpl {
-        return new GameObjectImpl(Il2Cpp.Api.BaseEventData._get_selectedObject(this.handle))
+    get_selectedObject(): UnityEngine_GameObject {
+        return Il2Cpp.Api.BaseEventData._get_selectedObject(this.handle)
+    }
+
+    set_selectedObject(value: UnityEngine_GameObject): void {
+        return Il2Cpp.Api.BaseEventData._set_selectedObject(this.handle, value)
     }
 
 }
 
-export { BaseEventDataImpl };
+Il2Cpp.BaseEventData = UnityEngine_EventSystems_BaseEventData_Impl
+
+declare global {
+    namespace Il2Cpp {
+        class BaseEventData extends UnityEngine_EventSystems_BaseEventData_Impl { }
+    }
+}
+
+export { UnityEngine_EventSystems_BaseEventData_Impl }

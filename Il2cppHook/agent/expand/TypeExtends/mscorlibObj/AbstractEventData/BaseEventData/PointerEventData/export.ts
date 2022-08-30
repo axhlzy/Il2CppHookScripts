@@ -1,9 +1,9 @@
-import { PointerEventImpl } from "./class"
+import { UnityEngine_EventSystems_PointerEventData_Impl as PointerEventData } from "./class"
 
 const showEventData = (eventData: NativePointer): void => {
     LOGO(`${getLine(15)} EventData ${getLine(15)}`)
 
-    let eventDataPack = new PointerEventImpl(eventData)
+    let eventDataPack = new PointerEventData(eventData)
     let click_vector2 = allocVector()
     callFunction(find_method("UnityEngine.UI", "PointerEventData", "get_position", 0), click_vector2, eventData)
     LOGD("ClickPositon\t--->\t" + click_vector2.readFloat() + "\t" + click_vector2.add(p_size).readFloat())

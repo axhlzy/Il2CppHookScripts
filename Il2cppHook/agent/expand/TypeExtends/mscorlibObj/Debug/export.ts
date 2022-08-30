@@ -13,7 +13,7 @@ const HookDebugLog = () => {
     })
 
     // public static void LogException(Exception exception)
-    let addr_LogException = Il2Cpp.Api.Debug.LogException_2
+    let addr_LogException = Il2Cpp.Api.Debug._LogException
     LOGD("[*] Hook : UnityEngine.CoreModule.Debug.LogException : " + addr_LogException)
     A(addr_LogException, (args, ctx) => {
         let retStr = callFunction(find_method("mscorlib", "Exception", "ToString", 0, true), args[0])

@@ -46,8 +46,8 @@ class il2cppObjAPI_impl extends Il2Cpp.Object implements CoreModule_Object {
     }
 }
 
-class ObjectIl2cpp_impl extends il2cppObjAPI_impl {
+class Unity_Object_Impl extends il2cppObjAPI_impl {
 
 }
 
-export { ObjectIl2cpp_impl }
+export { Unity_Object_Impl as UnityEngine_Object }

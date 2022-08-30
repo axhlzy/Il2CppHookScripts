@@ -1,4 +1,4 @@
-import { PointerEventImpl } from "../../../../../../AbstractEventData/BaseEventData/PointerEventData/class"
+import { UnityEngine_EventSystems_PointerEventData_Impl as PointerEventImpl } from "../../../../../../AbstractEventData/BaseEventData/PointerEventData/class"
 import { ButtonClickedEvent } from "./class"
 
 function OnPointerClick() {

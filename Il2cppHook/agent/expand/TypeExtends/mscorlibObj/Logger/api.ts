@@ -1,117 +1,98 @@
-import { cache } from "decorator-cache-getter";
+import { cache } from "decorator-cache-getter"
 
-class LoggerAPI {
-
+class UnityEngine_Logger_API {
+    // public Void .ctor(ILogHandler logHandler)
     @cache
-    static get _cctor() {
-        // .ctor(ILogHandler)
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", ".cctor", 1, "pointer", ["pointer", "pointer"]);
+    static get __ctor() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", ".ctor", 1, "void", ["pointer", "pointer"])
     }
 
+    // public ILogHandler get_logHandler()
     @cache
-    static get IsLogTypeAllowed() {
-        // IsLogTypeAllowed(LogType) : Boolean
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "IsLogTypeAllowed", 1, "bool", ["pointer", "int"]);
+    static get _get_logHandler() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "get_logHandler", 0, "pointer", ["pointer"])
     }
 
+    // public Void set_logHandler(ILogHandler value)
     @cache
-    static get Log_string_object() {
-        // Log(String, Object) : Void
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "Log", 2, "void", ["pointer", "pointer", "pointer"]);
+    static get _set_logHandler() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "set_logHandler", 1, "void", ["pointer", "pointer"])
     }
 
+    // public Boolean get_logEnabled()
     @cache
-    static get Log_logType_object() {
-        // Log(LogType, Object) : Void
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "Log", 2, "void", ["pointer", "int", "pointer"]);
+    static get _get_logEnabled() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "get_logEnabled", 0, "pointer", ["pointer"])
     }
 
+    // public Void set_logEnabled(Boolean value)
     @cache
-    static get Log_logType_object_object() {
-        // Log(LogType, Object, Object) : Void
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "Log", 3, "void", ["pointer", "int", "pointer", "pointer"]);
+    static get _set_logEnabled() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "set_logEnabled", 1, "void", ["pointer", "pointer"])
     }
 
+    // public LogType get_filterLogType()
     @cache
-    static get LogError_string_object() {
-        // LogError(String, Object) : Void
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "LogError", 2, "void", ["pointer", "pointer", "pointer"]);
+    static get _get_filterLogType() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "get_filterLogType", 0, "pointer", ["pointer"])
     }
 
+    // public Void set_filterLogType(LogType value)
     @cache
-    static get LogException_exception() {
-        // LogException(Exception) : Void
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "LogException", 1, "void", ["pointer", "pointer"]);
+    static get _set_filterLogType() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "set_filterLogType", 1, "void", ["pointer", "pointer"])
     }
 
+    // public Boolean IsLogTypeAllowed(LogType logType)
     @cache
-    static get LogException_exception_object() {
-        // LogException(Exception, Object) : Void
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "LogException", 2, "void", ["pointer", "pointer", "pointer"]);
+    static get _IsLogTypeAllowed() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "IsLogTypeAllowed", 1, "pointer", ["pointer", "pointer"])
     }
 
+    // private static String GetString(Object message)
     @cache
-    static get LogFormat_logType_string_object() {
-        // LogFormat(LogType, String, Object[]) : Void
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "LogFormat", 3, "void", ["pointer", "int", "pointer", "pointer"]);
+    static get _GetString() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "GetString", 1, "pointer", ["pointer"])
     }
 
+    // public Void Log(LogType logType,Object message)
     @cache
-    static get LogFormat_logType_object_string_object() {
-        // LogFormat(LogType, Object, String, Object[]) : Void
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "LogFormat", 4, "void", ["pointer", "int", "pointer", "pointer", "pointer"]);
+    static get _Log() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "Log", 2, "void", ["pointer", "pointer", "pointer"])
     }
 
+    // public Void Log(LogType logType,Object message,Object context)
     @cache
-    static get LogWarning_string_object() {
-        // LogWarning(String, Object) : Void
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "LogWarning", 2, "void", ["pointer", "pointer", "pointer"]);
+    static get _Log_logType_message_context() {
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Logger", "Log", 3, ["UnityEngine.LogType", "System.Object", "UnityEngine.Object"], "void", ["pointer", "pointer", "pointer", "pointer"])
     }
 
+    // public Void LogFormat(LogType logType,String format,Object[] args)
     @cache
-    static get set_filterLogType() {
-        // set_filterLogType(LogType) : Void
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "set_filterLogType", 1, "void", ["pointer", "int"]);
+    static get _LogFormat() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "LogFormat", 3, "void", ["pointer", "pointer", "pointer", "pointer"])
     }
 
+    // public Void LogFormat(LogType logType,Object context,String format,Object[] args)
     @cache
-    static get get_filterLogType() {
-        // get_filterLogType() : LogType
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "get_filterLogType", 0, "int", ["pointer"]);
+    static get _LogFormat_logType_context_format_args() {
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Logger", "LogFormat", 4, ["UnityEngine.LogType", "UnityEngine.Object", "System.String", "System.Object[]"], "void", ["pointer", "pointer", "pointer", "pointer", "pointer"])
     }
 
+    // public Void LogException(Exception exception,Object context)
     @cache
-    static get set_logEnabled() {
-        // set_logEnabled(Boolean) : Void
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "set_logEnabled", 1, "void", ["pointer", "bool"]);
-    }
-
-    @cache
-    static get get_logEnabled() {
-        // get_logEnabled() : Boolean
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "get_logEnabled", 0, "bool", ["pointer"]);
-    }
-
-    @cache
-    static get set_logHandler() {
-        // set_logHandler(ILogHandler) : Void
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "set_logHandler", 1, "void", ["pointer", "pointer"]);
-    }
-
-    @cache
-    static get get_logHandler() {
-        // get_logHandler() : ILogHandler
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "get_logHandler", 0, "pointer", ["pointer"]);
+    static get _LogException() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Logger", "LogException", 2, "void", ["pointer", "pointer", "pointer"])
     }
 
 }
+
+Il2Cpp.Api.Logger = UnityEngine_Logger_API
 
 declare global {
     namespace Il2Cpp.Api {
-        class Logger extends LoggerAPI { }
+        class Logger extends UnityEngine_Logger_API { }
     }
 }
-
-Il2Cpp.Api.Logger = LoggerAPI;
 
 export { }

@@ -1,53 +1,68 @@
+import { cache } from "decorator-cache-getter"
 
-import { cache } from "decorator-cache-getter";
+class UnityEngine_Resources_API {
+    // internal static T[] ConvertObjects(Object[] rawObjects)
+    @cache
+    static get _ConvertObjects() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Resources", "ConvertObjects", 1, "pointer", ["pointer"])
+    }
 
-class Resources_API {
-
-    // FindObjectsOfTypeAll(Type) : Object[]
-    // GetBuiltinResource(Type, String) : Object
-    // Load(String) : Object
-    // Load(String, Type) : Object
-    // LoadAll(String, Type) : Object[]
-    // LoadAsync(String, Type) : ResourceRequest
-    // UnloadAsset(Object) : Void
-
+    // public static Object[] FindObjectsOfTypeAll(Type type)
     @cache
     static get _FindObjectsOfTypeAll() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Resources", "FindObjectsOfTypeAll", 1, "pointer", ["pointer"]);
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Resources", "FindObjectsOfTypeAll", 1, "pointer", ["pointer"])
     }
 
+    // public static T[] FindObjectsOfTypeAll()
     @cache
-    static get _GetBuiltinResource() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Resources", "GetBuiltinResource", 2, "pointer", ["pointer", "pointer"]);
+    static get _FindObjectsOfTypeAll_() {
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Resources", "FindObjectsOfTypeAll", 0, [], "pointer", [])
     }
 
+    // public static Object Load(String path)
     @cache
     static get _Load() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Resources", "Load", 1, "pointer", ["pointer"]);
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Resources", "Load", 1, "pointer", ["pointer"])
     }
 
+    // public static T Load(String path)
     @cache
-    static get _LoadAll() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Resources", "LoadAll", 2, "pointer", ["pointer", "pointer"]);
+    static get _Load_path() {
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Resources", "Load", 1, ["System.String"], "pointer", ["pointer"])
     }
 
+    // public static Object Load(String path,Type systemTypeInstance)
     @cache
-    static get _LoadAsync() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Resources", "LoadAsync", 2, "pointer", ["pointer", "pointer"]);
+    static get _Load_path_systemTypeInstance() {
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Resources", "Load", 2, ["System.String", "System.Type"], "pointer", ["pointer", "pointer"])
     }
 
+    // public static Object GetBuiltinResource(Type type,String path)
     @cache
-    static get _UnloadAsset() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Resources", "UnloadAsset", 1, "pointer", ["pointer"]);
+    static get _GetBuiltinResource() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Resources", "GetBuiltinResource", 2, "pointer", ["pointer", "pointer"])
     }
+
+    // public static T GetBuiltinResource(String path)
+    @cache
+    static get _GetBuiltinResource_path() {
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Resources", "GetBuiltinResource", 1, ["System.String"], "pointer", ["pointer"])
+    }
+
+    // public static AsyncOperation UnloadUnusedAssets()
+    @cache
+    static get _UnloadUnusedAssets() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Resources", "UnloadUnusedAssets", 0, "pointer", [])
+    }
+
 }
+
+Il2Cpp.Api.Resources = UnityEngine_Resources_API
 
 declare global {
-    namespace mscorlib.Api {
-        class Resources extends Resources_API { }
+    namespace Il2Cpp.Api {
+        class Resources extends UnityEngine_Resources_API { }
     }
 }
-
-mscorlib.Api.Resources = Resources_API;
 
 export { }

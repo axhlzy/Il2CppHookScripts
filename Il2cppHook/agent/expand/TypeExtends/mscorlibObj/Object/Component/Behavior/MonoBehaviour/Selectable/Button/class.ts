@@ -1,11 +1,11 @@
 import { UnityEventBase_impl } from "../../../../../../UnityEventBase/class";
-import { SelectableImpl } from "../class";
+import { UnityEngine_UI_Selectable_Impl as Selectable } from "../class";
 
 class ButtonClickedEvent extends UnityEventBase_impl {
 
 }
 
-class ButtonImpl extends SelectableImpl implements Il2cppButton {
+class ButtonImpl extends Selectable implements Il2cppButton {
 
     m_OnClick: ButtonClickedEvent = new ButtonClickedEvent(lfv(this.handle, "m_OnClick"))
 

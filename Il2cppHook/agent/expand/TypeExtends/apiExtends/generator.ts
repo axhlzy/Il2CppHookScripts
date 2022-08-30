@@ -1,11 +1,18 @@
 import { getMethodDesFromMethodInfo } from "../../../bridge/fix/il2cppM"
 
-const generateClass = (className: string) => {
+// 
+const generateClass = (className: string, classPtr: NativePointer = ptr(0)) => {
 
     LOGW(getLine(80))
 
+    let clsInstance: Il2Cpp.Class
+
     // gen class title
-    let clsInstance = new Il2Cpp.Class(findClass(className))
+    if (classPtr.isNull()) {
+        clsInstance = new Il2Cpp.Class(findClass(className))
+    } else {
+        clsInstance = new Il2Cpp.Class(classPtr)
+    }
     let clsName = clsInstance.namespace.replace('.', '_') + "_" + clsInstance.name + "_Impl"
     let clsExtend = clsInstance.parent?.namespace.replace('.', '_') + "_" + clsInstance.parent?.name + "_Impl"
     LOGD(`\nclass ${clsName} extends ${clsExtend} {\n`)
@@ -101,11 +108,19 @@ globalThis.incorLib = (name: string) => {
     return corLib
 }
 
-const generateApi = (className: string) => {
+const generateApi = (className: string, classPtr: NativePointer = ptr(0)) => {
     LOGW(getLine(80))
 
+    let clsInstance: Il2Cpp.Class
+
     // gen class title
-    let clsInstance = new Il2Cpp.Class(findClass(className))
+    if (classPtr.isNull()) {
+        clsInstance = new Il2Cpp.Class(findClass(className))
+    } else {
+        clsInstance = new Il2Cpp.Class(classPtr)
+    }
+
+    // gen class title
     let clsName = clsInstance.namespace.replace('.', '_') + "_" + clsInstance.name + "_API"
 
     // import { cache } from "decorator-cache-getter"
@@ -184,8 +199,8 @@ const generateApi = (className: string) => {
 }
 
 declare global {
-    var generateClass: (className: string) => void
-    var generateApi: (className: string) => void
+    var generateClass: (className: string, classPtr?: NativePointer) => void
+    var generateApi: (className: string, classPtr?: NativePointer) => void
     var incorLib: (name: string) => boolean
 }
 

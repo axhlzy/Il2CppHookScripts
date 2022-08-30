@@ -1,6 +1,6 @@
-import { ObjectIl2cpp_impl } from "../class";
+import { UnityEngine_Object } from "../class";
 
-class UnityEngine_Component_Impl extends ObjectIl2cpp_impl implements Il2cppComponent {
+class UnityEngine_Component_Impl extends UnityEngine_Object implements Il2cppComponent {
 
     __ctor__(): UnityEngine_Component_Impl {
         return new Il2Cpp.Component(Il2Cpp.Api.Component._ctor_0(this.handle, allocP(1)))
