@@ -1,7 +1,7 @@
 import { distance } from "fastest-levenshtein"
 import { HookerBase } from "../base/base"
 import { Breaker } from "../base/breaker"
-import { getMethodDesFromMethodInfo } from "../bridge/fix/il2cppM"
+import { getMethodDesFromMethodInfo, methodToString } from "../bridge/fix/il2cppM"
 import { formartClass } from "../utils/formart"
 
 /**
@@ -482,6 +482,7 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
 
     if (retArr) return arrPtrResult
 
+    newLine()
     arrStrResult.sort(distance).forEach(LOGD)
     LOGZ(`\nTake ${Date.now() - enterTime}ms to find ${arrStrResult.length} ${arrStrResult.length <= 1 ? "result" : "results"}`)
     if (formartMaxLine != -1 && formartMaxLine < 100) LOGZ(`\n${formartMaxLine} lines of results are shown recommended to be greater than 100`)
@@ -490,7 +491,7 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
     function formartAndSaveModuleDetails(item: ModuleExportDetails) {
         if (retArr) return
         let index = formartClass.alignStr(`[${++countIndex}]`, 6)
-        let result = `${index} ${item.address}  --->   ${item.address.sub(soAddr)}\t${item.name}`
+        let result = `${index} ${formartClass.alignStr(item.address, p_size * 4)}  --->   ${item.address.sub(soAddr)}\t${item.name}`
         if (formartMaxLine != -1 && formartMaxLine > 10) result = formartClass.alignStr(result, formartMaxLine)
         arrStrResult.push(result)
     }
@@ -501,7 +502,7 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
             return
         }
         let index = formartClass.alignStr(`[${++countIndex}]`, 6)
-        let result = `${index} ${item.handle}  --->   ${item.relativeVirtualAddress}\t${item.class.name} | ${item}`
+        let result = `${index} ${formartClass.alignStr(item.handle, p_size * 4)}  --->   ${item.relativeVirtualAddress}\t${item.class.name}( ${item.class.handle} ) | ${getMethodDesFromMethodInfo(item)}`
         if (formartMaxLine != -1 && formartMaxLine > 10) result = formartClass.alignStr(result, formartMaxLine)
         arrStrResult.push(result)
     }

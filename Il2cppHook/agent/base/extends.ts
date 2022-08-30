@@ -403,7 +403,7 @@ globalThis.findExport = (exportName: string, moduleName: string | undefined, cal
             if (exp.name.indexOf(exportName) != -1) callback!(exp)
         })
     }
-    newLine()
+    if (callback == showDetails) newLine()
 
     function showDetails(exp: ModuleExportDetails) {
         try {

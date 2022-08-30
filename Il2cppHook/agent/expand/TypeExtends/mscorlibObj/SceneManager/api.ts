@@ -22,13 +22,13 @@ class UnityEngine_SceneManagement_SceneManager_API {
     // public static Scene GetSceneByBuildIndex(Int32 buildIndex)
     @cache
     static get _GetSceneByBuildIndex() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.SceneManagement.SceneManager", "GetSceneByBuildIndex", 1, "pointer", ["pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.SceneManagement.SceneManager", "GetSceneByBuildIndex", 1, "pointer", ["int32"])
     }
 
     // public static Scene GetSceneAt(Int32 index)
     @cache
     static get _GetSceneAt() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.SceneManagement.SceneManager", "GetSceneAt", 1, "pointer", ["pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.SceneManagement.SceneManager", "GetSceneAt", 1, "pointer", ["int32"])
     }
 
     // private static AsyncOperation LoadSceneAsyncNameIndexInternal(String sceneName,Int32 sceneBuildIndex,LoadSceneParameters parameters,Boolean mustCompleteNextFrame)
@@ -149,6 +149,18 @@ class UnityEngine_SceneManagement_SceneManager_API {
     @cache
     static get _MoveGameObjectToScene_Injected() {
         return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.SceneManagement.SceneManager", "MoveGameObjectToScene_Injected", 2, "void", ["pointer", "pointer"])
+    }
+
+    // public static Void add_activeSceneChanged(Scene> value)
+    @cache
+    static get _add_activeSceneChanged() {
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.SceneManagement.SceneManager", "add_activeSceneChanged", 1, ["UnityEngine.Events.UnityAction<UnityEngine.SceneManagement.Scene,UnityEngine.SceneManagement.Scene>"], "void", ["pointer"])
+    }
+
+    // public static Void remove_activeSceneChanged(Scene> value)
+    @cache
+    static get _remove_activeSceneChanged() {
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.SceneManagement.SceneManager", "remove_activeSceneChanged", 1, ["UnityEngine.Events.UnityAction<UnityEngine.SceneManagement.Scene,UnityEngine.SceneManagement.Scene>"], "void", ["pointer"])
     }
 
 }

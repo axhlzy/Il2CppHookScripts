@@ -1,60 +1,52 @@
-import { GameObjectImpl as UnityEngine_GameObject } from "../../../Object/GameObject/class"
-import { UnityEngine_Vector2_Impl as UnityEngine_Vector2 } from "../../../ValueType/Vector2/class"
-import { UnityEngine_Vector3_Impl as UnityEngine_Vector3 } from "../../../ValueType/Vector3/class"
-import { UnityEngine_EventSystems_BaseEventData_Impl as UnityEngine_EventSystems_BaseEventData } from "../class"
+import { GameObjectImpl as GameObject } from "../../../Object/GameObject/class"
+import { UnityEngine_Vector2_Impl as Vector2 } from "../../../ValueType/Vector2/class"
+import { UnityEngine_Vector3_Impl as Vector3 } from "../../../ValueType/Vector3/class"
+import { UnityEngine_EventSystems_BaseEventData_Impl as BaseEventData } from "../class"
 
 type UnityEngine_EventSystems_RaycastResult = NativePointer
 type UnityEngine_EventSystems_EventSystem = NativePointer
 type UnityEngine_Camera = NativePointer
-class UnityEngine_EventSystems_PointerEventData_Impl extends UnityEngine_EventSystems_BaseEventData {
+class UnityEngine_EventSystems_PointerEventData_Impl extends BaseEventData {
 
     // hovered : List<GameObject>
     hovered: NativePointer = lfv(this.handle, "hovered")
     // m_PointerPress : GameObject
-    m_PointerPress: UnityEngine_GameObject = new UnityEngine_GameObject(lfv(this.handle, "m_PointerPress"))
+    m_PointerPress: GameObject = new GameObject(lfv(this.handle, "m_PointerPress"))
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
     }
 
-    get_pointerEnter(): UnityEngine_GameObject {
+    get_pointerEnter(): GameObject {
         return Il2Cpp.Api.PointerEventData._get_pointerEnter(this.handle)
     }
 
-    set_pointerEnter(value: UnityEngine_GameObject): void {
+    set_pointerEnter(value: GameObject): void {
         return Il2Cpp.Api.PointerEventData._set_pointerEnter(this.handle, value)
     }
 
-    get_lastPress(): UnityEngine_GameObject {
+    get_lastPress(): GameObject {
         return Il2Cpp.Api.PointerEventData._get_lastPress(this.handle)
     }
 
-    set_lastPress(value: UnityEngine_GameObject): void {
+    set_lastPress(value: GameObject): void {
         return Il2Cpp.Api.PointerEventData._set_lastPress(this.handle, value)
     }
 
-    get_rawPointerPress(): UnityEngine_GameObject {
+    get_rawPointerPress(): GameObject {
         return Il2Cpp.Api.PointerEventData._get_rawPointerPress(this.handle)
     }
 
-    set_rawPointerPress(value: UnityEngine_GameObject): void {
+    set_rawPointerPress(value: GameObject): void {
         return Il2Cpp.Api.PointerEventData._set_rawPointerPress(this.handle, value)
     }
 
-    get_pointerDrag(): UnityEngine_GameObject {
+    get_pointerDrag(): GameObject {
         return Il2Cpp.Api.PointerEventData._get_pointerDrag(this.handle)
     }
 
-    set_pointerDrag(value: UnityEngine_GameObject): void {
+    set_pointerDrag(value: GameObject): void {
         return Il2Cpp.Api.PointerEventData._set_pointerDrag(this.handle, value)
-    }
-
-    get_pointerClick(): UnityEngine_GameObject {
-        return Il2Cpp.Api.PointerEventData._get_pointerClick(this.handle)
-    }
-
-    set_pointerClick(value: UnityEngine_GameObject): void {
-        return Il2Cpp.Api.PointerEventData._set_pointerClick(this.handle, value)
     }
 
     get_pointerCurrentRaycast(): UnityEngine_EventSystems_RaycastResult {
@@ -89,43 +81,43 @@ class UnityEngine_EventSystems_PointerEventData_Impl extends UnityEngine_EventSy
         return Il2Cpp.Api.PointerEventData._set_pointerId(this.handle, value)
     }
 
-    get_position(): UnityEngine_Vector3 {
+    get_position(): Vector2 {
         return Il2Cpp.Api.PointerEventData._get_position(this.handle)
     }
 
-    set_position(value: UnityEngine_Vector2): void {
+    set_position(value: Vector2): void {
         return Il2Cpp.Api.PointerEventData._set_position(this.handle, value)
     }
 
-    get_delta(): UnityEngine_Vector2 {
+    get_delta(): Vector2 {
         return Il2Cpp.Api.PointerEventData._get_delta(this.handle)
     }
 
-    set_delta(value: UnityEngine_Vector2): void {
+    set_delta(value: Vector2): void {
         return Il2Cpp.Api.PointerEventData._set_delta(this.handle, value)
     }
 
-    get_pressPosition(): UnityEngine_Vector2 {
+    get_pressPosition(): Vector2 {
         return Il2Cpp.Api.PointerEventData._get_pressPosition(this.handle)
     }
 
-    set_pressPosition(value: UnityEngine_Vector2): void {
+    set_pressPosition(value: Vector2): void {
         return Il2Cpp.Api.PointerEventData._set_pressPosition(this.handle, value)
     }
 
-    get_worldPosition(): UnityEngine_Vector3 {
+    get_worldPosition(): Vector3 {
         return Il2Cpp.Api.PointerEventData._get_worldPosition(this.handle)
     }
 
-    set_worldPosition(value: UnityEngine_Vector3): void {
+    set_worldPosition(value: Vector3): void {
         return Il2Cpp.Api.PointerEventData._set_worldPosition(this.handle, value)
     }
 
-    get_worldNormal(): UnityEngine_Vector3 {
+    get_worldNormal(): Vector3 {
         return Il2Cpp.Api.PointerEventData._get_worldNormal(this.handle)
     }
 
-    set_worldNormal(value: UnityEngine_Vector3): void {
+    set_worldNormal(value: Vector3): void {
         return Il2Cpp.Api.PointerEventData._set_worldNormal(this.handle, value)
     }
 
@@ -145,11 +137,11 @@ class UnityEngine_EventSystems_PointerEventData_Impl extends UnityEngine_EventSy
         return Il2Cpp.Api.PointerEventData._set_clickCount(this.handle, value)
     }
 
-    get_scrollDelta(): UnityEngine_Vector2 {
+    get_scrollDelta(): Vector2 {
         return Il2Cpp.Api.PointerEventData._get_scrollDelta(this.handle)
     }
 
-    set_scrollDelta(value: UnityEngine_Vector2): void {
+    set_scrollDelta(value: Vector2): void {
         return Il2Cpp.Api.PointerEventData._set_scrollDelta(this.handle, value)
     }
 
@@ -197,11 +189,11 @@ class UnityEngine_EventSystems_PointerEventData_Impl extends UnityEngine_EventSy
         return Il2Cpp.Api.PointerEventData._get_pressEventCamera(this.handle)
     }
 
-    get_pointerPress(): UnityEngine_GameObject {
+    get_pointerPress(): GameObject {
         return Il2Cpp.Api.PointerEventData._get_pointerPress(this.handle)
     }
 
-    set_pointerPress(value: UnityEngine_GameObject): void {
+    set_pointerPress(value: GameObject): void {
         return Il2Cpp.Api.PointerEventData._set_pointerPress(this.handle, value)
     }
 

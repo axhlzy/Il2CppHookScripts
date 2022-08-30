@@ -53,7 +53,7 @@ const generateClass = (className: string, classPtr: NativePointer = ptr(0)) => {
         let firstParam = method.isStatic ? '' : (method.parameters.length == 0 ? 'this.handle' : 'this.handle , ')
 
         let methodName = '_' + method.name.replace('.', '_')
-        let retValue = `Il2Cpp.Api.${clsInstance.name}.${methodName}(${firstParam}${paramNames})`
+        let retValue = `${incorLib(className) ? "mscorlib" : "Il2Cpp"}.Api.${clsInstance.name}.${methodName}(${firstParam}${paramNames})`
         if (method.returnType.name == "System.String") retValue = 'readU16(' + retValue + ')'
         // else if (method.returnType.name != "System.Void" && method.returnType.name != "System.Boolean" && method.returnType.name != "System.Int32") {
         //     retValue = `new ${method.returnType.name.replace('.', '_')}(${retValue})`
@@ -162,7 +162,7 @@ const generateApi = (className: string, classPtr: NativePointer = ptr(0)) => {
         if (retName == "System.Void") retName = 'void'
         else retName = 'pointer'
         let classNameSpace = method.class.namespace.length == 0 ? "" : `${method.class.namespace}.`
-        if (!names.includes(method.name)) {
+        if (false && !names.includes(method.name)) {
             LOGD(`\t\treturn Il2Cpp.Api.t("${method.class.image.assembly.name}", "${classNameSpace}${className}", "${method.name}", ${method.parameters.length}, "${retName}", ${param})`)
         } else {
             // 重名函数

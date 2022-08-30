@@ -1,33 +1,33 @@
-import { methodToString } from "../bridge/fix/il2cppM";
-import { UnityEngine_Object } from "../expand/TypeExtends/mscorlibObj/Object/class";
-import { UnityEngine_Color_Impl } from "../expand/TypeExtends/mscorlibObj/ValueType/Color/class";
-import { formartClass } from "../utils/formart";
-import { readInt, readInt64, readSingle, readU16, readUInt } from "../utils/reader";
+import { methodToString } from "../bridge/fix/il2cppM"
+import { UnityEngine_Object } from "../expand/TypeExtends/mscorlibObj/Object/class"
+import { UnityEngine_Color_Impl } from "../expand/TypeExtends/mscorlibObj/ValueType/Color/class"
+import { formartClass } from "../utils/formart"
+import { readInt, readInt64, readSingle, readU16, readUInt } from "../utils/reader"
 
 class ValueResolve {
 
     private cacheId: string = ""
     private method: Il2Cpp.Method
-    private args: InvocationArguments;
-    private retval: NativePointer = ptr(0);
+    private args: InvocationArguments
+    private retval: NativePointer = ptr(0)
 
     public constructor(cacheID: string, methodInfo: Il2Cpp.Method) {
-        this.cacheId = cacheID;
+        this.cacheId = cacheID
         this.method = methodInfo
         this.args = new Array<NativePointer>(methodInfo.genericParameterCount)
     }
 
     public getCacheId(): string {
-        return this.cacheId;
+        return this.cacheId
     }
 
     public setCacheId(cacheId: string): ValueResolve {
-        this.cacheId = cacheId;
+        this.cacheId = cacheId
         return this
     }
 
     public getMethod(): Il2Cpp.Method {
-        return this.method;
+        return this.method
     }
 
     public setMethod(method: Il2Cpp.Method): ValueResolve {
@@ -47,19 +47,19 @@ class ValueResolve {
     }
 
     public getArg(index: number): NativePointer {
-        return this.args[index];
+        return this.args[index]
     }
 
     public getRetval(): NativePointer {
-        return this.retval;
+        return this.retval
     }
 
     public getArgs(): Array<NativePointer> {
-        return this.args;
+        return this.args
     }
 
     public getArgsCount(): number {
-        return this.method.parameterCount;
+        return this.method.parameterCount
     }
 
     public setArgs(value: InvocationArguments): ValueResolve {
@@ -173,4 +173,4 @@ class ValueResolve {
     }
 }
 
-export default ValueResolve;
+export default ValueResolve

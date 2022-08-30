@@ -35,7 +35,7 @@ declare global {
     var allocUStr: (str: string) => NativePointer
     var allocVector: (x?: number, y?: number, z?: number, w?: number) => NativePointer
     var alloc: (size?: number) => NativePointer
-    var allocP: (size: number) => NativePointer
+    var allocP: (size?: number) => NativePointer
 }
 
 globalThis.allocCStr = allocCStr

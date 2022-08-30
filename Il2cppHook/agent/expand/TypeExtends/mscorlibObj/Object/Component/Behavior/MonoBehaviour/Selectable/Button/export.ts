@@ -10,7 +10,7 @@ function OnPointerClick() {
             LOGE("\nEnable Hook OnPointerClick at " + funcAddr + "(" + funcAddr.sub(soAddr) + ")" + "\n")
             A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
                 LOGW("\n" + getLine(38))
-                LOGD("public void OnPointerClick( " + args[0] + " , " + args[1] + " );")
+                LOGD("public void OnPointerClick( " + args[0] + " , " + args[1] + " )")
                 FakePointerEventData(args[1])
             })
             break
@@ -20,7 +20,7 @@ function OnPointerClick() {
             LOGE("\nEnable Hook DeselectIfSelectionChanged at " + funcAddr + "(" + funcAddr.sub(soAddr) + ")" + "\n")
             A(funcAddr, (args) => {
                 LOGW("\n" + getLine(38))
-                LOGD("protected void DeselectIfSelectionChanged(Ins = " + args[0] + " , GameObject = " + args[1] + " , BaseEventData(" + findClass("BaseEventData") + ") = " + args[2] + " );")
+                LOGD("protected void DeselectIfSelectionChanged(Ins = " + args[0] + " , GameObject = " + args[1] + " , BaseEventData(" + findClass("BaseEventData") + ") = " + args[2] + " )")
                 if (!args[1].isNull()) showGameObject(args[1])
             })
             break
@@ -30,21 +30,21 @@ function OnPointerClick() {
             LOGE("\nEnable Hook OnInitializePotentialDrag at " + funcAddr + "(" + funcAddr.sub(soAddr) + ")" + "\n")
             A(funcAddr, (args) => {
                 LOGW("\n" + getLine(38))
-                LOGD("public void OnInitializePotentialDrag( " + args[0] + " , " + args[1] + " );")
+                LOGD("public void OnInitializePotentialDrag( " + args[0] + " , " + args[1] + " )")
                 FakePointerEventData(args[1])
             })
             break
         case 2:
             A(find_method("UnityEngine.UI", "PointerInputModule", "ProcessMove", 1), (args) => {
                 LOGW("\n" + getLine(38))
-                LOGD("protected virtual Void ProcessMove( " + (args[1]) + " );")
+                LOGD("protected virtual Void ProcessMove( " + (args[1]) + " )")
                 FakePointerEventData(args[1])
             })
             break
         case 3:
             A(find_method("UnityEngine.UI", "PointerInputModule", "ProcessDrag", 1), (args) => {
                 LOGW("\n" + getLine(38))
-                LOGD("protected virtual Void ProcessDrag( " + (args[1]) + " );")
+                LOGD("protected virtual Void ProcessDrag( " + (args[1]) + " )")
                 FakePointerEventData(args[1])
             })
             break
@@ -58,14 +58,14 @@ function OnPointerClick() {
         case 5:
             A(find_method("UnityEngine.UI", "PointerEventData", "set_pointerPress", 1), (args) => {
                 LOGW("\n" + getLine(38))
-                LOGD("protected virtual Void set_pointerPress( " + (args[1]) + " );")
+                LOGD("protected virtual Void set_pointerPress( " + (args[1]) + " )")
                 showGameObject(args[1])
             })
             break
         case 6:
             A(find_method("UnityEngine.UI", "PointerInputModule", "GetPointerData", 3), (args) => {
                 LOGW("\n" + getLine(38))
-                LOGD("protected virtual Void GetPointerData( " + (args[2]) + " );")
+                LOGD("protected virtual Void GetPointerData( " + (args[2]) + " )")
                 showGameObject(args[1])
                 showEventData(args[2])
             })
@@ -74,7 +74,7 @@ function OnPointerClick() {
             // EventSystem --->  public Void RaycastAll (PointerEventData eventData,List`1 raycastResults)
             A(find_method("UnityEngine.UI", "EventSystem", "RaycastAll", 2), (args) => {
                 LOGW("\n" + getLine(38))
-                LOGD(`protected virtual Void RaycastAll( ${args[0]} , ${args[1]} , ${args[2]} );`)
+                LOGD(`protected virtual Void RaycastAll( ${args[0]} , ${args[1]} , ${args[2]} )`)
                 FakePointerEventData(args[1])
             })
             break
@@ -89,7 +89,7 @@ function OnPointerClick() {
             // Selectable --->  public virtual Void OnPointerExit (PointerEventData eventData)
             A(find_method("UnityEngine.UI", "Selectable", "OnPointerExit", 1), (args) => {
                 LOGW("\n" + getLine(38))
-                LOGD("protected virtual Void OnPointerExit( " + (args[1]) + " );")
+                LOGD("protected virtual Void OnPointerExit( " + (args[1]) + " )")
                 FakePointerEventData(args[1])
             })
             break
@@ -104,20 +104,19 @@ function OnPointerClick() {
     }
 }
 
-type PointerEventData = NativePointer
 const OnButtonClick = () => {
     A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
-        let current: PointerEventData = args[0]
+        let current: PointerEventImpl = new PointerEventImpl(args[0])
         // addRuntimeType(current)
-        let ButtonClickedEvent = new Il2Cpp.Button(current).m_OnClick
+        let ButtonClickedEvent = new Il2Cpp.Button(current.handle).m_OnClick
         // LOGJSON(ButtonClickedEvent) //debug commit
-        let gobj: NativePointer | undefined = getGameObject(current)
+        let gobj: NativePointer | undefined = getGameObject(current.handle)
         let gObjPack: Il2Cpp.GameObject
         if (gobj != undefined) gObjPack = new Il2Cpp.GameObject(gobj)
         else throw new Error("Il2Cpp.GameObject is null")
         LOGH("\n[*] " + current + " ---> " + gObjPack.get_name() + " { G:" + gobj + " | T:" + gObjPack.get_transform().handle + " }")
         LOGO("    [-] InvokableCallList(" + findClass("InvokableCallList") + ") m_Calls " + ButtonClickedEvent.m_Calls.handle)
-        setTimeout(() => ansItems(ButtonClickedEvent), 10);
+        setTimeout(() => ansItems(ButtonClickedEvent), 10)
     })
 
     function ansItems(event: ButtonClickedEvent): void {
@@ -149,7 +148,7 @@ const OnButtonClick = () => {
 //     if (m_size != 0) {
 //         let item = getFieldInfoFromCls(ret_itemCalls[2], "_items", ret_itemCalls[5])
 //         let arrAddr = []
-//         for (let i = 0; i < m_size; ++i) {
+//         for (let i = 0 i < m_size ++i) {
 //             // 本来是想解析动态解析类型的
 //             let tmpType = "UnityAction"
 //             // 这里就默认使用了0x8偏移位置的函数指针 从dump出来的情况看起来并不是每一个子类类型都有一个0x8，但实测0x8是可用的
@@ -197,11 +196,11 @@ const HideClickedObj = (x: number, y: number) => {
 export { OnPointerClick, OnButtonClick, HideClickedObj }
 
 declare global {
-    var HookOnPointerClick: () => void;
-    var B_Button: () => void;
-    var HideClickedObj: (x: number, y: number) => void;
+    var HookOnPointerClick: () => void
+    var B_Button: () => void
+    var HideClickedObj: (x: number, y: number) => void
 }
 
-globalThis.HookOnPointerClick = OnPointerClick;
-globalThis.B_Button = OnButtonClick;
-globalThis.HideClickedObj = HideClickedObj;
+globalThis.HookOnPointerClick = OnPointerClick
+globalThis.B_Button = OnButtonClick
+globalThis.HideClickedObj = HideClickedObj

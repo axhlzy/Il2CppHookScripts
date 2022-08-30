@@ -1,5 +1,6 @@
 import { UnityEngine_Vector2_Impl as Vector2 } from "../../ValueType/Vector2/class"
 import { UnityEngine_Object } from "../class"
+import { UnityEngine_Texture_API } from "./api"
 import {
     UnityEngine_ColorSpace as ColorSpace,
     UnityEngine_Experimental_Rendering_FormatUsage as FormatUsage,
@@ -19,71 +20,71 @@ class UnityEngine_Texture_Impl extends UnityEngine_Object {
     }
 
     _ctor(): void {
-        return Il2Cpp.Api.Texture.__ctor(this.handle)
+        return UnityEngine_Texture_API.__ctor(allocP())
     }
 
     GetDataWidth(): number {
-        return Il2Cpp.Api.Texture._GetDataWidth(this.handle)
+        return UnityEngine_Texture_API._GetDataWidth(this.handle)
     }
 
     GetDataHeight(): number {
-        return Il2Cpp.Api.Texture._GetDataHeight(this.handle)
+        return UnityEngine_Texture_API._GetDataHeight(this.handle)
     }
 
     get_width(): number {
-        return Il2Cpp.Api.Texture._get_width(this.handle)
+        return UnityEngine_Texture_API._get_width(this.handle)
     }
 
     set_width(value: number): void {
-        return Il2Cpp.Api.Texture._set_width(this.handle, value)
+        return UnityEngine_Texture_API._set_width(this.handle, value)
     }
 
     get_height(): number {
-        return Il2Cpp.Api.Texture._get_height(this.handle)
+        return UnityEngine_Texture_API._get_height(this.handle)
     }
 
     set_height(value: number): void {
-        return Il2Cpp.Api.Texture._set_height(this.handle, value)
+        return UnityEngine_Texture_API._set_height(this.handle, value)
     }
 
     get_isReadable(): boolean {
-        return Il2Cpp.Api.Texture._get_isReadable(this.handle)
+        return UnityEngine_Texture_API._get_isReadable(this.handle)
     }
 
     get_wrapMode(): UnityEngine_TextureWrapMode {
-        return Il2Cpp.Api.Texture._get_wrapMode(this.handle)
+        return UnityEngine_Texture_API._get_wrapMode(this.handle)
     }
 
     get_texelSize(): Vector2 {
-        return new Vector2(Il2Cpp.Api.Texture._get_texelSize(this.handle))
+        return new Vector2(UnityEngine_Texture_API._get_texelSize(this.handle))
     }
 
     Internal_GetActiveTextureColorSpace(): number {
-        return Il2Cpp.Api.Texture._Internal_GetActiveTextureColorSpace(this.handle)
+        return UnityEngine_Texture_API._Internal_GetActiveTextureColorSpace(this.handle)
     }
 
     get_activeTextureColorSpace(): ColorSpace {
-        return Il2Cpp.Api.Texture._get_activeTextureColorSpace(this.handle)
+        return UnityEngine_Texture_API._get_activeTextureColorSpace(this.handle)
     }
 
     ValidateFormat(format: UnityEngine_TextureFormat): boolean {
-        return Il2Cpp.Api.Texture._ValidateFormat(this.handle, format)
+        return UnityEngine_Texture_API._ValidateFormat(this.handle, format)
     }
 
     ValidateFormat_2(format: GraphicsFormat, usage: FormatUsage): boolean {
-        return Il2Cpp.Api.Texture._ValidateFormat(this.handle, format, usage)
+        return UnityEngine_Texture_API._ValidateFormat(this.handle, format, usage)
     }
 
     CreateNonReadableException(t: UnityEngine_Texture_Impl): UnityEngine_UnityException {
-        return Il2Cpp.Api.Texture._CreateNonReadableException(this.handle, t.handle)
+        return UnityEngine_Texture_API._CreateNonReadableException(this.handle, t.handle)
     }
 
     static _cctor(): void {
-        return Il2Cpp.Api.Texture.__cctor()
+        return UnityEngine_Texture_API.__cctor()
     }
 
     get_texelSize_Injected(ret: Vector2): void {
-        return Il2Cpp.Api.Texture._get_texelSize_Injected(this.handle, ret)
+        return UnityEngine_Texture_API._get_texelSize_Injected(this.handle, ret)
     }
 
 }

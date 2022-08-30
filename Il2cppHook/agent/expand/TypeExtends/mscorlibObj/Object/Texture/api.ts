@@ -112,4 +112,4 @@ declare global {
     }
 }
 
-export { }
+export { UnityEngine_Texture_API }
