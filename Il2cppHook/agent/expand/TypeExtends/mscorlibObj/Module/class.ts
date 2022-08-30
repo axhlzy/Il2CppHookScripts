@@ -1,4 +1,5 @@
-import { mscorlib_System_Type_impl } from "../Type/class";
+import { mscorlib_System_Object_impl as System_Object } from "../class";
+import { mscorlib_System_Type_impl as System_Type } from "../Type/class";
 
 type mscorlib_System_Reflection_Assembly_impl = NativePointer
 type mscorlib_System_Exception = NativePointer
@@ -6,7 +7,7 @@ type mscorlib_System_Guid = NativePointer
 type mscorlib_System_Runtime_Serialization_SerializationInfo_impl = NativePointer
 type mscorlib_System_Runtime_Serialization_StreamingContext = NativePointer
 
-class mscorlib_System_Reflection_Module_impl extends mscorlib_System_Type_impl {
+class mscorlib_System_Reflection_Module_impl extends System_Type {
 
     // _impl : In
     inter = lfv(this.handle, "_impl")
@@ -29,7 +30,7 @@ class mscorlib_System_Reflection_Module_impl extends mscorlib_System_Type_impl {
     // token : Int32
     token: number = lfv(this.handle, "token") as unknown as number
 
-    static get ctor(): mscorlib_System_Object {
+    static get ctor(): System_Object {
         return new mscorlib_System_Reflection_Module_impl(mscorlib.Api.Module._ctor(alloc()))
     }
 
@@ -45,11 +46,11 @@ class mscorlib_System_Reflection_Module_impl extends mscorlib_System_Type_impl {
         return mscorlib.Api.Module._Equals(this.handle, other)
     }
 
-    filter_by_type_name(type: mscorlib_System_Type_impl, obj: NativePointer): boolean {
+    filter_by_type_name(type: System_Type, obj: NativePointer): boolean {
         return mscorlib.Api.Module._filter_by_type_name(this.handle, type.handle, obj)
     }
 
-    filter_by_type_name_ignore_case(type: mscorlib_System_Type_impl, obj: NativePointer): boolean {
+    filter_by_type_name_ignore_case(type: System_Type, obj: NativePointer): boolean {
         return mscorlib.Api.Module._filter_by_type_name_ignore_case(this.handle, type.handle, obj)
     }
 
@@ -57,7 +58,7 @@ class mscorlib_System_Reflection_Module_impl extends mscorlib_System_Type_impl {
         return mscorlib.Api.Module._GetCustomAttributes(this.handle, inherit)
     }
 
-    GetCustomAttributes_2(type: mscorlib_System_Type_impl, inherit: boolean): NativePointer {
+    GetCustomAttributes_2(type: System_Type, inherit: boolean): NativePointer {
         return mscorlib.Api.Module._GetCustomAttributes_1(this.handle, type.handle, inherit)
     }
 
@@ -77,7 +78,7 @@ class mscorlib_System_Reflection_Module_impl extends mscorlib_System_Type_impl {
         return mscorlib.Api.Module._GetObjectData(this.handle, info, context)
     }
 
-    IsDefined(type: mscorlib_System_Type_impl, inherit: boolean): boolean {
+    IsDefined(type: System_Type, inherit: boolean): boolean {
         return mscorlib.Api.Module._IsDefined(this.handle, type.handle, inherit)
     }
 

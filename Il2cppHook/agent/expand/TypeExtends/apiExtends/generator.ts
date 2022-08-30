@@ -24,14 +24,12 @@ const generateClass = (className: string, classPtr: NativePointer = ptr(0)) => {
         LOGD(`\t${field.name}: ${type} = lfv(this.handle, "${field.name}") as unknown as ${type}`)
     })
 
-    newLine()
-
     // constructor(handleOrWrapper: NativePointer) {
     //     super(handleOrWrapper)
     // }
     LOGD('\tconstructor(handleOrWrapper: NativePointer) {')
     LOGD('\t\t super(handleOrWrapper)')
-    LOGD('\t}\n')
+    LOGD('\t}')
 
     // gen methods
     let methods = clsInstance.methods
@@ -57,6 +55,9 @@ const generateClass = (className: string, classPtr: NativePointer = ptr(0)) => {
         let methodName = '_' + method.name.replace('.', '_')
         let retValue = `Il2Cpp.Api.${clsInstance.name}.${methodName}(${firstParam}${paramNames})`
         if (method.returnType.name == "System.String") retValue = 'readU16(' + retValue + ')'
+        // else if (method.returnType.name != "System.Void" && method.returnType.name != "System.Boolean" && method.returnType.name != "System.Int32") {
+        //     retValue = `new ${method.returnType.name.replace('.', '_')}(${retValue})`
+        // }
         let line2 = `\t\treturn ${retValue}`
         let line3 = '\t}'
         LOGD(`${line1} \n ${line2} \n ${line3} \n`)
@@ -198,14 +199,43 @@ const generateApi = (className: string, classPtr: NativePointer = ptr(0)) => {
     LOGW(getLine(80))
 }
 
+const generateFieldEnum = (className: string, classPtr: NativePointer = ptr(0)) => {
+    LOGW(getLine(80))
+
+    let clsInstance: Il2Cpp.Class
+
+    // gen class title
+    if (classPtr.isNull()) {
+        clsInstance = new Il2Cpp.Class(findClass(className))
+    } else {
+        clsInstance = new Il2Cpp.Class(classPtr)
+    }
+
+    // export enum UnityEngine_ColorSpace {
+    //     Gamma = 0,
+    //     Linear = 1,
+    //     Uninitialized = -1
+    // }
+
+    LOGE(`export enum ${clsInstance.namespace.replace('.', '_')}_${clsInstance.name} {`)
+    clsInstance.fields.forEach((field: Il2Cpp.Field) => {
+        Il2Cpp.Api._typeGetTypeEnum
+        LOGD(`\t${field.name} = ${field}`)
+    })
+    LOGO(`}\n`)
+}
+
 declare global {
     var generateClass: (className: string, classPtr?: NativePointer) => void
     var generateApi: (className: string, classPtr?: NativePointer) => void
+    var generateFieldEnum: (className: string, classPtr?: NativePointer) => void
     var incorLib: (name: string) => boolean
 }
 
 globalThis.generateClass = generateClass
 globalThis.generateApi = generateApi
+globalThis.generateFieldEnum = generateFieldEnum
+globalThis.incorLib = incorLib
 
 export { }
 

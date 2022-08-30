@@ -1,14 +1,12 @@
-import "./interface"
-
 // 拓展 mscorlib.System.Object
-class mscorlib_System_Object_impl implements mscorlib_System_Object {
+class mscorlib_System_Object_impl {
 
     handle: NativePointer
     constructor(handleOrWrapper: NativePointer) {
         this.handle = handleOrWrapper
     }
 
-    ctor(): mscorlib_System_Object {
+    ctor(): mscorlib_System_Object_impl {
         return mscorlib.Api.mscorlibObj._ctor_0(allocP(1))
     }
 
@@ -16,7 +14,7 @@ class mscorlib_System_Object_impl implements mscorlib_System_Object {
         return readU16(mscorlib.Api.mscorlibObj._toString(this.handle))
     }
 
-    memberwiseClone(): mscorlib_System_Object {
+    memberwiseClone(): mscorlib_System_Object_impl {
         throw new Error("Not implemented")
     }
 
