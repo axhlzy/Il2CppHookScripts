@@ -1,253 +1,185 @@
-import { mscorlib_System_Object_impl } from "../class"
-import { mscorlib_System_Type_impl } from "../Type/class"
+import { mscorlib_System_Object_impl as System_Object } from "../class"
+import { mscorlib_System_RuntimeType_impl as System_RuntimeType } from "../RuntimeType/class"
+import { mscorlib_System_Type_impl as System_Type } from "../Type/class"
 
-type mscorlib_System_Runtime_Serialization_SerializationInfo_impl = NativePointer
-type mscorlib_System_Reflection_MethodInfo_impl = NativePointer
-type mscorlib_System_Runtime_Serialization_StreamingContext_impl = NativePointer
+type System_IntPtr = NativePointer
+type System_Reflection_MethodInfo = NativePointer
+type System_DelegateData = NativePointer
+type System_Runtime_Serialization_StreamingContext = NativePointer
+type System_Reflection_BindingFlags = NativePointer
+type System_Runtime_Serialization_SerializationInfo = NativePointer
+type System_MulticastDelegate = NativePointer
 
-export class mscorlib_System_Delegate_impl extends mscorlib_System_Object_impl {
+class System_Delegate_Impl extends System_Object {
 
-    // data : DelegateData
-    data: NativePointer = lfv(this.handle, "data", findClass("Delegate"))
-    // delegate_trampoline : IntPtr
-    delegate_trampoline: NativePointer = lfv(this.handle, "delegate_trampoline", findClass("Delegate"))
-    // extra_arg : IntPtr
-    extra_arg: NativePointer = lfv(this.handle, "extra_arg", findClass("Delegate"))
-    // invoke_impl : IntPtr
-    invoke_impl: NativePointer = lfv(this.handle, "invoke_impl", findClass("Delegate"))
-    // m_target : Object
-    m_target: NativePointer = lfv(this.handle, "m_target", findClass("Delegate"))
-    // method : IntPtr
-    method: NativePointer = lfv(this.handle, "method", findClass("Delegate"))
-    // method_code : IntPtr
-    method_code: NativePointer = lfv(this.handle, "method_code", findClass("Delegate"))
-    // method_info : MethodInfo
-    method_info: NativePointer = lfv(this.handle, "method_info", findClass("Delegate"))
-    // method_is_virtual : Boolean
-    method_is_virtual: NativePointer = lfv(this.handle, "method_is_virtual", findClass("Delegate"))
-    // method_ptr : IntPtr
-    method_ptr: NativePointer = lfv(this.handle, "method_ptr", findClass("Delegate"))
-    // original_method_info : MethodInfo
-    original_method_info: NativePointer = lfv(this.handle, "original_method_info", findClass("Delegate"))
+    method_ptr: System_IntPtr = lfv(this.handle, "method_ptr") as unknown as System_IntPtr
+    invoke_impl: System_IntPtr = lfv(this.handle, "invoke_impl") as unknown as System_IntPtr
+    m_target: System_Object = new System_Object(lfv(this.handle, "m_target"))
+    method: System_IntPtr = lfv(this.handle, "method") as unknown as System_IntPtr
+    delegate_trampoline: System_IntPtr = lfv(this.handle, "delegate_trampoline") as unknown as System_IntPtr
+    extra_arg: System_IntPtr = lfv(this.handle, "extra_arg") as unknown as System_IntPtr
+    method_code: System_IntPtr = lfv(this.handle, "method_code") as unknown as System_IntPtr
+    method_info: System_Reflection_MethodInfo = lfv(this.handle, "method_info") as unknown as System_Reflection_MethodInfo
+    original_method_info: System_Reflection_MethodInfo = lfv(this.handle, "original_method_info") as unknown as System_Reflection_MethodInfo
+    data: System_DelegateData = lfv(this.handle, "data") as unknown as System_DelegateData
+    method_is_virtual: boolean = lfv(this.handle, "method_is_virtual") as unknown as boolean
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
     }
 
-    /**
-     * 
-     * @param call // Clone() : Object
-    @cache
-    static get _Clone_0() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.InvokableCallList", "Clone", 0, "pointer", ["pointer"])
+    get_Method(): System_Reflection_MethodInfo {
+        return mscorlib.Api.Delegate._get_Method(this.handle)
     }
 
-    // Combine(Delegate[]) : Delegate
-    @cache
-    static get _Combine_1() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "Combine", 1, "pointer", ["pointer", "pointer"])
+    GetVirtualMethod_internal(): System_Reflection_MethodInfo {
+        return mscorlib.Api.Delegate._GetVirtualMethod_internal(this.handle)
     }
 
-    // Combine(Delegate, Delegate) : Delegate
-    @cache
-    static get _Combine_2() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "Combine", 2, "pointer", ["pointer", "pointer"])
+    get_Target(): System_Object {
+        return mscorlib.Api.Delegate._get_Target(this.handle)
     }
 
-    // CombineImpl(Delegate) : Delegate
-    @cache
-    static get _CombineImpl_1() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "CombineImpl", 1, "pointer", ["pointer", "pointer"])
+    static CreateDelegate_internal(type: System_Type, target: System_Object, info: System_Reflection_MethodInfo, throwOnBindFailure: boolean): System_Delegate_Impl {
+        return mscorlib.Api.Delegate._CreateDelegate_internal(type.handle, target.handle, info, throwOnBindFailure)
     }
 
-    // CreateDelegate(Type, MethodInfo) : Delegate
-    @cache
-    static get _CreateDelegate_2() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "CreateDelegate", 2, "pointer", ["pointer", "pointer", "pointer"])
+    static arg_type_match(delArgType: System_Type, argType: System_Type): boolean {
+        return mscorlib.Api.Delegate._arg_type_match(delArgType, argType)
     }
 
-    // CreateDelegate(Type, Object, MethodInfo) : Delegate
-    @cache
-    static get _CreateDelegate_3() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "CreateDelegate", 3, "pointer", ["pointer", "pointer", "pointer", "pointer"])
+    static arg_type_match_this(delArgType: System_Type, argType: System_Type, boxedThis: boolean): boolean {
+        return mscorlib.Api.Delegate._arg_type_match_this(delArgType, argType, boxedThis)
     }
 
-    // ......
-
-    // DynamicInvoke(Object[]) : Object
-    @cache
-    static get _DynamicInvoke() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "DynamicInvoke", 1, "pointer", ["pointer", "pointer"])
+    static return_type_match(delReturnType: System_Type, returnType: System_Type): boolean {
+        return mscorlib.Api.Delegate._return_type_match(delReturnType, returnType)
     }
 
-    // DynamicInvokeImpl(Object[]) : Object
-    @cache
-    static get _DynamicInvokeImpl() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "DynamicInvokeImpl", 1, "pointer", ["pointer", "pointer"])
+    static CreateDelegate(type: System_Type, firstArgument: System_Object, method: System_Reflection_MethodInfo, throwOnBindFailure: boolean): System_Delegate_Impl {
+        return new System_Delegate_Impl(mscorlib.Api.Delegate._CreateDelegate(type.handle, firstArgument, method, throwOnBindFailure))
     }
 
-    // Equals(Object) : Boolean
-    @cache
-    static get _Equals() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "Equals", 1, "bool", ["pointer", "pointer"])
+    static CreateDelegate_5_(type: System_Type, firstArgument: System_Object, method: System_Reflection_MethodInfo, throwOnBindFailure: boolean, allowClosed: boolean): System_Delegate_Impl {
+        return mscorlib.Api.Delegate._CreateDelegate(type.handle, firstArgument, method, throwOnBindFailure, allowClosed)
     }
 
-    // GetHashCode() : Int32
-    @cache
-    static get _GetHashCode() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "GetHashCode", 0, "int", ["pointer"])
+    static CreateDelegate_3_(type: System_Type, firstArgument: System_Object, method: System_Reflection_MethodInfo): System_Delegate_Impl {
+        return new System_Delegate_Impl(mscorlib.Api.Delegate._CreateDelegate(type.handle, firstArgument, method))
     }
 
-    // GetInvocationList() : Delegate[]
-    @cache
-    static get _GetInvocationList() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "GetInvocationList", 0, "pointer", ["pointer"])
+    static CreateDelegate_3(type: System_Type, method: System_Reflection_MethodInfo, throwOnBindFailure: boolean): System_Delegate_Impl {
+        return new System_Delegate_Impl(mscorlib.Api.Delegate._CreateDelegate(type.handle, method, throwOnBindFailure))
     }
 
-    // GetMethodImpl() : MethodInfo
-    @cache
-    static get _GetMethodImpl() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "GetMethodImpl", 0, "pointer", ["pointer"])
+    static CreateDelegate_2(type: System_Type, method: System_Reflection_MethodInfo): System_Delegate_Impl {
+        return new System_Delegate_Impl(mscorlib.Api.Delegate._CreateDelegate(type.handle, method))
     }
 
-    // GetObjectData(SerializationInfo, StreamingContext) : Void
-    @cache
-    static get _GetObjectData() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "GetObjectData", 2, "void", ["pointer", "pointer", "pointer"])
+    static CreateDelegate_3__(type: System_Type, target: System_Object, method: string): System_Delegate_Impl {
+        return new System_Delegate_Impl(mscorlib.Api.Delegate._CreateDelegate(type.handle, target.handle, method))
     }
 
-    // GetVirtualMethod_internal() : MethodInfo
-    @cache
-    static get _GetVirtualMethod_internal() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "GetVirtualMethod_internal", 0, "pointer", ["pointer"])
+    static GetCandidateMethod(type: System_Type, target: System_Type, method: string, bflags: System_Reflection_BindingFlags, ignoreCase: boolean, throwOnBindFailure: boolean): System_Reflection_MethodInfo {
+        return mscorlib.Api.Delegate._GetCandidateMethod(type.handle, target.handle, method, bflags, ignoreCase, throwOnBindFailure)
     }
 
-    // op_Equality(Delegate, Delegate) : Boolean
-    @cache
-    static get _op_Equality() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "op_Equality", 2, "bool", ["pointer", "pointer"])
+    static CreateDelegate_5__(type: System_Type, target: System_Type, method: string, ignoreCase: boolean, throwOnBindFailure: boolean): System_Delegate_Impl {
+        return new System_Delegate_Impl(mscorlib.Api.Delegate._CreateDelegate(type.handle, target.handle, method, ignoreCase, throwOnBindFailure))
     }
 
-    // op_Inequality(Delegate, Delegate) : Boolean
-    @cache
-    static get _op_Inequality() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "op_Inequality", 2, "bool", ["pointer", "pointer"])
+    static CreateDelegate_3___(type: System_Type, target: System_Type, method: string): System_Delegate_Impl {
+        return new System_Delegate_Impl(mscorlib.Api.Delegate._CreateDelegate(type.handle, target.handle, method))
     }
 
-    // Remove(Delegate, Delegate) : Delegate
-    @cache
-    static get _Remove() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "Remove", 2, "pointer", ["pointer", "pointer", "pointer"])
+    static CreateDelegate_5(type: System_Type, target: System_Object, method: string, ignoreCase: boolean, throwOnBindFailure: boolean): System_Delegate_Impl {
+        return new System_Delegate_Impl(mscorlib.Api.Delegate._CreateDelegate(type.handle, target.handle, method, ignoreCase, throwOnBindFailure))
     }
 
-    // RemoveImpl(Delegate) : Delegate
-    @cache
-    static get _RemoveImpl() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "RemoveImpl", 1, "pointer", ["pointer", "pointer"])
+    static CreateDelegate_4(type: System_Type, target: System_Object, method: string, ignoreCase: boolean): System_Delegate_Impl {
+        return new System_Delegate_Impl(mscorlib.Api.Delegate._CreateDelegate(type.handle, target.handle, method, ignoreCase))
     }
 
-    // return_type_match(Type, Type) : Boolean
-    @cache
-    static get _return_type_match() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "return_type_match", 2, "bool", ["pointer", "pointer"])
+    DynamicInvoke(args: System_Object[]): System_Object {
+        return new System_Object(mscorlib.Api.Delegate._DynamicInvoke(this.handle, args))
     }
 
-    // get_Method() : MethodInfo
-    @cache
-    static get _get_Method() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "get_Method", 0, "pointer", ["pointer"])
+    InitializeDelegateData(): void {
+        return mscorlib.Api.Delegate._InitializeDelegateData(this.handle)
     }
 
-    // get_Target() : Object
-    @cache
-    static get _get_Target() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Events.UnityEventBase", "get_Target", 0, "pointer", ["pointer"])
-    }
-     */
-
-    Clone_0(): mscorlib_System_Delegate_impl {
-        return new mscorlib.Api.Delegate._Clone_0(this.handle)
+    DynamicInvokeImpl(args: System_Object[]): System_Object {
+        return new System_Object(mscorlib.Api.Delegate._DynamicInvokeImpl(this.handle, args))
     }
 
-    Combine_1(arg0: mscorlib_System_Delegate_impl): mscorlib_System_Delegate_impl {
-        return new mscorlib.Api.Delegate._Combine_1(this.handle, arg0.handle)
+    Clone(): System_Object {
+        return new System_Object(mscorlib.Api.Delegate._Clone(this.handle))
     }
 
-    Combine_2(arg0: mscorlib_System_Delegate_impl, arg1: mscorlib_System_Delegate_impl): mscorlib_System_Delegate_impl {
-        return new mscorlib.Api.Delegate._Combine_2(this.handle, arg0.handle, arg1.handle)
-    }
-
-    CreateDelegate_3(arg0: NativePointer, arg1: NativePointer): mscorlib_System_Delegate_impl {
-        return new mscorlib.Api.Delegate._CreateDelegate_3(this.handle, arg0, arg1)
-    }
-
-    DynamicInvoke(arg0: mscorlib_System_Object_impl[]): mscorlib_System_Object_impl {
-        return new mscorlib.Api.Delegate._DynamicInvoke(this.handle, arg0)
-    }
-
-    DynamicInvokeImpl(arg0: mscorlib_System_Object_impl[]): mscorlib_System_Object_impl {
-        return new mscorlib.Api.Delegate._DynamicInvokeImpl(this.handle, arg0)
-    }
-
-    Equals(arg0: mscorlib_System_Object_impl): boolean {
-        return new mscorlib.Api.Delegate._Equals(this.handle, arg0.handle)
+    Equals(obj: System_Object): boolean {
+        return mscorlib.Api.Delegate._Equals(this.handle, obj)
     }
 
     GetHashCode(): number {
-        return new mscorlib.Api.Delegate._GetHashCode(this.handle)
+        return mscorlib.Api.Delegate._GetHashCode(this.handle)
     }
 
-    GetInvocationList(): mscorlib_System_Delegate_impl[] {
-        return new mscorlib.Api.Delegate._GetInvocationList(this.handle)
+    GetMethodImpl(): System_Reflection_MethodInfo {
+        return mscorlib.Api.Delegate._GetMethodImpl(this.handle)
     }
 
-    GetMethodImpl(): mscorlib_System_Reflection_MethodInfo_impl {
-        return new mscorlib.Api.Delegate._GetMethodImpl(this.handle)
+    GetObjectData(info: System_Runtime_Serialization_SerializationInfo, context: System_Runtime_Serialization_StreamingContext): void {
+        return mscorlib.Api.Delegate._GetObjectData(this.handle, info, context)
     }
 
-    GetObjectData(arg0: mscorlib_System_Runtime_Serialization_SerializationInfo_impl, arg1: mscorlib_System_Runtime_Serialization_StreamingContext_impl): void {
-        return new mscorlib.Api.Delegate._GetObjectData(this.handle, arg0, arg1)
+    GetInvocationList(): System_Delegate_Impl[] {
+        return mscorlib.Api.Delegate._GetInvocationList(this.handle)
     }
 
-    GetVirtualMethod_internal(): mscorlib_System_Reflection_MethodInfo_impl {
-        return new mscorlib.Api.Delegate._GetVirtualMethod_internal(this.handle)
+    static Combine(a: System_Delegate_Impl, b: System_Delegate_Impl): System_Delegate_Impl {
+        return new System_Delegate_Impl(mscorlib.Api.Delegate._Combine(a.handle, b.handle))
     }
 
-    op_Equality(arg0: mscorlib_System_Delegate_impl, arg1: mscorlib_System_Delegate_impl): boolean {
-        return new mscorlib.Api.Delegate._op_Equality(this.handle, arg0.handle, arg1.handle)
+    static Combine_1(delegates: System_Delegate_Impl[]): System_Delegate_Impl {
+        return new System_Delegate_Impl(mscorlib.Api.Delegate._Combine(delegates))
     }
 
-    op_Inequality(arg0: mscorlib_System_Delegate_impl, arg1: mscorlib_System_Delegate_impl): boolean {
-        return new mscorlib.Api.Delegate._op_Inequality(this.handle, arg0.handle, arg1.handle)
+    CombineImpl(d: System_Delegate_Impl): System_Delegate_Impl {
+        return new System_Delegate_Impl(mscorlib.Api.Delegate._CombineImpl(this.handle, d.handle))
     }
 
-    Remove(arg0: mscorlib_System_Delegate_impl, arg1: mscorlib_System_Delegate_impl): mscorlib_System_Delegate_impl {
-        return new mscorlib.Api.Delegate._Remove(this.handle, arg0.handle, arg1.handle)
+    static Remove(source: System_Delegate_Impl, value: System_Delegate_Impl): System_Delegate_Impl {
+        return new System_Delegate_Impl(mscorlib.Api.Delegate._Remove(source.handle, value.handle))
     }
 
-    RemoveImpl(arg0: mscorlib_System_Delegate_impl): mscorlib_System_Delegate_impl {
-        return new mscorlib.Api.Delegate._RemoveImpl(this.handle, arg0.handle)
+    RemoveImpl(d: System_Delegate_Impl): System_Delegate_Impl {
+        return new System_Delegate_Impl(mscorlib.Api.Delegate._RemoveImpl(this.handle, d.handle))
     }
 
-    return_type_match(arg0: mscorlib_System_Type_impl, arg1: mscorlib_System_Type_impl): boolean {
-        return new mscorlib.Api.Delegate._return_type_match(this.handle, arg0.handle, arg1.handle)
+    static op_Equality(d1: System_Delegate_Impl, d2: System_Delegate_Impl): boolean {
+        return mscorlib.Api.Delegate._op_Equality(d1.handle, d2.handle)
     }
 
-    get_Method(): mscorlib_System_Reflection_MethodInfo_impl {
-        return new mscorlib.Api.Delegate._get_Method(this.handle)
+    static op_Inequality(d1: System_Delegate_Impl, d2: System_Delegate_Impl): boolean {
+        return mscorlib.Api.Delegate._op_Inequality(d1.handle, d2.handle)
     }
 
-    get_Target(): mscorlib_System_Object_impl {
-        return new mscorlib.Api.Delegate._get_Target(this.handle)
+    static CreateDelegateNoSecurityCheck(type: System_RuntimeType, firstArgument: System_Object, method: System_Reflection_MethodInfo): System_Delegate_Impl {
+        return mscorlib.Api.Delegate._CreateDelegateNoSecurityCheck(type, firstArgument, method)
     }
+
+    static AllocDelegateLike_internal(d: System_Delegate_Impl): System_MulticastDelegate {
+        return mscorlib.Api.Delegate._AllocDelegateLike_internal(d.handle)
+    }
+
 }
+
+mscorlib.Delegate = System_Delegate_Impl
 
 declare global {
     namespace mscorlib {
-        class Delegate extends mscorlib_System_Delegate_impl { }
+        class Delegate extends System_Delegate_Impl { }
     }
 }
 
-mscorlib.Delegate = mscorlib_System_Delegate_impl;
-
-export { mscorlib_System_Object_impl };
+export { System_Delegate_Impl }

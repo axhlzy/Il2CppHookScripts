@@ -37,6 +37,19 @@ export class UnityEventBase_impl extends mscorlib_System_Object_impl {
     Findmethod_2(target: mscorlib_System_Object_impl, method: mscorlib_System_Reflection_MethodInfo): void {
         return mscorlib.Api.UnityEventBase._FindMethod_2(this.handle, target, method)
     }
+
+    get_Calls(): InvokableCallList_impl {
+        return this.m_Calls
+    }
+
+    get_CallsDirty(): boolean {
+        return this.m_CallsDirty
+    }
+
+    get_PersistentCalls(): PersistentCallGroup {
+        return this.m_PersistentCalls
+    }
+
 }
 
 declare global {

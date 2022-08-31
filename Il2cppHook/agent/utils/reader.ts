@@ -21,12 +21,12 @@ const readUInt64 = (value: NativePointer): UInt64 => alloc(2).writePointer(value
  */
 const readU16 = (mPtr: ARGM): string => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
-    if (mPtr == undefined || mPtr == ptr(0)) return ""
+    if (typeof mPtr == "string" && (String(mPtr).startsWith('0x') || String(mPtr).startsWith('0X'))) mPtr = ptr(mPtr)
+    if (mPtr instanceof NativePointer) mPtr = mPtr
+    if (mPtr == undefined || mPtr == 0) return ""
     try {
         return mPtr.add(p_size * 2 + 4).readUtf16String()
-    } catch {
-        return ""
-    }
+    } catch { return "" }
 }
 
 // funcTransform 自定义解析函数

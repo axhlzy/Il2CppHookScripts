@@ -1,4 +1,5 @@
-import { TransformImpl } from "./class"
+import { GameObjectImpl as GameObject } from "../../GameObject/class"
+import { TransformImpl as Transform } from "./class"
 
 globalThis.showTransform = (transform: NativePointer) => {
     if (typeof transform == "number") transform = ptr(transform)
@@ -72,14 +73,19 @@ globalThis.getGameObject = (transform: NativePointer, inCall: boolean = false): 
     if (inCall) {
         showGameObject(transform)
     } else {
-        return new TransformImpl(transform).get_gameObject().handle
+        return new Transform(transform).get_gameObject().handle
     }
+}
+
+globalThis.getGameObjectPack = (mPtr: NativePointer): GameObject => {
+    return new GameObject(getGameObject(mPtr) as NativePointer)
 }
 
 declare global {
     var showTransform: (transform: NativePointer) => void
     var PrintHierarchy: (mPtr: NativePointer, level?: number, inCall?: boolean) => void
     var getGameObject: (transform: NativePointer) => undefined | NativePointer
+    var getGameObjectPack: (mPtr: NativePointer) => GameObject
 }
 
 export { } 

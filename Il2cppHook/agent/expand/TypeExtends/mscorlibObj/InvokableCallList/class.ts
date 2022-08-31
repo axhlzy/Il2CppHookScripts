@@ -1,3 +1,4 @@
+import { PackList } from "../../../../bridge/fix/packList"
 import { mscorlib_System_Object_impl } from "../class"
 
 type BaseInvokableCall = NativePointer
@@ -6,13 +7,13 @@ type mscorlib_System_Reflection_MethodInfo = NativePointer
 export class InvokableCallList_impl extends mscorlib_System_Object_impl {
 
     // m_ExecutingCalls : List<BaseInvokableCall>
-    m_ExecutingCalls: NativePointer = lfv(this.handle, "m_ExecutingCalls", findClass("InvokableCallList"))
+    m_ExecutingCalls: PackList = new PackList(lfv(this.handle, "m_ExecutingCalls", findClass("InvokableCallList")))
     // m_NeedsUpdate : Boolean
     m_NeedsUpdate: boolean = lfv(this.handle, "m_NeedsUpdate", findClass("InvokableCallList")) as unknown as boolean
     // m_PersistentCalls : List<BaseInvokableCall>
-    m_PersistentCalls: NativePointer = lfv(this.handle, "m_PersistentCalls", findClass("InvokableCallList"))
+    m_PersistentCalls: PackList = new PackList(lfv(this.handle, "m_PersistentCalls", findClass("InvokableCallList")))
     // m_RuntimeCalls : List<BaseInvokableCall>
-    m_RuntimeCalls: NativePointer = lfv(this.handle, "m_RuntimeCalls", findClass("InvokableCallList"))
+    m_RuntimeCalls: PackList = new PackList(lfv(this.handle, "m_RuntimeCalls", findClass("InvokableCallList")))
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)

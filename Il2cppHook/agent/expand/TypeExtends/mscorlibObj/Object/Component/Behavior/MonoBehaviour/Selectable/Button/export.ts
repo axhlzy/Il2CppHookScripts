@@ -1,5 +1,8 @@
-import { UnityEngine_EventSystems_PointerEventData_Impl as PointerEventImpl } from "../../../../../../AbstractEventData/BaseEventData/PointerEventData/class"
-import { ButtonClickedEvent } from "./class"
+import { PackList } from "../../../../../../../../../bridge/fix/packList"
+import { UnityEngine_EventSystems_PointerEventData_Impl as PointerEventData } from "../../../../../../AbstractEventData/BaseEventData/PointerEventData/class"
+import { UnityEngine_Events_UnityAction_Impl as UnityAction } from "../../../../../../Delegate/MulticastDelegate/UnityAction/class"
+import { UnityEngine_UI_Button_ButtonClickedEvent_Impl as ButtonClickedEvent } from "../../../../../../UnityEventBase/UnityEvent/ButtonClickedEvent/class"
+import { GameObjectImpl as GameObject } from "../../../../../GameObject/class"
 
 function OnPointerClick() {
     let funcAddr: NativePointer | undefined = undefined
@@ -97,7 +100,7 @@ function OnPointerClick() {
 
     function FakePointerEventData(eventData: NativePointer): void {
         if (eventData.isNull()) return
-        let gameObj: Il2Cpp.GameObject = new PointerEventImpl(eventData).get_pointerEnter()
+        let gameObj: Il2Cpp.GameObject = new PointerEventData(eventData).get_pointerEnter()
         if (!gameObj.handle.isNull()) showGameObject(gameObj.handle)
         // showTransform(f_getTransform(gameObj))
         // showEventData(pointerEventData)
@@ -105,65 +108,39 @@ function OnPointerClick() {
 }
 
 const OnButtonClick = () => {
+    // OnPointerClick(instance, PointerEventData) : Void
     A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
-        let current: PointerEventImpl = new PointerEventImpl(args[0])
-        // addRuntimeType(current)
-        let ButtonClickedEvent = new Il2Cpp.Button(current.handle).m_OnClick
-        // LOGJSON(ButtonClickedEvent) //debug commit
-        let gobj: NativePointer | undefined = getGameObject(current.handle)
-        let gObjPack: Il2Cpp.GameObject
-        if (gobj != undefined) gObjPack = new Il2Cpp.GameObject(gobj)
-        else throw new Error("Il2Cpp.GameObject is null")
-        LOGH("\n[*] " + current + " ---> " + gObjPack.get_name() + " { G:" + gobj + " | T:" + gObjPack.get_transform().handle + " }")
-        LOGO("    [-] InvokableCallList(" + findClass("InvokableCallList") + ") m_Calls " + ButtonClickedEvent.m_Calls.handle)
-        setTimeout(() => ansItems(ButtonClickedEvent), 10)
+        let currentGameobj: GameObject = getGameObjectPack(args[0])
+        let button: Il2Cpp.Button = new Il2Cpp.Button(args[0])
+        let pointerEventData: Il2Cpp.PointerEventData = new Il2Cpp.PointerEventData(args[1])
+        let buttonOnclickEvent: ButtonClickedEvent = button.get_onClick()
+        LOGD(`\n[*] ${pointerEventData.handle} ---> ${currentGameobj.get_name()} { G:${currentGameobj.handle} | T:${currentGameobj.get_transform().handle} }`)
+
+        // m_ExecutingCalls : List<BaseInvokableCall>
+        let exeCalls: PackList = buttonOnclickEvent.m_Calls.m_ExecutingCalls
+        let persistentCalls: PackList = buttonOnclickEvent.m_Calls.m_PersistentCalls
+        let runtimeCalls: PackList = buttonOnclickEvent.m_Calls.m_RuntimeCalls
+        let callsArray: Array<PackList> = [exeCalls, persistentCalls, runtimeCalls]
+
+        callsArray.forEach((callList: PackList) => {
+            LOGZ(`\t[+] ${callList}`)
+            callList.forEach((instance: Il2Cpp.Object, index: number) => {
+                // // UnityEngine.Events.InvokableCall
+                // LOGD(index + " : " + instance + " " + instance.handle)
+                let action = (instance.field('Delegate').value as Il2Cpp.Object)
+                // lfp(action.handle)
+                let unityAction = new UnityAction(action.handle)
+                let method: Il2Cpp.Method
+                if (!unityAction.method.isNull()) {
+                    method = new Il2Cpp.Method(unityAction.method)
+                } else if (!unityAction.method_ptr.isNull()) {
+                    method = AddressToMethod(unityAction.method_ptr, false)
+                } else throw new Error("unityAction.method is null")
+                LOGW(`\t\t[${index}] ${method.class.image.assembly.name}.${method.class.name}.${method.name} @ ${method.relativeVirtualAddress} <- ${method.virtualAddress} }`)
+            })
+        })
     })
-
-    function ansItems(event: ButtonClickedEvent): void {
-        //  ps:暂时只是适配了arm32
-        if (Process.arch != "arm") return
-        // lf(event.m_Calls.m_PersistentCalls)
-        // lf(event.m_Calls.m_ExecutingCalls)
-        // lf(event.m_Calls.m_RuntimeCalls)
-
-        let persistentCalls = event.m_Calls.m_PersistentCalls
-        let executingCalls = event.m_Calls.m_ExecutingCalls
-        let runtimeCalls = event.m_Calls.m_RuntimeCalls
-
-        LOGD(`\t${parseList(persistentCalls).toSimpleString()}`)
-        LOGD(`\t${parseList(executingCalls).toSimpleString()}`)
-        LOGD(`\t${parseList(runtimeCalls).toSimpleString()}`)
-    }
 }
-
-// /**
-//  * 内部调用函数（展示解析的数据）  
-//  * @param {*} ret_mCalls 
-//  * @param {*} itemStr 
-//  */
-// let ansItems = (ret_mCalls, itemStr) => {
-
-//     let ret_itemCalls = getFieldInfoFromCls(ret_mCalls[2], itemStr, ret_mCalls[5])
-//     let m_size = getFieldInfoFromCls(ret_itemCalls[2], "_size", ret_itemCalls[5])[5]
-//     if (m_size != 0) {
-//         let item = getFieldInfoFromCls(ret_itemCalls[2], "_items", ret_itemCalls[5])
-//         let arrAddr = []
-//         for (let i = 0 i < m_size ++i) {
-//             // 本来是想解析动态解析类型的
-//             let tmpType = "UnityAction"
-//             // 这里就默认使用了0x8偏移位置的函数指针 从dump出来的情况看起来并不是每一个子类类型都有一个0x8，但实测0x8是可用的
-//             let tmpValue = FackKnownType(tmpType, ptr(item[5]).add(p_size * (4 + i)).readPointer().add(p_size * 2).readPointer())
-//             let functionName = mapNameToAddr(tmpValue)
-//             tmpValue += (functionName == "" || functionName == undefined ? "" : (" | " + functionName))
-//             arrAddr.push(tmpValue)
-//         }
-//         LOGD("\t" + itemStr.substring(2, 3) + "_calls ( INS :" + item[5] + ")  [TYPE : " + ret_itemCalls[3] + " ( " + ret_itemCalls[2] + " ) | LEN : " + m_size +
-//             "] \n\t\t" + JSON.stringify(arrAddr) + " <--- " + JSON.stringify(JSON.parse(FackKnownType(item[3], item[5], item[2])).slice(0, m_size)))
-//     }
-// }
-
-
-
 
 /**
  * 隐藏模拟点击位置的gameobj
@@ -178,7 +155,7 @@ const HideClickedObj = (x: number, y: number) => {
     Interceptor.replace(m_ptr, new NativeCallback(function (arg0, pointerEventData, arg2, arg3) {
         srcFunc(arg0, pointerEventData, arg2, arg3)
         if (pointerEventData.isNull()) return
-        let gameObj = new PointerEventImpl(pointerEventData).get_pointerEnter()
+        let gameObj = new PointerEventData(pointerEventData).get_pointerEnter()
         // 判断名字后使用这三种方式都可以去掉该对象
         if (gameObj.get_name() === "Settings Button") {
             // setActive(gameObj,0)

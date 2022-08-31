@@ -108,6 +108,10 @@ class GameObjectImpl extends UnityEngine_Object implements Il2cppGameObject {
     static FindWithTag(tag: string): Il2Cpp.GameObject {
         return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._FindWithTag(allocUStr(tag)))
     }
+
+    showSelf(): void {
+        if (!this.handle.isNull()) showGameObject(this.handle)
+    }
 }
 
 declare global {

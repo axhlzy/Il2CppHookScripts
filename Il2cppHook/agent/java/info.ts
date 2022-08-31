@@ -410,15 +410,15 @@ function getUnityInfo() {
 }
 
 let allMethodsCacheArray: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>() // all methods cache
-const cacheMethods = () => {
-    LOGZ("Caching methods ...")
+const cacheMethods = (withLog: boolean = true) => {
+    if (withLog) LOGZ("Caching methods ...")
     let timeCurrent = Date.now()
     Il2Cpp.Domain.assemblies.forEach((assembly: Il2Cpp.Assembly) => {
         assembly.image.classes.forEach((klass: Il2Cpp.Class) => {
             klass.methods.forEach((item: Il2Cpp.Method) => allMethodsCacheArray.push(item))
         })
     })
-    LOGZ(`Caching methods done. ${allMethodsCacheArray.length} Methods . cost ${Date.now() - timeCurrent} ms\n`)
+    if (withLog) LOGZ(`Caching methods done. ${allMethodsCacheArray.length} Methods . cost ${Date.now() - timeCurrent} ms\n`)
 }
 
 // filter and show useful address
@@ -508,8 +508,8 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
     }
 }
 
-const AddressToMethod = (mPtr: NativePointer): Il2Cpp.Method => {
-    allMethodsCacheArray.length == 0 ? cacheMethods() : null
+const AddressToMethod = (mPtr: NativePointer, withLog: boolean = true): Il2Cpp.Method => {
+    allMethodsCacheArray.length == 0 ? cacheMethods(withLog) : null
     if (typeof mPtr == "string" && String(mPtr).startsWith("0x")) mPtr = ptr(mPtr)
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     let result = allMethodsCacheArray.find((item: Il2Cpp.Method) => item.virtualAddress.equals(mPtr) || item.relativeVirtualAddress.equals(mPtr))
@@ -569,6 +569,6 @@ declare global {
     var printExp: (filter: string, findAll?: boolean, formartMaxLine?: number) => void | Array<Il2Cpp.Method>
     var getUnityInfo: () => void
     var bp: (filterName: string, breakMethodInfo?: boolean) => void
-    var AddressToMethod: (mPtr: NativePointer) => Il2Cpp.Method
+    var AddressToMethod: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method
     var AddressToMethodToString: (mPtr: NativePointer) => void
 }
