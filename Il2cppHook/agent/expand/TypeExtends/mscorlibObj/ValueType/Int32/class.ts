@@ -28,8 +28,8 @@ class System_Int32_Impl extends System_ValueType {
         return mscorlib.Api.Int32._CompareTo(this.handle, value.handle).toInt32()
     }
 
-    CompareTo_1(value: number): number {
-        return mscorlib.Api.Int32._CompareTo(this.handle, value).toInt32()
+    CompareTo_1(value: System_Int32_Impl): number {
+        return mscorlib.Api.Int32._CompareTo(this.handle, value.handle).toInt32()
     }
 
     Equals(obj: System_Object): boolean {
@@ -37,7 +37,7 @@ class System_Int32_Impl extends System_ValueType {
     }
 
     Equals_1(obj: number): boolean {
-        return mscorlib.Api.Int32._Equals(this.handle, obj)
+        return !mscorlib.Api.Int32._Equals(this.handle, obj).isNull()
     }
 
     GetHashCode(): System_Int32_Impl {
@@ -60,27 +60,27 @@ class System_Int32_Impl extends System_ValueType {
         return readU16(mscorlib.Api.Int32._ToString(this.handle, format, provider))
     }
 
-    static Parse(s: string): number {
+    static Parse(s: string): System_Int32_Impl {
         return mscorlib.Api.Int32._Parse(allocUStr(s))
     }
 
-    static Parse_2(s: string, style: System_Globalization_NumberStyles): number {
+    static Parse_2(s: string, style: System_Globalization_NumberStyles): System_Int32_Impl {
         return mscorlib.Api.Int32._Parse(s, style)
     }
 
-    static Parse_s_p(s: string, provider: System_IFormatProvider): number {
+    static Parse_s_p(s: string, provider: System_IFormatProvider): System_Int32_Impl {
         return mscorlib.Api.Int32._Parse(s, provider)
     }
 
-    static Parse_3(s: string, style: System_Globalization_NumberStyles, provider: System_IFormatProvider): number {
+    static Parse_3(s: string, style: System_Globalization_NumberStyles, provider: System_IFormatProvider): System_Int32_Impl {
         return mscorlib.Api.Int32._Parse(s, style, provider)
     }
 
-    static TryParse(s: string, result: number): boolean {
-        return mscorlib.Api.Int32._TryParse(s, result)
+    static TryParse(s: string, result: System_Int32_Impl): boolean {
+        return mscorlib.Api.Int32._TryParse(s, result.handle)
     }
 
-    static TryParse_4(s: string, style: System_Globalization_NumberStyles, provider: System_IFormatProvider, result: number): boolean {
+    static TryParse_4(s: string, style: System_Globalization_NumberStyles, provider: System_IFormatProvider, result: System_Int32_Impl): boolean {
         return mscorlib.Api.Int32._TryParse(s, style, provider, result)
     }
 

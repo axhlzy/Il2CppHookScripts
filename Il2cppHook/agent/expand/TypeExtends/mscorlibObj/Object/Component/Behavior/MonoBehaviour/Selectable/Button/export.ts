@@ -123,23 +123,25 @@ const OnButtonClick = () => {
         let runtimeCalls: PackList = buttonOnclickEvent.m_Calls.m_RuntimeCalls
         let callsArray: Array<PackList> = [exeCalls, persistentCalls, runtimeCalls]
 
-        callsArray.forEach((callList: PackList) => {
-            LOGZ(`\t[+] ${callList}`)
-            callList.forEach((instance: Il2Cpp.Object, index: number) => {
-                // // UnityEngine.Events.InvokableCall
-                // LOGD(index + " : " + instance + " " + instance.handle)
-                let action = (instance.field('Delegate').value as Il2Cpp.Object)
-                // lfp(action.handle)
-                let unityAction = new UnityAction(action.handle)
-                let method: Il2Cpp.Method
-                if (!unityAction.method.isNull()) {
-                    method = new Il2Cpp.Method(unityAction.method)
-                } else if (!unityAction.method_ptr.isNull()) {
-                    method = AddressToMethod(unityAction.method_ptr, false)
-                } else throw new Error("unityAction.method is null")
-                LOGW(`\t\t[${index}] ${method.class.image.assembly.name}.${method.class.name}.${method.name} @ ${method.relativeVirtualAddress} <- ${method.virtualAddress} }`)
+        setTimeout(() => {
+            callsArray.forEach((callList: PackList) => {
+                LOGZ(`\t[+] ${callList}`)
+                callList.forEach((instance: Il2Cpp.Object, index: number) => {
+                    // // UnityEngine.Events.InvokableCall
+                    // LOGD(index + " : " + instance + " " + instance.handle)
+                    let action = (instance.field('Delegate').value as Il2Cpp.Object)
+                    // lfp(action.handle)
+                    let unityAction = new UnityAction(action.handle)
+                    let method: Il2Cpp.Method
+                    if (!unityAction.method.isNull()) {
+                        method = new Il2Cpp.Method(unityAction.method)
+                    } else if (!unityAction.method_ptr.isNull()) {
+                        method = AddressToMethod(unityAction.method_ptr, false)
+                    } else throw new Error("unityAction.method is null")
+                    LOGW(`\t\t[${index}] ${method.class.image.assembly.name}.${method.class.name}.${method.name} @ ${method.relativeVirtualAddress} <- ${method.virtualAddress} }`)
+                })
             })
-        })
+        }, 20);
     })
 }
 

@@ -164,7 +164,7 @@ class System_DateTime_Impl extends System_ValueType {
     }
 
     static DateToTicks(year: System_Int32, month: System_Int32, day: System_Int32): System_Int32 {
-        return mscorlib.Api.DateTime._DateToTicks(year, month, day)
+        return mscorlib.Api.DateTime._DateToTicks(year.handle, month.handle, day.handle)
     }
 
     static TimeToTicks(hour: System_Int32, minute: System_Int32, second: System_Int32): System_Int32 {
