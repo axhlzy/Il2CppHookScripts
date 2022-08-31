@@ -1,5 +1,6 @@
 import { mscorlib_System_Object_impl as System_Object } from "../../class"
 import { System_ValueType_Impl } from "../class"
+import { System_Int32_Impl } from "../Int32/class"
 import { UnityEngine_Vector2_Impl as Vector2 } from "../Vector2/class"
 import { UnityEngine_Vector3_Impl as Vector3 } from "../Vector3/class"
 
@@ -149,7 +150,7 @@ class UnityEngine_Rect_Impl extends System_ValueType_Impl {
         return Il2Cpp.Api.Rect._op_Equality(lhs.handle, rhs.handle)
     }
 
-    GetHashCode(): number {
+    GetHashCode(): System_Int32_Impl {
         return Il2Cpp.Api.Rect._GetHashCode(this.handle)
     }
 

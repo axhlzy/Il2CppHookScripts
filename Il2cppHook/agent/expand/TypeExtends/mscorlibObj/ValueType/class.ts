@@ -1,4 +1,5 @@
 import { mscorlib_System_Object_impl } from "../class"
+import { System_Int32_Impl as System_Int32 } from "./Int32/class"
 
 class System_ValueType_Impl extends mscorlib_System_Object_impl {
 
@@ -11,22 +12,22 @@ class System_ValueType_Impl extends mscorlib_System_Object_impl {
     }
 
     InternalEquals(o1: mscorlib_System_Object_impl, o2: mscorlib_System_Object_impl, fields: mscorlib_System_Object_impl[]): boolean {
-        return mscorlib.Api.ValueType._InternalEquals(o1, o2, fields)
+        return mscorlib.Api.ValueType._InternalEquals(o1.handle, o2.handle, fields)
     }
 
     DefaultEquals(o1: mscorlib_System_Object_impl, o2: mscorlib_System_Object_impl): boolean {
-        return mscorlib.Api.ValueType._DefaultEquals(o1, o2)
+        return mscorlib.Api.ValueType._DefaultEquals(o1.handle, o2.handle)
     }
 
     Equals(obj: mscorlib_System_Object_impl): boolean {
-        return mscorlib.Api.ValueType._Equals(this.handle, obj)
+        return mscorlib.Api.ValueType._Equals(this.handle, obj.handle)
     }
 
     InternalGetHashCode(o: mscorlib_System_Object_impl, fields: mscorlib_System_Object_impl[]): number {
         return mscorlib.Api.ValueType._InternalGetHashCode(o, fields)
     }
 
-    GetHashCode(): number {
+    GetHashCode(): System_Int32 {
         return mscorlib.Api.ValueType._GetHashCode(this.handle)
     }
 

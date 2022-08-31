@@ -1,54 +1,54 @@
+import { UnityEngine_Color_Impl as Color } from "../../../../../../ValueType/Color/class"
+import { UnityEngine_Vector2_Impl as Vector2 } from "../../../../../../ValueType/Vector2/class"
+import { UnityEngine_Vector4_Impl as Vector4 } from "../../../../../../ValueType/Vector4/class"
+import { UnityEngine_Material_Impl as Material } from "../../../../../Material/class"
+import { UnityEngine_RectTransform_Impl as RectTransform } from "../../../../Transform/RectTransform/class"
+import { UnityEngine_Camera_Impl as Camera } from "../../../Camera/class"
+import { UnityEngine_Canvas_Impl as Canvas } from "../../../Canvas/class"
 import { UnityEngine_EventSystems_UIBehaviour_Impl } from "../class"
 
-type UnityEngine_Material = NativePointer
-type UnityEngine_Texture2D = NativePointer
-type UnityEngine_Color = NativePointer
-type UnityEngine_Vector2 = NativePointer
-type UnityEngine_Vector4 = NativePointer
 type UnityEngine_UI_VertexHelper = NativePointer
-type UnityEngine_RectTransform = NativePointer
 type UnityEngine_CanvasRenderer = NativePointer
-type UnityEngine_Canvas = NativePointer
 type UnityEngine_Events_UnityAction = NativePointer
-type UnityEngine_Mesh = NativePointer
 type UnityEngine_Texture = NativePointer
-type System_Boolean = NativePointer
-type UnityEngine_Camera = NativePointer
 type UnityEngine_UI_CanvasUpdate = NativePointer
 type UnityEngine_Rect = NativePointer
 
+type UnityEngine_Texture2D = NativePointer
+type UnityEngine_Mesh = NativePointer
+
 class UnityEngine_UI_Graphic_Impl extends UnityEngine_EventSystems_UIBehaviour_Impl {
 
-    s_DefaultUI: UnityEngine_Material = lfv(this.handle, "s_DefaultUI") as unknown as UnityEngine_Material
+    s_DefaultUI: Material = new Material(lfv(this.handle, "s_DefaultUI"))
     s_WhiteTexture: UnityEngine_Texture2D = lfv(this.handle, "s_WhiteTexture") as unknown as UnityEngine_Texture2D
-    m_Material: UnityEngine_Material = lfv(this.handle, "m_Material") as unknown as UnityEngine_Material
-    m_Color: UnityEngine_Color = lfv(this.handle, "m_Color") as unknown as UnityEngine_Color
-    m_SkipLayoutUpdate: boolean = lfv(this.handle, "m_SkipLayoutUpdate") as unknown as boolean
-    m_SkipMaterialUpdate: boolean = lfv(this.handle, "m_SkipMaterialUpdate") as unknown as boolean
-    m_RaycastTarget: boolean = lfv(this.handle, "m_RaycastTarget") as unknown as boolean
-    m_RaycastPadding: UnityEngine_Vector4 = lfv(this.handle, "m_RaycastPadding") as unknown as UnityEngine_Vector4
-    m_RectTransform: UnityEngine_RectTransform = lfv(this.handle, "m_RectTransform") as unknown as UnityEngine_RectTransform
+    m_Material: Material = new Material(lfv(this.handle, "m_Material"))
+    m_Color: Color = new Color(lfv(this.handle, "m_Color"))
+    m_SkipLayoutUpdate: boolean = !lfv(this.handle, "m_SkipLayoutUpdate").isNull()
+    m_SkipMaterialUpdate: boolean = !lfv(this.handle, "m_SkipMaterialUpdate").isNull()
+    m_RaycastTarget: boolean = !lfv(this.handle, "m_RaycastTarget").isNull()
+    m_RaycastPadding: Vector4 = lfv(this.handle, "m_RaycastPadding") as unknown as Vector4
+    m_RectTransform: RectTransform = new RectTransform(lfv(this.handle, "m_RectTransform"))
     m_CanvasRenderer: UnityEngine_CanvasRenderer = lfv(this.handle, "m_CanvasRenderer") as unknown as UnityEngine_CanvasRenderer
-    m_Canvas: UnityEngine_Canvas = lfv(this.handle, "m_Canvas") as unknown as UnityEngine_Canvas
-    m_VertsDirty: boolean = lfv(this.handle, "m_VertsDirty") as unknown as boolean
-    m_MaterialDirty: boolean = lfv(this.handle, "m_MaterialDirty") as unknown as boolean
+    m_Canvas: Canvas = new Canvas(lfv(this.handle, "m_Canvas"))
+    m_VertsDirty: boolean = !lfv(this.handle, "m_VertsDirty").isNull()
+    m_MaterialDirty: boolean = !lfv(this.handle, "m_MaterialDirty").isNull()
     m_OnDirtyLayoutCallback: UnityEngine_Events_UnityAction = lfv(this.handle, "m_OnDirtyLayoutCallback") as unknown as UnityEngine_Events_UnityAction
     m_OnDirtyVertsCallback: UnityEngine_Events_UnityAction = lfv(this.handle, "m_OnDirtyVertsCallback") as unknown as UnityEngine_Events_UnityAction
     m_OnDirtyMaterialCallback: UnityEngine_Events_UnityAction = lfv(this.handle, "m_OnDirtyMaterialCallback") as unknown as UnityEngine_Events_UnityAction
     s_Mesh: UnityEngine_Mesh = lfv(this.handle, "s_Mesh") as unknown as UnityEngine_Mesh
     s_VertexHelper: UnityEngine_UI_VertexHelper = lfv(this.handle, "s_VertexHelper") as unknown as UnityEngine_UI_VertexHelper
     m_CachedMesh: UnityEngine_Mesh = lfv(this.handle, "m_CachedMesh") as unknown as UnityEngine_Mesh
-    m_CachedUvs: UnityEngine_Vector2[] = lfv(this.handle, "m_CachedUvs") as unknown as UnityEngine_Vector2[]
+    m_CachedUvs: Vector2[] = lfv(this.handle, "m_CachedUvs") as unknown as Vector2[]
 
-    get_defaultGraphicMaterial(): UnityEngine_Material {
+    get_defaultGraphicMaterial(): Material {
         return Il2Cpp.Api.Graphic._get_defaultGraphicMaterial()
     }
 
-    get_color(): UnityEngine_Color {
+    get_color(): Color {
         return Il2Cpp.Api.Graphic._get_color(this.handle)
     }
 
-    set_color(value: UnityEngine_Color): void {
+    set_color(value: Color): void {
         return Il2Cpp.Api.Graphic._set_color(this.handle, value)
     }
 
@@ -60,11 +60,11 @@ class UnityEngine_UI_Graphic_Impl extends UnityEngine_EventSystems_UIBehaviour_I
         return Il2Cpp.Api.Graphic._set_raycastTarget(this.handle, value)
     }
 
-    get_raycastPadding(): UnityEngine_Vector4 {
+    get_raycastPadding(): Vector4 {
         return Il2Cpp.Api.Graphic._get_raycastPadding(this.handle)
     }
 
-    set_raycastPadding(value: UnityEngine_Vector4): void {
+    set_raycastPadding(value: Vector4): void {
         return Il2Cpp.Api.Graphic._set_raycastPadding(this.handle, value)
     }
 
@@ -112,12 +112,12 @@ class UnityEngine_UI_Graphic_Impl extends UnityEngine_EventSystems_UIBehaviour_I
         return Il2Cpp.Api.Graphic._get_depth(this.handle)
     }
 
-    get_rectTransform(): UnityEngine_RectTransform {
-        return Il2Cpp.Api.Graphic._get_rectTransform(this.handle)
+    get_rectTransform(): RectTransform {
+        return new RectTransform(Il2Cpp.Api.Graphic._get_rectTransform(this.handle))
     }
 
-    get_canvas(): UnityEngine_Canvas {
-        return Il2Cpp.Api.Graphic._get_canvas(this.handle)
+    get_canvas(): Canvas {
+        return new Canvas(Il2Cpp.Api.Graphic._get_canvas(this.handle))
     }
 
     CacheCanvas(): void {
@@ -128,19 +128,19 @@ class UnityEngine_UI_Graphic_Impl extends UnityEngine_EventSystems_UIBehaviour_I
         return Il2Cpp.Api.Graphic._get_canvasRenderer(this.handle)
     }
 
-    get_defaultMaterial(): UnityEngine_Material {
+    get_defaultMaterial(): Material {
         return Il2Cpp.Api.Graphic._get_defaultMaterial(this.handle)
     }
 
-    get_material(): UnityEngine_Material {
+    get_material(): Material {
         return Il2Cpp.Api.Graphic._get_material(this.handle)
     }
 
-    set_material(value: UnityEngine_Material): void {
+    set_material(value: Material): void {
         return Il2Cpp.Api.Graphic._set_material(this.handle, value)
     }
 
-    get_materialForRendering(): UnityEngine_Material {
+    get_materialForRendering(): Material {
         return Il2Cpp.Api.Graphic._get_materialForRendering(this.handle)
     }
 
@@ -220,11 +220,11 @@ class UnityEngine_UI_Graphic_Impl extends UnityEngine_EventSystems_UIBehaviour_I
         return Il2Cpp.Api.Graphic._SetNativeSize(this.handle)
     }
 
-    Raycast(sp: UnityEngine_Vector2, eventCamera: UnityEngine_Camera): boolean {
+    Raycast(sp: Vector2, eventCamera: Camera): boolean {
         return Il2Cpp.Api.Graphic._Raycast(this.handle, sp, eventCamera)
     }
 
-    PixelAdjustPoint(point: UnityEngine_Vector2): UnityEngine_Vector2 {
+    PixelAdjustPoint(point: Vector2): Vector2 {
         return Il2Cpp.Api.Graphic._PixelAdjustPoint(this.handle, point)
     }
 
@@ -232,15 +232,15 @@ class UnityEngine_UI_Graphic_Impl extends UnityEngine_EventSystems_UIBehaviour_I
         return Il2Cpp.Api.Graphic._GetPixelAdjustedRect(this.handle)
     }
 
-    CrossFadeColor_4(targetColor: UnityEngine_Color, duration: number, ignoreTimeScale: boolean, useAlpha: System_Boolean): void {
+    CrossFadeColor_4(targetColor: Color, duration: number, ignoreTimeScale: boolean, useAlpha: boolean): void {
         return Il2Cpp.Api.Graphic._CrossFadeColor(this.handle, targetColor, duration, ignoreTimeScale, useAlpha)
     }
 
-    CrossFadeColor_5(targetColor: UnityEngine_Color, duration: number, ignoreTimeScale: boolean, useAlpha: System_Boolean, useRGB: System_Boolean): void {
+    CrossFadeColor_5(targetColor: Color, duration: number, ignoreTimeScale: boolean, useAlpha: boolean, useRGB: boolean): void {
         return Il2Cpp.Api.Graphic._CrossFadeColor(this.handle, targetColor, duration, ignoreTimeScale, useAlpha, useRGB)
     }
 
-    CreateColorFromAlpha(alpha: number): UnityEngine_Color {
+    CreateColorFromAlpha(alpha: number): Color {
         return Il2Cpp.Api.Graphic._CreateColorFromAlpha(alpha)
     }
 

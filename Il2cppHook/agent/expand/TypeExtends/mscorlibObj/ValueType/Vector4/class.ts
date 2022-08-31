@@ -1,5 +1,6 @@
 import { UnityEngine_Object } from "../../Object/class"
 import { System_ValueType_Impl } from "../class"
+import { System_Int32_Impl } from "../Int32/class"
 import { UnityEngine_Vector3_Impl as Vector3Impl } from "../Vector3/class"
 
 type System_IFormatProvider = NativePointer
@@ -41,7 +42,7 @@ class UnityEngine_Vector4_Impl extends System_ValueType_Impl {
         return Il2Cpp.Api.Vector4._Lerp(a, b, t)
     }
 
-    GetHashCode(): number {
+    GetHashCode(): System_Int32_Impl {
         return Il2Cpp.Api.Vector4._GetHashCode(this.handle)
     }
 

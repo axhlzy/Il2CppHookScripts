@@ -1,5 +1,6 @@
 import { mscorlib_System_Object_impl as System_Object } from "../../class"
 import { System_ValueType_Impl } from "../class"
+import { System_Int32_Impl } from "../Int32/class"
 import { UnityEngine_Quaternion_Impl as Quaternion } from "../Quaternion/class"
 import { UnityEngine_Vector3_Impl as Vector3 } from "../Vector3/class"
 import { UnityEngine_Vector4_Impl as Vector4 } from "../Vector4/class"
@@ -72,7 +73,7 @@ class UnityEngine_Matrix4x4_Impl extends System_ValueType_Impl {
         return Il2Cpp.Api.Matrix4x4.__ctor(this.handle, column0, column1, column2, column3)
     }
 
-    GetHashCode(): number {
+    GetHashCode(): System_Int32_Impl {
         return Il2Cpp.Api.Matrix4x4._GetHashCode(this.handle)
     }
 

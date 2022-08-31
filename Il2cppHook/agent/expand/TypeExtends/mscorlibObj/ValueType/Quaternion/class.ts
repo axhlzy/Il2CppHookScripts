@@ -1,5 +1,6 @@
 import { UnityEngine_Object } from "../../Object/class"
 import { System_ValueType_Impl } from "../class"
+import { System_Int32_Impl } from "../Int32/class"
 import { UnityEngine_Vector3_Impl as Vector3Impl } from "../Vector3/class"
 
 type System_IFormatProvider = NativePointer
@@ -117,7 +118,7 @@ class UnityEngine_Quaternion_Impl extends System_ValueType_Impl {
         return Il2Cpp.Api.Quaternion._get_normalized(this.handle)
     }
 
-    GetHashCode(): number {
+    GetHashCode(): System_Int32_Impl {
         return Il2Cpp.Api.Quaternion._GetHashCode(this.handle)
     }
 

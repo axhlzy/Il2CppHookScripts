@@ -1,5 +1,6 @@
 import { UnityEngine_Object } from "../../Object/class"
 import { System_ValueType_Impl } from "../class"
+import { System_Int32_Impl as System_Int32 } from "../Int32/class"
 
 
 type System_IFormatProvider = NativePointer
@@ -33,7 +34,7 @@ class UnityEngine_Color_Impl extends System_ValueType_Impl {
         return readU16(Il2Cpp.Api.Color._ToString(this.handle, format, formatProvider))
     }
 
-    GetHashCode(): number {
+    GetHashCode(): System_Int32 {
         return Il2Cpp.Api.Color._GetHashCode(this.handle)
     }
 

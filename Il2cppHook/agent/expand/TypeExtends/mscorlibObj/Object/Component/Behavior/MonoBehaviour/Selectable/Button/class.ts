@@ -22,6 +22,7 @@ class ButtonImpl extends Selectable implements Il2cppButton {
         return Il2Cpp.Api.Button._OnSubmit(this.handle, BaseEventData)
     }
 
+    // 模拟点击
     Press(): void {
         return Il2Cpp.Api.Button._Press(this.handle)
     }

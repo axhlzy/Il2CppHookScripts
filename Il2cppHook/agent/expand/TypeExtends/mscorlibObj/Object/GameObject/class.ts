@@ -114,12 +114,11 @@ class GameObjectImpl extends UnityEngine_Object implements Il2cppGameObject {
     }
 }
 
+Il2Cpp.GameObject = GameObjectImpl
 declare global {
     namespace Il2Cpp {
         class GameObject extends GameObjectImpl { }
     }
 }
-
-Il2Cpp.GameObject = GameObjectImpl;
 
 export { GameObjectImpl }

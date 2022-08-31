@@ -1,5 +1,5 @@
 import { GameObjectImpl as GameObject } from "../../GameObject/class"
-import { TransformImpl as Transform } from "./class"
+import { UnityEngine_Transform_Impl as Transform } from "./class"
 
 globalThis.showTransform = (transform: NativePointer) => {
     if (typeof transform == "number") transform = ptr(transform)

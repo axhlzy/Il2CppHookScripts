@@ -1,5 +1,6 @@
 import { mscorlib_System_Object_impl } from "../../class"
 import { System_ValueType_Impl } from "../class"
+import { System_Int32_Impl } from "../Int32/class"
 import { UnityEngine_Vector3_Impl as Vector3Impl } from "../Vector3/class"
 
 type System_IFormatProvider = NativePointer
@@ -60,7 +61,7 @@ class UnityEngine_Vector2_Impl extends System_ValueType_Impl {
         return readU16(Il2Cpp.Api.Vector2._ToString(this.handle, format, formatProvider))
     }
 
-    GetHashCode(): number {
+    GetHashCode(): System_Int32_Impl {
         return Il2Cpp.Api.Vector2._GetHashCode(this.handle)
     }
 

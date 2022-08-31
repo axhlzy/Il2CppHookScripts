@@ -1,5 +1,6 @@
 import { UnityEngine_Object } from "../../Object/class"
 import { System_ValueType_Impl } from "../class"
+import { System_Int32_Impl } from "../Int32/class"
 
 type System_IFormatProvider = NativePointer
 
@@ -74,7 +75,7 @@ class UnityEngine_Vector3_Impl extends System_ValueType_Impl {
         return Il2Cpp.Api.Vector3._Cross(lhs, rhs)
     }
 
-    GetHashCode(): number {
+    GetHashCode(): System_Int32_Impl {
         return Il2Cpp.Api.Vector3._GetHashCode(this.handle)
     }
 

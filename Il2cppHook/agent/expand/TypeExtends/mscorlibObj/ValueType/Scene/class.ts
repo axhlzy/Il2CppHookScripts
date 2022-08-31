@@ -1,6 +1,7 @@
 import { mscorlib_System_Object_impl as System_Object } from "../../class"
 import { GameObjectImpl } from "../../Object/GameObject/class"
 import { System_ValueType_Impl as System_ValueType } from "../class"
+import { System_Int32_Impl } from "../Int32/class"
 
 class UnityEngine_SceneManagement_Scene_Impl extends System_ValueType {
 
@@ -46,7 +47,7 @@ class UnityEngine_SceneManagement_Scene_Impl extends System_ValueType {
         } catch { return -1 }
     }
 
-    GetHashCode(): number {
+    GetHashCode(): System_Int32_Impl {
         return Il2Cpp.Api.Scene._GetHashCode(this.handle)
     }
 

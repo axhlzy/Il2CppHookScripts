@@ -1,5 +1,6 @@
 import { UnityEngine_UI_FontData_Impl } from "../../../../../../../../FontData/class"
-import { UnityEngine_UI_MaskableGraphic_Impl } from "../class"
+import { UnityEngine_Vector2_Impl as Vector2 } from "../../../../../../../../ValueType/Vector2/class"
+import { UnityEngine_UI_MaskableGraphic_Impl as MaskableGraphic } from "../class"
 
 type UnityEngine_TextGenerator = NativePointer
 type UnityEngine_Material = NativePointer
@@ -10,11 +11,10 @@ type UnityEngine_TextAnchor = NativePointer
 type UnityEngine_HorizontalWrapMode = NativePointer
 type UnityEngine_VerticalWrapMode = NativePointer
 type UnityEngine_FontStyle = NativePointer
-type UnityEngine_Vector2 = NativePointer
 type UnityEngine_TextGenerationSettings = NativePointer
 type UnityEngine_UI_VertexHelper = NativePointer
 
-class UnityEngine_UI_Text_Impl extends UnityEngine_UI_MaskableGraphic_Impl {
+class UnityEngine_UI_Text_Impl extends MaskableGraphic {
 
     m_FontData: UnityEngine_UI_FontData_Impl = lfv(this.handle, "m_FontData") as unknown as UnityEngine_UI_FontData_Impl
     m_Text: string = readU16(lfv(this.handle, "m_Text"))
@@ -168,11 +168,11 @@ class UnityEngine_UI_Text_Impl extends UnityEngine_UI_MaskableGraphic_Impl {
         return Il2Cpp.Api.Text._AssignDefaultFont(this.handle)
     }
 
-    GetGenerationSettings(extents: UnityEngine_Vector2): UnityEngine_TextGenerationSettings {
+    GetGenerationSettings(extents: Vector2): UnityEngine_TextGenerationSettings {
         return Il2Cpp.Api.Text._GetGenerationSettings(this.handle, extents)
     }
 
-    GetTextAnchorPivot(anchor: UnityEngine_TextAnchor): UnityEngine_Vector2 {
+    GetTextAnchorPivot(anchor: UnityEngine_TextAnchor): Vector2 {
         return Il2Cpp.Api.Text._GetTextAnchorPivot(anchor)
     }
 

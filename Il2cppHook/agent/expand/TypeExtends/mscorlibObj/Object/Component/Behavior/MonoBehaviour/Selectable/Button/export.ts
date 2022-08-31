@@ -3,6 +3,7 @@ import { UnityEngine_EventSystems_PointerEventData_Impl as PointerEventData } fr
 import { UnityEngine_Events_UnityAction_Impl as UnityAction } from "../../../../../../Delegate/MulticastDelegate/UnityAction/class"
 import { UnityEngine_UI_Button_ButtonClickedEvent_Impl as ButtonClickedEvent } from "../../../../../../UnityEventBase/UnityEvent/ButtonClickedEvent/class"
 import { GameObjectImpl as GameObject } from "../../../../../GameObject/class"
+import { ButtonImpl as Button } from "./class"
 
 function OnPointerClick() {
     let funcAddr: NativePointer | undefined = undefined
@@ -111,8 +112,8 @@ const OnButtonClick = () => {
     // OnPointerClick(instance, PointerEventData) : Void
     A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
         let currentGameobj: GameObject = getGameObjectPack(args[0])
-        let button: Il2Cpp.Button = new Il2Cpp.Button(args[0])
-        let pointerEventData: Il2Cpp.PointerEventData = new Il2Cpp.PointerEventData(args[1])
+        let button: Button = new Button(args[0])
+        let pointerEventData: PointerEventData = new PointerEventData(args[1])
         let buttonOnclickEvent: ButtonClickedEvent = button.get_onClick()
         LOGD(`\n[*] ${pointerEventData.handle} ---> ${currentGameobj.get_name()} { G:${currentGameobj.handle} | T:${currentGameobj.get_transform().handle} }`)
 

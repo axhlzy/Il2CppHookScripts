@@ -92,13 +92,13 @@ const generateClass = (className: string, classPtr: NativePointer = ptr(0)) => {
 
 const repStr = (str: string): string => {
     return str
-        .replace('System_Void', 'void')
-        .replace('System_String', 'string')
-        .replace('System_Int32', 'number')
-        .replace('System_Int64', 'number')
-        .replace('System_Single', 'number')
-        .replace('System_Double', 'number')
-        .replace('System_Boolean', 'boolean')
+    // .replace('System_Void', 'void')
+    // .replace('System_String', 'string')
+    // .replace('System_Int32', 'number')
+    // .replace('System_Int64', 'number')
+    // .replace('System_Single', 'number')
+    // .replace('System_Double', 'number')
+    // .replace('System_Boolean', 'boolean')
 }
 
 globalThis.incorLib = (name: string) => {

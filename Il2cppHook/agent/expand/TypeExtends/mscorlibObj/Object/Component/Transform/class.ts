@@ -1,213 +1,323 @@
-import { UnityEngine_Vector3_Impl as Vector3Impl } from "../../../ValueType/Vector3/class";
-import { UnityEngine_Component_Impl as ComponentImpl } from "../class";
+import { UnityEngine_Matrix4x4_Impl as Matrix4x4 } from "../../../ValueType/Matrix4x4/class"
+import { UnityEngine_Quaternion_Impl as Quaternion } from "../../../ValueType/Quaternion/class"
+import { UnityEngine_Vector3_Impl as Vector3 } from "../../../ValueType/Vector3/class"
+import { UnityEngine_Component_Impl } from "../class"
 
-class TransformImpl extends ComponentImpl implements Il2cppTransform {
+type UnityEngine_Space = NativePointer
+type System_Single = NativePointer
+class UnityEngine_Transform_Impl extends UnityEngine_Component_Impl {
 
-    ctor_0(): Il2Cpp.Transform {
-        return new TransformImpl(Il2Cpp.Api.Transform._ctor(alloc()));
+    constructor(handleOrWrapper: NativePointer) {
+        super(handleOrWrapper)
     }
 
-    GetChild(index: number): Il2Cpp.Transform {
-        return new TransformImpl(Il2Cpp.Api.Transform._GetChild(this.handle, index));
+    _ctor(): void {
+        return Il2Cpp.Api.Transform.__ctor(alloc())
     }
 
-    GetEnumerator() {
-        throw new Error("Method not implemented.");
+    get_position(): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._get_position(this.handle))
     }
 
-    GetParent(): Il2Cpp.Transform {
-        return new TransformImpl(Il2Cpp.Api.Transform._get_parent(this.handle));
+    set_position(value: Vector3): void {
+        return Il2Cpp.Api.Transform._set_position(this.handle, value.handle)
     }
 
-    GetSiblingIndex(): number {
-        throw new Error("Method not implemented.");
+    get_localPosition(): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._get_localPosition(this.handle))
     }
 
-    InverseTransformDirection(direction: Il2Cpp.Vector3): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+    set_localPosition(value: Vector3): void {
+        return Il2Cpp.Api.Transform._set_localPosition(this.handle, value.handle)
     }
 
-    InverseTransformPoint(position: Il2Cpp.Vector3): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+    get_eulerAngles(): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._get_eulerAngles(this.handle))
     }
 
-    InverseTransformVector(vector: Il2Cpp.Vector3): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+    set_eulerAngles(value: Vector3): void {
+        return Il2Cpp.Api.Transform._set_eulerAngles(this.handle, value.handle)
     }
 
-    IsChildOf(parent: Il2Cpp.Transform): boolean {
-        return Il2Cpp.Api.Transform._IsChildOf(this.handle, parent.handle);
+    get_localEulerAngles(): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._get_localEulerAngles(this.handle))
     }
 
-    // LookAt(target: Il2Cpp.Transform): void;
-    // LookAt(target: Il2Cpp.Vector3): void;
-    // LookAt(target: Il2Cpp.Transform, worldUp: Il2Cpp.Vector3): void;
-    // LookAt(target: Il2Cpp.Vector3, worldUp: Il2Cpp.Vector3): void;
-    // LookAt(target: unknown, worldUp?: unknown): void {
-    //     throw new Error("Method not implemented.");
-    // }
-    // Rotate(eulerAngles: Il2Cpp.Vector3): void;
-    // Rotate(eulerAngles: Il2Cpp.Vector3, relativeTo: Il2Cpp.Space): void;
-    // Rotate(axis: Il2Cpp.Vector3, angle: number): void;
-    // Rotate(axis: Il2Cpp.Vector3, angle: number, relativeTo: Il2Cpp.Space): void;
-    // Rotate(x: number, y: number, z: number, relativeTo: Il2Cpp.Space): void;
-    // Rotate(x: unknown, y?: unknown, z?: unknown, relativeTo?: unknown): void {
-    //     throw new Error("Method not implemented.");
-    // }
-    RotateAround(point: Il2Cpp.Vector3, axis: Il2Cpp.Vector3, angle: number): void {
-        throw new Error("Method not implemented.");
+    get_up(): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._get_up(this.handle))
     }
 
-    SetAsFirstSibling(): void {
-        throw new Error("Method not implemented.");
+    get_forward(): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._get_forward(this.handle))
     }
 
-    SetAsLastSibling(): void {
-        throw new Error("Method not implemented.");
+    set_forward(value: Vector3): void {
+        return Il2Cpp.Api.Transform._set_forward(this.handle, value.handle)
     }
 
-    // SetParent(parent: Il2Cpp.Transform): void;
-    // SetParent(parent: Il2Cpp.Transform, worldPositionStays: boolean): void;
-    // SetParent(parent: unknown, worldPositionStays?: unknown): void {
-    //     throw new Error("Method not implemented.");
-    // }
-    SetPositionAndRotation(position: Il2Cpp.Vector3, rotation: Il2Cpp.Quaternion): void {
-        throw new Error("Method not implemented.");
+    get_rotation(): Quaternion {
+        return new Quaternion(Il2Cpp.Api.Transform._get_rotation(this.handle))
     }
 
-    SetSiblingIndex(index: number): void {
-        throw new Error("Method not implemented.");
+    set_rotation(value: Quaternion): void {
+        return Il2Cpp.Api.Transform._set_rotation(this.handle, value.handle)
     }
 
-    TransformDirection(direction: Il2Cpp.Vector3): Il2Cpp.Vector3;
-    TransformDirection(x: number, y: number, z: number): Il2Cpp.Vector3;
-    TransformDirection(x: unknown, y?: unknown, z?: unknown): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+    get_localRotation(): Quaternion {
+        return new Quaternion(Il2Cpp.Api.Transform._get_localRotation(this.handle))
     }
 
-    TransformPoint(position: Il2Cpp.Vector3): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+    set_localRotation(value: Quaternion): void {
+        return Il2Cpp.Api.Transform._set_localRotation(this.handle, value.handle)
     }
 
-    TransformVector(vector: Il2Cpp.Vector3): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+    get_localScale(): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._get_localScale(this.handle))
     }
 
-    Translate(translation: Il2Cpp.Vector3): void;
-    Translate(translation: Il2Cpp.Vector3, relativeTo: Il2Cpp.Space): void;
-    Translate(x: number, y: number, z: number, relativeTo: Il2Cpp.Space): void;
-    Translate(x: unknown, y?: unknown, z?: unknown, relativeTo?: unknown): void {
-        throw new Error("Method not implemented.");
+    set_localScale(value: Vector3): void {
+        return Il2Cpp.Api.Transform._set_localScale(this.handle, value.handle)
+    }
+
+    get_parent(): UnityEngine_Transform_Impl {
+        return new UnityEngine_Transform_Impl(Il2Cpp.Api.Transform._get_parent(this.handle))
+    }
+
+    set_parent(value: UnityEngine_Transform_Impl): void {
+        return Il2Cpp.Api.Transform._set_parent(this.handle, value.handle)
+    }
+
+    get_parentInternal(): UnityEngine_Transform_Impl {
+        return new UnityEngine_Transform_Impl(Il2Cpp.Api.Transform._get_parentInternal(this.handle))
+    }
+
+    set_parentInternal(value: UnityEngine_Transform_Impl): void {
+        return Il2Cpp.Api.Transform._set_parentInternal(this.handle, value.handle)
+    }
+
+    GetParent(): UnityEngine_Transform_Impl {
+        return new UnityEngine_Transform_Impl(Il2Cpp.Api.Transform._GetParent(this.handle))
+    }
+
+    SetParent(p: UnityEngine_Transform_Impl): void {
+        return Il2Cpp.Api.Transform._SetParent(this.handle, p.handle)
+    }
+
+    SetParent_2(parent: UnityEngine_Transform_Impl, worldPositionStays: boolean): void {
+        return Il2Cpp.Api.Transform._SetParent(this.handle, parent.handle, worldPositionStays)
+    }
+
+    get_worldToLocalMatrix(): Matrix4x4 {
+        return new Matrix4x4(Il2Cpp.Api.Transform._get_worldToLocalMatrix(this.handle))
+    }
+
+    get_localToWorldMatrix(): Matrix4x4 {
+        return new Matrix4x4(Il2Cpp.Api.Transform._get_localToWorldMatrix(this.handle))
+    }
+
+    SetPositionAndRotation(position: Vector3, rotation: Quaternion): void {
+        return Il2Cpp.Api.Transform._SetPositionAndRotation(this.handle, position.handle, rotation.handle)
+    }
+
+    Translate(translation: Vector3, relativeTo: UnityEngine_Space): void {
+        return Il2Cpp.Api.Transform._Translate(this.handle, translation.handle, relativeTo)
+    }
+
+    Rotate(eulers: Vector3, relativeTo: UnityEngine_Space): void {
+        return Il2Cpp.Api.Transform._Rotate(this.handle, eulers.handle, relativeTo)
+    }
+
+    Rotate_1(eulers: Vector3): void {
+        return Il2Cpp.Api.Transform._Rotate(this.handle, eulers.handle)
+    }
+
+    Rotate_3(xAngle: number, yAngle: System_Single, zAngle: System_Single): void {
+        return Il2Cpp.Api.Transform._Rotate(this.handle, xAngle, yAngle, zAngle)
+    }
+
+    RotateAroundInternal(axis: Vector3, angle: number): void {
+        return Il2Cpp.Api.Transform._RotateAroundInternal(this.handle, axis.handle, angle)
+    }
+
+    RotateAround(point: Vector3, axis: Vector3, angle: number): void {
+        return Il2Cpp.Api.Transform._RotateAround(this.handle, point.handle, axis.handle, angle)
+    }
+
+    LookAt(target: UnityEngine_Transform_Impl): void {
+        return Il2Cpp.Api.Transform._LookAt(this.handle, target.handle)
+    }
+
+    LookAt_2(worldPosition: Vector3, worldUp: Vector3): void {
+        return Il2Cpp.Api.Transform._LookAt(this.handle, worldPosition.handle, worldUp.handle)
+    }
+
+    LookAt_1(worldPosition: Vector3): void {
+        return Il2Cpp.Api.Transform._LookAt(this.handle, worldPosition.handle)
+    }
+
+    Internal_LookAt(worldPosition: Vector3, worldUp: Vector3): void {
+        return Il2Cpp.Api.Transform._Internal_LookAt(this.handle, worldPosition.handle, worldUp.handle)
+    }
+
+    TransformDirection(direction: Vector3): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._TransformDirection(this.handle, direction.handle))
+    }
+
+    TransformDirection_3(x: number, y: System_Single, z: System_Single): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._TransformDirection(this.handle, x, y, z))
+    }
+
+    InverseTransformDirection(direction: Vector3): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._InverseTransformDirection(this.handle, direction))
+    }
+
+    TransformVector(vector: Vector3): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._TransformVector(this.handle, vector.handle))
+    }
+
+    InverseTransformVector(vector: Vector3): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._InverseTransformVector(this.handle, vector.handle))
+    }
+
+    TransformPoint(position: Vector3): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._TransformPoint(this.handle, position.handle))
+    }
+
+    InverseTransformPoint(position: Vector3): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._InverseTransformPoint(this.handle, position.handle))
     }
 
     get_childCount(): number {
-        return Il2Cpp.Api.Transform._get_childCount(this.handle);
+        return Il2Cpp.Api.Transform._get_childCount(this.handle)
     }
 
-    get_eulerAngles(): Il2Cpp.Vector3 {
-        let allocMem = alloc(4);
-        Il2Cpp.Api.Transform._get_eulerAngles(this.handle, allocMem)
-        return new Il2Cpp.Vector3(allocMem);
+    SetAsFirstSibling(): void {
+        return Il2Cpp.Api.Transform._SetAsFirstSibling(this.handle)
     }
 
-    set_eulerAngles(value: Il2Cpp.Vector3): void {
-        throw new Error("Method not implemented.");
+    static FindRelativeTransformWithPath(transform: UnityEngine_Transform_Impl, path: string, isActiveOnly: boolean): UnityEngine_Transform_Impl {
+        return new UnityEngine_Transform_Impl(Il2Cpp.Api.Transform._FindRelativeTransformWithPath(transform, path, isActiveOnly))
     }
 
-    get_forward(): Il2Cpp.Vector3 {
-        return Il2Cpp.Api.Transform._get_forward(this.handle);
+    Find(name: string): UnityEngine_Transform_Impl {
+        return new UnityEngine_Transform_Impl(Il2Cpp.Api.Transform._Find(this.handle, allocUStr(name)))
+    }
+
+    get_lossyScale(): Vector3 {
+        return new Vector3(Il2Cpp.Api.Transform._get_lossyScale(this.handle))
+    }
+
+    IsChildOf(parent: UnityEngine_Transform_Impl): boolean {
+        return !Il2Cpp.Api.Transform._IsChildOf(this.handle, parent.handle).isNull()
     }
 
     set_hasChanged(value: boolean): void {
-        throw new Error("Method not implemented.");
+        return Il2Cpp.Api.Transform._set_hasChanged(this.handle, value)
     }
 
-    get_hasChanged(): boolean {
-        throw new Error("Method not implemented.");
+    // GetEnumerator(): System_Collections.IEnumerator {
+    //     return Il2Cpp.Api.Transform._GetEnumerator(this.handle)
+    // }
+
+    GetChild(index: number): UnityEngine_Transform_Impl {
+        return Il2Cpp.Api.Transform._GetChild(this.handle, index)
     }
 
-    get_localEulerAngles(): Il2Cpp.Vector3 {
-        return new Il2Cpp.Vector3(Il2Cpp.Api.Transform._get_localEulerAngles(this.handle));
+    get_position_Injected(ret: Vector3): void {
+        return Il2Cpp.Api.Transform._get_position_Injected(this.handle, ret.handle)
     }
 
-    set_localEulerAngles(value: Il2Cpp.Vector3): void {
-        return Il2Cpp.Api.Transform._set_localEulerAngles(this.handle, value);
+    set_position_Injected(value: Vector3): void {
+        return Il2Cpp.Api.Transform._set_position_Injected(this.handle, value.handle)
     }
 
-    get_localPosition(): Il2Cpp.Vector3 {
-        return new Il2Cpp.Vector3(Il2Cpp.Api.Transform._get_localPosition(this.handle));
+    get_localPosition_Injected(ret: Vector3): void {
+        return Il2Cpp.Api.Transform._get_localPosition_Injected(this.handle, ret.handle)
     }
 
-    set_localPosition(value: Il2Cpp.Vector3): void {
-        return Il2Cpp.Api.Transform._set_localPosition(this.handle, value.handle);
+    set_localPosition_Injected(value: Vector3): void {
+        return Il2Cpp.Api.Transform._set_localPosition_Injected(this.handle, value.handle)
     }
 
-    get_localRotation(): Il2Cpp.Quaternion {
-        return new Il2Cpp.Quaternion(Il2Cpp.Api.Transform._get_localRotation(this.handle))
+    get_rotation_Injected(ret: Quaternion): void {
+        return Il2Cpp.Api.Transform._get_rotation_Injected(this.handle, ret.handle)
     }
 
-    set_localRotation(value: Il2Cpp.Quaternion): void {
-        return Il2Cpp.Api.Transform._set_localRotation(this.handle, value.handle);
+    set_rotation_Injected(value: Quaternion): void {
+        return Il2Cpp.Api.Transform._set_rotation_Injected(this.handle, value.handle)
     }
 
-    get_localScale(): Il2Cpp.Vector3 {
-        return new Il2Cpp.Vector3(Il2Cpp.Api.Transform._get_localScale(this.handle));
+    get_localRotation_Injected(ret: Quaternion): void {
+        return Il2Cpp.Api.Transform._get_localRotation_Injected(this.handle, ret.handle)
     }
 
-    set_localScale(value: Il2Cpp.Vector3): void {
-        return Il2Cpp.Api.Transform._set_localScale(this.handle, value.handle);
+    set_localRotation_Injected(value: Quaternion): void {
+        return Il2Cpp.Api.Transform._set_localRotation_Injected(this.handle, value.handle)
     }
 
-    get_lossyScale(): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+    get_localScale_Injected(ret: Vector3): void {
+        return Il2Cpp.Api.Transform._get_localScale_Injected(this.handle, ret.handle)
     }
 
-    get_parent(): Il2Cpp.Transform {
-        if (this.handle == ptr(0)) return new Il2Cpp.Transform(ptr(0));
-        return new Il2Cpp.Transform(Il2Cpp.Api.Transform._get_parent(this.handle));
+    set_localScale_Injected(value: Vector3): void {
+        return Il2Cpp.Api.Transform._set_localScale_Injected(this.handle, value.handle)
     }
 
-    set_parent(value: Il2Cpp.Transform): void {
-        return Il2Cpp.Api.Transform._set_parent(this.handle, value.handle);
+    get_worldToLocalMatrix_Injected(ret: Matrix4x4): void {
+        return Il2Cpp.Api.Transform._get_worldToLocalMatrix_Injected(this.handle, ret.handle)
     }
 
-    get_position(): Il2Cpp.Vector3 {
-        let allocMem = allocVector(0, 0, 0);
-        Il2Cpp.Api.Transform._get_position(allocMem, this.handle)
-        return new Vector3Impl(allocMem);
+    get_localToWorldMatrix_Injected(ret: Matrix4x4): void {
+        return Il2Cpp.Api.Transform._get_localToWorldMatrix_Injected(this.handle, ret.handle)
     }
 
-    set_position(value: Il2Cpp.Vector3): void {
-        return Il2Cpp.Api.Transform._set_position(this.handle, value.handle);
+    SetPositionAndRotation_Injected(position: Vector3, rotation: Quaternion): void {
+        return Il2Cpp.Api.Transform._SetPositionAndRotation_Injected(this.handle, position.handle, rotation.handle)
     }
 
-    get_right(): Il2Cpp.Vector3 {
-        throw new Error("Method not implemented.");
+    RotateAroundInternal_Injected(axis: Vector3, angle: number): void {
+        return Il2Cpp.Api.Transform._RotateAroundInternal_Injected(this.handle, axis.handle, angle)
     }
 
-    get_rotation(): Il2Cpp.Quaternion {
-        return new Il2Cpp.Quaternion(Il2Cpp.Api.Transform._get_rotation(this.handle));
+    Internal_LookAt_Injected(worldPosition: Vector3, worldUp: Vector3): void {
+        return Il2Cpp.Api.Transform._Internal_LookAt_Injected(this.handle, worldPosition.handle, worldUp.handle)
     }
 
-    set_rotation(value: Il2Cpp.Quaternion): void {
-        return Il2Cpp.Api.Transform._set_rotation(this.handle, value.handle);
+    TransformDirection_Injected(direction: Vector3, ret: Vector3): void {
+        return Il2Cpp.Api.Transform._TransformDirection_Injected(this.handle, direction.handle, ret.handle)
     }
 
-    get_up(): Il2Cpp.Vector3 {
-        return new Il2Cpp.Vector3(Il2Cpp.Api.Transform._get_up(this.handle));
+    InverseTransformDirection_Injected(direction: Vector3, ret: Vector3): void {
+        return Il2Cpp.Api.Transform._InverseTransformDirection_Injected(this.handle, direction.handle, ret.handle)
     }
 
-    set_up(value: Il2Cpp.Vector3): void {
-        throw new Error("Method not implemented.");
+    TransformVector_Injected(vector: Vector3, ret: Vector3): void {
+        return Il2Cpp.Api.Transform._TransformVector_Injected(this.handle, vector.handle, ret.handle)
+    }
+
+    InverseTransformVector_Injected(vector: Vector3, ret: Vector3): void {
+        return Il2Cpp.Api.Transform._InverseTransformVector_Injected(this.handle, vector.handle, ret.handle)
+    }
+
+    TransformPoint_Injected(position: Vector3, ret: Vector3): void {
+        return Il2Cpp.Api.Transform._TransformPoint_Injected(this.handle, position.handle, ret.handle)
+    }
+
+    InverseTransformPoint_Injected(position: Vector3, ret: Vector3): void {
+        return Il2Cpp.Api.Transform._InverseTransformPoint_Injected(this.handle, position.handle, ret.handle)
+    }
+
+    get_lossyScale_Injected(ret: Vector3): void {
+        return Il2Cpp.Api.Transform._get_lossyScale_Injected(this.handle, ret.handle)
     }
 }
+
+Il2Cpp.Transform = UnityEngine_Transform_Impl
 
 declare global {
     namespace Il2Cpp {
-        class Transform extends TransformImpl { }
+        class Transform extends UnityEngine_Transform_Impl { }
     }
 }
 
-Il2Cpp.Transform = TransformImpl;
-
-export { TransformImpl }
+export { UnityEngine_Transform_Impl }

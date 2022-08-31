@@ -1,4 +1,5 @@
 import "./api"
 import "./export"
 import "./class"
-import "./interface"
+
+import './RectTransform/include'
