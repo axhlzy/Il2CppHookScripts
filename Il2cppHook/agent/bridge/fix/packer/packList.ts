@@ -37,7 +37,7 @@ export class PackList implements list_impl {
 
     toString(): string {
         let itemName = this.get_Count() == 0 ? '' : ` < '${this.get_Item().class.name}' > `
-        return `${this.handle} ---> ${this.class.name} (${this.class.handle}${itemName} | ${this.get_Count()}/${this.get_Capacity()} )`
+        return `${this.handle} ---> ${this.class.name} (${this.object.class.handle}${itemName} | ${this.get_Count()}/${this.get_Capacity()} )`
     }
 
     toShow(): void {

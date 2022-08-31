@@ -1,4 +1,4 @@
-import { PackList } from "../../../../bridge/fix/packList"
+import { PackList } from "../../../../bridge/fix/packer/packList"
 import { mscorlib_System_Object_impl } from "../class"
 
 type BaseInvokableCall = NativePointer
