@@ -1,3 +1,3 @@
-export class packArray {
+export class packDictionary {
 
 }

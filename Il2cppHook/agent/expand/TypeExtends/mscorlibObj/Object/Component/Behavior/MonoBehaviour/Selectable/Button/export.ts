@@ -9,7 +9,7 @@ function OnPointerClick() {
     let funcAddr: NativePointer | undefined = undefined
     switch (arguments[0]) {
         default:
-            funcAddr = Il2Cpp.Api.Button._OnPointerClick
+            funcAddr = ptr(Il2Cpp.Api.Button._OnPointerClick)
             if (funcAddr == undefined || funcAddr.isNull()) break
             LOGE("\nEnable Hook OnPointerClick at " + funcAddr + "(" + funcAddr.sub(soAddr) + ")" + "\n")
             A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
@@ -125,7 +125,7 @@ const OnButtonClick = () => {
 
         setTimeout(() => {
             callsArray.forEach((callList: PackList) => {
-                LOGZ(`\t[+] ${callList}`)
+                if (callList.get_Count() != 0) LOGZ(`\t[+] ${callList}`)
                 callList.forEach((instance: Il2Cpp.Object, index: number) => {
                     // // UnityEngine.Events.InvokableCall
                     // LOGD(index + " : " + instance + " " + instance.handle)
@@ -138,10 +138,10 @@ const OnButtonClick = () => {
                     } else if (!unityAction.method_ptr.isNull()) {
                         method = AddressToMethod(unityAction.method_ptr, false)
                     } else throw new Error("unityAction.method is null")
-                    LOGW(`\t\t[${index}] ${method.class.image.assembly.name}.${method.class.name}.${method.name} @ ${method.relativeVirtualAddress} <- ${method.virtualAddress} }`)
+                    LOGW(`\t\t[${index}] ${method.handle} -> ${method.relativeVirtualAddress} | ${method.class.image.assembly.name}.${method.class.name}.${method.name}`)
                 })
             })
-        }, 20);
+        })
     })
 }
 

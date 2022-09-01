@@ -1,5 +1,4 @@
 import { cache } from "decorator-cache-getter"
-import "./interface"
 
 class ButtonAPI {
 

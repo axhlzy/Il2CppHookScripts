@@ -2,7 +2,7 @@ import { UnityEngine_EventSystems_PointerEventData_Impl as PointerEventData } fr
 import { UnityEngine_UI_Button_ButtonClickedEvent_Impl as ButtonClickedEvent } from "../../../../../../UnityEventBase/UnityEvent/ButtonClickedEvent/class"
 import { UnityEngine_UI_Selectable_Impl as Selectable } from "../class"
 
-class ButtonImpl extends Selectable implements Il2cppButton {
+class ButtonImpl extends Selectable {
 
     m_OnClick: ButtonClickedEvent = new ButtonClickedEvent(lfv(this.handle, "m_OnClick"))
 
