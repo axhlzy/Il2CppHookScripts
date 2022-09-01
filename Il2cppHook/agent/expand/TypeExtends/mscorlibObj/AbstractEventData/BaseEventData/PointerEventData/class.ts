@@ -115,7 +115,9 @@ class UnityEngine_EventSystems_PointerEventData_Impl extends BaseEventData {
     }
 
     get_worldNormal(): Vector3 {
-        return new Vector3(Il2Cpp.Api.PointerEventData._get_worldNormal(this.handle))
+        const allocVector3 = alloc(0x10)
+        Il2Cpp.Api.PointerEventData._get_worldNormal(allocVector3, this.handle)
+        return new Vector3(allocVector3)
     }
 
     set_worldNormal(value: Vector3): void {

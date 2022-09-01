@@ -101,7 +101,10 @@ function OnPointerClick() {
 
     function FakePointerEventData(eventData: NativePointer): void {
         if (eventData.isNull()) return
-        let gameObj: Il2Cpp.GameObject = new PointerEventData(eventData).get_pointerEnter()
+        let pointerEventData = new PointerEventData(eventData)
+        let gameObj: Il2Cpp.GameObject = pointerEventData.get_pointerEnter()
+        // LOGD(pointerEventData.toString())
+        // LOGW(pointerEventData.ToString())
         if (!gameObj.handle.isNull()) showGameObject(gameObj.handle)
         // showTransform(f_getTransform(gameObj))
         // showEventData(pointerEventData)

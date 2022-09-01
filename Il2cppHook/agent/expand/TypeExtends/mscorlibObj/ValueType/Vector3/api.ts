@@ -196,49 +196,49 @@ class UnityEngine_Vector3_API {
     // public static Vector3 get_zero()
     @cache
     static get _get_zero() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_zero", 0, "pointer", [])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_zero", 0, "pointer", ['pointer'])
     }
 
     // public static Vector3 get_one()
     @cache
     static get _get_one() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_one", 0, "pointer", [])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_one", 0, "pointer", ['pointer'])
     }
 
     // public static Vector3 get_forward()
     @cache
     static get _get_forward() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_forward", 0, "pointer", [])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_forward", 0, "pointer", ['pointer'])
     }
 
     // public static Vector3 get_back()
     @cache
     static get _get_back() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_back", 0, "pointer", [])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_back", 0, "pointer", ['pointer'])
     }
 
     // public static Vector3 get_up()
     @cache
     static get _get_up() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_up", 0, "pointer", [])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_up", 0, "pointer", ['pointer'])
     }
 
     // public static Vector3 get_down()
     @cache
     static get _get_down() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_down", 0, "pointer", [])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_down", 0, "pointer", ['pointer'])
     }
 
     // public static Vector3 get_left()
     @cache
     static get _get_left() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_left", 0, "pointer", [])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_left", 0, "pointer", ['pointer'])
     }
 
     // public static Vector3 get_right()
     @cache
     static get _get_right() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_right", 0, "pointer", [])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "get_right", 0, "pointer", ['pointer'])
     }
 
     // public static Vector3 op_Addition(Vector3 a,Vector3 b)

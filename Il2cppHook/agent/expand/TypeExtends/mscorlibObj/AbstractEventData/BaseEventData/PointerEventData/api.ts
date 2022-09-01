@@ -149,7 +149,7 @@ class UnityEngine_EventSystems_PointerEventData_API {
     // public Vector3 get_worldNormal()
     @cache
     static get _get_worldNormal() {
-        return Il2Cpp.Api.o("UnityEngine.UI", "UnityEngine.EventSystems.PointerEventData", "get_worldNormal", 0, [], "pointer", ["pointer"])
+        return Il2Cpp.Api.o("UnityEngine.UI", "UnityEngine.EventSystems.PointerEventData", "get_worldNormal", 0, [], "pointer", ["pointer", "pointer"])
     }
 
     // public Void set_worldNormal(Vector3 value)
@@ -161,25 +161,25 @@ class UnityEngine_EventSystems_PointerEventData_API {
     // public Single get_clickTime()
     @cache
     static get _get_clickTime() {
-        return Il2Cpp.Api.o("UnityEngine.UI", "UnityEngine.EventSystems.PointerEventData", "get_clickTime", 0, [], "pointer", ["pointer"])
+        return Il2Cpp.Api.o("UnityEngine.UI", "UnityEngine.EventSystems.PointerEventData", "get_clickTime", 0, [], "float", ["pointer"])
     }
 
     // public Void set_clickTime(Single value)
     @cache
     static get _set_clickTime() {
-        return Il2Cpp.Api.o("UnityEngine.UI", "UnityEngine.EventSystems.PointerEventData", "set_clickTime", 1, ["System.Single"], "void", ["pointer", "pointer"])
+        return Il2Cpp.Api.o("UnityEngine.UI", "UnityEngine.EventSystems.PointerEventData", "set_clickTime", 1, ["System.Single"], "void", ["pointer", "float"])
     }
 
     // public Int32 get_clickCount()
     @cache
     static get _get_clickCount() {
-        return Il2Cpp.Api.o("UnityEngine.UI", "UnityEngine.EventSystems.PointerEventData", "get_clickCount", 0, [], "pointer", ["pointer"])
+        return Il2Cpp.Api.o("UnityEngine.UI", "UnityEngine.EventSystems.PointerEventData", "get_clickCount", 0, [], "int32", ["pointer"])
     }
 
     // public Void set_clickCount(Int32 value)
     @cache
     static get _set_clickCount() {
-        return Il2Cpp.Api.o("UnityEngine.UI", "UnityEngine.EventSystems.PointerEventData", "set_clickCount", 1, ["System.Int32"], "void", ["pointer", "pointer"])
+        return Il2Cpp.Api.o("UnityEngine.UI", "UnityEngine.EventSystems.PointerEventData", "set_clickCount", 1, ["System.Int32"], "void", ["pointer", "int32"])
     }
 
     // public Vector2 get_scrollDelta()

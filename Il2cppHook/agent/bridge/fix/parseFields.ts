@@ -146,33 +146,28 @@ declare global {
     var lfo: (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => number
 }
 
-/**
- * 解析实例的 fields / 非实例不解析值
- * @param mPtr 实例指针/class指针
- * @param classHandle 可空（默认为当前实例指针的class） 用classHandle来解析前面的实例
- */
+// 解析当前实例的 fields / 非实例不解析值 （s means show）
 globalThis.lfs = (mPtr: NativePointer, classHandle: NativePointer | string | object | number = 0) => new FieldsParser(mPtr, classHandle).toShow()
 
+// 解析实例的 fields 以及 class 父级 fields （p means parents）
 globalThis.lfp = (mPtr: NativePointer) => {
     let classType: Array<mscorlib.Type> = getTypeParent(mPtr) as Array<mscorlib.Type>
     classType.reverse().forEach(type => new FieldsParser(mPtr, type.class).toShow(true))
     showTypeParent(mPtr)
 }
 
-// 拿到实例 field type
+// 拿到实例 field type (t means type)
 globalThis.lft = (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => new FieldsParser(mPtr, classHandle).fieldInstance(fieldName)
 
-// 拿到实例 field
+// 拿到实例指针指向的值 (v means value)
 globalThis.lfv = (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => new FieldsParser(mPtr, classHandle).fieldValue(fieldName)
 
-// 拿到实例 field offset
+// 拿到实例 field offset (o means offset)
 globalThis.lfo = (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => new FieldsParser(mPtr, classHandle).fieldOffset(fieldName)
 
 // 拿到实例指定的 field 值 (try catch)
 globalThis.lfvt = (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => {
     try {
         return new FieldsParser(mPtr, classHandle).fieldValue(fieldName)
-    } catch {
-        return new NativePointer(0)
-    }
+    } catch { return new NativePointer(0) }
 }

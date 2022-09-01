@@ -517,6 +517,12 @@ const AddressToMethod = (mPtr: NativePointer, withLog: boolean = true): Il2Cpp.M
     throw new Error(`Can't find method by address ${mPtr}`)
 }
 
+const AddressToMethodNoException = (mPtr: NativePointer, withLog: boolean = false): Il2Cpp.Method | null => {
+    try {
+        return AddressToMethod(mPtr, withLog)
+    } catch { return null }
+}
+
 const AddressToMethodToString = (mPtr: NativePointer, simple: boolean = true): void => {
     if (simple) return HookerBase.MethodToShow(AddressToMethod(mPtr))
     let method: Il2Cpp.Method = AddressToMethod(mPtr)
@@ -562,6 +568,7 @@ Reflect.set(globalThis, "printExp", printExp)
 Reflect.set(globalThis, "getUnityInfo", getUnityInfo)
 Reflect.set(globalThis, "AddressToMethod", AddressToMethod)
 Reflect.set(globalThis, "AddressToMethodToString", AddressToMethodToString)
+Reflect.set(globalThis, "AddressToMethodNoException", AddressToMethodNoException)
 
 declare global {
     var launchApp: (pkgName: string) => void
@@ -571,4 +578,5 @@ declare global {
     var bp: (filterName: string, breakMethodInfo?: boolean) => void
     var AddressToMethod: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method
     var AddressToMethodToString: (mPtr: NativePointer) => void
+    var AddressToMethodNoException: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method | null
 }

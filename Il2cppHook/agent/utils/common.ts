@@ -1,4 +1,3 @@
-import { type } from "os";
 import { EpFunc, LogColor, MapKAY, PTR } from "../base/enum";
 import { ARGM, GET_F, GET_MAP, GET_MAP_VALUE, SET_MAP_VALUE } from "../base/globle";
 
@@ -142,7 +141,7 @@ export const SeeTypeToString = (obj: number | NativePointer, b: boolean) => {
 const getJclassName = (jclsName: NativePointer, ShouldRet: boolean): string | undefined => {
     ShouldRet == undefined ? false : true
     let pVoid = callFunction(GET_F(EpFunc.DecodeJObject), GET_F(EpFunc.ArtCurrent), jclsName)
-    let k_class = callFunction(GET_F(EpFunc.GetDescriptor), pVoid, alloc())
+    let k_class = callFunction(GET_F(EpFunc.GetDescriptor), pVoid, allocP())
     if (ShouldRet) return String(k_class.readCString())
     LOG("\n" + String(k_class.readCString()) + "\n", LogColor.C36)
 }

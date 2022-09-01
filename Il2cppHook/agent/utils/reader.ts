@@ -3,17 +3,17 @@ import { ARGM } from "../base/globle"
 import { PTR2NativePtr } from "./common"
 
 // 读取浮点数 ptr().readFloat() === readSingle(ptr().readPointer())
-const readSingle = (value: NativePointer): number => alloc(2).writePointer(value).readFloat()
+const readSingle = (value: NativePointer): number => allocP().writePointer(value).readFloat()
 
-const readBoolean = (value: NativePointer): boolean => alloc(0.25).writePointer(value).readU8() == 0x1
+const readBoolean = (value: NativePointer): boolean => alloc(1).writePointer(value).readU8() == 0x1
 
-const readInt = (value: NativePointer): number => alloc().writePointer(value).readInt()
+const readInt = (value: NativePointer): number => allocP().writePointer(value).readInt()
 
-const readUInt = (value: NativePointer): number => alloc(1).writePointer(value).readUInt()
+const readUInt = (value: NativePointer): number => allocP().writePointer(value).readUInt()
 
-const readInt64 = (value: NativePointer): UInt64 => alloc(2).writePointer(value).readS64()
+const readInt64 = (value: NativePointer): UInt64 => allocP(2).writePointer(value).readS64()
 
-const readUInt64 = (value: NativePointer): UInt64 => alloc(2).writePointer(value).readU64()
+const readUInt64 = (value: NativePointer): UInt64 => allocP(2).writePointer(value).readU64()
 
 /**
  * 读取 c# 字符串

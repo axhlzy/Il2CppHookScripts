@@ -43,7 +43,7 @@ const callFunctionRI = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): number => cal
 const callFunctionRS = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): number => readSingle(callFunctionWithOutError(mPtr, ...args))
 
 // readFloat
-const callFunctionRF = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): number => alloc(p_size * 2).writePointer(callFunctionWithOutError(mPtr, ...args)).readFloat()
+const callFunctionRF = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): number => allocP(2).writePointer(callFunctionWithOutError(mPtr, ...args)).readFloat()
 
 // 返回值为 Unity String
 const callFunctionRUS = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): string => readU16(callFunction(mPtr, ...args))

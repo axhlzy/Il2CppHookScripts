@@ -1,4 +1,6 @@
-class AsmParser {
+import { getMethodDesFromMethodInfo } from "./il2cppM"
+
+export class AsmParser {
 
     private current: NativePointer = ptr(0)
     private Offset: number = 0
@@ -45,17 +47,56 @@ class AsmParser {
 
 
 
-const showAsm = (mPtr: NativePointer, len: number = 20): void => {
-    let asmP = new AsmParser(checkPointer(mPtr), len)
-    while (asmP.next()) {
-        LOGD(asmP.toString())
+globalThis.showAsm = (mPtr: NativePointer, len: number = 40): void => {
+
+    // AddressToMethodNoException()
+    let currentPtr = checkPointer(mPtr)
+    let asm: Instruction
+    let arrayStrs = new Array<string>()
+    let arrayRecords = new Array<NativePointer>()
+    while (len-- > 0) {
+        asm = Instruction.parse(currentPtr)
+        arrayStrs.push(`${asm.address} ${asm.toString()}`)
+        let moreInfo: string = getMoreInfo(asm)
+        if (moreInfo.length != 0) arrayStrs.push(moreInfo)
+        currentPtr = asm.next
     }
+    arrayStrs.forEach((str, index) => {
+        let b = arrayRecords.map((record, index) => {
+            return String(record)
+        }).includes(String(asm.address))
+
+        if (b) {
+            LOGW(str)
+        } else {
+            str.startsWith("0x") ? LOGD(str) : LOGZ(str)
+        }
+    })
+
+    function getMoreInfo(asm: Instruction): string {
+        let filterIns = ["bl", "blx", "b", "bx", "b.w", "blx.w", "bl.w", "bne"]
+        if (filterIns.includes(asm.mnemonic)) {
+            let target = ptr(asm.opStr.replace("#", ""))
+            arrayRecords.push(target)
+            // unity 方法解析
+            let targetMethod = AddressToMethodNoException(target)
+            if (targetMethod) return `\ttargetMethod: ${getMethodDesFromMethodInfo(targetMethod)}`
+            // 局部跳转方法解析
+            let Offset = target.sub(asm.address).toInt32()
+            if (Math.abs(Offset) < 0x1000) {
+                return `\t ${Offset > 0 ? '↓' : '↑'} ${ptr(Offset)} / ${Offset}`
+            }
+            return ""
+        }
+        return ""
+    }
+
 }
 
-export { showAsm }
+globalThis.showAsmSJ = (mPtr: NativePointer): void => LOGJSON(Instruction.parse(checkPointer(mPtr)))
 
 declare global {
     var showAsm: (mPtr: NativePointer, len?: number) => void
+    var showAsmSJ: (mPtr: NativePointer) => void
 }
 
-globalThis.showAsm = showAsm

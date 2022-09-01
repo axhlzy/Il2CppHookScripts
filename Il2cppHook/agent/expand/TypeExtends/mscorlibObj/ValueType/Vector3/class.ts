@@ -1,101 +1,76 @@
-import { UnityEngine_Object } from "../../Object/class"
+import { OffsetManager } from "../../../../../bridge/fix/offsetManager"
+import { mscorlib_System_Object_impl as System_Object } from "../../class"
 import { System_ValueType_Impl } from "../class"
-import { System_Int32_Impl } from "../Int32/class"
+import { System_Int32_Impl as System_Int32 } from "../Int32/class"
 
 type System_IFormatProvider = NativePointer
+type System_Single = NativePointer
 
 class UnityEngine_Vector3_Impl extends System_ValueType_Impl {
 
-    kEpsilon: number = lfv(this.handle, "kEpsilon") as unknown as number
-    kEpsilonNormalSqrt: number = lfv(this.handle, "kEpsilonNormalSqrt") as unknown as number
-    x: number = lfv(this.handle, "x") as unknown as number
-    y: number = lfv(this.handle, "y") as unknown as number
-    z: number = lfv(this.handle, "z") as unknown as number
-    zeroVector: UnityEngine_Vector3_Impl = lfv(this.handle, "zeroVector") as unknown as UnityEngine_Vector3_Impl
-    oneVector: UnityEngine_Vector3_Impl = lfv(this.handle, "oneVector") as unknown as UnityEngine_Vector3_Impl
-    upVector: UnityEngine_Vector3_Impl = lfv(this.handle, "upVector") as unknown as UnityEngine_Vector3_Impl
-    downVector: UnityEngine_Vector3_Impl = lfv(this.handle, "downVector") as unknown as UnityEngine_Vector3_Impl
-    leftVector: UnityEngine_Vector3_Impl = lfv(this.handle, "leftVector") as unknown as UnityEngine_Vector3_Impl
-    rightVector: UnityEngine_Vector3_Impl = lfv(this.handle, "rightVector") as unknown as UnityEngine_Vector3_Impl
-    forwardVector: UnityEngine_Vector3_Impl = lfv(this.handle, "forwardVector") as unknown as UnityEngine_Vector3_Impl
-    backVector: UnityEngine_Vector3_Impl = lfv(this.handle, "backVector") as unknown as UnityEngine_Vector3_Impl
-    positiveInfinityVector: UnityEngine_Vector3_Impl = lfv(this.handle, "positiveInfinityVector") as unknown as UnityEngine_Vector3_Impl
-    negativeInfinityVector: UnityEngine_Vector3_Impl = lfv(this.handle, "negativeInfinityVector") as unknown as UnityEngine_Vector3_Impl
+    // kEpsilon: number = readSingle(lfv(this.handle, "kEpsilon"))
+    // kEpsilonNormalSqrt: number = readSingle(lfv(this.handle, "kEpsilonNormalSqrt"))
+    x: number = readSingle(lfv(this.handle, "x", findClass("Vector3"))) // lfn （not read pointer）, 不使用lf解析值
+    y: number = readSingle(lfv(this.handle, "y", findClass("Vector3")))
+    z: number = readSingle(lfv(this.handle, "z", findClass("Vector3")))
+    // zeroVector: UnityEngine_Vector3_Impl = new UnityEngine_Vector3_Impl(lfv(this.handle, "zeroVector", findClass("Vector3")))
+    // oneVector: UnityEngine_Vector3_Impl = new UnityEngine_Vector3_Impl(lfv(this.handle, "oneVector", findClass("Vector3")))
+    // upVector: UnityEngine_Vector3_Impl = new UnityEngine_Vector3_Impl(lfv(this.handle, "upVector", findClass("Vector3")))
+    // downVector: UnityEngine_Vector3_Impl = new UnityEngine_Vector3_Impl(lfv(this.handle, "downVector", findClass("Vector3")))
+    // leftVector: UnityEngine_Vector3_Impl = new UnityEngine_Vector3_Impl(lfv(this.handle, "leftVector"))
+    // rightVector: UnityEngine_Vector3_Impl = new UnityEngine_Vector3_Impl(lfv(this.handle, "rightVector"))
+    // forwardVector: UnityEngine_Vector3_Impl = new UnityEngine_Vector3_Impl(lfv(this.handle, "forwardVector"))
+    // backVector: UnityEngine_Vector3_Impl = new UnityEngine_Vector3_Impl(lfv(this.handle, "backVector"))
+    // positiveInfinityVector: UnityEngine_Vector3_Impl = new UnityEngine_Vector3_Impl(lfv(this.handle, "positiveInfinityVector"))
+    // negativeInfinityVector: UnityEngine_Vector3_Impl = new UnityEngine_Vector3_Impl(lfv(this.handle, "negativeInfinityVector"))
 
+    static cache = new Array<NativePointer>()
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
     }
 
-    Slerp(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl, t: number): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._Slerp(a, b, t)
-    }
-
-    Lerp(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl, t: number): UnityEngine_Vector3_Impl {
+    static Lerp(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl, t: System_Single): UnityEngine_Vector3_Impl {
         return Il2Cpp.Api.Vector3._Lerp(a, b, t)
     }
 
-    LerpUnclamped(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl, t: number): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._LerpUnclamped(a, b, t)
-    }
-
-    MoveTowards(current: UnityEngine_Vector3_Impl, target: UnityEngine_Vector3_Impl, maxDistanceDelta: number): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._MoveTowards(current, target, maxDistanceDelta)
-    }
-
-    SmoothDamp_4(current: UnityEngine_Vector3_Impl, target: UnityEngine_Vector3_Impl, currentVelocity: UnityEngine_Vector3_Impl, smoothTime: number): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._SmoothDamp(current, target, currentVelocity, smoothTime)
-    }
-
-    SmoothDamp_6(current: UnityEngine_Vector3_Impl, target: UnityEngine_Vector3_Impl, currentVelocity: UnityEngine_Vector3_Impl, smoothTime: number, maxSpeed: number, deltaTime: number): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._SmoothDamp(current, target, currentVelocity, smoothTime, maxSpeed, deltaTime)
-    }
-
-    get_Item(index: number): number {
+    get_Item(index: System_Int32): System_Single {
         return Il2Cpp.Api.Vector3._get_Item(this.handle, index)
     }
 
-    set_Item(index: number, value: number): void {
+    set_Item(index: System_Int32, value: System_Single): void {
         return Il2Cpp.Api.Vector3._set_Item(this.handle, index, value)
     }
 
-    _ctor_xyz(x: number, y: number, z: number): void {
+    __ctor(x: System_Single, y: System_Single, z: System_Single): void {
         return Il2Cpp.Api.Vector3.__ctor(this.handle, x, y, z)
     }
 
-    _ctor_xy(x: number, y: number): void {
+    _ctor_2(x: System_Single, y: System_Single): void {
         return Il2Cpp.Api.Vector3.__ctor(this.handle, x, y)
     }
 
-    Scale(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._Scale(a, b)
-    }
-
-    Cross(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
+    static Cross(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
         return Il2Cpp.Api.Vector3._Cross(lhs, rhs)
     }
 
-    GetHashCode(): System_Int32_Impl {
+    GetHashCode(): System_Int32 {
         return Il2Cpp.Api.Vector3._GetHashCode(this.handle)
     }
 
-    Equals_obj(other: UnityEngine_Object): boolean {
+    Equals(other: System_Object): boolean {
         return Il2Cpp.Api.Vector3._Equals(this.handle, other)
     }
 
-    Equals_v3(other: UnityEngine_Vector3_Impl): boolean {
+    Equals_1(other: UnityEngine_Vector3_Impl): boolean {
         return Il2Cpp.Api.Vector3._Equals(this.handle, other)
     }
 
-    Reflect(inDirection: UnityEngine_Vector3_Impl, inNormal: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._Reflect(inDirection, inNormal)
-    }
-
-    Normalize_v3(value: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
+    static Normalize(value: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
         return Il2Cpp.Api.Vector3._Normalize(value)
     }
 
-    Normalize(): void {
+    Normalize_0(): void {
         return Il2Cpp.Api.Vector3._Normalize(this.handle)
     }
 
@@ -103,119 +78,147 @@ class UnityEngine_Vector3_Impl extends System_ValueType_Impl {
         return Il2Cpp.Api.Vector3._get_normalized(this.handle)
     }
 
-    Dot(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): number {
+    static Dot(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): System_Single {
         return Il2Cpp.Api.Vector3._Dot(lhs, rhs)
     }
 
-    Project(vector: UnityEngine_Vector3_Impl, onNormal: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._Project(vector, onNormal)
-    }
-
-    ProjectOnPlane(vector: UnityEngine_Vector3_Impl, planeNormal: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
+    static ProjectOnPlane(vector: UnityEngine_Vector3_Impl, planeNormal: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
         return Il2Cpp.Api.Vector3._ProjectOnPlane(vector, planeNormal)
     }
 
-    Angle(from: UnityEngine_Vector3_Impl, to: UnityEngine_Vector3_Impl): number {
-        return Il2Cpp.Api.Vector3._Angle(from, to)
-    }
-
-    SignedAngle(from: UnityEngine_Vector3_Impl, to: UnityEngine_Vector3_Impl, axis: UnityEngine_Vector3_Impl): number {
-        return Il2Cpp.Api.Vector3._SignedAngle(from, to, axis)
-    }
-
-    Distance(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl): number {
+    static Distance(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl): System_Single {
         return Il2Cpp.Api.Vector3._Distance(a, b)
     }
 
-    ClampMagnitude(vector: UnityEngine_Vector3_Impl, maxLength: number): UnityEngine_Vector3_Impl {
+    static ClampMagnitude(vector: UnityEngine_Vector3_Impl, maxLength: System_Single): UnityEngine_Vector3_Impl {
         return Il2Cpp.Api.Vector3._ClampMagnitude(vector, maxLength)
     }
 
-    Magnitude(vector: UnityEngine_Vector3_Impl): number {
+    static Magnitude(vector: UnityEngine_Vector3_Impl): System_Single {
         return Il2Cpp.Api.Vector3._Magnitude(vector)
     }
 
-    get_magnitude(): number {
+    get_magnitude(): System_Single {
         return Il2Cpp.Api.Vector3._get_magnitude(this.handle)
     }
 
-    SqrMagnitude(vector: UnityEngine_Vector3_Impl): number {
+    static SqrMagnitude(vector: UnityEngine_Vector3_Impl): System_Single {
         return Il2Cpp.Api.Vector3._SqrMagnitude(vector)
     }
 
-    get_sqrMagnitude(): number {
+    get_sqrMagnitude(): System_Single {
         return Il2Cpp.Api.Vector3._get_sqrMagnitude(this.handle)
     }
 
-    Min(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
+    static Min(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
         return Il2Cpp.Api.Vector3._Min(lhs, rhs)
     }
 
-    Max(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
+    static Max(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
         return Il2Cpp.Api.Vector3._Max(lhs, rhs)
     }
 
-    get_zero(): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._get_zero()
+    static get get_zero(): UnityEngine_Vector3_Impl {
+        let start = OffsetManager.getInstance().getOffset("Vector3", "x")
+        let end = OffsetManager.getInstance().getOffset("Vector3", "z")
+        let alloc3 = alloc(end)
+        Il2Cpp.Api.Vector3._get_zero(alloc(start))
+        seeHexA(alloc3)
+        UnityEngine_Vector3_Impl.cache.push(alloc3)
+        return new UnityEngine_Vector3_Impl(alloc3)
     }
 
-    get_one(): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._get_one()
+    static get get_one(): UnityEngine_Vector3_Impl {
+        let start = OffsetManager.getInstance().getOffset("Vector3", "x")
+        let end = OffsetManager.getInstance().getOffset("Vector3", "z")
+        let alloc3 = alloc(end)
+        Il2Cpp.Api.Vector3._get_one(alloc3.add(start))
+        seeHexA(alloc3)
+        UnityEngine_Vector3_Impl.cache.push(alloc3)
+        return new UnityEngine_Vector3_Impl(alloc3)
     }
 
-    get_forward(): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._get_forward()
+    static get get_forward(): UnityEngine_Vector3_Impl {
+        let start = OffsetManager.getInstance().getOffset("Vector3", "x")
+        let end = OffsetManager.getInstance().getOffset("Vector3", "z")
+        let alloc3 = alloc(end)
+        Il2Cpp.Api.Vector3._get_forward(alloc(start))
+        seeHexA(alloc3)
+        UnityEngine_Vector3_Impl.cache.push(alloc3)
+        return new UnityEngine_Vector3_Impl(alloc3)
     }
 
-    get_back(): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._get_back()
+    static get get_back(): UnityEngine_Vector3_Impl {
+        let start = OffsetManager.getInstance().getOffset("Vector3", "x")
+        let end = OffsetManager.getInstance().getOffset("Vector3", "z")
+        let alloc3 = alloc(end)
+        Il2Cpp.Api.Vector3._get_back(alloc(start))
+        seeHexA(alloc3)
+        UnityEngine_Vector3_Impl.cache.push(alloc3)
+        return new UnityEngine_Vector3_Impl(alloc3)
     }
 
-    get_up(): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._get_up()
+    static get get_up(): UnityEngine_Vector3_Impl {
+        let start = OffsetManager.getInstance().getOffset("Vector3", "x")
+        let end = OffsetManager.getInstance().getOffset("Vector3", "z")
+        let alloc3 = alloc(end)
+        Il2Cpp.Api.Vector3._get_up(alloc(start))
+        return new UnityEngine_Vector3_Impl(alloc3)
     }
 
-    get_down(): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._get_down()
+    static get get_down(): UnityEngine_Vector3_Impl {
+        let start = OffsetManager.getInstance().getOffset("Vector3", "x")
+        let end = OffsetManager.getInstance().getOffset("Vector3", "z")
+        let alloc3 = alloc(end)
+        Il2Cpp.Api.Vector3._get_down(alloc(start))
+        return new UnityEngine_Vector3_Impl(alloc3)
     }
 
-    get_left(): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._get_left()
+    static get get_left(): UnityEngine_Vector3_Impl {
+        let start = OffsetManager.getInstance().getOffset("Vector3", "x")
+        let end = OffsetManager.getInstance().getOffset("Vector3", "z")
+        let alloc3 = alloc(end)
+        Il2Cpp.Api.Vector3._get_left(alloc(start))
+        return new UnityEngine_Vector3_Impl(alloc3)
     }
 
-    get_right(): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._get_right()
+    static get get_right(): UnityEngine_Vector3_Impl {
+        let start = OffsetManager.getInstance().getOffset("Vector3", "x")
+        let end = OffsetManager.getInstance().getOffset("Vector3", "z")
+        let alloc3 = alloc(end)
+        Il2Cpp.Api.Vector3._get_right(alloc(start))
+        return new UnityEngine_Vector3_Impl(alloc3)
     }
 
-    op_Addition(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
+    static op_Addition(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
         return Il2Cpp.Api.Vector3._op_Addition(a, b)
     }
 
-    op_Subtraction(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
+    static op_Subtraction(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
         return Il2Cpp.Api.Vector3._op_Subtraction(a, b)
     }
 
-    op_UnaryNegation(a: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
+    static op_UnaryNegation(a: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
         return Il2Cpp.Api.Vector3._op_UnaryNegation(a)
     }
 
-    op_Multiply_v3_number(a: UnityEngine_Vector3_Impl, d: number): UnityEngine_Vector3_Impl {
+    static op_Multiply(a: UnityEngine_Vector3_Impl, d: System_Single): UnityEngine_Vector3_Impl {
         return Il2Cpp.Api.Vector3._op_Multiply(a, d)
     }
 
-    op_Multiply_number_v3(d: number, a: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
+    static op_Multiply_2(d: System_Single, a: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
         return Il2Cpp.Api.Vector3._op_Multiply(d, a)
     }
 
-    op_Division(a: UnityEngine_Vector3_Impl, d: number): UnityEngine_Vector3_Impl {
+    static op_Division(a: UnityEngine_Vector3_Impl, d: System_Single): UnityEngine_Vector3_Impl {
         return Il2Cpp.Api.Vector3._op_Division(a, d)
     }
 
-    op_Equality(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): boolean {
+    static op_Equality(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): boolean {
         return Il2Cpp.Api.Vector3._op_Equality(lhs, rhs)
     }
 
-    op_Inequality(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): boolean {
+    static op_Inequality(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): boolean {
         return Il2Cpp.Api.Vector3._op_Inequality(lhs, rhs)
     }
 
@@ -224,15 +227,11 @@ class UnityEngine_Vector3_Impl extends System_ValueType_Impl {
     }
 
     ToString_2(format: string, formatProvider: System_IFormatProvider): string {
-        return readU16(Il2Cpp.Api.Vector3._ToString(this.handle, format, formatProvider))
+        return readU16(Il2Cpp.Api.Vector3._ToString(this.handle, allocUStr(format), formatProvider))
     }
 
-    _cctor(): void {
+    static get _cctor(): void {
         return Il2Cpp.Api.Vector3.__cctor()
-    }
-
-    Slerp_Injected(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl, t: number, ret: UnityEngine_Vector3_Impl): void {
-        return Il2Cpp.Api.Vector3._Slerp_Injected(a, b, t, ret)
     }
 
 }

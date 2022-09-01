@@ -34,7 +34,9 @@ declare global {
     var allocCStr: (str: string) => NativePointer
     var allocUStr: (str: string) => NativePointer
     var allocVector: (x?: number, y?: number, z?: number, w?: number) => NativePointer
+    // 分配 size 个字节大小
     var alloc: (size?: number) => NativePointer
+    // 分配 size 个指针大小
     var allocP: (size?: number) => NativePointer
 }
 
