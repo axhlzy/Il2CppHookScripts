@@ -1,96 +1,86 @@
+import { LogColor } from "../../base/enum"
+import { cacheMethods } from "../../java/info"
+import { formartClass } from "../../utils/formart"
 import { getMethodDesFromMethodInfo } from "./il2cppM"
 
-export class AsmParser {
+class ItemInfo {
+    ins: Instruction
+    current: NativePointer
+    size: number
+    title: string = ""
+    info: string
+    infoColor: LogColor = LogColor.C36
+    extra: string = ""
+    extraColor: LogColor = LogColor.C90
+    private static _preCache: Set<String> = new Set<String>()
+    private static _filterIns = new Array<string>('smull', 'strd', 'strh', 'sbc')
 
-    private current: NativePointer = ptr(0)
-    private Offset: number = 0
-    private len: number = 0
-    private ret: Instruction | ArmInstruction | Arm64Instruction | null = null
-
-    constructor(mPtr: NativePointer, len: number = 20) {
-        if (mPtr.isNull()) throw new Error("Current mPtr can not be null")
-        this.current = mPtr
-        this.len = len
-        try {
-            Instruction.parse(this.current)
-        } catch (error) { throw error }
+    constructor(ins: Instruction) {
+        this.ins = ins
+        this.current = ins.address
+        this.size = ins.size
+        cacheMethods()
+        let currentMethod = AddressToMethodNoException(this.current)
+        if (currentMethod) this.title = `${getMethodDesFromMethodInfo(currentMethod)}`
+        let insStr = ins.toString()
+        ItemInfo._filterIns.forEach((item) => {
+            if (insStr.includes(item)) insStr = ins.address.readPointer().toString()
+        })
+        this.info = `${ins.address} ${insStr}`
+        if (ItemInfo._preCache.has(this.current.toString()))
+            this.infoColor = LogColor.C32
+        this.checkExtra()
     }
 
-    next(): Instruction | X86Instruction | ArmInstruction | Arm64Instruction | null {
-        if (this.len <= 0 || this.Offset > this.len) return null
-        while (!this.current.isNull()) {
-            try {
-                this.ret = Instruction.parse(this.current.add(this.Offset))
-            } catch (error) {
-                this.ret = null
+    setExtra(extra: string) {
+        this.extra = extra
+    }
+
+    getExtra(): string {
+        return this.extra
+    }
+
+    toString(): string {
+        return `${this.info}${this.extra.length == 0 ? "" : '\n\t' + this.extra}`
+    }
+
+    private checkExtra(): void {
+        let filterIns = ["bl", "blx", "b", "bx", "b.w", "blx.w", "bl.w", "bne", "beq"]
+        if (filterIns.includes(this.ins.mnemonic)) {
+            let target = ptr(this.ins.opStr.replace("#", ""))
+            ItemInfo._preCache.add(target.toString())
+            // unity 方法解析
+            let targetMethod = AddressToMethodNoException(target)
+            if (targetMethod) {
+                let localMethod = targetMethod as Il2Cpp.Method
+                this.extra = `→ ${getMethodDesFromMethodInfo(targetMethod)} @ ${localMethod.handle}`
             }
-            // arm32 [× thumb, √ arm]  / arm64
-            this.Offset += Process.pageSize
+            // 局部跳转方法解析
+            let Offset = target.sub(this.ins.address).toInt32()
+            if (Math.abs(Offset) < 0x1000) {
+                this.extra = `${Offset > 0 ? '↓' : '↑'} ${Offset / p_size} ( ${ptr(Offset)} / ${Offset})`
+            }
         }
-        return this.ret
     }
-
-    value(): Instruction | ArmInstruction | Arm64Instruction {
-        return this.ret as Instruction | ArmInstruction | Arm64Instruction
-    }
-
-    tostring(): string {
-        if (this.ret) return this.ret.toString()
-        else return ""
-    }
-
-
-
-
-
 }
-
-
 
 globalThis.showAsm = (mPtr: NativePointer, len: number = 40): void => {
 
-    // AddressToMethodNoException()
     let currentPtr = checkPointer(mPtr)
     let asm: Instruction
-    let arrayStrs = new Array<string>()
-    let arrayRecords = new Array<NativePointer>()
+    let mapInfo = new Map<NativePointer, ItemInfo>()
+
     while (len-- > 0) {
         asm = Instruction.parse(currentPtr)
-        arrayStrs.push(`${asm.address} ${asm.toString()}`)
-        let moreInfo: string = getMoreInfo(asm)
-        if (moreInfo.length != 0) arrayStrs.push(moreInfo)
+        mapInfo.set(asm.address, new ItemInfo(asm))
         currentPtr = asm.next
     }
-    arrayStrs.forEach((str, index) => {
-        let b = arrayRecords.map((record, index) => {
-            return String(record)
-        }).includes(String(asm.address))
 
-        if (b) {
-            LOGW(str)
-        } else {
-            str.startsWith("0x") ? LOGD(str) : LOGZ(str)
-        }
+    mapInfo.forEach((value: ItemInfo, key: NativePointer) => {
+        if (value.title.length > 0) formartClass.printTitile(value.title)
+        LOG(value.info, value.infoColor)
+        if (value.extra.length > 0) LOG(`\t${value.extra}`, value.extraColor)
     })
-
-    function getMoreInfo(asm: Instruction): string {
-        let filterIns = ["bl", "blx", "b", "bx", "b.w", "blx.w", "bl.w", "bne"]
-        if (filterIns.includes(asm.mnemonic)) {
-            let target = ptr(asm.opStr.replace("#", ""))
-            arrayRecords.push(target)
-            // unity 方法解析
-            let targetMethod = AddressToMethodNoException(target)
-            if (targetMethod) return `\ttargetMethod: ${getMethodDesFromMethodInfo(targetMethod)}`
-            // 局部跳转方法解析
-            let Offset = target.sub(asm.address).toInt32()
-            if (Math.abs(Offset) < 0x1000) {
-                return `\t ${Offset > 0 ? '↓' : '↑'} ${ptr(Offset)} / ${Offset}`
-            }
-            return ""
-        }
-        return ""
-    }
-
 }
 
 globalThis.showAsmSJ = (mPtr: NativePointer): void => LOGJSON(Instruction.parse(checkPointer(mPtr)))

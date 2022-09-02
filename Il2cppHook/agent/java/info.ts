@@ -411,6 +411,7 @@ function getUnityInfo() {
 
 let allMethodsCacheArray: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>() // all methods cache
 const cacheMethods = (withLog: boolean = true) => {
+    if (allMethodsCacheArray.length > 0) return
     if (withLog) LOGZ("Caching methods ...")
     let timeCurrent = Date.now()
     Il2Cpp.Domain.assemblies.forEach((assembly: Il2Cpp.Assembly) => {
@@ -560,7 +561,7 @@ globalThis.bp = (filterName: string, breakMethodInfo: boolean = false) => {
         })
 }
 
-export { getApkInfo, launchApp }
+export { getApkInfo, launchApp, cacheMethods }
 
 Reflect.set(globalThis, "launchApp", launchApp)
 Reflect.set(globalThis, "getApkInfo", getApkInfo)

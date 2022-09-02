@@ -355,6 +355,10 @@ class HookerBase {
     }
 
     static MethodToShow(method: Il2Cpp.Method): void {
+        if (typeof method == "string" && (String(method).startsWith('0x') || String(method).startsWith('0X'))) {
+            method = new Il2Cpp.Method(ptr(method))
+        }
+        if (typeof method == "number") method = new Il2Cpp.Method(ptr(method))
         let methodDes = getMethodDesFromMethodInfo(method)
         let nameSpace = method.class.namespace
         let classBelow = `${nameSpace.length == 0 ? '' : nameSpace + '.'}${method.class.name}`
