@@ -30,7 +30,7 @@ class ItemInfo {
         }
         let insStr = ins.toString()
         ItemInfo._filterIns.forEach((item) => {
-            if (insStr.includes(item)) insStr = ins.address.readPointer().toString()
+            if (insStr.includes(item)) insStr = `= ${ins.address.readPointer().toString()}`
         })
         this.info = `${ins.address} ${insStr}`
         if (ItemInfo._preCache.has(this.current.toString()))
@@ -83,18 +83,28 @@ globalThis.showAsm = (mPtr: NativePointer, len: number = 0x40, needAsm: boolean 
 
     if (len == -1) {
         while (true) {
-            asm = Instruction.parse(currentPtr)
-            let info = new ItemInfo(asm)
-            // len == -1 的情况下只记录一个methodInfo 即返回
-            if (info.getCountMethod() > 0) break
-            mapInfo.set(asm.address, info)
-            currentPtr = asm.next
+            try {
+                asm = Instruction.parse(currentPtr)
+                let info = new ItemInfo(asm)
+                // len == -1 的情况下只记录一个methodInfo 即返回
+                if (info.getCountMethod() > 0) break
+                mapInfo.set(asm.address, info)
+                currentPtr = asm.next
+            } catch (error) {
+                LOGE(error)
+                break
+            }
         }
     } else {
         while (len-- > 0) {
-            asm = Instruction.parse(currentPtr)
-            mapInfo.set(asm.address, new ItemInfo(asm))
-            currentPtr = asm.next
+            try {
+                asm = Instruction.parse(currentPtr)
+                mapInfo.set(asm.address, new ItemInfo(asm))
+                currentPtr = asm.next
+            } catch (error) {
+                LOGE(error)
+                break
+            }
         }
     }
 
@@ -102,7 +112,13 @@ globalThis.showAsm = (mPtr: NativePointer, len: number = 0x40, needAsm: boolean 
         // 解析的 Unity 方法名称
         if (value.title.length > 0) formartClass.printTitile(value.title)
         // 正常汇编代码
-        if (needAsm) LOG(value.info, value.infoColor)
+        if (needAsm) {
+            if (value.info.indexOf('= ') != -1) {
+                LOG(value.info, LogColor.C34)
+            } else {
+                LOG(value.info, value.infoColor)
+            }
+        }
         // 附加信息 (bl 偏移，以及行内 unity 方法跳转)
         if (value.extra.length > 0) {
             if (needAsm) {

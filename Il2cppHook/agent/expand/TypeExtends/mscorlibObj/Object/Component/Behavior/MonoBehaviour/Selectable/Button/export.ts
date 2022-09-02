@@ -190,33 +190,33 @@ globalThis.HookOnPointerClick = OnPointerClick
 globalThis.B_Button = OnButtonClick
 globalThis.HideClickedObj = HideClickedObj
 
-globalThis.B_ButtonTest = () => {
-    // OnPointerClick(instance, PointerEventData) : Void
-    A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
-        // let currentGameobj: GameObject = getGameObjectPack(args[0])
-        // let button: Button = new Button(args[0])
-        // let pointerEventData: PointerEventData = new PointerEventData(args[1])
-        // let buttonOnclickEvent: ButtonClickedEvent = button.get_onClick()
-        // LOGD(`\n[*] ${pointerEventData.handle} ---> ${currentGameobj.get_name()} { G:${currentGameobj.handle} | T:${currentGameobj.get_transform().handle} }`)
+// globalThis.B_ButtonTest = () => {
+//     // OnPointerClick(instance, PointerEventData) : Void
+//     A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
+//         // let currentGameobj: GameObject = getGameObjectPack(args[0])
+//         // let button: Button = new Button(args[0])
+//         // let pointerEventData: PointerEventData = new PointerEventData(args[1])
+//         // let buttonOnclickEvent: ButtonClickedEvent = button.get_onClick()
+//         // LOGD(`\n[*] ${pointerEventData.handle} ---> ${currentGameobj.get_name()} { G:${currentGameobj.handle} | T:${currentGameobj.get_transform().handle} }`)
 
-        // LOGD(getType(button.handle).toString());
+//         // LOGD(getType(button.handle).toString());
 
-        // (getTypeParent(button.handle) as Array<mscorlib.Type>).forEach((type: mscorlib.Type) => {
-        //     LOGD(type.toString())
-        // })
+//         // (getTypeParent(button.handle) as Array<mscorlib.Type>).forEach((type: mscorlib.Type) => {
+//         //     LOGD(type.toString())
+//         // })
 
-        // // let ret = button.GetComponentInChildren(new System_Type(ptr(0xc52af5c0)), true)
+//         // // let ret = button.GetComponentInChildren(new System_Type(ptr(0xc52af5c0)), true)
 
-        // // let s = button.GetComponent(new System_Type(ptr(0xa278bdc0))).toString()
-        // // LOGE(s)
+//         // // let s = button.GetComponent(new System_Type(ptr(0xa278bdc0))).toString()
+//         // // LOGE(s)
 
-        // LOGD(currentGameobj.GetComponent(new System_Type(ptr(0xa276e8e0))).toString())
+//         // LOGD(currentGameobj.GetComponent(new System_Type(ptr(0xa276e8e0))).toString())
 
-        // LOGD(currentGameobj.GetComponentsInternal(new System_Type(ptr(0xa276e8e0))))
+//         // LOGD(currentGameobj.GetComponentsInternal(new System_Type(ptr(0xa276e8e0))))
 
-        new PackList(ptr(0xd684d940)).forEach((instance: Il2Cpp.Object, index: number) => {
-            LOGD(`${instance.toString()}`)
-        })
+//         new PackList(ptr(0xd684d940)).forEach((instance: Il2Cpp.Object, index: number) => {
+//             LOGD(`${instance.toString()}`)
+//         })
 
-    })
-}
+//     })
+// }
