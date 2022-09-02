@@ -1073,3 +1073,5 @@ var LogColor = {
     C90:90,C91:91,C92:92,C93:93,C94:94,C95:95,C96:96,C97:97,
     C100:100,C101:101,C102:102,C103:103,C104:104,C105:105,C106:106,C107:107
 }
+
+// 参考项目 https://github.com/Misaka-Mikoto-Tech/MonoHook
