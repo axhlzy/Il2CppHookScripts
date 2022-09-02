@@ -3,6 +3,7 @@ import { cacheMethods } from "../../java/info"
 import { formartClass } from "../../utils/formart"
 import { getMethodDesFromMethodInfo } from "./il2cppM"
 
+
 class ItemInfo {
     ins: Instruction
     current: NativePointer
@@ -14,7 +15,7 @@ class ItemInfo {
     extra: string = ""
     extraColor: LogColor = LogColor.C90
 
-    private static countMethod: number = -1
+    public static countMethod: number = -1
     private static _preCache: Set<String> = new Set<String>()
     private static _filterIns = new Array<string>('smull', 'strd', 'strh', 'sbc')
 
@@ -36,10 +37,6 @@ class ItemInfo {
         if (ItemInfo._preCache.has(this.current.toString()))
             this.infoColor = LogColor.C32
         this.checkExtra()
-    }
-
-    getCountMethod(): number {
-        return ItemInfo.countMethod
     }
 
     setExtra(extra: string) {
@@ -76,18 +73,17 @@ class ItemInfo {
 }
 
 globalThis.showAsm = (mPtr: NativePointer, len: number = 0x40, needAsm: boolean = true): void => {
-
+    ItemInfo.countMethod = -1
     let currentPtr = checkPointer(mPtr)
     let asm: Instruction
     let mapInfo = new Map<NativePointer, ItemInfo>()
-
     if (len == -1) {
         while (true) {
             try {
                 asm = Instruction.parse(currentPtr)
                 let info = new ItemInfo(asm)
                 // len == -1 的情况下只记录一个methodInfo 即返回
-                if (info.getCountMethod() > 0) break
+                if (ItemInfo.countMethod > 0) break
                 mapInfo.set(asm.address, info)
                 currentPtr = asm.next
             } catch (error) {
