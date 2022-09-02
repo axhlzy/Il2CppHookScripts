@@ -10,7 +10,7 @@ class UnityEngine_Vector3_API {
     // public static Vector3 Lerp(Vector3 a,Vector3 b,Single t)
     @cache
     static get _Lerp() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "Lerp", 3, "pointer", ["pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "Lerp", 3, "pointer", ["pointer", "pointer", "float"])
     }
 
     // public static Vector3 LerpUnclamped(Vector3 a,Vector3 b,Single t)
@@ -46,19 +46,19 @@ class UnityEngine_Vector3_API {
     // public Void set_Item(Int32 index,Single value)
     @cache
     static get _set_Item() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "set_Item", 2, "void", ["pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", "set_Item", 2, "void", ["pointer", "pointer", "float"])
     }
 
     // public Void .ctor(Single x,Single y,Single z)
     @cache
     static get __ctor() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", ".ctor", 3, "void", ["pointer", "pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Vector3", ".ctor", 3, "void", ["pointer", "float", "float", "float"])
     }
 
     // public Void .ctor(Single x,Single y)
     @cache
     static get __ctor_x_y() {
-        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Vector3", ".ctor", 2, ["System.Single", "System.Single"], "void", ["pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Vector3", ".ctor", 2, ["System.Single", "System.Single"], "void", ["pointer", "float", "float"])
     }
 
     // public static Vector3 Scale(Vector3 a,Vector3 b)

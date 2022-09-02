@@ -31,19 +31,20 @@ class UnityEngine_Vector3_Impl extends System_ValueType_Impl {
     }
 
     static Lerp(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl, t: System_Single): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._Lerp(a, b, t)
+        return new UnityEngine_Vector3_Impl(Il2Cpp.Api.Vector3._Lerp(a.handle, b.handle, t))
     }
 
-    get_Item(index: System_Int32): System_Single {
-        return Il2Cpp.Api.Vector3._get_Item(this.handle, index)
+    get_Item(index: System_Int32): number {
+        return readSingle(Il2Cpp.Api.Vector3._get_Item(this.handle, index))
     }
 
-    set_Item(index: System_Int32, value: System_Single): void {
+    set_Item(index: System_Int32, value: number): void {
         return Il2Cpp.Api.Vector3._set_Item(this.handle, index, value)
     }
 
     __ctor(x: System_Single, y: System_Single, z: System_Single): void {
-        return Il2Cpp.Api.Vector3.__ctor(this.handle, x, y, z)
+        let tmp = alloc(6)
+        return Il2Cpp.Api.Vector3.__ctor(tmp, x, y, z)
     }
 
     _ctor_2(x: System_Single, y: System_Single): void {
@@ -51,7 +52,7 @@ class UnityEngine_Vector3_Impl extends System_ValueType_Impl {
     }
 
     static Cross(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._Cross(lhs, rhs)
+        return new UnityEngine_Vector3_Impl(Il2Cpp.Api.Vector3._Cross(lhs.handle, rhs.handle))
     }
 
     GetHashCode(): System_Int32 {
@@ -59,15 +60,15 @@ class UnityEngine_Vector3_Impl extends System_ValueType_Impl {
     }
 
     Equals(other: System_Object): boolean {
-        return Il2Cpp.Api.Vector3._Equals(this.handle, other)
+        return !Il2Cpp.Api.Vector3._Equals(this.handle, other.handle).isNull()
     }
 
     Equals_1(other: UnityEngine_Vector3_Impl): boolean {
-        return Il2Cpp.Api.Vector3._Equals(this.handle, other)
+        return !Il2Cpp.Api.Vector3._Equals(this.handle, other.handle).isNull()
     }
 
     static Normalize(value: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._Normalize(value)
+        return Il2Cpp.Api.Vector3._Normalize(value.handle)
     }
 
     Normalize_0(): void {
@@ -75,47 +76,47 @@ class UnityEngine_Vector3_Impl extends System_ValueType_Impl {
     }
 
     get_normalized(): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._get_normalized(this.handle)
+        return new UnityEngine_Vector3_Impl(Il2Cpp.Api.Vector3._get_normalized(this.handle))
     }
 
-    static Dot(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): System_Single {
-        return Il2Cpp.Api.Vector3._Dot(lhs, rhs)
+    static Dot(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): number {
+        return readSingle(Il2Cpp.Api.Vector3._Dot(lhs.handle, rhs.handle))
     }
 
     static ProjectOnPlane(vector: UnityEngine_Vector3_Impl, planeNormal: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
         return Il2Cpp.Api.Vector3._ProjectOnPlane(vector, planeNormal)
     }
 
-    static Distance(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl): System_Single {
-        return Il2Cpp.Api.Vector3._Distance(a, b)
+    static Distance(a: UnityEngine_Vector3_Impl, b: UnityEngine_Vector3_Impl): number {
+        return readSingle(Il2Cpp.Api.Vector3._Distance(a.handle, b.handle))
     }
 
     static ClampMagnitude(vector: UnityEngine_Vector3_Impl, maxLength: System_Single): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._ClampMagnitude(vector, maxLength)
+        return new UnityEngine_Vector3_Impl(Il2Cpp.Api.Vector3._ClampMagnitude(vector.handle, maxLength))
     }
 
-    static Magnitude(vector: UnityEngine_Vector3_Impl): System_Single {
-        return Il2Cpp.Api.Vector3._Magnitude(vector)
+    static Magnitude(vector: UnityEngine_Vector3_Impl): number {
+        return readSingle(Il2Cpp.Api.Vector3._Magnitude(vector.handle))
     }
 
     get_magnitude(): System_Single {
         return Il2Cpp.Api.Vector3._get_magnitude(this.handle)
     }
 
-    static SqrMagnitude(vector: UnityEngine_Vector3_Impl): System_Single {
-        return Il2Cpp.Api.Vector3._SqrMagnitude(vector)
+    static SqrMagnitude(vector: UnityEngine_Vector3_Impl): number {
+        return readSingle(Il2Cpp.Api.Vector3._SqrMagnitude(vector.handle))
     }
 
-    get_sqrMagnitude(): System_Single {
-        return Il2Cpp.Api.Vector3._get_sqrMagnitude(this.handle)
+    get_sqrMagnitude(): number {
+        return readSingle(Il2Cpp.Api.Vector3._get_sqrMagnitude(this.handle))
     }
 
     static Min(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._Min(lhs, rhs)
+        return new UnityEngine_Vector3_Impl(Il2Cpp.Api.Vector3._Min(lhs, rhs))
     }
 
     static Max(lhs: UnityEngine_Vector3_Impl, rhs: UnityEngine_Vector3_Impl): UnityEngine_Vector3_Impl {
-        return Il2Cpp.Api.Vector3._Max(lhs, rhs)
+        return new UnityEngine_Vector3_Impl(Il2Cpp.Api.Vector3._Max(lhs, rhs))
     }
 
     static get get_zero(): UnityEngine_Vector3_Impl {
@@ -123,7 +124,6 @@ class UnityEngine_Vector3_Impl extends System_ValueType_Impl {
         let end = OffsetManager.getInstance().getOffset("Vector3", "z")
         let alloc3 = alloc(end)
         Il2Cpp.Api.Vector3._get_zero(alloc(start))
-        seeHexA(alloc3)
         UnityEngine_Vector3_Impl.cache.push(alloc3)
         return new UnityEngine_Vector3_Impl(alloc3)
     }
@@ -133,7 +133,6 @@ class UnityEngine_Vector3_Impl extends System_ValueType_Impl {
         let end = OffsetManager.getInstance().getOffset("Vector3", "z")
         let alloc3 = alloc(end)
         Il2Cpp.Api.Vector3._get_one(alloc3.add(start))
-        seeHexA(alloc3)
         UnityEngine_Vector3_Impl.cache.push(alloc3)
         return new UnityEngine_Vector3_Impl(alloc3)
     }
@@ -143,7 +142,6 @@ class UnityEngine_Vector3_Impl extends System_ValueType_Impl {
         let end = OffsetManager.getInstance().getOffset("Vector3", "z")
         let alloc3 = alloc(end)
         Il2Cpp.Api.Vector3._get_forward(alloc(start))
-        seeHexA(alloc3)
         UnityEngine_Vector3_Impl.cache.push(alloc3)
         return new UnityEngine_Vector3_Impl(alloc3)
     }
@@ -153,7 +151,6 @@ class UnityEngine_Vector3_Impl extends System_ValueType_Impl {
         let end = OffsetManager.getInstance().getOffset("Vector3", "z")
         let alloc3 = alloc(end)
         Il2Cpp.Api.Vector3._get_back(alloc(start))
-        seeHexA(alloc3)
         UnityEngine_Vector3_Impl.cache.push(alloc3)
         return new UnityEngine_Vector3_Impl(alloc3)
     }

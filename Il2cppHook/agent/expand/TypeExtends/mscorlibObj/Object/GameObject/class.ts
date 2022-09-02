@@ -1,47 +1,55 @@
+import { mscorlib_System_Type_impl as System_Type } from "../../Type/class"
 import { UnityEngine_Object } from "../class"
+import { UnityEngine_Component_Impl as Component } from "../Component/class"
+// import { UnityEngine_Transform_Impl as Transform } from "../Component/Transform/class"
 
-class GameObjectImpl extends UnityEngine_Object implements Il2cppGameObject {
+class GameObjectImpl extends UnityEngine_Object {
 
     constructor(handle: NativePointer) {
         super(handle)
     }
 
     ctor_0(): Il2Cpp.GameObject {
-        return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._ctor_0(allocP(1)))
+        return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._ctor_0(alloc()))
     }
 
     ctor_1(name: string): Il2Cpp.GameObject {
-        return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._ctor_1(allocP(1), allocUStr(name)))
+        return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._ctor_1(alloc(), allocUStr(name)))
     }
 
-    ctor_2(name: string, type: Il2Cpp.Type[]): Il2Cpp.GameObject {
-        let types = Il2Cpp.Array.from(type[0].class, type.length)
-        return Il2Cpp.Api.GameObject._ctor_2(this.handle, allocP(1), allocUStr(name), types)
+    // ctor_2(name: string, type: System_Type[]): Il2Cpp.GameObject {
+    //     // let types = Il2Cpp.Array.from(type[0].class, type.length)
+    //     return Il2Cpp.Api.GameObject._ctor_2(this.handle, allocP(1), allocUStr(name), types)
+    // }
+
+    AddComponent(componentType: System_Type): Component {
+        return Il2Cpp.Api.GameObject._AddComponent(this.handle, componentType.handle)
     }
 
-    AddComponent(componentType: Il2Cpp.Type): Il2Cpp.Component {
-        return Il2Cpp.Api.GameObject._AddComponent(this.handle, componentType)
+    GetComponent(type: System_Type): Component {
+        return new Component(Il2Cpp.Api.GameObject._GetComponent(this.handle, type.handle))
     }
 
-    GetComponent(type: Il2Cpp.Type): Il2Cpp.Component {
-        return Il2Cpp.Api.GameObject._GetComponent(this.handle, type)
+    GetComponentInChildren(type: System_Type, includeInactive: boolean): Component {
+        return new Component(Il2Cpp.Api.GameObject._GetComponentInChildren(this.handle, type.handle, includeInactive ? ptr(1) : ptr(0)))
     }
 
-    GetComponentInChildren(type: Il2Cpp.Type, includeInactive: boolean): Il2Cpp.Component {
-        return Il2Cpp.Api.GameObject._GetComponentInChildren(this.handle, type.handle, ptr(includeInactive as unknown as number))
+    GetComponentInParent(type: System_Type, includeInactive: boolean): Component {
+        return new Component(Il2Cpp.Api.GameObject._GetComponentInParent(this.handle, type.handle, includeInactive ? ptr(1) : ptr(0)))
     }
 
-    GetComponentInParent(type: Il2Cpp.Type, includeInactive: boolean): Il2Cpp.Component {
-        return Il2Cpp.Api.GameObject._GetComponentInParent(this.handle, type.handle, ptr(includeInactive as unknown as number))
-    }
-
-    GetComponentsInternal(type: Il2Cpp.Type, useSearchTypeAsArrayReturnType: boolean, recursive: boolean, includeInactive: boolean, reverse: boolean, resultList: any) {
-        return Il2Cpp.Api.GameObject._GetComponentsInternal(this.handle, type.handle,
-            ptr(useSearchTypeAsArrayReturnType as unknown as number),
-            ptr(recursive as unknown as number),
-            ptr(includeInactive as unknown as number),
-            ptr(reverse as unknown as number),
-            ptr(resultList))
+    GetComponentsInternal(type: System_Type, useSearchTypeAsArrayReturnType: boolean = true, recursive: boolean = true, includeInactive: boolean = true, reverse: boolean = true, resultList: NativePointer = ptr(0)): NativePointer {
+        resultList = alloc(0x20)
+        let ret = Il2Cpp.Api.GameObject._GetComponentsInternal(
+            this.handle,
+            type.handle,
+            useSearchTypeAsArrayReturnType ? ptr(1) : ptr(0),
+            recursive ? ptr(1) : ptr(0),
+            includeInactive ? ptr(1) : ptr(0),
+            reverse ? ptr(1) : ptr(0),
+            resultList)
+        seeHexA(resultList)
+        return ret
     }
 
     SendMessage(methodName: string, options?: NativePointer): void {
@@ -49,15 +57,15 @@ class GameObjectImpl extends UnityEngine_Object implements Il2cppGameObject {
     }
 
     SetActive(value: boolean): void {
-        return Il2Cpp.Api.GameObject._SetActive(this.handle, ptr(value as unknown as number))
+        return Il2Cpp.Api.GameObject._SetActive(this.handle, value ? ptr(1) : ptr(0))
     }
 
-    GetComponentFastPath(type: Il2Cpp.Type, oneFurtherThanResultValue: NativePointer): void {
-        return Il2Cpp.Api.GameObject._GetComponentFastPath(this.handle, type, oneFurtherThanResultValue)
+    GetComponentFastPath(type: System_Type, oneFurtherThanResultValue: NativePointer): void {
+        return Il2Cpp.Api.GameObject._GetComponentFastPath(this.handle, type.handle, oneFurtherThanResultValue)
     }
 
     CompareTag(tag: string): boolean {
-        return Il2Cpp.Api.GameObject._CompareTag(this.handle, allocUStr(tag))
+        return !Il2Cpp.Api.GameObject._CompareTag(this.handle, allocUStr(tag)).isNull()
     }
 
     get_transform(): Il2Cpp.Transform {
@@ -66,11 +74,11 @@ class GameObjectImpl extends UnityEngine_Object implements Il2cppGameObject {
     }
 
     get_tag(): string {
-        return Il2Cpp.Api.GameObject._get_tag(this.handle)
+        return readU16(Il2Cpp.Api.GameObject._get_tag(this.handle))
     }
 
     set_layer(value: number): void {
-        return Il2Cpp.Api.GameObject._set_layer(this.handle, ptr(value))
+        return Il2Cpp.Api.GameObject._set_layer(this.handle, value)
     }
 
     get_layer(): number {
@@ -82,11 +90,11 @@ class GameObjectImpl extends UnityEngine_Object implements Il2cppGameObject {
     }
 
     get_activeSelf(): boolean {
-        return Il2Cpp.Api.GameObject._get_activeSelf(this.handle)
+        return !Il2Cpp.Api.GameObject._get_activeSelf(this.handle).isNull()
     }
 
     get_activeInHierarchy(): boolean {
-        return Il2Cpp.Api.GameObject._get_activeSelf(this.handle)
+        return !Il2Cpp.Api.GameObject._get_activeSelf(this.handle).isNull()
     }
 
     // public static extern GameObject Find(string name);
@@ -95,9 +103,9 @@ class GameObjectImpl extends UnityEngine_Object implements Il2cppGameObject {
     }
 
     // public static extern GameObject[] FindGameObjectsWithTag(string tag);
-    static FindGameObjectsWithTag_A(tag: string): Il2Cpp.GameObject[] {
-        return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._FindGameObjectsWithTag_A(allocUStr(tag))) as unknown as Il2Cpp.GameObject[]
-    }
+    // static FindGameObjectsWithTag_A(tag: string): GameObjectImpl[] {
+    //     return new GameObjectImpl(Il2Cpp.Api.GameObject._FindGameObjectsWithTag_A(allocUStr(tag))) as unknown as Il2Cpp.GameObject[]
+    // }
 
     // public static extern GameObject FindGameObjectWithTag(string tag);
     static FindGameObjectWithTag(tag: string): Il2Cpp.GameObject {

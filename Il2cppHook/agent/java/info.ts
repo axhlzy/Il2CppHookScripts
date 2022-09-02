@@ -427,6 +427,7 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
 
     let countIndex: number = -1
     let arrStrResult: Array<string> = new Array<string>()
+    let arrVirResult: Array<string> = new Array<string>() // 虚方法
     let arrPtrResult: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
     let enterTime: number = Date.now()
 
@@ -485,6 +486,8 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
 
     newLine()
     arrStrResult.sort(distance).forEach(LOGD)
+    newLine()
+    arrVirResult.sort(distance).forEach(LOGZ)
     LOGZ(`\nTake ${Date.now() - enterTime}ms to find ${arrStrResult.length} ${arrStrResult.length <= 1 ? "result" : "results"}`)
     if (formartMaxLine != -1 && formartMaxLine < 100) LOGZ(`\n${formartMaxLine} lines of results are shown recommended to be greater than 100`)
     newLine(1)
@@ -503,9 +506,14 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
             return
         }
         let index = formartClass.alignStr(`[${++countIndex}]`, 6)
-        let result = `${index} ${formartClass.alignStr(item.handle, p_size * 4)}  --->   ${item.relativeVirtualAddress}\t${item.class.name}( ${item.class.handle} ) | ${getMethodDesFromMethodInfo(item)}`
+        let virAddr = item.virtualAddress.isNull() ? "" : `  --->   ${item.relativeVirtualAddress}`
+        let result = `${index} ${formartClass.alignStr(item.handle, p_size * 4)}${virAddr}\t${item.class.name}( ${item.class.handle} ) | ${getMethodDesFromMethodInfo(item)}`
         if (formartMaxLine != -1 && formartMaxLine > 10) result = formartClass.alignStr(result, formartMaxLine)
-        arrStrResult.push(result)
+        if (!item.virtualAddress.isNull()) {
+            arrStrResult.push(result)
+        } else {
+            arrVirResult.push(result)
+        }
     }
 }
 

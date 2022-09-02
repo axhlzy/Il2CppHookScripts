@@ -20,7 +20,7 @@ class ComponentAPI {
 
     @cache
     static get _GetComponentInChildren() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Component", "GetComponentInChildren", 2, "pointer", ["pointer", "pointer", "bool"]);
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Component", "GetComponentInChildren", 2, "pointer", ["pointer", "pointer", "pointer"]);
     }
 
     @cache

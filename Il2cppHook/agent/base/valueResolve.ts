@@ -1,5 +1,6 @@
 import { methodToString } from "../bridge/fix/il2cppM"
 import { UnityEngine_Object } from "../expand/TypeExtends/mscorlibObj/Object/class"
+import { getObjName } from "../expand/TypeExtends/mscorlibObj/Object/export"
 import { UnityEngine_Color_Impl } from "../expand/TypeExtends/mscorlibObj/ValueType/Color/class"
 import { formartClass } from "../utils/formart"
 import { readInt, readInt64, readSingle, readU16, readUInt } from "../utils/reader"

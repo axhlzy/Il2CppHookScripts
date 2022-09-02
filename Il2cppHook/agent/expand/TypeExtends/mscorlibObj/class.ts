@@ -2,6 +2,7 @@
 class mscorlib_System_Object_impl {
 
     handle: NativePointer
+
     constructor(handleOrWrapper: NativePointer) {
         this.handle = handleOrWrapper
     }

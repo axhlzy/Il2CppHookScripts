@@ -61,6 +61,13 @@ export class PackList implements list_impl {
         return JSON.stringify(this)
     }
 
+    showList(): void {
+        if (this.get_Count() == 0) throw new Error('List is empty')
+        this.forEach((item: Il2Cpp.Object) => {
+            LOGD(item.toString())
+        })
+    }
+
     // toSimpleString(): string {
     //     return this.toArray().map(item => {
     //         let action = item.add(p_size * 2).readPointer()
@@ -112,3 +119,9 @@ export class PackList implements list_impl {
     }
 
 }
+
+declare global {
+    var showList: (mPtr: NativePointer) => void
+}
+
+globalThis.showList = (mPtr: NativePointer) => { new PackList(checkCmdInput(mPtr)).showList() }

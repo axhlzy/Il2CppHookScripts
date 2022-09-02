@@ -1,6 +1,7 @@
 import { PackList } from "../../../../../../../../../bridge/fix/packer/packList"
 import { UnityEngine_EventSystems_PointerEventData_Impl as PointerEventData } from "../../../../../../AbstractEventData/BaseEventData/PointerEventData/class"
 import { UnityEngine_Events_UnityAction_Impl as UnityAction } from "../../../../../../Delegate/MulticastDelegate/UnityAction/class"
+import { mscorlib_System_Type_impl as System_Type } from "../../../../../../Type/class"
 import { UnityEngine_UI_Button_ButtonClickedEvent_Impl as ButtonClickedEvent } from "../../../../../../UnityEventBase/UnityEvent/ButtonClickedEvent/class"
 import { GameObjectImpl as GameObject } from "../../../../../GameObject/class"
 import { ButtonImpl as Button } from "./class"
@@ -144,7 +145,7 @@ const OnButtonClick = () => {
                     LOGW(`\t\t[${index}] ${method.handle} -> ${method.relativeVirtualAddress} | ${method.class.image.assembly.name}.${method.class.name}.${method.name}`)
                 })
             })
-        })
+        }, 20)
     })
 }
 
@@ -176,14 +177,46 @@ const HideClickedObj = (x: number, y: number) => {
     // 循环调用，出现时destory掉这个gameObj
 }
 
-export { OnPointerClick, OnButtonClick, HideClickedObj }
+export { OnPointerClick, HideClickedObj }
 
 declare global {
     var HookOnPointerClick: () => void
     var B_Button: () => void
+    var B_ButtonTest: () => void
     var HideClickedObj: (x: number, y: number) => void
 }
 
 globalThis.HookOnPointerClick = OnPointerClick
 globalThis.B_Button = OnButtonClick
 globalThis.HideClickedObj = HideClickedObj
+
+globalThis.B_ButtonTest = () => {
+    // OnPointerClick(instance, PointerEventData) : Void
+    A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
+        // let currentGameobj: GameObject = getGameObjectPack(args[0])
+        // let button: Button = new Button(args[0])
+        // let pointerEventData: PointerEventData = new PointerEventData(args[1])
+        // let buttonOnclickEvent: ButtonClickedEvent = button.get_onClick()
+        // LOGD(`\n[*] ${pointerEventData.handle} ---> ${currentGameobj.get_name()} { G:${currentGameobj.handle} | T:${currentGameobj.get_transform().handle} }`)
+
+        // LOGD(getType(button.handle).toString());
+
+        // (getTypeParent(button.handle) as Array<mscorlib.Type>).forEach((type: mscorlib.Type) => {
+        //     LOGD(type.toString())
+        // })
+
+        // // let ret = button.GetComponentInChildren(new System_Type(ptr(0xc52af5c0)), true)
+
+        // // let s = button.GetComponent(new System_Type(ptr(0xa278bdc0))).toString()
+        // // LOGE(s)
+
+        // LOGD(currentGameobj.GetComponent(new System_Type(ptr(0xa276e8e0))).toString())
+
+        // LOGD(currentGameobj.GetComponentsInternal(new System_Type(ptr(0xa276e8e0))))
+
+        new PackList(ptr(0xd684d940)).forEach((instance: Il2Cpp.Object, index: number) => {
+            LOGD(`${instance.toString()}`)
+        })
+
+    })
+}

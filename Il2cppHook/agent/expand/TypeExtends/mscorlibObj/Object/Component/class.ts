@@ -1,41 +1,53 @@
+import { PackList } from "../../../../../bridge/fix/packer/packList";
+import { mscorlib_System_Type_impl as System_Type } from "../../Type/class";
 import { UnityEngine_Object } from "../class";
+import { GameObjectImpl as GameObject } from "../GameObject/class";
 
-class UnityEngine_Component_Impl extends UnityEngine_Object implements Il2cppComponent {
+class UnityEngine_Component_Impl extends UnityEngine_Object {
 
     __ctor__(): UnityEngine_Component_Impl {
-        return new Il2Cpp.Component(Il2Cpp.Api.Component._ctor_0(this.handle, allocP(1)))
+        return new UnityEngine_Component_Impl(Il2Cpp.Api.Component._ctor_0(allocP()))
     }
 
     CompareTag(tag: string): boolean {
-        return Il2Cpp.Api.Component._CompareTag(this.handle, allocUStr(tag))
+        return !Il2Cpp.Api.Component._CompareTag(this.handle, allocUStr(tag)).isNull()
     }
 
-    GetComponent(type: Il2Cpp.Type): Il2cppComponent {
-        return new Il2Cpp.Component(Il2Cpp.Api.Component._GetComponent(this.handle, type))
+    // pass
+    GetComponent(type: System_Type): UnityEngine_Component_Impl {
+        return new UnityEngine_Component_Impl(Il2Cpp.Api.Component._GetComponent(this.handle, type.handle))
     }
 
-    GetComponentInChildren(t: Il2Cpp.Type, includeInactive: boolean): Il2cppComponent {
-        return new Il2Cpp.Component(Il2Cpp.Api.Component._GetComponentInChildren(this.handle, t.handle, includeInactive))
+    // pass
+    GetComponentInChildren(t: System_Type, includeInactive: boolean): UnityEngine_Component_Impl {
+        return new UnityEngine_Component_Impl(Il2Cpp.Api.Component._GetComponentInChildren(this.handle, t.handle, includeInactive ? ptr(1) : ptr(0)))
     }
 
-    GetComponentInParent(t: Il2Cpp.Type): Il2cppComponent {
-        return new Il2Cpp.Component(Il2Cpp.Api.Component._GetComponentInParent(this.handle, t.handle))
+    // pass
+    GetComponentInParent(t: System_Type): UnityEngine_Component_Impl {
+        return new UnityEngine_Component_Impl(Il2Cpp.Api.Component._GetComponentInParent(this.handle, t.handle))
     }
 
-    GetComponents(type: Il2Cpp.Type, results: any): void {
-        return Il2Cpp.Api.Component._GetComponents(this.handle, type, results)
-    }
+    // GetComponents(type: System_Type): PackList {
+    //     let allocTmp = alloc(0x10)
+    //     seeHexA(allocTmp)
+    //     Il2Cpp.Api.Component._GetComponents(this.handle, type, allocTmp)
+    //     seeHexA(allocTmp)
+    //     return new PackList(allocTmp)
+    // }
 
-    get_gameObject(): Il2Cpp.GameObject {
-        return new Il2Cpp.GameObject(Il2Cpp.Api.Component._get_gameObject(this.handle))
+    // pass
+    get_gameObject(): GameObject {
+        return new GameObject(Il2Cpp.Api.Component._get_gameObject(this.handle))
     }
 
     set_tag(value: string): void {
         return Il2Cpp.Api.Component._set_tag(this.handle, allocUStr(value))
     }
 
+    // pass
     get_transform(): Il2Cpp.Transform {
-        return Il2Cpp.Api.Component._get_transform(this.handle)
+        return new Il2Cpp.Transform(Il2Cpp.Api.Component._get_transform(this.handle))
     }
 }
 

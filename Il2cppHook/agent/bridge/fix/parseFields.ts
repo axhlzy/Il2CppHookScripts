@@ -18,15 +18,15 @@ export class FieldsParser {
         else if (mPtr instanceof NativePointer) this.mPtr = mPtr
         else throw new Error("Input type is not support")
 
-        try {
-            this.mClass = new Il2Cpp.Object(this.mPtr).class
-            this.mClass.name // use to check if instance is valid
-        } catch (error) {
-            this.mClass = new Il2Cpp.Class(this.mPtr)
-            this.mPtr = ptr(0) // not instance need set it to null
-        }
-
-        if (classHandle != 0) {
+        if (classHandle == undefined || classHandle == 0) {
+            try {
+                this.mClass = new Il2Cpp.Object(this.mPtr).class
+                this.mClass.name // use to check if instance is valid
+            } catch (error) {
+                this.mClass = new Il2Cpp.Class(this.mPtr)
+                this.mPtr = ptr(0) // not instance need set it to null
+            }
+        } else {
             let clsPtr: NativePointer
             if (typeof classHandle === "number") {
                 clsPtr = ptr(classHandle)
