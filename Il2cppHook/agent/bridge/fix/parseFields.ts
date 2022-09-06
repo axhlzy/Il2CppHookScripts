@@ -65,7 +65,7 @@ export class FieldsParser {
         this.mClass.fields
             .sort((f1: Il2Cpp.Field, f2: Il2Cpp.Field) => f1.offset - f2.offset)
             .forEach(field => {
-                let index = formartClass.alignStr(`[${++countNum}]`, 5)
+                let index = formartClass.alignStr(`[${++countNum}]`, 6)
                 let offset = ptr(field.offset)
                 let modifier = getModifier(field.flags).trim()
                 let classDes = `${field.type.class.name} (${field.type.class.handle})`
@@ -77,7 +77,11 @@ export class FieldsParser {
                     let tmpOut = this.fakeStaticField(field)
                     let realPtr = tmpOut.readPointer()
                     // LOGZ(`\t${tmpOut}  --->  ${realPtr}  ---> ${new Il2Cpp.Object(realPtr).toString()}`)
-                    LOGZ(`\t${tmpOut}  --->  ${realPtr}  ---> ${field.value}`)
+                    let value: string
+                    try {
+                        value = `---> ${field.value}`
+                    } catch (error) { value = '' }
+                    LOGZ(`\t${tmpOut}  --->  ${realPtr}  ${value}`)
                 }
                 // 即对实例进行值解析
                 else if (!this.mPtr.isNull()) {
@@ -152,7 +156,9 @@ globalThis.lfs = (mPtr: NativePointer, classHandle: NativePointer | string | obj
 // 解析实例的 fields 以及 class 父级 fields （p means parents）
 globalThis.lfp = (mPtr: NativePointer) => {
     let classType: Array<mscorlib.Type> = getTypeParent(mPtr) as Array<mscorlib.Type>
-    classType.reverse().forEach(type => new FieldsParser(mPtr, type.class).toShow(true))
+    setTimeout(() => {
+        classType.reverse().forEach(type => new FieldsParser(mPtr, type.class).toShow(true))
+    }, 200)
     showTypeParent(mPtr)
 }
 

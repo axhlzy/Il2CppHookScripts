@@ -3,7 +3,6 @@ import { cacheMethods } from "../../java/info"
 import { formartClass } from "../../utils/formart"
 import { getMethodDesFromMethodInfo } from "./il2cppM"
 
-
 class ItemInfo {
     ins: Instruction
     current: NativePointer

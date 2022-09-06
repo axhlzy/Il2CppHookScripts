@@ -220,7 +220,7 @@ class UnityEngine_Transform_Impl extends UnityEngine_Component_Impl {
     // }
 
     GetChild(index: number): UnityEngine_Transform_Impl {
-        return Il2Cpp.Api.Transform._GetChild(this.handle, index)
+        return new UnityEngine_Transform_Impl(Il2Cpp.Api.Transform._GetChild(this.handle, index))
     }
 
     get_position_Injected(ret: Vector3): void {

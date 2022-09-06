@@ -431,14 +431,16 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
     let arrPtrResult: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
     let enterTime: number = Date.now()
 
-    // libil2cpp.so common export function
-    findExport("il2cpp_", "libil2cpp.so", (item: ModuleExportDetails) => {
-        if (item.type == "function" && item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveModuleDetails(item)
-    })
+    try {
+        // libil2cpp.so common export function
+        findExport("il2cpp_", "libil2cpp.so", (item: ModuleExportDetails) => {
+            if (item.type == "function" && item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveModuleDetails(item)
+        })
 
-    findExport("", "libunity.so", (item: ModuleExportDetails) => {
-        if (item.type == "function" && item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveModuleDetails(item)
-    })
+        findExport("", "libunity.so", (item: ModuleExportDetails) => {
+            if (item.type == "function" && item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveModuleDetails(item)
+        })
+    } catch (error) { LOGE(error) }
 
     // 查找所有函数
     if (findAll) {

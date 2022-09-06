@@ -61,11 +61,24 @@ export class PackList implements list_impl {
         return JSON.stringify(this)
     }
 
-    showList(): void {
+    showList(simpleCallback?: (item: Il2Cpp.Object) => string): void {
         if (this.get_Count() == 0) throw new Error('List is empty')
+        LOGZ(`\nList<${this.get_Item().class.name}> ( Count: ${this.get_Count()} / Capacity: ${this.get_Capacity()} )\n`)
+        let count: number = 0
+        let arrayResult: Array<string> = new Array<string>()
         this.forEach((item: Il2Cpp.Object) => {
-            LOGD(item.toString())
+            let simpleStr: string = '-> '
+            if (simpleCallback != undefined) {
+                let res = simpleCallback(item)
+                simpleStr += res
+                arrayResult.push(res.toString().replace('"', '').replace('"', ''))
+            }
+            LOGD(`[${++count}]  ${item.handle} -> ${item.toString()} ${simpleCallback == undefined ? '' : simpleStr}`)
         })
+        if (arrayResult.length != 0) {
+            newLine()
+            LOGJSON(arrayResult)
+        }
     }
 
     // toSimpleString(): string {
@@ -124,4 +137,18 @@ declare global {
     var showList: (mPtr: NativePointer) => void
 }
 
-globalThis.showList = (mPtr: NativePointer) => { new PackList(checkCmdInput(mPtr)).showList() }
+/**
+ * 用来简单解析 unity 的 List<T> 类型
+ * @param mPtr 指定一个指向 list 的指针
+ * @param simpleCallback simpleCallback 用来解析 item 内部的指定数据，返回一个字符串
+ * 
+ * @example
+ *  showList(0xbf71efa0,(item)=>{return item.field('name').value})
+ *  [76]  0xaf049090 -> NameDef -> "Giulia"
+ *  [77]  0xaf049078 -> NameDef -> "Glenn"
+ *  [78]  0xaf049060 -> NameDef -> "Haley"
+ *  [79]  0xaf049048 -> NameDef -> "Hedwig"
+ *  [80]  0xaf049030 -> NameDef -> "Helena"
+ *  [81]  0xaf049018 -> NameDef -> "Hildagarde"
+ */
+globalThis.showList = (mPtr: NativePointer, simpleCallback?: (item: Il2Cpp.Object) => string) => { new PackList(checkCmdInput(mPtr)).showList(simpleCallback) }

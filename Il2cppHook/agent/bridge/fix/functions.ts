@@ -1,8 +1,7 @@
 export let setFunctionValue = (mPtr: NativePointer, retValue: NativePointer = ptr(0)) => {
     let srcPtr = mPtr
-    mPtr = checkCmdInput(mPtr)
-    retValue = checkCmdInput(retValue)
-    mPtr = checkPointer(mPtr)
+    if (!retValue.equals(0) && !retValue.equals(1)) retValue = checkCmdInput(retValue)
+    mPtr = checkPointer(checkCmdInput(mPtr))
     Interceptor.attach(mPtr, {
         onLeave: (retval) => {
             LOGW(`setFunctionValue | ${ptr(srcPtr as unknown as number)} | ret => { ${retval} -> ${retValue} } `)

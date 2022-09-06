@@ -21,7 +21,7 @@ globalThis.showTransform = (transform: NativePointer) => {
  */
 globalThis.PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boolean = false) => {
 
-    if (typeof mPtr == "number") mPtr = ptr(mPtr)
+    mPtr = checkCmdInput(mPtr)
     if (mPtr.isNull()) return
 
     let trsIns: Il2Cpp.Transform
@@ -35,8 +35,9 @@ globalThis.PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boo
 
     // 递归调用下层信息
     function getChild(trsInsLocal: Il2Cpp.Transform) {
-        // LOGD(trsInsLocal.get_childCount())
-        for (let index = 0; index < trsInsLocal.get_childCount(); ++index) {
+        let count = trsInsLocal.get_childCount()
+        if (count == 0) return
+        for (let index = 0; index < count; ++index) {
             let child_transform = trsInsLocal.GetChild(index)
             let levelC = getLevel(child_transform) - baseLevel
             // 这里可能出现 -1 -2 的情况，打出来一大片和当前transform无关的transform

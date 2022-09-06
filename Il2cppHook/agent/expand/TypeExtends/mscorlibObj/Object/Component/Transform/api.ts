@@ -268,7 +268,7 @@ class UnityEngine_Transform_API {
     // public Int32 get_childCount()
     @cache
     static get _get_childCount() {
-        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Transform", "get_childCount", 0, [], "pointer", ["pointer"])
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Transform", "get_childCount", 0, [], "int32", ["pointer"])
     }
 
     // public Void SetAsFirstSibling()
@@ -316,7 +316,7 @@ class UnityEngine_Transform_API {
     // public Transform GetChild(Int32 index)
     @cache
     static get _GetChild() {
-        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Transform", "GetChild", 1, ["System.Int32"], "pointer", ["pointer", "pointer"])
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Transform", "GetChild", 1, ["System.Int32"], "pointer", ["pointer", "int32"])
     }
 
     // private Void get_position_Injected(Vector3& ret)

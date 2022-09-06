@@ -1,6 +1,6 @@
 import { LogColor } from "../base/enum"
 
-class formartClass {
+export class formartClass {
 
     static printTitileA = (strTitle: string, color: LogColor = LogColor.C33): number => formartClass.printTitile(strTitle, color, color, color)
 
@@ -69,8 +69,6 @@ class formartClass {
         return `${getLine(paddingNum, " ")}${str}${getLine(paddingNum, " ")}`
     }
 }
-
-export { formartClass }
 
 globalThis.insertStr = formartClass.insertStr
 declare global {
