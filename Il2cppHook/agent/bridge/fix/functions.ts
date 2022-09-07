@@ -1,15 +1,34 @@
-export let setFunctionValue = (mPtr: NativePointer, retValue: NativePointer = ptr(0)) => {
+/**
+ * 参数值的修改
+ * @param mPtr 指定函数地址
+ * @param retValue 修改的新值
+ * @param index 修改第 ${index} 个,默认 -1 ： 修改返回值
+ */
+export let setFunctionValue = (mPtr: NativePointer, retValue: NativePointer = ptr(0), index: number = -1) => {
     let srcPtr = mPtr
     if (!retValue.equals(0) && !retValue.equals(1)) retValue = checkCmdInput(retValue)
     mPtr = checkPointer(checkCmdInput(mPtr))
     Interceptor.attach(mPtr, {
+        onEnter: function (args) {
+            if (index != -1) {
+                args[index] = retValue
+                LOGW(`setFunctionValue: Modify index: ${index} value: ${retValue}`)
+            }
+        },
         onLeave: (retval) => {
-            LOGW(`setFunctionValue | ${ptr(srcPtr as unknown as number)} | ret => { ${retval} -> ${retValue} } `)
-            retval.replace(retValue)
+            if (index == -1) {
+                LOGW(`setFunctionValue | ${ptr(srcPtr as unknown as number)} | ret => { ${retval} -> ${retValue} } `)
+                retval.replace(retValue)
+            }
         }
     })
 }
 
+/**
+ * 修改函数返回值 true / false
+ * @param mPtr 指定函数地址
+ * @param retval 指定函数返回值
+ */
 export const setFunctionBool = (mPtr: NativePointer, retval: boolean = false) => setFunctionValue(mPtr, ptr(retval ? 1 : 0))
 
 declare global {
