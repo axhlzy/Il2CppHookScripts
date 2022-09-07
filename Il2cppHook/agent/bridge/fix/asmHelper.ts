@@ -9,23 +9,26 @@ class ItemInfo {
     size: number
     title: string = ""
     info: string
-    classInfo: string = ''
+    extra_class_Str: string = ''
     infoColor: LogColor = LogColor.C36
-    extra: string = ""
+    extra_MI: Il2Cpp.Method | null = null
+    extra_Str: string = ""
     extraColor: LogColor = LogColor.C90
 
     public static countMethod: number = -1
     private static _preCache: Set<String> = new Set<String>()
-    private static _filterIns = new Array<string>('smull', 'strd', 'strh', 'sbc')
+    private static _filterIns = new Array<string>('smull', 'strd', 'strh', 'sbc', 'teq')
 
     constructor(ins: Instruction) {
         this.ins = ins
         this.current = ins.address
         this.size = ins.size
         cacheMethods()
-        let currentMethod = AddressToMethodNoException(this.current)
+        let currentMethod: Il2Cpp.Method | null = AddressToMethodNoException(this.current)
         if (currentMethod) {
-            this.title = `${getMethodDesFromMethodInfo(currentMethod)}`
+            let method: Il2Cpp.Method = currentMethod
+            // MI means MethodInfo ; MP means MethodPointer
+            this.title = `${method.class.image.assembly.name}.${method.class.name}.${getMethodDesFromMethodInfo(currentMethod)} | MI: ${method.handle} & MP: ${method.relativeVirtualAddress}`
             ++ItemInfo.countMethod
         }
         let insStr = ins.toString()
@@ -39,15 +42,15 @@ class ItemInfo {
     }
 
     setExtra(extra: string) {
-        this.extra = extra
+        this.extra_Str = extra
     }
 
     getExtra(): string {
-        return this.extra
+        return this.extra_Str
     }
 
     toString(): string {
-        return `${this.info}${this.extra.length == 0 ? "" : '\n\t' + this.extra}`
+        return `${this.info}${this.extra_Str.length == 0 ? "" : '\n\t' + this.extra_Str}`
     }
 
     private checkExtra(): void {
@@ -59,13 +62,14 @@ class ItemInfo {
             let targetMethod = AddressToMethodNoException(target)
             if (targetMethod) {
                 let localMethod = targetMethod as Il2Cpp.Method
-                this.extra = `→ ${getMethodDesFromMethodInfo(localMethod)} @ ${localMethod.handle}`
-                this.classInfo = `${localMethod.class.image.assembly.name}(${localMethod.class.image.handle}).${localMethod.class.name}(${localMethod.class.handle})`
+                this.extra_MI = localMethod
+                this.extra_Str = `→ ${getMethodDesFromMethodInfo(localMethod)} @ MI ${localMethod.handle} | MP ${localMethod.relativeVirtualAddress}`
+                this.extra_class_Str = `${this.current} | ${localMethod.class.image.assembly.name}(${localMethod.class.image.handle}).${localMethod.class.name}(${localMethod.class.handle})`
             }
             // 局部跳转方法解析
             let Offset = target.sub(this.ins.address).toInt32()
             if (Math.abs(Offset) < 0x1000) {
-                this.extra = `${Offset > 0 ? '↓' : '↑'} ${Offset / p_size} ( ${ptr(Offset)} / ${Offset})`
+                this.extra_Str = `${Offset > 0 ? '↓' : '↑'} ${Offset / p_size} ( ${ptr(Offset)} / ${Offset})`
             }
         }
     }
@@ -145,14 +149,14 @@ globalThis.showAsm = (mPtr: NativePointer, len: number = 0x40, needAsm: boolean 
             }
         }
         // 附加信息 (bl 偏移，以及行内 unity 方法跳转)
-        if (value.extra.length > 0) {
+        if (value.extra_Str.length > 0) {
             if (needAsm) {
-                LOG(`\t${value.extra}`, value.extraColor)
+                LOG(`\t${value.extra_Str}`, value.extraColor)
             } else {
-                if (value.extra.includes('→')) {
-                    LOG(`\t${value.extra}`, LogColor.C36)
-                    LOG(`\t\t@${value.classInfo}\n`, value.extraColor)
-                    recordScan.addExtra = value.classInfo
+                if (value.extra_Str.includes('→')) {
+                    LOG(`\t${value.extra_Str}`, LogColor.C36)
+                    LOG(`\t\t@${value.extra_class_Str}\n`, value.extraColor)
+                    recordScan.addExtra = value.extra_class_Str // 只是记录了一下调用的次数
                 }
             }
         }

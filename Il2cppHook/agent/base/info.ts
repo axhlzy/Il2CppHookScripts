@@ -9,11 +9,10 @@ const showMethodInfo = (methodInfoPtr: NativePointer): void => {
         return (`${getLine(8, ' ')}[-]${formartClass.alignStr(param.name)} | type: ${param.type.handle} | @ class:${param.type.class.handle} | ${param.type.name}`)
     }).join("\n")
 
-    newLine()
     LOGZ(`[-]${packMethod.class.image.assembly.name} @ ${packMethod.class.image.assembly.handle}`)
     LOGZ(`${getLine(2, ' ')}[-]${packMethod.class.image.name} @ ${packMethod.class.image.handle} | C:${packMethod.class.image.classCount}`)
     LOGZ(`${getLine(4, ' ')}[-]${packMethod.class.name} @ ${packMethod.class.handle} | M:${packMethod.class.methods.length} | F:${packMethod.class.fields.length}`)
-    LOGD(`${getLine(6, ' ')}[-]${getMethodDesFromMethodInfo(packMethod)} @ ${packMethod.handle} | ${packMethod.virtualAddress} ( ${packMethod.relativeVirtualAddress} ) `)
+    LOGD(`${getLine(6, ' ')}[-]${getMethodDesFromMethodInfo(packMethod)} @ MI:${packMethod.handle} & MP: ${packMethod.virtualAddress} ( ${packMethod.relativeVirtualAddress} ) `)
     LOGZ(`${params}`)
     newLine()
 }
