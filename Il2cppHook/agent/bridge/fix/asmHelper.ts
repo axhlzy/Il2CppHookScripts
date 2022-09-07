@@ -94,11 +94,11 @@ globalThis.showAsm = (mPtr: NativePointer, len: number = 0x40, needAsm: boolean 
     ItemInfo.countMethod = -1
     let currentPtr: NativePointer = checkPointer(mPtr)
     let recordScan: RecordScanInfo = new RecordScanInfo()
+    // 记录开始位置
     recordScan.start = currentPtr
     let asm: Instruction
     let mapInfo = new Map<NativePointer, ItemInfo>()
     if (len == -1) {
-        // 记录开始位置
         // 简洁版只扫描一个函数并记录函数调用
         while (true) {
             try {
@@ -160,7 +160,7 @@ globalThis.showAsm = (mPtr: NativePointer, len: number = 0x40, needAsm: boolean 
 
     // 底部额外信息
     if (!recordScan.start.isNull()) {
-        let ext = recordScan.extra.length == 0 ? "" : `| ${recordScan.extra.length} method`
+        let ext = recordScan.extra.length == 0 ? "" : `| ${recordScan.extra.length} methods`
         let addr = `${recordScan.start} - ${recordScan.end}`
         let addrSub = `${recordScan.getSubStart} - ${recordScan.getSubEnd}`
         LOGO(`\nscan asm @ ${addr} ( ${addrSub} ) ${ext}\n`)
