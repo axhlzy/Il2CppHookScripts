@@ -6,40 +6,43 @@ import { TYPE_CHECK_POINTER } from "../base/globle"
  * @param {TYPE_CHECK_POINTER} value
  * @returns {NativePointer}
  */
+var baseAddress = Process.findModuleByName("libil2cpp.so")!.base
 export const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, showLog: boolean = false): NativePointer => {
-    if (Il2Cpp.module.base.isNull()) return ptr(value as unknown as number)
+    if (baseAddress.isNull()) throw new Error("checkPointer: libil2cpp.so not found ! \n please call setBaseAddress first")
     if (Process.arch == 'arm64' && typeof value === "string" && value.trim().startsWith('0x')) value = Number(value)
-    if (typeof value === "number") {
-        return calPointer(ptr(value))
-    } else if (typeof value === "string") {
-        return Module.findExportByName(null, value) as NativePointer
-    } else if (typeof value === "function") {
-        return value as NativePointer
-    } else if (typeof value === "object") {
-        if (value instanceof NativePointer) {
-            return calPointer(value)
-        } else if (value instanceof Array<string | number>) {
-            if (!checkValue(value as Array<string | number>)) {
-                if (throwErr) throw new Error("checkPointer: checkValue Error")
+    switch (typeof value) {
+        case 'number':
+            return calPointer(ptr(value))
+        case 'string':
+            return Module.findExportByName(null, value) as NativePointer
+        case 'function':
+            return value as NativePointer
+        case 'object':
+            if (value instanceof NativePointer) {
+                return calPointer(value)
+            } else if (value instanceof Array<string | number>) {
+                if (!checkValue(value as Array<string | number>)) {
+                    if (throwErr) throw new Error("checkPointer: checkValue Error")
+                    else return ptr(0)
+                }
+                switch (value.length) {
+                    case 1:
+                        return Module.findExportByName(null, value[0] as string) as NativePointer
+                    case 2:
+                        return Module.findExportByName(value[0] as string, value[1] as string) as NativePointer
+                    case 3:
+                        return find_method(value[0] as string, value[1] as string, value[2] as string, value[3] as number)
+                    default:
+                        if (throwErr) throw new Error("checkPointer:UnKnow value length \nArray<> length must be 1,2,3")
+                        else return ptr(0)
+                }
+            } else {
+                if (throwErr) throw new Error("checkPointer: Error type")
                 else return ptr(0)
             }
-            switch (value.length) {
-                case 1:
-                    return Module.findExportByName(null, value[0] as string) as NativePointer
-                case 2:
-                    return Module.findExportByName(value[0] as string, value[1] as string) as NativePointer
-                case 3:
-                    return find_method(value[0] as string, value[1] as string, value[2] as string, value[3] as number)
-                default:
-                    if (throwErr) throw new Error("checkPointer:UnKnow value length \nArray<> length must be 1,2,3")
-                    else return ptr(0)
-            }
-        } else {
-            if (throwErr) throw new Error("checkPointer: Error type")
-            else return ptr(0)
-        }
+        default:
+            throw new Error("checkPointer: Error type")
     }
-    return ptr(0)
 
     function calPointer(mPtr: NativePointer): NativePointer {
         if (mPtr.isNull() || !mPtr.compare(soAddr)) return mPtr
@@ -75,38 +78,48 @@ export const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = fals
     }
 }
 
-
 declare global {
     var checkPointer: (args: NativePointer | number) => NativePointer
-    var checkCmdInput: (mPtr: NativePointer) => NativePointer
+    var checkCmdInput: (mPtr: NativePointer | number | string | Function) => NativePointer
     var getSubBasePtr: (mPtr: NativePointer, mdName?: string) => NativePointer
     var getSubBaseDes: (mPtr: NativePointer, mdName?: string) => string
+    var setBaseAddress: (mPtr: NativePointer) => void
 }
 
 globalThis.checkPointer = checkPointer as any
 
-globalThis.checkCmdInput = (mPtr: NativePointer): NativePointer => {
-    if (typeof mPtr == "number") mPtr = ptr(mPtr)
-    if (typeof mPtr == "string" && (String(mPtr).startsWith("0x") || String(mPtr).startsWith("0X"))) mPtr = ptr(mPtr)
-    if (mPtr.isNull()) throw new Error("mPtr can't be null")
-    return mPtr
+globalThis.checkCmdInput = (mPtr: NativePointer | number | string | Function): NativePointer => {
+    if (mPtr instanceof NativePointer) return mPtr
+    switch (typeof mPtr) {
+        case "number":
+            return ptr(mPtr)
+        case "string":
+            if (mPtr.startsWith("0x") || mPtr.startsWith("0X")) return ptr(mPtr)
+        case "function":
+            return ptr(mPtr as any)
+        default:
+            throw new Error("checkCmdInput: Error type")
+    }
 }
 
 const getMD = (mdName: string | NativePointer = "libil2cpp.so"): Module => {
     let md: Module = Process.findModuleByName("libil2cpp.so")!
-    if (typeof mdName === "string") {
-        try {
-            md = Process.findModuleByName(mdName)!
-        } catch (error) { throw error }
-    }
-    else if (typeof mdName === "number") {
-        try {
-            md = Process.getModuleByAddress(mdName)!
-        } catch (error) {
-            md = Process.findModuleByName(mdName)!
-        }
-    } else {
-        mdName = ptr(mdName as unknown as string)
+    switch (typeof mdName) {
+        case "number":
+            try {
+                md = Process.getModuleByAddress(mdName)!
+            } catch {
+                md = Process.findModuleByName(mdName)!
+            }
+            break
+        case "string":
+            try {
+                md = Process.findModuleByName(mdName)!
+            } catch (error) { throw error }
+            break
+        default:
+            mdName = ptr(mdName as unknown as string)
+            break
     }
     if (md == null) throw new Error("getSubBasePtr: can't find module")
     return md
@@ -120,4 +133,8 @@ globalThis.getSubBasePtr = (mPtr: NativePointer): NativePointer => {
 globalThis.getSubBaseDes = (mPtr: NativePointer): string => {
     let md: Module = getMD(mPtr)
     return `${mPtr.sub(md.base)} <--- ${mPtr} @ ${md.name} (${md.base})`
+}
+
+globalThis.setBaseAddress = (mPtr: NativePointer): void => {
+    baseAddress = checkCmdInput(mPtr)
 }

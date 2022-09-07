@@ -1,7 +1,6 @@
-import { PackList } from "../../../../../bridge/fix/packer/packList";
-import { mscorlib_System_Type_impl as System_Type } from "../../Type/class";
-import { UnityEngine_Object } from "../class";
-import { GameObjectImpl as GameObject } from "../GameObject/class";
+import { mscorlib_System_Type_impl as System_Type } from "../../Type/class"
+import { UnityEngine_Object } from "../class"
+import { GameObjectImpl as GameObject } from "../GameObject/class"
 
 class UnityEngine_Component_Impl extends UnityEngine_Object {
 
@@ -36,7 +35,6 @@ class UnityEngine_Component_Impl extends UnityEngine_Object {
     //     return new PackList(allocTmp)
     // }
 
-    // pass
     get_gameObject(): GameObject {
         return new GameObject(Il2Cpp.Api.Component._get_gameObject(this.handle))
     }
@@ -45,7 +43,6 @@ class UnityEngine_Component_Impl extends UnityEngine_Object {
         return Il2Cpp.Api.Component._set_tag(this.handle, allocUStr(value))
     }
 
-    // pass
     get_transform(): Il2Cpp.Transform {
         return new Il2Cpp.Transform(Il2Cpp.Api.Component._get_transform(this.handle))
     }

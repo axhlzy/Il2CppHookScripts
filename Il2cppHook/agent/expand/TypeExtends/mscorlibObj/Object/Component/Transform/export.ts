@@ -8,7 +8,6 @@ globalThis.showTransform = (transform: NativePointer) => {
     LOGD(`childCount\t--->\t${trsIns.get_childCount()}\t(${trsIns.get_name()})`)
     PrintHierarchy(transform, 1, true)
     LOGD("get_position\t(" + trsIns.get_position().toString() + ")")
-
     // todo
 }
 

@@ -1,7 +1,6 @@
-import { mscorlib_System_Type_impl as System_Type } from "../../Type/class"
 import { UnityEngine_Object } from "../class"
+import { mscorlib_System_Type_impl as System_Type } from "../../Type/class"
 import { UnityEngine_Component_Impl as Component } from "../Component/class"
-// import { UnityEngine_Transform_Impl as Transform } from "../Component/Transform/class"
 
 class GameObjectImpl extends UnityEngine_Object {
 
@@ -65,7 +64,7 @@ class GameObjectImpl extends UnityEngine_Object {
     }
 
     CompareTag(tag: string): boolean {
-        return !Il2Cpp.Api.GameObject._CompareTag(this.handle, allocUStr(tag)).isNull()
+        return Il2Cpp.Api.GameObject._CompareTag(this.handle, allocUStr(tag))
     }
 
     get_transform(): Il2Cpp.Transform {
@@ -90,11 +89,11 @@ class GameObjectImpl extends UnityEngine_Object {
     }
 
     get_activeSelf(): boolean {
-        return !Il2Cpp.Api.GameObject._get_activeSelf(this.handle).isNull()
+        return Il2Cpp.Api.GameObject._get_activeSelf(this.handle)
     }
 
     get_activeInHierarchy(): boolean {
-        return !Il2Cpp.Api.GameObject._get_activeSelf(this.handle).isNull()
+        return Il2Cpp.Api.GameObject._get_activeSelf(this.handle)
     }
 
     // public static extern GameObject Find(string name);

@@ -1,4 +1,5 @@
 import { filterDuplicateOBJ, PassType } from "../../../../../utils/common"
+import { setActiveT, setActiveTChange } from "../Component/export"
 
 globalThis.HookSetActive = (defaltActive: number = 1) => {
     A(Il2Cpp.Api.GameObject._SetActive, (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
@@ -58,10 +59,42 @@ globalThis.getTransform = (mPtr: NativePointer) => {
     return gameObject.get_transform().handle
 }
 
+globalThis.setActive = (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active: boolean = false) => {
+    mPtr = checkGT(mPtr)
+    if (mPtr instanceof Il2Cpp.GameObject) setActiveG(mPtr, active)
+    else if (mPtr instanceof Il2Cpp.Transform) setActiveT(mPtr, active)
+    else throw new Error("setActive: mPtr is not GameObject or Transform or number or string")
+}
+
+globalThis.setActiveC = (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active: boolean = false) => {
+    mPtr = checkGT(mPtr)
+    if (mPtr instanceof Il2Cpp.GameObject) setActiveGChange(mPtr)
+    else if (mPtr instanceof Il2Cpp.Transform) setActiveTChange(mPtr)
+    else throw new Error("setActive: mPtr is not GameObject or Transform or number or string")
+}
+
+const checkGT = (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer): Il2Cpp.GameObject | Il2Cpp.Transform => {
+    let newPtr: NativePointer
+    if (typeof mPtr == 'number' || typeof mPtr == 'string' || mPtr instanceof NativePointer) {
+        newPtr = checkCmdInput(mPtr)
+        let typeName = getTypeName(newPtr)
+        if (typeName.includes('Transform')) mPtr = new Il2Cpp.Transform(newPtr) // type : RectTransform
+        else if (typeName.includes('GameObject')) mPtr = new Il2Cpp.GameObject(newPtr)
+        else throw new Error("setActive: mPtr is not GameObject or Transform")
+    }
+    return mPtr
+}
+
+export const setActiveG = (gameObject: Il2Cpp.GameObject, active: boolean = false) => gameObject.SetActive(active)
+
+export const setActiveGChange = (gameObject: Il2Cpp.GameObject) => gameObject.SetActive(!gameObject.get_activeSelf())
+
 declare global {
     var HookSetActive: (defaltActive?: number) => void
     var showGameObject: (gameObjOrTransform: NativePointer) => void
     var getTransform: (gameObjOrComponent: NativePointer) => NativePointer
+    var setActive: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void
+    var setActiveC: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void
 }
 
 export { showGameObject, HookSetActive, getTransform } 
