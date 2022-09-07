@@ -107,6 +107,8 @@ $ frida -FU -l ../_Ufunc.js
 - **showAsm 基于frida.Instruction结合unity函数信息的反汇编** <a id="showAsm"></a>
     
     ![showAsm](img/showAsm.png)
+    
+    ![showAsmSP](img/showAsmSP.png)
 
 - **showMethodInfo / MethodToShow 查看MethodInfo信息（后者多用在findMethod）** <a id="MethodInfo"></a>
     
