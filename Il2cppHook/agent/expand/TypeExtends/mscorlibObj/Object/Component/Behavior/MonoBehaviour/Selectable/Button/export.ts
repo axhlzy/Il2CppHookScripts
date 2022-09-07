@@ -138,8 +138,10 @@ const OnButtonClick = () => {
                     let unityAction = new UnityAction(action.handle)
                     let method: Il2Cpp.Method
                     if (!unityAction.method.isNull()) {
+                        // action 中本身就包含了 methodInfo
                         method = new Il2Cpp.Method(unityAction.method)
                     } else if (!unityAction.method_ptr.isNull()) {
+                        // 备用的相对较慢的解析手段 （address to method 需要遍历）
                         method = AddressToMethod(unityAction.method_ptr, false)
                     } else throw new Error("unityAction.method is null")
                     LOGW(`\t\t[${index}] ${method.handle} -> ${method.relativeVirtualAddress} | ${method.class.image.assembly.name}.${method.class.name}.${method.name}`)

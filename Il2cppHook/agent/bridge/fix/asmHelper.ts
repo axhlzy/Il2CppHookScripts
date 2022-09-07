@@ -64,7 +64,8 @@ class ItemInfo {
                 let localMethod = targetMethod as Il2Cpp.Method
                 this.extra_MI = localMethod
                 this.extra_Str = `→ ${getMethodDesFromMethodInfo(localMethod)} @ MI ${localMethod.handle} | MP ${localMethod.relativeVirtualAddress}`
-                this.extra_class_Str = `${this.current} | ${localMethod.class.image.assembly.name}(${localMethod.class.image.handle}).${localMethod.class.name}(${localMethod.class.handle})`
+                let current = `${this.current} ( ${this.current.sub(Process.findModuleByAddress(this.current)!.base)} )`
+                this.extra_class_Str = `${current} | ${localMethod.class.image.assembly.name}(${localMethod.class.image.handle}).${localMethod.class.name}(${localMethod.class.handle})`
             }
             // 局部跳转方法解析
             let Offset = target.sub(this.ins.address).toInt32()
@@ -116,7 +117,7 @@ globalThis.showAsm = (mPtr: NativePointer, len: number = 0x40, needAsm: boolean 
                 mapInfo.set(asm.address, info)
                 currentPtr = asm.next
             } catch (error) {
-                LOGE(error)
+                // LOGE(error)
                 recordScan.end = currentPtr
                 break
             }
@@ -130,7 +131,7 @@ globalThis.showAsm = (mPtr: NativePointer, len: number = 0x40, needAsm: boolean 
                 currentPtr = asm.next
                 recordScan.end = currentPtr
             } catch (error) {
-                LOGE(error)
+                // LOGE(error)
                 recordScan.end = currentPtr
                 break
             }

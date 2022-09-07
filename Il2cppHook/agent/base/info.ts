@@ -3,6 +3,7 @@ import { formartClass } from "../utils/formart"
 
 // 侧重参数信息 还有一个 MethodToShow() 用在 findMethod / find_method 侧重基本信息
 const showMethodInfo = (methodInfoPtr: NativePointer): void => {
+    newLine()
     if (typeof methodInfoPtr == "number") methodInfoPtr = ptr(methodInfoPtr)
     let packMethod = new Il2Cpp.Method(methodInfoPtr)
     let params = packMethod.parameters.map((param: Il2Cpp.Parameter) => {

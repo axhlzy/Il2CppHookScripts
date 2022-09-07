@@ -46,7 +46,7 @@ export class FieldsParser {
     }
 
     fieldValue(fieldName: string): NativePointer {
-        let field = this.fieldInstance(fieldName)
+        let field: Il2Cpp.Field = this.fieldInstance(fieldName)
         if (field.isStatic) return this.fakeStaticField(field).readPointer()
         return this.mPtr.add(this.fieldOffset(fieldName)).readPointer()
     }
@@ -64,18 +64,18 @@ export class FieldsParser {
         let countNum: number = -1
         this.mClass.fields
             .sort((f1: Il2Cpp.Field, f2: Il2Cpp.Field) => f1.offset - f2.offset)
-            .forEach(field => {
-                let index = formartClass.alignStr(`[${++countNum}]`, 6)
-                let offset = ptr(field.offset)
-                let modifier = getModifier(field.flags).trim()
-                let classDes = `${field.type.class.name} (${field.type.class.handle})`
-                let fieldName = field.name
+            .forEach((field: Il2Cpp.Field) => {
+                let index: string = formartClass.alignStr(`[${++countNum}]`, 6)
+                let offset: NativePointer = ptr(field.offset)
+                let modifier: string = getModifier(field.flags).trim()
+                let classDes: string = `${field.type.class.name} (${field.type.class.handle})`
+                let fieldName: string = field.name
                 // 字段通用信息打印
                 LOGD(`${index}  ${offset} ${modifier} ${classDes}\t${fieldName}`)
                 // 即对静态变量进行值解析
                 if (field.isStatic) {
-                    let tmpOut = this.fakeStaticField(field)
-                    let realPtr = tmpOut.readPointer()
+                    let tmpOut: NativePointer = this.fakeStaticField(field)
+                    let realPtr: NativePointer = tmpOut.readPointer()
                     // LOGZ(`\t${tmpOut}  --->  ${realPtr}  ---> ${new Il2Cpp.Object(realPtr).toString()}`)
                     let value: string
                     try {
@@ -83,10 +83,15 @@ export class FieldsParser {
                     } catch (error) { value = '' }
                     LOGZ(`\t${tmpOut}  --->  ${realPtr}  ${value}`)
                 }
+                // 对枚举的解析
+                else if (field.type.class.isEnum) {
+                    let value = field.value
+                    LOGZ(`\tEnum -> ${value}`)
+                }
                 // 即对实例进行值解析
                 else if (!this.mPtr.isNull()) {
-                    let thisHandle = this.mPtr.add(field.offset)
-                    let thisValue = thisHandle.readPointer()
+                    let thisHandle: NativePointer = this.mPtr.add(field.offset)
+                    let thisValue: NativePointer = thisHandle.readPointer()
                     let thisString: string = "--->  "
                     try {
                         // 需要考虑一些自定义处理(包含基本数据类型)，手动解析的一些常用类型
@@ -111,7 +116,7 @@ export class FieldsParser {
     }
 
     private fakeStaticField(field: Il2Cpp.Field): NativePointer {
-        let tmpOut = alloc()
+        let tmpOut: NativePointer = alloc()
         Il2Cpp.Api._fieldGetStaticValue(field.handle, tmpOut)
         return tmpOut
     }

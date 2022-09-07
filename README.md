@@ -118,6 +118,9 @@ $ frida -FU -l ../_Ufunc.js
   - B ('ClassName') === B(findClass('ClassName')),不会重复添加已添加的Method,不带参数即断点所有常用的方法
   
     ![breakPoint_B](img/breakPoint_B_0.png)
+  - BF 等价于原来的 B("filterStr") ,断点包含指定字符串的方法
+  
+    ![breakPoint_BF](img/breakPoint_BF.png)
 
   - b ('Method_Pointer') / b('MethodInfo_Pointer')
       
@@ -175,6 +178,8 @@ $ frida -FU -l ../_Ufunc.js
 - **B_Button : Hook Button** <a id="B_Button"></a>
     
     ![B_Button](img/B_Button.png)
+
+    ![B_Button](img/B_Button_1.png)
 
 - **listModule (filterName: string) => void** <a id="listModule"></a>
   

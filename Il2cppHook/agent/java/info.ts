@@ -97,6 +97,9 @@ function getApkInfo() {
 // todo ....
 function getUnityInfo() {
 
+    LOGE('todo ....')
+    return
+
     let line20 = getLine(20)
     let retStr = undefined
 
