@@ -71,22 +71,49 @@ class ItemInfo {
     }
 }
 
+class RecordScanInfo {
+    start: NativePointer = ptr(0)
+    end: NativePointer = ptr(0)
+    extra: Array<string> = new Array<string>()
+
+    get getSubStart(): NativePointer {
+        return this.start.sub(Process.findModuleByAddress(this.start)!.base)
+    }
+
+    get getSubEnd(): NativePointer {
+        return this.end.sub(Process.findModuleByAddress(this.end)!.base).sub(p_size)
+    }
+
+    set addExtra(extra: string) {
+        this.extra.push(extra)
+    }
+
+}
+
 globalThis.showAsm = (mPtr: NativePointer, len: number = 0x40, needAsm: boolean = true): void => {
     ItemInfo.countMethod = -1
-    let currentPtr = checkPointer(mPtr)
+    let currentPtr: NativePointer = checkPointer(mPtr)
+    let recordScan: RecordScanInfo = new RecordScanInfo()
+    recordScan.start = currentPtr
     let asm: Instruction
     let mapInfo = new Map<NativePointer, ItemInfo>()
     if (len == -1) {
+        // 记录开始位置
+        // 简洁版只扫描一个函数并记录函数调用
         while (true) {
             try {
                 asm = Instruction.parse(currentPtr)
                 let info = new ItemInfo(asm)
                 // len == -1 的情况下只记录一个methodInfo 即返回
-                if (ItemInfo.countMethod > 0) break
+                if (ItemInfo.countMethod > 0) {
+                    recordScan.end = currentPtr
+                    break
+                } else tipsCurrent(currentPtr)
                 mapInfo.set(asm.address, info)
                 currentPtr = asm.next
             } catch (error) {
                 LOGE(error)
+                recordScan.end = currentPtr
                 break
             }
         }
@@ -95,9 +122,12 @@ globalThis.showAsm = (mPtr: NativePointer, len: number = 0x40, needAsm: boolean 
             try {
                 asm = Instruction.parse(currentPtr)
                 mapInfo.set(asm.address, new ItemInfo(asm))
+                tipsCurrent(currentPtr)
                 currentPtr = asm.next
+                recordScan.end = currentPtr
             } catch (error) {
                 LOGE(error)
+                recordScan.end = currentPtr
                 break
             }
         }
@@ -120,13 +150,26 @@ globalThis.showAsm = (mPtr: NativePointer, len: number = 0x40, needAsm: boolean 
                 LOG(`\t${value.extra}`, value.extraColor)
             } else {
                 if (value.extra.includes('→')) {
-                    LOG(`\t${value.extra}`, value.extraColor)
-                    LOG(`\t\t${value.classInfo}`, value.extraColor)
+                    LOG(`\t${value.extra}`, LogColor.C36)
+                    LOG(`\t\t@${value.classInfo}\n`, value.extraColor)
+                    recordScan.addExtra = value.classInfo
                 }
-
             }
         }
     })
+
+    // 底部额外信息
+    if (!recordScan.start.isNull()) {
+        let ext = recordScan.extra.length == 0 ? "" : `| ${recordScan.extra.length} method`
+        let addr = `${recordScan.start} - ${recordScan.end}`
+        let addrSub = `${recordScan.getSubStart} - ${recordScan.getSubEnd}`
+        LOGO(`\nscan asm @ ${addr} ( ${addrSub} ) ${ext}\n`)
+    }
+
+    // 提示一下当前位置，避免看起来像卡死
+    function tipsCurrent(mPtr: NativePointer) {
+        if (mPtr.toInt32() % 0x100 == 0) LOGZ(`scan asm @ ${mPtr}`)
+    }
 }
 
 globalThis.showAsmSJ = (mPtr: NativePointer): void => LOGJSON(Instruction.parse(checkPointer(mPtr)))

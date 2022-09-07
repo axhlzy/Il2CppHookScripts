@@ -10,27 +10,27 @@ class UnityEngine_MonoBehaviour_Impl extends UnityEngine_Behaviour_Impl {
     // m_Transition : Transition
     m_Transition: Transition = lfv(this.handle, "m_Transition")
     // s_SelectableCount : Int32
-    s_SelectableCount: number = lfv(this.handle, "s_SelectableCount").toInt32()
+    // s_SelectableCount: number = lfv(this.handle, "s_SelectableCount").toInt32() // not all having this field
     // s_Selectables : Selectable[]
-    s_Selectables: Selectable[] = lfv(this.handle, "s_Selectables") as unknown as Selectable[]
+    // s_Selectables: Selectable[] = lfv(this.handle, "s_Selectables") as unknown as Selectable[]
     // m_TargetGraphic : Graphic
-    m_TargetGraphic: Il2Cpp.Graphic = new Il2Cpp.Graphic(lfv(this.handle, "m_TargetGraphic"))
-    // m_SpriteState : SpriteState
-    m_SpriteState: SpriteState = lfv(this.handle, "m_SpriteState")
-    // m_Navigation : Navigation
-    m_Navigation: Navigation = lfv(this.handle, "m_Navigation")
-    // m_Interactable : Boolean
-    m_Interactable: boolean = lfv(this.handle, "m_Interactable") as unknown as boolean
-    // m_GroupsAllowInteraction : Boolean
-    m_GroupsAllowInteraction: boolean = lfv(this.handle, "m_GroupsAllowInteraction") as unknown as boolean
-    // m_EnableCalled : Boolean
-    m_EnableCalled: boolean = lfv(this.handle, "m_EnableCalled") as unknown as boolean
-    // m_CurrentIndex : Int32
-    m_CurrentIndex: number = lfv(this.handle, "m_CurrentIndex") as unknown as number
-    // m_Colors : ColorBlock
-    m_Colors: ColorBlock = lfv(this.handle, "m_Colors") as unknown as ColorBlock
-    // m_CanvasGroupCache : List<CanvasGroup>
-    m_CanvasGroupCache: NativePointer = lfv(this.handle, "m_CanvasGroupCache")
+    // m_TargetGraphic: Il2Cpp.Graphic = new Il2Cpp.Graphic(lfv(this.handle, "m_TargetGraphic"))
+    // // m_SpriteState : SpriteState
+    // m_SpriteState: SpriteState = lfv(this.handle, "m_SpriteState")
+    // // m_Navigation : Navigation
+    // m_Navigation: Navigation = lfv(this.handle, "m_Navigation")
+    // // m_Interactable : Boolean
+    // m_Interactable: boolean = lfv(this.handle, "m_Interactable") as unknown as boolean
+    // // m_GroupsAllowInteraction : Boolean
+    // m_GroupsAllowInteraction: boolean = lfv(this.handle, "m_GroupsAllowInteraction") as unknown as boolean
+    // // m_EnableCalled : Boolean
+    // m_EnableCalled: boolean = lfv(this.handle, "m_EnableCalled") as unknown as boolean
+    // // m_CurrentIndex : Int32
+    // m_CurrentIndex: number = lfv(this.handle, "m_CurrentIndex") as unknown as number
+    // // m_Colors : ColorBlock
+    // m_Colors: ColorBlock = lfv(this.handle, "m_Colors") as unknown as ColorBlock
+    // // m_CanvasGroupCache : List<CanvasGroup>
+    // m_CanvasGroupCache: NativePointer = lfv(this.handle, "m_CanvasGroupCache")
 
     ctor_0(): UnityEngine_MonoBehaviour_Impl {
         return new UnityEngine_MonoBehaviour_Impl(Il2Cpp.Api.MonoBehaviour._ctor(alloc()));

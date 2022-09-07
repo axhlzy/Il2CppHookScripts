@@ -23,17 +23,17 @@ type UnityEngine_Sprite = NativePointer
 class UnityEngine_UI_Selectable_Impl extends UnityEngine_EventSystems_UIBehaviour {
 
     // s_Selectables: NativePointer = lfv(this.handle, "s_Selectables") as unknown as NativePointer
-    s_SelectableCount: number = lfv(this.handle, "s_SelectableCount") as unknown as number
-    m_EnableCalled: boolean = lfv(this.handle, "m_EnableCalled") as unknown as boolean
-    m_Navigation: UnityEngine_UI_Navigation = lfv(this.handle, "m_Navigation") as unknown as UnityEngine_UI_Navigation
-    m_Transition: UnityEngine_UI_Selectable_Impl_Transition = lfv(this.handle, "m_Transition") as unknown as UnityEngine_UI_Selectable_Impl_Transition
-    m_Colors: UnityEngine_UI_ColorBlock = lfv(this.handle, "m_Colors") as unknown as UnityEngine_UI_ColorBlock
-    m_SpriteState: UnityEngine_UI_SpriteState = lfv(this.handle, "m_SpriteState") as unknown as UnityEngine_UI_SpriteState
-    m_AnimationTriggers: UnityEngine_UI_AnimationTriggers = lfv(this.handle, "m_AnimationTriggers") as unknown as UnityEngine_UI_AnimationTriggers
-    m_Interactable: boolean = lfv(this.handle, "m_Interactable") as unknown as boolean
-    m_TargetGraphic: Graphic = new Graphic(lfv(this.handle, "m_TargetGraphic"))
-    m_GroupsAllowInteraction: boolean = lfv(this.handle, "m_GroupsAllowInteraction").toInt32() == 0
-    m_CurrentIndex: number = lfv(this.handle, "m_CurrentIndex").toInt32()
+    // s_SelectableCount: number = lfv(this.handle, "s_SelectableCount") as unknown as number
+    // m_EnableCalled: boolean = lfv(this.handle, "m_EnableCalled") as unknown as boolean
+    m_Navigation: UnityEngine_UI_Navigation
+    m_Transition: UnityEngine_UI_Selectable_Impl_Transition
+    m_Colors: UnityEngine_UI_ColorBlock
+    m_SpriteState: UnityEngine_UI_SpriteState
+    m_AnimationTriggers: UnityEngine_UI_AnimationTriggers
+    m_Interactable: boolean
+    // m_TargetGraphic: Graphic = new Graphic(lfv(this.handle, "m_TargetGraphic"))
+    m_GroupsAllowInteraction: boolean
+    // m_CurrentIndex: number = lfv(this.handle, "m_CurrentIndex").toInt32()
     // < isPointerInside > k__BackingField: boolean = lfv(this.handle, "<isPointerInside>k__BackingField") as unknown as boolean
     //     < isPointerDown > k__BackingField: boolean = lfv(this.handle, "<isPointerDown>k__BackingField") as unknown as boolean
     //         < hasSelection > k__BackingField: boolean = lfv(this.handle, "<hasSelection>k__BackingField") as unknown as boolean
@@ -42,6 +42,15 @@ class UnityEngine_UI_Selectable_Impl extends UnityEngine_EventSystems_UIBehaviou
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
+        this.m_Navigation = lfv(this.handle, "m_Navigation") as UnityEngine_UI_Navigation
+        this.m_Transition = lfv(this.handle, "m_Transition") as UnityEngine_UI_Selectable_Impl_Transition
+        this.m_Colors = lfv(this.handle, "m_Colors") as UnityEngine_UI_ColorBlock
+        this.m_SpriteState = lfv(this.handle, "m_SpriteState") as UnityEngine_UI_SpriteState
+        this.m_AnimationTriggers = lfv(this.handle, "m_AnimationTriggers") as UnityEngine_UI_AnimationTriggers
+        this.m_Interactable = lfv(this.handle, "m_Interactable").toInt32() == 0
+        // this.m_TargetGraphic = new Graphic(lfv(this.handle, "m_TargetGraphic"))
+        this.m_GroupsAllowInteraction = lfv(this.handle, "m_GroupsAllowInteraction").toInt32() == 0
+        // this.m_CurrentIndex = lfv(this.handle, "m_CurrentIndex").toInt32()
     }
 
     static get_allSelectablesArray(): UnityEngine_UI_Selectable_Impl[] {
