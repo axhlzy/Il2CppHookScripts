@@ -9,7 +9,7 @@ interface list_impl {
 
 export class PackList implements list_impl {
 
-    private handle: NativePointer
+    public handle: NativePointer
     private object: Il2Cpp.Object
     private class: Il2Cpp.Class
 

@@ -4,6 +4,8 @@ import { UnityEngine_Color_Impl as UnityEngine_Color } from "../../../../../Valu
 import { UnityEngine_EventSystems_UIBehaviour_Impl as UnityEngine_EventSystems_UIBehaviour } from "../UIBehaviour/class"
 import { UnityEngine_EventSystems_PointerEventData_Impl as PointerEventData } from "../../../../../AbstractEventData/BaseEventData/PointerEventData/class"
 import { UnityEngine_EventSystems_BaseEventData_Impl as BaseEventData } from "../../../../../AbstractEventData/BaseEventData/class"
+import { UnityEngine_UI_Graphic_Impl as Graphic } from "../UIBehaviour/Graphic/class"
+import { PackList } from "../../../../../../../../bridge/fix/packer/packList"
 
 type UnityEngine_UI_Navigation = NativePointer
 type UnityEngine_UI_Selectable_Impl_Transition = NativePointer
@@ -29,9 +31,9 @@ class UnityEngine_UI_Selectable_Impl extends UnityEngine_EventSystems_UIBehaviou
     m_SpriteState: UnityEngine_UI_SpriteState = lfv(this.handle, "m_SpriteState") as unknown as UnityEngine_UI_SpriteState
     m_AnimationTriggers: UnityEngine_UI_AnimationTriggers = lfv(this.handle, "m_AnimationTriggers") as unknown as UnityEngine_UI_AnimationTriggers
     m_Interactable: boolean = lfv(this.handle, "m_Interactable") as unknown as boolean
-    m_TargetGraphic: UnityEngine_UI_Graphic = lfv(this.handle, "m_TargetGraphic") as unknown as UnityEngine_UI_Graphic
-    m_GroupsAllowInteraction: boolean = lfv(this.handle, "m_GroupsAllowInteraction") as unknown as boolean
-    m_CurrentIndex: number = lfv(this.handle, "m_CurrentIndex") as unknown as number
+    m_TargetGraphic: Graphic = new Graphic(lfv(this.handle, "m_TargetGraphic"))
+    m_GroupsAllowInteraction: boolean = lfv(this.handle, "m_GroupsAllowInteraction").toInt32() == 0
+    m_CurrentIndex: number = lfv(this.handle, "m_CurrentIndex").toInt32()
     // < isPointerInside > k__BackingField: boolean = lfv(this.handle, "<isPointerInside>k__BackingField") as unknown as boolean
     //     < isPointerDown > k__BackingField: boolean = lfv(this.handle, "<isPointerDown>k__BackingField") as unknown as boolean
     //         < hasSelection > k__BackingField: boolean = lfv(this.handle, "<hasSelection>k__BackingField") as unknown as boolean
@@ -53,8 +55,8 @@ class UnityEngine_UI_Selectable_Impl extends UnityEngine_EventSystems_UIBehaviou
     // static get_allSelectables(): System_Collections.Generic.List<UnityEngine.UI.Selectable> {
     //     return Il2Cpp.Api.Selectable._get_allSelectables()
     // }
-    static get_allSelectables(): NativePointer {
-        return Il2Cpp.Api.Selectable._get_allSelectables()
+    static get_allSelectables(): PackList {
+        return new PackList(Il2Cpp.Api.Selectable._get_allSelectables())
     }
 
     static AllSelectablesNoAlloc(selectables: UnityEngine_UI_Selectable_Impl[]): number {

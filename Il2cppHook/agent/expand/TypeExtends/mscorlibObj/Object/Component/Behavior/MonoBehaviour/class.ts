@@ -1,21 +1,20 @@
-import { UnityEngine_Behaviour_Impl } from "../class";
+import { UnityEngine_Behaviour_Impl } from "../class"
 
 type Transition = NativePointer
 type Selectable = NativePointer
-type Graphic = NativePointer
 type SpriteState = NativePointer
 type Navigation = NativePointer
 type ColorBlock = NativePointer
-class UnityEngine_MonoBehaviour_Impl extends UnityEngine_Behaviour_Impl implements UnityEngine_MonoBehaviour_Interface {
+class UnityEngine_MonoBehaviour_Impl extends UnityEngine_Behaviour_Impl {
 
     // m_Transition : Transition
     m_Transition: Transition = lfv(this.handle, "m_Transition")
     // s_SelectableCount : Int32
-    s_SelectableCount: number = lfv(this.handle, "s_SelectableCount") as unknown as number
+    s_SelectableCount: number = lfv(this.handle, "s_SelectableCount").toInt32()
     // s_Selectables : Selectable[]
     s_Selectables: Selectable[] = lfv(this.handle, "s_Selectables") as unknown as Selectable[]
     // m_TargetGraphic : Graphic
-    m_TargetGraphic: Graphic = lfv(this.handle, "m_TargetGraphic")
+    m_TargetGraphic: Il2Cpp.Graphic = new Il2Cpp.Graphic(lfv(this.handle, "m_TargetGraphic"))
     // m_SpriteState : SpriteState
     m_SpriteState: SpriteState = lfv(this.handle, "m_SpriteState")
     // m_Navigation : Navigation

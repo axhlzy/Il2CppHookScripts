@@ -17,6 +17,7 @@ import "./Vector2/include"
 import "./Vector3/include"
 import "./Vector4/include"
 import "./Ray/include"
+import "./RaycastResult/include"
 
 import "./Int32/include"
 import "./DateTime/include"
