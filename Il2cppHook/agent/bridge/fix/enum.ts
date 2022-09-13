@@ -24,7 +24,7 @@ export const enumForEach = (className: string, callback: (field: NativePointer, 
     }
 }
 
-// export const enumNumToName = (value: number, enumName: string) => {
+// export const enumNumToName1 = (value: number, enumName: string) => {
 //     let clsPtr = findClass(enumName)
 //     if (clsPtr.isNull()) throw new Error("Don't find class " + enumName)
 //     let localCls = new Il2Cpp.Class(findClass(enumName))
@@ -36,9 +36,25 @@ export const enumForEach = (className: string, callback: (field: NativePointer, 
 //             value = field.value
 //         } catch { }
 //         LOGD(value + " " + field.name)
+//         retStr = value
 //     })
 //     return retStr
 // }
+
+globalThis.testCall = () => {
+    // LOGW(enumNumToName1(0x2, "OperatingSystemFamily"))
+
+    LOGD(mscorlib.Environment.GetEnvironmentVariableNames().toString())
+
+    mscorlib.Environment.GetEnvironmentVariableNames().forEach((item: Il2Cpp.Object, index: number) => {
+        LOGD(`${index} ${item}`)
+    })
+
+}
+
+declare global {
+    var testCall: Function
+}
 
 // function read(pointer: NativePointer, type: Il2Cpp.Type): Il2Cpp.Field.Type {
 //     switch (type.typeEnum) {

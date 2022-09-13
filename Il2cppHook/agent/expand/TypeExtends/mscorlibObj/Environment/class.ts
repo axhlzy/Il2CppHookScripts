@@ -1,4 +1,5 @@
 import { enumNumToName } from "../../../../bridge/fix/enum"
+import { PackArray } from "../../../../bridge/fix/packer/packArray"
 import { mscorlib_System_Object_impl } from "../class"
 import { System_IntPtr_Impl as IntPtr } from "../ValueType/IntPtr/class"
 import { System_PlatformID } from "./enum"
@@ -141,8 +142,11 @@ class System_Environment_Impl extends mscorlib_System_Object_impl {
         return mscorlib.Api.Environment._get_IsRunningOnWindows() == 1
     }
 
-    static GetEnvironmentVariableNames(): System_String[] {
-        return mscorlib.Api.Environment._GetEnvironmentVariableNames()
+    // static GetEnvironmentVariableNames(): System_String[] {
+    //     return mscorlib.Api.Environment._GetEnvironmentVariableNames()
+    // }
+    static GetEnvironmentVariableNames(): PackArray<string> {
+        return new PackArray(mscorlib.Api.Environment._GetEnvironmentVariableNames())
     }
 
     static GetMachineConfigPath(): System_String {
