@@ -202,67 +202,67 @@ class UnityEngine_Camera_API {
     // public Vector3 WorldToScreenPoint(Vector3 position,MonoOrStereoscopicEye eye)
     @cache
     static get _WorldToScreenPoint() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "WorldToScreenPoint", 2, "pointer", ["pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "WorldToScreenPoint", 2, "pointer", ["pointer", "pointer"])
     }
 
     // public Vector3 ViewportToWorldPoint(Vector3 position,MonoOrStereoscopicEye eye)
     @cache
     static get _ViewportToWorldPoint() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ViewportToWorldPoint", 2, "pointer", ["pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ViewportToWorldPoint", 2, "pointer", ["pointer", "pointer"])
     }
 
     // public Vector3 ScreenToWorldPoint(Vector3 position,MonoOrStereoscopicEye eye)
     @cache
     static get _ScreenToWorldPoint() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ScreenToWorldPoint", 2, "pointer", ["pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ScreenToWorldPoint", 2, "pointer", ["pointer", "pointer"])
     }
 
     // public Vector3 WorldToScreenPoint(Vector3 position)
     @cache
     static get _WorldToScreenPoint_position() {
-        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Camera", "WorldToScreenPoint", 1, ["UnityEngine.Vector3"], "pointer", ["pointer", "pointer"])
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Camera", "WorldToScreenPoint", 1, ["UnityEngine.Vector3"], "pointer", ["pointer"])
     }
 
     // public Vector3 ViewportToWorldPoint(Vector3 position)
     @cache
     static get _ViewportToWorldPoint_position() {
-        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Camera", "ViewportToWorldPoint", 1, ["UnityEngine.Vector3"], "pointer", ["pointer", "pointer"])
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Camera", "ViewportToWorldPoint", 1, ["UnityEngine.Vector3"], "pointer", ["pointer"])
     }
 
     // public Vector3 ScreenToWorldPoint(Vector3 position)
     @cache
     static get _ScreenToWorldPoint_position() {
-        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Camera", "ScreenToWorldPoint", 1, ["UnityEngine.Vector3"], "pointer", ["pointer", "pointer"])
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Camera", "ScreenToWorldPoint", 1, ["UnityEngine.Vector3"], "pointer", ["pointer"])
     }
 
     // public Vector3 ScreenToViewportPoint(Vector3 position)
     @cache
     static get _ScreenToViewportPoint() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ScreenToViewportPoint", 1, "pointer", ["pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ScreenToViewportPoint", 1, "pointer", ["pointer"])
     }
 
     // private Ray ViewportPointToRay(Vector2 pos,MonoOrStereoscopicEye eye)
     @cache
     static get _ViewportPointToRay() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ViewportPointToRay", 2, "pointer", ["pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ViewportPointToRay", 2, "pointer", ["pointer", "pointer"])
     }
 
     // public Ray ViewportPointToRay(Vector3 pos,MonoOrStereoscopicEye eye)
     @cache
     static get _ViewportPointToRay_pos_eye() {
-        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Camera", "ViewportPointToRay", 2, ["UnityEngine.Vector3", "UnityEngine.Camera.MonoOrStereoscopicEye"], "pointer", ["pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Camera", "ViewportPointToRay", 2, ["UnityEngine.Vector3", "UnityEngine.Camera.MonoOrStereoscopicEye"], "pointer", ["pointer", "pointer"])
     }
 
     // public Ray ViewportPointToRay(Vector3 pos)
     @cache
     static get _ViewportPointToRay_pos() {
-        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Camera", "ViewportPointToRay", 1, ["UnityEngine.Vector3"], "pointer", ["pointer", "pointer"])
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Camera", "ViewportPointToRay", 1, ["UnityEngine.Vector3"], "pointer", ["pointer"])
     }
 
     // private Ray ScreenPointToRay(Vector2 pos,MonoOrStereoscopicEye eye)
     @cache
     static get _ScreenPointToRay() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ScreenPointToRay", 2, "pointer", ["pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ScreenPointToRay", 2, "pointer", ["pointer", "pointer"])
     }
 
     // public Ray ScreenPointToRay(Vector3 pos,MonoOrStereoscopicEye eye)
@@ -346,103 +346,103 @@ class UnityEngine_Camera_API {
     // private Void get_backgroundColor_Injected(Color& ret)
     @cache
     static get _get_backgroundColor_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "get_backgroundColor_Injected", 1, "void", ["pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "get_backgroundColor_Injected", 1, "void", ["pointer"])
     }
 
     // private Void set_backgroundColor_Injected(Color& value)
     @cache
     static get _set_backgroundColor_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "set_backgroundColor_Injected", 1, "void", ["pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "set_backgroundColor_Injected", 1, "void", ["pointer"])
     }
 
     // private Void get_sensorSize_Injected(Vector2& ret)
     @cache
     static get _get_sensorSize_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "get_sensorSize_Injected", 1, "void", ["pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "get_sensorSize_Injected", 1, "void", ["pointer"])
     }
 
     // private Void get_lensShift_Injected(Vector2& ret)
     @cache
     static get _get_lensShift_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "get_lensShift_Injected", 1, "void", ["pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "get_lensShift_Injected", 1, "void", ["pointer"])
     }
 
     // private Void set_lensShift_Injected(Vector2& value)
     @cache
     static get _set_lensShift_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "set_lensShift_Injected", 1, "void", ["pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "set_lensShift_Injected", 1, "void", ["pointer"])
     }
 
     // private Void get_rect_Injected(Rect& ret)
     @cache
     static get _get_rect_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "get_rect_Injected", 1, "void", ["pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "get_rect_Injected", 1, "void", ["pointer"])
     }
 
     // private Void set_rect_Injected(Rect& value)
     @cache
     static get _set_rect_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "set_rect_Injected", 1, "void", ["pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "set_rect_Injected", 1, "void", ["pointer"])
     }
 
     // private Void get_pixelRect_Injected(Rect& ret)
     @cache
     static get _get_pixelRect_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "get_pixelRect_Injected", 1, "void", ["pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "get_pixelRect_Injected", 1, "void", ["pointer"])
     }
 
     // private Void set_pixelRect_Injected(Rect& value)
     @cache
     static get _set_pixelRect_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "set_pixelRect_Injected", 1, "void", ["pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "set_pixelRect_Injected", 1, "void", ["pointer"])
     }
 
     // private Void get_cameraToWorldMatrix_Injected(Matrix4x4& ret)
     @cache
     static get _get_cameraToWorldMatrix_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "get_cameraToWorldMatrix_Injected", 1, "void", ["pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "get_cameraToWorldMatrix_Injected", 1, "void", ["pointer"])
     }
 
     // private Void get_projectionMatrix_Injected(Matrix4x4& ret)
     @cache
     static get _get_projectionMatrix_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "get_projectionMatrix_Injected", 1, "void", ["pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "get_projectionMatrix_Injected", 1, "void", ["pointer"])
     }
 
     // private Void WorldToScreenPoint_Injected(Vector3& position,MonoOrStereoscopicEye eye,Vector3& ret)
     @cache
     static get _WorldToScreenPoint_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "WorldToScreenPoint_Injected", 3, "void", ["pointer", "pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "WorldToScreenPoint_Injected", 3, "void", ["pointer", "pointer", "pointer"])
     }
 
     // private Void ViewportToWorldPoint_Injected(Vector3& position,MonoOrStereoscopicEye eye,Vector3& ret)
     @cache
     static get _ViewportToWorldPoint_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ViewportToWorldPoint_Injected", 3, "void", ["pointer", "pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ViewportToWorldPoint_Injected", 3, "void", ["pointer", "pointer", "pointer"])
     }
 
     // private Void ScreenToWorldPoint_Injected(Vector3& position,MonoOrStereoscopicEye eye,Vector3& ret)
     @cache
     static get _ScreenToWorldPoint_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ScreenToWorldPoint_Injected", 3, "void", ["pointer", "pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ScreenToWorldPoint_Injected", 3, "void", ["pointer", "pointer", "pointer"])
     }
 
     // private Void ScreenToViewportPoint_Injected(Vector3& position,Vector3& ret)
     @cache
     static get _ScreenToViewportPoint_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ScreenToViewportPoint_Injected", 2, "void", ["pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ScreenToViewportPoint_Injected", 2, "void", ["pointer", "pointer"])
     }
 
     // private Void ViewportPointToRay_Injected(Vector2& pos,MonoOrStereoscopicEye eye,Ray& ret)
     @cache
     static get _ViewportPointToRay_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ViewportPointToRay_Injected", 3, "void", ["pointer", "pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ViewportPointToRay_Injected", 3, "void", ["pointer", "pointer", "pointer"])
     }
 
     // private Void ScreenPointToRay_Injected(Vector2& pos,MonoOrStereoscopicEye eye,Ray& ret)
     @cache
     static get _ScreenPointToRay_Injected() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ScreenPointToRay_Injected", 3, "void", ["pointer", "pointer", "pointer", "pointer"])
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Camera", "ScreenPointToRay_Injected", 3, "void", ["pointer", "pointer", "pointer"])
     }
 
 }

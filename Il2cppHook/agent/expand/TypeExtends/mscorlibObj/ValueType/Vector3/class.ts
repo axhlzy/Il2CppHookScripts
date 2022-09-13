@@ -227,6 +227,10 @@ class UnityEngine_Vector3_Impl extends System_ValueType_Impl {
         return readU16(Il2Cpp.Api.Vector3._ToString(this.handle, allocUStr(format), formatProvider))
     }
 
+    toString(): string {
+        return `${this.x}, ${this.y}, ${this.z}`
+    }
+
     static get _cctor(): void {
         return Il2Cpp.Api.Vector3.__cctor()
     }

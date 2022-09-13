@@ -1,5 +1,6 @@
 import { UnityEngine_Color_Impl as Color } from "../../../../ValueType/Color/class"
 import { UnityEngine_Matrix4x4_Impl as Matrix4x4 } from "../../../../ValueType/Matrix4x4/class"
+import { UnityEngine_Ray_Impl as Ray } from "../../../../ValueType/Ray/class"
 import { UnityEngine_Rect_Impl as Rect } from "../../../../ValueType/Rect/class"
 import { UnityEngine_Vector2_Impl as Vector2 } from "../../../../ValueType/Vector2/class"
 import { UnityEngine_Vector3_Impl as Vector3 } from "../../../../ValueType/Vector3/class"
@@ -7,7 +8,6 @@ import { UnityEngine_Behaviour_Impl as Behaviour } from "../class"
 import { UnityEngine_CameraClearFlags, UnityEngine_Camera_MonoOrStereoscopicEye as MonoOrStereoscopicEye, UnityEngine_DepthTextureMode } from "./enum"
 
 type UnityEngine_Camera_CameraCallback = NativePointer
-type UnityEngine_Ray = NativePointer
 type UnityEngine_RenderTexture = NativePointer
 
 class UnityEngine_Camera_Impl extends Behaviour {
@@ -113,27 +113,27 @@ class UnityEngine_Camera_Impl extends Behaviour {
     }
 
     get_rect(): Rect {
-        return Il2Cpp.Api.Camera._get_rect(this.handle)
+        return new Rect(Il2Cpp.Api.Camera._get_rect(this.handle))
     }
 
     set_rect(value: Rect): void {
-        return Il2Cpp.Api.Camera._set_rect(this.handle, value)
+        return Il2Cpp.Api.Camera._set_rect(this.handle, value.handle)
     }
 
     get_pixelRect(): Rect {
-        return Il2Cpp.Api.Camera._get_pixelRect(this.handle)
+        return new Rect(Il2Cpp.Api.Camera._get_pixelRect(this.handle))
     }
 
     set_pixelRect(value: Rect): void {
-        return Il2Cpp.Api.Camera._set_pixelRect(this.handle, value)
+        return Il2Cpp.Api.Camera._set_pixelRect(this.handle, value.handle)
     }
 
     get_pixelWidth(): number {
-        return Il2Cpp.Api.Camera._get_pixelWidth(this.handle)
+        return Il2Cpp.Api.Camera._get_pixelWidth(this.handle).toInt32()
     }
 
     get_pixelHeight(): number {
-        return Il2Cpp.Api.Camera._get_pixelHeight(this.handle)
+        return Il2Cpp.Api.Camera._get_pixelHeight(this.handle).toInt32()
     }
 
     get_targetTexture(): UnityEngine_RenderTexture {
@@ -141,7 +141,7 @@ class UnityEngine_Camera_Impl extends Behaviour {
     }
 
     get_targetDisplay(): number {
-        return Il2Cpp.Api.Camera._get_targetDisplay(this.handle)
+        return Il2Cpp.Api.Camera._get_targetDisplay(this.handle).toInt32()
     }
 
     get_cameraToWorldMatrix(): Matrix4x4 {
@@ -180,51 +180,51 @@ class UnityEngine_Camera_Impl extends Behaviour {
         return new Vector3(Il2Cpp.Api.Camera._ScreenToViewportPoint(this.handle, position))
     }
 
-    ViewportPointToRay(pos: Vector2, eye: MonoOrStereoscopicEye): UnityEngine_Ray {
-        return Il2Cpp.Api.Camera._ViewportPointToRay(this.handle, pos, eye)
+    ViewportPointToRay(pos: Vector2, eye: MonoOrStereoscopicEye): Ray {
+        return new Ray(Il2Cpp.Api.Camera._ViewportPointToRay(this.handle, pos, eye))
     }
 
-    ViewportPointToRay_2(pos: Vector3, eye: MonoOrStereoscopicEye): UnityEngine_Ray {
-        return Il2Cpp.Api.Camera._ViewportPointToRay(this.handle, pos, eye)
+    ViewportPointToRay_2(pos: Vector3, eye: MonoOrStereoscopicEye): Ray {
+        return new Ray(Il2Cpp.Api.Camera._ViewportPointToRay(this.handle, pos, eye))
     }
 
-    ViewportPointToRay_1(pos: Vector3): UnityEngine_Ray {
-        return Il2Cpp.Api.Camera._ViewportPointToRay(this.handle, pos)
+    ViewportPointToRay_1(pos: Vector3): Ray {
+        return new Ray(Il2Cpp.Api.Camera._ViewportPointToRay(this.handle, pos.handle))
     }
 
-    ScreenPointToRay(pos: Vector2, eye: MonoOrStereoscopicEye): UnityEngine_Ray {
-        return Il2Cpp.Api.Camera._ScreenPointToRay(this.handle, pos, eye)
+    ScreenPointToRay_v2_eye(pos: Vector2, eye: MonoOrStereoscopicEye): Ray {
+        return new Ray(Il2Cpp.Api.Camera._ScreenPointToRay(this.handle, pos.handle, eye))
     }
 
-    ScreenPointToRay_2(pos: Vector3, eye: MonoOrStereoscopicEye): UnityEngine_Ray {
-        return Il2Cpp.Api.Camera._ScreenPointToRay(this.handle, pos, eye)
+    ScreenPointToRay_v3_eye(pos: Vector3, eye: MonoOrStereoscopicEye): Ray {
+        return new Ray(Il2Cpp.Api.Camera._ScreenPointToRay(this.handle, pos.handle, eye))
     }
 
-    ScreenPointToRay_1(pos: Vector3): UnityEngine_Ray {
-        return Il2Cpp.Api.Camera._ScreenPointToRay(this.handle, pos)
+    ScreenPointToRay_v3(pos: Vector3): Ray {
+        return new Ray(Il2Cpp.Api.Camera._ScreenPointToRay(this.handle, pos.handle))
     }
 
     static get_main(): UnityEngine_Camera_Impl {
-        return Il2Cpp.Api.Camera._get_main()
+        return new UnityEngine_Camera_Impl(Il2Cpp.Api.Camera._get_main())
     }
 
     static get_current(): UnityEngine_Camera_Impl {
-        return Il2Cpp.Api.Camera._get_current()
+        return new UnityEngine_Camera_Impl(Il2Cpp.Api.Camera._get_current())
     }
 
     get_stereoEnabled(): boolean {
         return Il2Cpp.Api.Camera._get_stereoEnabled(this.handle)
     }
 
-    static GetAllCamerasCount(): number {
-        return Il2Cpp.Api.Camera._GetAllCamerasCount()
+    static get GetAllCamerasCount(): number {
+        return Il2Cpp.Api.Camera._GetAllCamerasCount().toInt32()
     }
 
     static GetAllCamerasImpl(cam: UnityEngine_Camera_Impl[]): number {
         return Il2Cpp.Api.Camera._GetAllCamerasImpl(cam)
     }
 
-    static get_allCamerasCount(): number {
+    static get get_allCamerasCount(): number {
         return Il2Cpp.Api.Camera._get_allCamerasCount()
     }
 
@@ -237,11 +237,11 @@ class UnityEngine_Camera_Impl extends Behaviour {
     }
 
     static FireOnPreRender(cam: UnityEngine_Camera_Impl): void {
-        return Il2Cpp.Api.Camera._FireOnPreRender(cam)
+        return Il2Cpp.Api.Camera._FireOnPreRender(cam.handle)
     }
 
     static FireOnPostRender(cam: UnityEngine_Camera_Impl): void {
-        return Il2Cpp.Api.Camera._FireOnPostRender(cam)
+        return Il2Cpp.Api.Camera._FireOnPostRender(cam.handle)
     }
 
     _ctor(): void {
@@ -249,71 +249,71 @@ class UnityEngine_Camera_Impl extends Behaviour {
     }
 
     get_backgroundColor_Injected(ret: Color): void {
-        return Il2Cpp.Api.Camera._get_backgroundColor_Injected(this.handle, ret)
+        return Il2Cpp.Api.Camera._get_backgroundColor_Injected(this.handle, ret.handle)
     }
 
     set_backgroundColor_Injected(value: Color): void {
-        return Il2Cpp.Api.Camera._set_backgroundColor_Injected(this.handle, value)
+        return Il2Cpp.Api.Camera._set_backgroundColor_Injected(this.handle, value.handle)
     }
 
     get_sensorSize_Injected(ret: Vector2): void {
-        return Il2Cpp.Api.Camera._get_sensorSize_Injected(this.handle, ret)
+        return Il2Cpp.Api.Camera._get_sensorSize_Injected(this.handle, ret.handle)
     }
 
     get_lensShift_Injected(ret: Vector2): void {
-        return Il2Cpp.Api.Camera._get_lensShift_Injected(this.handle, ret)
+        return Il2Cpp.Api.Camera._get_lensShift_Injected(this.handle, ret.handle)
     }
 
     set_lensShift_Injected(value: Vector2): void {
-        return Il2Cpp.Api.Camera._set_lensShift_Injected(this.handle, value)
+        return Il2Cpp.Api.Camera._set_lensShift_Injected(this.handle, value.handle)
     }
 
     get_rect_Injected(ret: Rect): void {
-        return Il2Cpp.Api.Camera._get_rect_Injected(this.handle, ret)
+        return Il2Cpp.Api.Camera._get_rect_Injected(this.handle, ret.handle)
     }
 
     set_rect_Injected(value: Rect): void {
-        return Il2Cpp.Api.Camera._set_rect_Injected(this.handle, value)
+        return Il2Cpp.Api.Camera._set_rect_Injected(this.handle, value.handle)
     }
 
     get_pixelRect_Injected(ret: Rect): void {
-        return Il2Cpp.Api.Camera._get_pixelRect_Injected(this.handle, ret)
+        return Il2Cpp.Api.Camera._get_pixelRect_Injected(this.handle, ret.handle)
     }
 
     set_pixelRect_Injected(value: Rect): void {
-        return Il2Cpp.Api.Camera._set_pixelRect_Injected(this.handle, value)
+        return Il2Cpp.Api.Camera._set_pixelRect_Injected(this.handle, value.handle)
     }
 
     get_cameraToWorldMatrix_Injected(ret: Matrix4x4): void {
-        return Il2Cpp.Api.Camera._get_cameraToWorldMatrix_Injected(this.handle, ret)
+        return Il2Cpp.Api.Camera._get_cameraToWorldMatrix_Injected(this.handle, ret.handle)
     }
 
     get_projectionMatrix_Injected(ret: Matrix4x4): void {
-        return Il2Cpp.Api.Camera._get_projectionMatrix_Injected(this.handle, ret)
+        return Il2Cpp.Api.Camera._get_projectionMatrix_Injected(this.handle, ret.handle)
     }
 
     WorldToScreenPoint_Injected(position: Vector3, eye: MonoOrStereoscopicEye, ret: Vector3): void {
-        return Il2Cpp.Api.Camera._WorldToScreenPoint_Injected(this.handle, position, eye, ret)
+        return Il2Cpp.Api.Camera._WorldToScreenPoint_Injected(this.handle, position.handle, eye, ret.handle)
     }
 
     ViewportToWorldPoint_Injected(position: Vector3, eye: MonoOrStereoscopicEye, ret: Vector3): void {
-        return Il2Cpp.Api.Camera._ViewportToWorldPoint_Injected(this.handle, position, eye, ret)
+        return Il2Cpp.Api.Camera._ViewportToWorldPoint_Injected(this.handle, position.handle, eye, ret.handle)
     }
 
     ScreenToWorldPoint_Injected(position: Vector3, eye: MonoOrStereoscopicEye, ret: Vector3): void {
-        return Il2Cpp.Api.Camera._ScreenToWorldPoint_Injected(this.handle, position, eye, ret)
+        return Il2Cpp.Api.Camera._ScreenToWorldPoint_Injected(this.handle, position.handle, eye, ret.handle)
     }
 
     ScreenToViewportPoint_Injected(position: Vector3, ret: Vector3): void {
-        return Il2Cpp.Api.Camera._ScreenToViewportPoint_Injected(this.handle, position, ret)
+        return Il2Cpp.Api.Camera._ScreenToViewportPoint_Injected(this.handle, position.handle, ret.handle)
     }
 
-    ViewportPointToRay_Injected(pos: Vector2, eye: MonoOrStereoscopicEye, ret: UnityEngine_Ray): void {
-        return Il2Cpp.Api.Camera._ViewportPointToRay_Injected(this.handle, pos, eye, ret)
+    ViewportPointToRay_Injected(pos: Vector2, eye: MonoOrStereoscopicEye, ret: Ray): void {
+        return Il2Cpp.Api.Camera._ViewportPointToRay_Injected(this.handle, pos.handle, eye, ret.handle)
     }
 
-    ScreenPointToRay_Injected(pos: Vector2, eye: MonoOrStereoscopicEye, ret: UnityEngine_Ray): void {
-        return Il2Cpp.Api.Camera._ScreenPointToRay_Injected(this.handle, pos, eye, ret)
+    ScreenPointToRay_Injected(pos: Vector2, eye: MonoOrStereoscopicEye, ret: Ray): void {
+        return Il2Cpp.Api.Camera._ScreenPointToRay_Injected(this.handle, pos.handle, eye, ret.handle)
     }
 
 }
