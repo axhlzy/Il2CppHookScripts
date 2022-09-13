@@ -1,0 +1,15 @@
+export function Environment() {
+    LOG(`${getLine(20)} Environment ${getLine(20)}`, LogColor.RED)
+    LOGD(`[*] OSVersionString\t\t\t${mscorlib.Environment.GetOSVersionString()}\n${getLine(20)}`)
+    LOGD(`[*] MachineConfigPath\t\t\t${mscorlib.Environment.GetMachineConfigPath()}\n${getLine(20)}`)
+    LOGD(`[*] PageSize\t\t\t\t${mscorlib.Environment.GetPageSize()}\n${getLine(20)}`)
+    LOGD(`[*] HasShutdownStarted\t\t\t${mscorlib.Environment.get_HasShutdownStarted()}\n${getLine(20)}`)
+    LOGD(`[*] Is64BitProcess\t\t\t${mscorlib.Environment.get_Is64BitProcess()}\n${getLine(20)}`)
+    LOGD(`[*] IsRunningOnWindows\t\t\t${mscorlib.Environment.get_IsRunningOnWindows()}\n${getLine(20)}`)
+    LOGD(`[*] Platform\t\t\t\t${mscorlib.Environment.Platform}\n${getLine(20)}`)
+    LOGD(`[*] ProcessorCount\t\t\t${mscorlib.Environment.get_ProcessorCount()}\n${getLine(20)}`)
+    LOGD(`[*] TickCount\t\t\t\t${mscorlib.Environment.get_TickCount()}\n${getLine(20)}`)
+    // LOGD(`[*] MachineName\t\t\t\t\t${mscorlib.Environment.get_MachineName()}\n${getLine(20)}`)
+    // LOGD(`[*] UserDomainName\t\t\t\t${mscorlib.Environment.get_UserDomainName()}\n${getLine(20)}`)
+    // LOGD(`[*] UserName\t\t\t\t\t${mscorlib.Environment.get_UserName()}\n${getLine(20)}`)
+}

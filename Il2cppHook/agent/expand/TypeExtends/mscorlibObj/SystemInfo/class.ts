@@ -1,161 +1,289 @@
-import { mscorlib_System_Type_impl } from "../Type/class"
-import './api'
+import { enumNumToName } from "../../../../bridge/fix/enum"
+import { mscorlib_System_Object_impl } from "../class"
+import { UnityEngine_Experimental_Rendering_DefaultFormat, UnityEngine_Experimental_Rendering_FormatUsage, UnityEngine_Experimental_Rendering_GraphicsFormat } from "../Object/Texture/enum"
+import { CopyTextureSupport, DeviceType, GraphicsDeviceType, OperatingSystemFamily, RenderTextureFormat } from "./enum"
 
-class UnityEngine_SystemInfo_impl extends mscorlib_System_Type_impl {
+type System_String = string
+type System_Int32 = number
+type System_Boolean = boolean
+type System_Enum = NativePointer
+type TextureFormat = NativePointer
+type UnityEngine_RenderTextureDescriptor = NativePointer
 
-    GetCompatibleFormat(format: RenderTextureFormat): RenderTextureFormat {
-        return Il2Cpp.Api.SystemInfo._GetCompatibleFormat(this.handle, format)
+class UnityEngine_SystemInfo_Impl extends mscorlib_System_Object_impl {
+
+    constructor(handleOrWrapper: NativePointer) {
+        super(handleOrWrapper)
     }
 
-    GetCopyTextureSupport(): CopyTextureSupport {
-        return Il2Cpp.Api.SystemInfo._GetCopyTextureSupport(this.handle)
+    static get_operatingSystem(): System_String {
+        return readU16(Il2Cpp.Api.SystemInfo._get_operatingSystem())
     }
 
-    get deviceModel(): string {
-        return readU16(Il2Cpp.Api.SystemInfo._get_deviceModel(this.handle))
+    static get_operatingSystemFamily(): OperatingSystemFamily {
+        return Il2Cpp.Api.SystemInfo._get_operatingSystemFamily()
     }
 
-    get deviceName(): string {
-        return readU16(Il2Cpp.Api.SystemInfo._get_deviceName(this.handle))
+    static get_operatingSystemFamily_toString(): string {
+        return enumNumToName(Il2Cpp.Api.SystemInfo._get_operatingSystemFamily(), "OperatingSystemFamily")
     }
 
-    get deviceType(): DeviceType {
-        return Il2Cpp.Api.SystemInfo._get_deviceType(this.handle)
+    static get_processorType(): System_String {
+        return readU16(Il2Cpp.Api.SystemInfo._get_processorType())
     }
 
-    get graphicsDeviceName(): string {
-        return readU16(Il2Cpp.Api.SystemInfo._get_graphicsDeviceName(this.handle))
+    static get_deviceUniqueIdentifier(): System_String {
+        return readU16(Il2Cpp.Api.SystemInfo._get_deviceUniqueIdentifier())
     }
 
-    get graphicsDeviceVendorID(): number {
-        return Il2Cpp.Api.SystemInfo._get_graphicsDeviceVendorID(this.handle)
+    static get_deviceName(): System_String {
+        return readU16(Il2Cpp.Api.SystemInfo._get_deviceName())
     }
 
-    get graphicsDeviceVersion(): string {
-        return readU16(Il2Cpp.Api.SystemInfo._get_graphicsDeviceVersion(this.handle))
+    static get_deviceModel(): System_String {
+        return readU16(Il2Cpp.Api.SystemInfo._get_deviceModel())
     }
 
-    get graphicsMemorySize(): number {
-        return Il2Cpp.Api.SystemInfo._get_graphicsMemorySize(this.handle)
+    static get_deviceType(): DeviceType {
+        return Il2Cpp.Api.SystemInfo._get_deviceType()
     }
 
-    get graphicsShaderLevel(): number {
-        return Il2Cpp.Api.SystemInfo._get_graphicsShaderLevel(this.handle)
+    static get_deviceType_toString(): string {
+        return enumNumToName(Il2Cpp.Api.SystemInfo._get_deviceType(), "DeviceType")
     }
 
-    get maxTextureSize(): number {
-        return Il2Cpp.Api.SystemInfo._get_maxTextureSize(this.handle)
+    static get_graphicsMemorySize(): System_Int32 {
+        return Il2Cpp.Api.SystemInfo._get_graphicsMemorySize().toInt32()
     }
 
-    get operatingSystem(): string {
-        return readU16(Il2Cpp.Api.SystemInfo._get_operatingSystem(this.handle))
+    static get_graphicsDeviceVendor(): System_String {
+        return readU16(Il2Cpp.Api.SystemInfo._get_graphicsDeviceVendor())
     }
 
-    get operatingSystemFamily(): OperatingSystemFamily {
-        return Il2Cpp.Api.SystemInfo._get_operatingSystemFamily(this.handle)
+    static get_graphicsDeviceType(): GraphicsDeviceType {
+        return Il2Cpp.Api.SystemInfo._get_graphicsDeviceType()
     }
 
-    get processorCount(): number {
-        return Il2Cpp.Api.SystemInfo._get_processorCount(this.handle)
+    static get_graphicsDeviceType_toString(): string {
+        return enumNumToName(Il2Cpp.Api.SystemInfo._get_graphicsDeviceType(), "GraphicsDeviceType")
     }
 
-    get processorFrequency(): number {
-        return Il2Cpp.Api.SystemInfo._get_processorFrequency(this.handle)
+    static get_graphicsUVStartsAtTop(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._get_graphicsUVStartsAtTop() == 1
     }
 
-    get processorType(): string {
-        return readU16(Il2Cpp.Api.SystemInfo._get_processorType(this.handle))
+    static get_graphicsDeviceVersion(): System_String {
+        return readU16(Il2Cpp.Api.SystemInfo._get_graphicsDeviceVersion())
     }
 
-    get supportedRandomWriteTargetCount(): number {
-        return Il2Cpp.Api.SystemInfo._get_supportedRandomWriteTargetCount(this.handle)
+    static get_graphicsShaderLevel(): System_Int32 {
+        return Il2Cpp.Api.SystemInfo._get_graphicsShaderLevel().toInt32()
     }
 
-    get supportedRenderTargetCount(): number {
-        return Il2Cpp.Api.SystemInfo._get_supportedRenderTargetCount(this.handle)
+    static get_hasHiddenSurfaceRemovalOnGPU(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._get_hasHiddenSurfaceRemovalOnGPU() == 1
     }
 
-    get supports3DTextures(): boolean {
-        return Il2Cpp.Api.SystemInfo._get_supports3DTextures(this.handle)
+    static get_supportsShadows(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._get_supportsShadows() == 1
     }
 
-    get supportsComputeShaders(): boolean {
-        return Il2Cpp.Api.SystemInfo._get_supportsComputeShaders(this.handle)
+    static get_copyTextureSupport(): CopyTextureSupport {
+        return Il2Cpp.Api.SystemInfo._get_copyTextureSupport()
     }
 
-    get supportsImageEffects(): boolean {
-        return Il2Cpp.Api.SystemInfo._get_supportsImageEffects(this.handle)
+    static get_supportsRenderTargetArrayIndexFromVertexShader(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._get_supportsRenderTargetArrayIndexFromVertexShader()
     }
 
-    get supportsRenderTextures(): boolean {
-        return Il2Cpp.Api.SystemInfo._get_supportsRenderTextures(this.handle)
+    static get_supportedRenderTargetCount(): System_Int32 {
+        return Il2Cpp.Api.SystemInfo._get_supportedRenderTargetCount()
     }
 
-    get systemMemorySize(): number {
-        return Il2Cpp.Api.SystemInfo._get_systemMemorySize(this.handle)
+    static get_supportsMultisampledTextures(): System_Int32 {
+        return Il2Cpp.Api.SystemInfo._get_supportsMultisampledTextures()
     }
+
+    static get_supportsMultisampleAutoResolve(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._get_supportsMultisampleAutoResolve()
+    }
+
+    static get_usesReversedZBuffer(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._get_usesReversedZBuffer()
+    }
+
+    static IsValidEnumValue(value: System_Enum): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._IsValidEnumValue(value)
+    }
+
+    static SupportsRenderTextureFormat(format: RenderTextureFormat): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._SupportsRenderTextureFormat(format) == 1
+    }
+
+    static SupportsTextureFormat(format: TextureFormat): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._SupportsTextureFormat(format) == 1
+    }
+
+    static get_supportsGraphicsFence(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._get_supportsGraphicsFence()
+    }
+
+    static get_supportsMultiview(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._get_supportsMultiview()
+    }
+
+    static get_supportsStoreAndResolveAction(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._get_supportsStoreAndResolveAction()
+    }
+
+    static GetOperatingSystem(): System_String {
+        return readU16(Il2Cpp.Api.SystemInfo._GetOperatingSystem())
+    }
+
+    static GetOperatingSystemFamily(): OperatingSystemFamily {
+        return Il2Cpp.Api.SystemInfo._GetOperatingSystemFamily()
+    }
+
+    static GetOperatingSystemFamily_toString(): string {
+        return enumNumToName(Il2Cpp.Api.SystemInfo._GetOperatingSystemFamily(), "OperatingSystemFamily")
+    }
+
+    static GetProcessorType(): System_String {
+        return readU16(Il2Cpp.Api.SystemInfo._GetProcessorType())
+    }
+
+    static GetDeviceUniqueIdentifier(): System_String {
+        return readU16(Il2Cpp.Api.SystemInfo._GetDeviceUniqueIdentifier())
+    }
+
+    static GetDeviceName(): System_String {
+        return readU16(Il2Cpp.Api.SystemInfo._GetDeviceName())
+    }
+
+    static GetDeviceModel(): System_String {
+        return readU16(Il2Cpp.Api.SystemInfo._GetDeviceModel())
+    }
+
+    static GetDeviceType(): DeviceType {
+        return Il2Cpp.Api.SystemInfo._GetDeviceType()
+    }
+
+    static GetDeviceType_toString(): string {
+        return enumNumToName(Il2Cpp.Api.SystemInfo._GetDeviceType(), "DeviceType")
+    }
+
+    static GetGraphicsMemorySize(): System_Int32 {
+        return Il2Cpp.Api.SystemInfo._GetGraphicsMemorySize().toInt32()
+    }
+
+    static GetGraphicsDeviceVendor(): System_String {
+        return readU16(Il2Cpp.Api.SystemInfo._GetGraphicsDeviceVendor())
+    }
+
+    static GetGraphicsDeviceType(): GraphicsDeviceType {
+        return Il2Cpp.Api.SystemInfo._GetGraphicsDeviceType()
+    }
+
+    static GetGraphicsDeviceType_toString(): string {
+        return enumNumToName(Il2Cpp.Api.SystemInfo._GetGraphicsDeviceType(), "GraphicsDeviceType")
+    }
+
+    static GetGraphicsUVStartsAtTop(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._GetGraphicsUVStartsAtTop() == 1
+    }
+
+    static GetGraphicsDeviceVersion(): System_String {
+        return readU16(Il2Cpp.Api.SystemInfo._GetGraphicsDeviceVersion())
+    }
+
+    static GetGraphicsShaderLevel(): System_Int32 {
+        return Il2Cpp.Api.SystemInfo._GetGraphicsShaderLevel().toInt32()
+    }
+
+    static HasHiddenSurfaceRemovalOnGPU(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._HasHiddenSurfaceRemovalOnGPU() == 1
+    }
+
+    static SupportsShadows(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._SupportsShadows() == 1
+    }
+
+    static GetCopyTextureSupport(): CopyTextureSupport {
+        return Il2Cpp.Api.SystemInfo._GetCopyTextureSupport()
+    }
+
+    static GetCopyTextureSupport_toString(): string {
+        return enumNumToName(Il2Cpp.Api.SystemInfo._GetCopyTextureSupport(), "CopyTextureSupport")
+    }
+
+    static SupportsRenderTargetArrayIndexFromVertexShader(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._SupportsRenderTargetArrayIndexFromVertexShader() == 1
+    }
+
+    static SupportedRenderTargetCount(): System_Int32 {
+        return Il2Cpp.Api.SystemInfo._SupportedRenderTargetCount().toInt32()
+    }
+
+    static SupportsMultisampledTextures(): System_Int32 {
+        return Il2Cpp.Api.SystemInfo._SupportsMultisampledTextures().toInt32()
+    }
+
+    static SupportsMultisampleAutoResolve(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._SupportsMultisampleAutoResolve() == 1
+    }
+
+    static UsesReversedZBuffer(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._UsesReversedZBuffer()
+    }
+
+    static HasRenderTextureNative(format: RenderTextureFormat): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._HasRenderTextureNative(format) == 1
+    }
+
+    static SupportsTextureFormatNative(format: TextureFormat): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._SupportsTextureFormatNative(format) == 1
+    }
+
+    static SupportsGPUFence(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._SupportsGPUFence() == 1
+    }
+
+    static IsFormatSupported(format: UnityEngine_Experimental_Rendering_GraphicsFormat, usage: UnityEngine_Experimental_Rendering_FormatUsage): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._IsFormatSupported(format, usage) == 1
+    }
+
+    static GetCompatibleFormat(format: UnityEngine_Experimental_Rendering_GraphicsFormat, usage: UnityEngine_Experimental_Rendering_FormatUsage): UnityEngine_Experimental_Rendering_GraphicsFormat {
+        return Il2Cpp.Api.SystemInfo._GetCompatibleFormat(format, usage)
+    }
+
+    static GetGraphicsFormat(format: UnityEngine_Experimental_Rendering_DefaultFormat): UnityEngine_Experimental_Rendering_GraphicsFormat {
+        return Il2Cpp.Api.SystemInfo._GetGraphicsFormat(format)
+    }
+
+    static GetRenderTextureSupportedMSAASampleCount(desc: UnityEngine_RenderTextureDescriptor): System_Int32 {
+        return Il2Cpp.Api.SystemInfo._GetRenderTextureSupportedMSAASampleCount(desc)
+    }
+
+    static SupportsMultiview(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._SupportsMultiview()
+    }
+
+    static SupportsStoreAndResolveAction(): System_Boolean {
+        return Il2Cpp.Api.SystemInfo._SupportsStoreAndResolveAction()
+    }
+
+    static GetRenderTextureSupportedMSAASampleCount_Injected(desc: UnityEngine_RenderTextureDescriptor): System_Int32 {
+        return Il2Cpp.Api.SystemInfo._GetRenderTextureSupportedMSAASampleCount_Injected(desc)
+    }
+
 }
+
+Il2Cpp.SystemInfo = UnityEngine_SystemInfo_Impl
 
 declare global {
     namespace Il2Cpp {
-        class SystemInfo extends UnityEngine_SystemInfo_impl { }
+        class SystemInfo extends UnityEngine_SystemInfo_Impl { }
     }
 }
 
-Il2Cpp.SystemInfo = UnityEngine_SystemInfo_impl
-
-export { UnityEngine_SystemInfo_impl }
-
-export enum RenderTextureFormat {
-    ARGB1555 = 6,
-    ARGB2101010 = 8,
-    ARGB32 = 0,
-    ARGB4444 = 5,
-    ARGB64 = 10,
-    ARGBFloat = 11,
-    ARGBHalf = 2,
-    ARGBInt = 0x11,
-    BGR101010_XR = 0x1B,
-    BGRA10101010_XR = 0x1A,
-    BGRA32 = 20,
-    Default = 7,
-    DefaultHDR = 9,
-    Depth = 1,
-    R16 = 0x1C,
-    R8 = 0x10,
-    RFloat = 14,
-    RG16 = 0x19,
-    RG32 = 0x17,
-    RGB111110Float = 0x16,
-    RGB565 = 4,
-    RGBAUShort = 0x18,
-    RGFloat = 12,
-    RGHalf = 13,
-    RGInt = 0x12,
-    RHalf = 15,
-    RInt = 0x13,
-    Shadowmap = 3
-}
-
-export enum CopyTextureSupport {
-    Basic = 1,
-    Copy3D = 2,
-    DifferentTypes = 4,
-    None = 0,
-    RTToTexture = 0x10,
-    TextureToRT = 8
-}
-
-export enum DeviceType {
-    Console = 2,
-    Desktop = 3,
-    Handheld = 1,
-    Unknown = 0
-}
-
-export enum OperatingSystemFamily {
-    Linux = 3,
-    MacOSX = 1,
-    Other = 0,
-    Windows = 2
-}
+export { UnityEngine_SystemInfo_Impl }

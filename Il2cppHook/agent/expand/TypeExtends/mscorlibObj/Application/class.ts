@@ -1,3 +1,4 @@
+import { enumNumToName } from "../../../../bridge/fix/enum"
 import { mscorlib_System_Type_impl } from "../Type/class"
 import { NetworkReachability, RuntimePlatform, SystemLanguage, LogType, StackTraceLogType } from "./enum"
 
@@ -23,7 +24,7 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
     wantsToQuit = lfv(this.handle, "wantsToQuit")
 
     static get Quit_1(): void {
-        return Il2Cpp.Api.Application._Quit_1()
+        return Il2Cpp.Api.Application._Quit_()
     }
 
     static get Quit(): void {
@@ -31,7 +32,7 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
     }
 
     static get isPlaying(): boolean {
-        return Il2Cpp.Api.Application._get_isPlaying()
+        return Il2Cpp.Api.Application._get_isPlaying() == 1
     }
 
     static get dataPath(): string {
@@ -59,6 +60,8 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
     }
 
     static get identifier(): string {
+        if (ptr(Il2Cpp.Api.Application._get_identifier).isNull())
+            return Java.use('android.app.ActivityThread').currentApplication().getApplicationContext().getPackageName() + " ( from java api )"
         return readU16(Il2Cpp.Api.Application._get_identifier())
     }
 
@@ -72,10 +75,6 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
 
     static get cloudProjectId(): string {
         return readU16(Il2Cpp.Api.Application._get_cloudProjectId())
-    }
-
-    static get_internetReachability(): NetworkReachability {
-        return Il2Cpp.Api.Application._get_internetReachability()
     }
 
     static OpenURL(url: string): void {
@@ -94,16 +93,36 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
         return Il2Cpp.Api.Application._GetStackTraceLogType(logType)
     }
 
+    static get internetReachability(): NetworkReachability {
+        return Il2Cpp.Api.Application._get_internetReachability()
+    }
+
+    static get internetReachability_toString(): string {
+        return enumNumToName(Il2Cpp.Application.internetReachability, 'NetworkReachability')
+    }
+
+    static get_internetReachability(): NetworkReachability {
+        return Il2Cpp.Api.Application._get_internetReachability()
+    }
+
+    static get_internetReachability_toString(): string {
+        return enumNumToName(UnityEngine_Application_impl.internetReachability, 'NetworkReachability')
+    }
+
     static get platform(): RuntimePlatform {
-        return Il2Cpp.Api.Application._get_platform()
+        return <RuntimePlatform>Il2Cpp.Api.Application._get_platform()
+    }
+
+    static get platform_toString(): string {
+        return enumNumToName(UnityEngine_Application_impl.platform, 'RuntimePlatform')
     }
 
     static get systemLanguage(): SystemLanguage {
-        return Il2Cpp.Api.Application._get_platform() as SystemLanguage
+        return <SystemLanguage>Il2Cpp.Api.Application._get_platform()
     }
 
-    static get internetReachability(): number {
-        return Il2Cpp.Api.Application._get_internetReachability()
+    static get systemLanguage_toString(): string {
+        return enumNumToName(UnityEngine_Application_impl.systemLanguage, 'SystemLanguage')
     }
 
     static CallLowMemory(): void {
@@ -163,11 +182,15 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
     }
 
     static get isEditor(): boolean {
-        return Il2Cpp.Api.Application._get_isEditor()
+        return Il2Cpp.Api.Application._get_isEditor() == 1
     }
 
     static GetStackTraceLogType_1(logType: LogType): StackTraceLogType {
         return Il2Cpp.Api.Application._GetStackTraceLogType(logType)
+    }
+
+    static GetStackTraceLogType_toString(logType: LogType): string {
+        return enumNumToName(Il2Cpp.Application.GetStackTraceLogType_1(logType), 'StackTraceLogType')
     }
 }
 

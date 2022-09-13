@@ -1,6 +1,9 @@
-import { GKEY, LogColor } from "../base/enum";
-import { GET_GT, SET_G } from "../base/globle";
-import { formartClass } from "./formart";
+import { GKEY, LogColor } from "../base/enum"
+import { GET_GT, SET_G } from "../base/globle"
+import { formartClass } from "./formart"
+import chalk from 'chalk'
+
+const logL = console.log
 
 const setNeedLog = (flag: boolean): void => SET_G(GKEY.LogFlag, flag) as unknown as void;
 
@@ -8,19 +11,17 @@ const getNeedLog = (): boolean => GET_GT<boolean>(GKEY.LogFlag)
 
 export const LOG = (str: any, type: LogColor = LogColor.WHITE): void => {
     switch (type) {
-        case LogColor.WHITE: console.log(str); break
+        case LogColor.WHITE: logL(str); break
         case LogColor.RED: console.error(str); break
         case LogColor.YELLOW: console.warn(str); break
-        default: console.log("\x1b[" + type + "m" + str + "\x1b[0m"); break
+        default: logL("\x1b[" + type + "m" + str + "\x1b[0m"); break
     }
 }
 
 export const LOGJSON = (obj: any, type: LogColor = LogColor.C36, lines: number = 1): void => LOG(JSON.stringify(obj, null, lines), type)
 
 const colorEndDes: string = "\x1b[0m"
-const colorStartDes = (color: LogColor): string => {
-    return `\x1b[${color as number}m`
-}
+const colorStartDes = (color: LogColor): string => `\x1b[${color as number}m`
 
 // not used
 export const LOGS = (str: string, colorDescription: [number, number, LogColor][] = [[0, str.length, LogColor.RED]]) => {
@@ -31,7 +32,7 @@ export const LOGS = (str: string, colorDescription: [number, number, LogColor][]
         localStr = formartClass.insertStr(localStr, start, strStart)
         localStr = formartClass.insertStr(localStr, end + strStart.length, colorEndDes)
     }
-    console.log(localStr)
+    logL(localStr)
 }
 
 export const LOGW = (msg: any): void => LOG(msg, LogColor.YELLOW)
@@ -42,26 +43,30 @@ export const LOGO = (msg: any): void => LOG(msg, LogColor.C33)
 export const LOGH = (msg: any): void => LOG(msg, LogColor.C96)
 export const LOGZ = (msg: any): void => LOG(msg, LogColor.C90)
 
-export function printLogColors(): void {
+export const printLogColors = (): void => {
     let str = "123456789"
-    console.log("----------------  listLogColors  ----------------")
+    logL(`\n${getLine(16)}  listLogColors  ${getLine(16)}`)
     for (let i = 30; i <= 37; i++) {
-        console.log(`\t\t${colorStartDes(i)} C${i}\t${str} ${colorEndDes}`)
+        logL(`\t\t${colorStartDes(i)} C${i}\t${str} ${colorEndDes}`)
     }
-    console.log("----------------------------------------------")
+    logL(getLine(50))
     for (let i = 40; i <= 47; i++) {
-        console.log(`\t\t${colorStartDes(i)} C${i}\t${str} ${colorEndDes}`)
+        logL(`\t\t${colorStartDes(i)} C${i}\t${str} ${colorEndDes}`)
     }
-    console.log("----------------------------------------------")
+    logL(getLine(50))
     for (let i = 90; i <= 97; i++) {
-        console.log(`\t\t${colorStartDes(i)} C${i}\t${str} ${colorEndDes}`)
+        logL(`\t\t${colorStartDes(i)} C${i}\t${str} ${colorEndDes}`)
     }
-    console.log("----------------------------------------------")
+    logL(getLine(50))
     for (let i = 100; i <= 107; i++) {
-        console.log(`\t\t${colorStartDes(i)} C${i}\t${str} ${colorEndDes}`)
+        logL(`\t\t${colorStartDes(i)} C${i}\t${str} ${colorEndDes}`)
     }
-    console.log("----------------------------------------------")
+    logL(getLine(50))
 }
+
+// log(chalk.red("this"), chalk.blue("is"), chalk.green("a"), chalk.yellow("test"))
+// chalk.bold chalk.rgb 在 frida 这里不好使
+// export const logFormart = (...text: chalk.Chalk[] | string[]) => logL(...text)
 
 let linesMap = new Map()
 export const getLine = (length: number, fillStr: string = "-") => {
@@ -88,6 +93,7 @@ declare global {
     var getLine: (length: number, fillStr?: string) => string
     var printLogColors: () => void
     var LogColor: any
+    // var log: (...text: chalk.Chalk[] | string[]) => void
 }
 
 globalThis.LOG = LOG
@@ -102,5 +108,6 @@ globalThis.LOGH = LOGH
 globalThis.LOGZ = LOGZ
 globalThis.getLine = getLine
 globalThis.printLogColors = printLogColors
-globalThis.LogColor = LogColor
 globalThis.newLine = (lines: number = 1) => LOG(getLine(lines, "\n"))
+globalThis.LogColor = LogColor
+// globalThis.log = logFormart // alias log <= logFormart

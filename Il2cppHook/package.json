@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "babelify": "^10.0.0",
+    "chalk": "^5.0.1",
     "decorator-cache-getter": "^1.0.0",
     "fastest-levenshtein": "^1.0.12",
     "frida-compile": "^10.2.5",

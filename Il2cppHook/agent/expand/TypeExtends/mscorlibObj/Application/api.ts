@@ -40,12 +40,6 @@ class ApplicationApi {
         return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Application", "Quit", 0, "void", [])
     }
 
-    // Quit(Int32) : Void
-    @cache
-    static get _Quit_1() {
-        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Application", "Quit", 1, "void", ["int32"])
-    }
-
     // RegisterLogCallback(LogCallback) : Void
     @cache
     static get _RegisterLogCallback() {
@@ -224,6 +218,24 @@ class ApplicationApi {
     @cache
     static get _remove_logMessageReceivedThreaded() {
         return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Application", "remove_logMessageReceivedThreaded", 1, "void", ["pointer"])
+    }
+
+    // public static Void Quit()
+    @cache
+    static get _Quit_() {
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Application", "Quit", 0, [], "void", [])
+    }
+
+    // public static Boolean get_isFocused()
+    @cache
+    static get _get_isFocused() {
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Application", "get_isFocused", 0, [], "pointer", [])
+    }
+
+    // public static Boolean get_isBatchMode()
+    @cache
+    static get _get_isBatchMode() {
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Application", "get_isBatchMode", 0, [], "pointer", [])
     }
 }
 
