@@ -30,6 +30,10 @@ class mscorlib_System_Object_impl {
     getHashCode(): number {
         return mscorlib.Api.mscorlibObj._getHashCode(this.handle)
     }
+
+    caseTo<type extends mscorlib_System_Object_impl>() {
+        // return new type(this.handle)
+    }
 }
 
 declare global {

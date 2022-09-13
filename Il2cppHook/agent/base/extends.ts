@@ -329,7 +329,7 @@ globalThis.listModule = (moduleName: string, printItems: number = 5) => {
         LOGO(`\t[-] enumerateRanges ( ${range.length} )`)
         range.sort((f: RangeDetails, s: RangeDetails) => f.base.compare(s.base))
             .forEach((item: RangeDetails) => {
-                LOGZ(`\t\t${item.protection}\t${item.base} - ${item.base.add(item.size)} | ${formartClass.alignStr(String(ptr(item.size)), p_size + 4)} <- ${item.size}`)
+                LOGZ(`\t\t${item.protection}\t${item.base} - ${item.base.add(item.size)} | ${formartClass.alignStr(String(ptr(item.size)), p_size + 8)} <- ${item.size}`)
             })
         LOG("")
     }
@@ -340,7 +340,7 @@ globalThis.listModule = (moduleName: string, printItems: number = 5) => {
         let arrTmpRecord: Array<string> = []
         imp.sort((a: ModuleImportDetails, b: ModuleImportDetails) => a.name.length - b.name.length)
             .slice(0, printItems).forEach((item: ModuleImportDetails) => {
-                let address = formartClass.alignStr(String(item.address), Process.pointerSize * 2)
+                let address = formartClass.alignStr(String(item.address), p_size + 8)
                 let importFromDes: string = "\t<---\t"
                 try {
                     let tmd = Process.findModuleByAddress(item.address!)! //this can throw exception
@@ -359,7 +359,7 @@ globalThis.listModule = (moduleName: string, printItems: number = 5) => {
         LOGO(`\t[-] enumerateExports ( ${exp.length} )`)
         exp.sort((a: ModuleExportDetails, b: ModuleExportDetails) => a.name.length - b.name.length)
             .slice(0, printItems).forEach((item: ModuleExportDetails) => {
-                let address = formartClass.alignStr(String(item.address), Process.pointerSize * 2)
+                let address = formartClass.alignStr(String(item.address), p_size + 8)
                 LOGZ(`\t\t${item.type}   ${address}  ${item.name}`)
             })
         if (exp.length > printItems) LOGZ("\t\t......\n")
@@ -377,10 +377,11 @@ globalThis.listModule = (moduleName: string, printItems: number = 5) => {
 
 function printModule(md: Module, needIndex: boolean = false) {
     needIndex == true ? LOGD(`\n[${++index}]\t${md.name}`) : LOGD(`\n[*]\t${md.name}`)
-    let fileLen = getFileLenth(md.path)
-    let extendFileLen = fileLen == 0 ? "" : `| FILE: ${ptr(fileLen)} ( ${fileLen} B )`
     // 保留三位小数
+    let fileLen = getFileLenth(md.path)
     let size = Math.round(md.size / 1024 / 1024 * 100) / 100
+    let fileLenFormat = Math.round(fileLen / 1024 / 1024 * 100) / 100
+    let extendFileLen = fileLen == 0 ? "" : `| FILE: ${fileLen} B ≈ ${fileLenFormat} MB `
     LOGZ(`\t${md.base} - ${(md.base.add(md.size))}  | MEM: ${ptr(md.size)} ( ${md.size} B = ${md.size / 1024} KB ≈ ${size} MB ) ${extendFileLen}`)
     LOGZ(`\t${md.path}\n`)
 }

@@ -110,7 +110,7 @@ $ frida -FU -l ../_Ufunc.js
     
     ![showAsmSP](img/showAsmSP.png)
 
-- **showMethodInfo / MethodToShow 查看MethodInfo信息（后者多用在findMethod）** <a id="MethodInfo"></a>
+- **showMethodInfo / MethodToShow 查看MethodInfo信息（后者多用在findMethod）showAddressInfo alias showMethodInfo(addressToMethod)** <a id="MethodInfo"></a>
     
     ![showMethodInfo](img/showMethodInfo.png)
 

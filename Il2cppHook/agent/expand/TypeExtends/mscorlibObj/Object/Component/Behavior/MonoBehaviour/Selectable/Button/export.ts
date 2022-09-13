@@ -1,7 +1,6 @@
 import { PackList } from "../../../../../../../../../bridge/fix/packer/packList"
 import { UnityEngine_EventSystems_PointerEventData_Impl as PointerEventData } from "../../../../../../AbstractEventData/BaseEventData/PointerEventData/class"
 import { UnityEngine_Events_UnityAction_Impl as UnityAction } from "../../../../../../Delegate/MulticastDelegate/UnityAction/class"
-import { mscorlib_System_Type_impl as System_Type } from "../../../../../../Type/class"
 import { UnityEngine_UI_Button_ButtonClickedEvent_Impl as ButtonClickedEvent } from "../../../../../../UnityEventBase/UnityEvent/ButtonClickedEvent/class"
 import { GameObjectImpl as GameObject } from "../../../../../GameObject/class"
 import { ButtonImpl as Button } from "./class"
@@ -20,7 +19,7 @@ function OnPointerClick() {
             })
             break
         case 0:
-            funcAddr = find_method("UnityEngine.UI", "PointerInputModule", "DeselectIfSelectionChanged", 2)
+            funcAddr = ptr(Il2Cpp.Api.PointerInputModule._DeselectIfSelectionChanged)
             if (funcAddr.isNull()) break
             LOGE("\nEnable Hook DeselectIfSelectionChanged at " + funcAddr + "(" + funcAddr.sub(soAddr) + ")" + "\n")
             A(funcAddr, (args) => {
@@ -40,35 +39,35 @@ function OnPointerClick() {
             })
             break
         case 2:
-            A(find_method("UnityEngine.UI", "PointerInputModule", "ProcessMove", 1), (args) => {
+            A(Il2Cpp.Api.PointerInputModule._ProcessMove, (args) => {
                 LOGW("\n" + getLine(38))
                 LOGD("protected virtual Void ProcessMove( " + (args[1]) + " )")
                 FakePointerEventData(args[1])
             })
             break
         case 3:
-            A(find_method("UnityEngine.UI", "PointerInputModule", "ProcessDrag", 1), (args) => {
+            A(Il2Cpp.Api.PointerInputModule._ProcessDrag, (args) => {
                 LOGW("\n" + getLine(38))
                 LOGD("protected virtual Void ProcessDrag( " + (args[1]) + " )")
                 FakePointerEventData(args[1])
             })
             break
         case 4:
-            A(find_method("UnityEngine.UI", "BaseInputModule", "HandlePointerExitAndEnter", 2), (args) => {
+            A(Il2Cpp.Api.BaseInputModule._HandlePointerExitAndEnter, (args) => {
                 LOGW("\n" + getLine(38))
                 LOGD("protected virtual Void HandlePointerExitAndEnter( " + (args[1]) + " , " + (args[2]) + ")")
                 FakePointerEventData(args[1])
             })
             break
         case 5:
-            A(find_method("UnityEngine.UI", "PointerEventData", "set_pointerPress", 1), (args) => {
+            A(Il2Cpp.Api.PointerEventData._set_pointerPress, (args) => {
                 LOGW("\n" + getLine(38))
                 LOGD("protected virtual Void set_pointerPress( " + (args[1]) + " )")
                 showGameObject(args[1])
             })
             break
         case 6:
-            A(find_method("UnityEngine.UI", "PointerInputModule", "GetPointerData", 3), (args) => {
+            A(Il2Cpp.Api.PointerInputModule._GetPointerData, (args) => {
                 LOGW("\n" + getLine(38))
                 LOGD("protected virtual Void GetPointerData( " + (args[2]) + " )")
                 showGameObject(args[1])
@@ -77,7 +76,7 @@ function OnPointerClick() {
             break
         case 7:
             // EventSystem --->  public Void RaycastAll (PointerEventData eventData,List`1 raycastResults)
-            A(find_method("UnityEngine.UI", "EventSystem", "RaycastAll", 2), (args) => {
+            A(Il2Cpp.Api.EventSystem._RaycastAll, (args) => {
                 LOGW("\n" + getLine(38))
                 LOGD(`protected virtual Void RaycastAll( ${args[0]} , ${args[1]} , ${args[2]} )`)
                 FakePointerEventData(args[1])
@@ -85,14 +84,14 @@ function OnPointerClick() {
             break
         case 8:
             // PointerInputModule --->  protected PointerEventData GetTouchPointerEventData (Touch input,Boolean pressed,Boolean released)
-            A(find_method("UnityEngine.UI", "PointerInputModule", "GetTouchPointerEventData", 3), (args) => { }, (ret) => {
+            A(Il2Cpp.Api.PointerInputModule._GetTouchPointerEventData, (args) => { }, (ret) => {
                 LOGW("\n" + getLine(38))
                 LOGD(`protected virtual Void GetTouchPointerEventData `)
                 FakePointerEventData(ret)
             })
         case 9:
             // Selectable --->  public virtual Void OnPointerExit (PointerEventData eventData)
-            A(find_method("UnityEngine.UI", "Selectable", "OnPointerExit", 1), (args) => {
+            A(Il2Cpp.Api.Selectable._OnPointerExit, (args) => {
                 LOGW("\n" + getLine(38))
                 LOGD("protected virtual Void OnPointerExit( " + (args[1]) + " )")
                 FakePointerEventData(args[1])
@@ -105,7 +104,6 @@ function OnPointerClick() {
         let pointerEventData = new PointerEventData(eventData)
         let gameObj: Il2Cpp.GameObject = pointerEventData.get_pointerEnter()
         // LOGD(pointerEventData.toString())
-        // LOGW(pointerEventData.ToString())
         if (!gameObj.handle.isNull()) showGameObject(gameObj.handle)
         // showTransform(f_getTransform(gameObj))
         // showEventData(pointerEventData)
@@ -131,11 +129,11 @@ const OnButtonClick = () => {
             callsArray.forEach((callList: PackList) => {
                 if (callList.get_Count() != 0) LOGZ(`\t[+] ${callList}`)
                 callList.forEach((instance: Il2Cpp.Object, index: number) => {
-                    // // UnityEngine.Events.InvokableCall
+                    // UnityEngine.Events.InvokableCall
                     // LOGD(index + " : " + instance + " " + instance.handle)
-                    let action = (instance.field('Delegate').value as Il2Cpp.Object)
+                    let action: Il2Cpp.Object = <Il2Cpp.Object>instance.field('Delegate').value
                     // lfp(action.handle)
-                    let unityAction = new UnityAction(action.handle)
+                    let unityAction: UnityAction = new UnityAction(action.handle)
                     let method: Il2Cpp.Method
                     if (!unityAction.method.isNull()) {
                         // action 中本身就包含了 methodInfo

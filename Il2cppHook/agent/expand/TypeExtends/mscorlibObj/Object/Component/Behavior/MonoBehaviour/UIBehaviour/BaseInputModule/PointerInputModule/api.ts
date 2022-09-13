@@ -96,7 +96,6 @@ class UnityEngine_EventSystems_PointerInputModule_API {
     static get _DeselectIfSelectionChanged() {
         return Il2Cpp.Api.o("UnityEngine.UI", "UnityEngine.EventSystems.PointerInputModule", "DeselectIfSelectionChanged", 2, ["UnityEngine.GameObject", "UnityEngine.EventSystems.BaseEventData"], "void", ["pointer", "pointer", "pointer"])
     }
-
 }
 
 Il2Cpp.Api.PointerInputModule = UnityEngine_EventSystems_PointerInputModule_API

@@ -20,4 +20,5 @@ import "./Ray/include"
 import "./RaycastResult/include"
 
 import "./Int32/include"
+import "./IntPtr/include"
 import "./DateTime/include"

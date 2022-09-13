@@ -46,7 +46,8 @@ function getApkInfo() {
         LOGD("\n[*]Signatures\t\tMD5\t " + hexdigest(hexDigist, 'MD5') +
             "\n\t\t\tSHA-1\t " + hexdigest(hexDigist, 'SHA-1') +
             "\n\t\t\tSHA-256\t " + hexdigest(hexDigist, 'SHA-256'))
-        LOGD("\n[*]unity.build-id\t" + getMetaData('unity.build-id'))
+        let buildId = getMetaData('unity.build-id')
+        if (buildId.length != 0) LOGD("\n[*]unity.build-id\t" + getMetaData('unity.build-id'))
         LOGO(getLine(100))
     })
 
@@ -558,6 +559,8 @@ const AddressToMethodToString = (mPtr: NativePointer, simple: boolean = true): v
     LOGW(getLine(maxDispLen))
 }
 
+const showAddressInfo = (mPtr: NativePointer | number = 0) => showMethodInfo(AddressToMethod(checkCmdInput(mPtr)).handle)
+
 /**
  * 用包名启动 APK
  * @param {String} pkgName 
@@ -583,6 +586,7 @@ Reflect.set(globalThis, "getUnityInfo", getUnityInfo)
 Reflect.set(globalThis, "AddressToMethod", AddressToMethod)
 Reflect.set(globalThis, "AddressToMethodToString", AddressToMethodToString)
 Reflect.set(globalThis, "AddressToMethodNoException", AddressToMethodNoException)
+Reflect.set(globalThis, "showAddressInfo", showAddressInfo)
 
 declare global {
     var launchApp: (pkgName: string) => void
@@ -593,4 +597,5 @@ declare global {
     var AddressToMethod: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method
     var AddressToMethodToString: (mPtr: NativePointer) => void
     var AddressToMethodNoException: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method | null
+    var showAddressInfo: (mPtr: NativePointer) => void
 }
