@@ -93,7 +93,7 @@ class UnityEngine_SystemInfo_Impl extends mscorlib_System_Object_impl {
     }
 
     static get_supportsRenderTargetArrayIndexFromVertexShader(): System_Boolean {
-        return Il2Cpp.Api.SystemInfo._get_supportsRenderTargetArrayIndexFromVertexShader()
+        return Il2Cpp.Api.SystemInfo._get_supportsRenderTargetArrayIndexFromVertexShader() == 1
     }
 
     static get_supportedRenderTargetCount(): System_Int32 {
@@ -105,15 +105,15 @@ class UnityEngine_SystemInfo_Impl extends mscorlib_System_Object_impl {
     }
 
     static get_supportsMultisampleAutoResolve(): System_Boolean {
-        return Il2Cpp.Api.SystemInfo._get_supportsMultisampleAutoResolve()
+        return Il2Cpp.Api.SystemInfo._get_supportsMultisampleAutoResolve() == 1
     }
 
     static get_usesReversedZBuffer(): System_Boolean {
-        return Il2Cpp.Api.SystemInfo._get_usesReversedZBuffer()
+        return Il2Cpp.Api.SystemInfo._get_usesReversedZBuffer() == 1
     }
 
     static IsValidEnumValue(value: System_Enum): System_Boolean {
-        return Il2Cpp.Api.SystemInfo._IsValidEnumValue(value)
+        return Il2Cpp.Api.SystemInfo._IsValidEnumValue(value) == 1
     }
 
     static SupportsRenderTextureFormat(format: RenderTextureFormat): System_Boolean {
@@ -125,15 +125,15 @@ class UnityEngine_SystemInfo_Impl extends mscorlib_System_Object_impl {
     }
 
     static get_supportsGraphicsFence(): System_Boolean {
-        return Il2Cpp.Api.SystemInfo._get_supportsGraphicsFence()
+        return Il2Cpp.Api.SystemInfo._get_supportsGraphicsFence() == 1
     }
 
     static get_supportsMultiview(): System_Boolean {
-        return Il2Cpp.Api.SystemInfo._get_supportsMultiview()
+        return Il2Cpp.Api.SystemInfo._get_supportsMultiview() == 1
     }
 
     static get_supportsStoreAndResolveAction(): System_Boolean {
-        return Il2Cpp.Api.SystemInfo._get_supportsStoreAndResolveAction()
+        return Il2Cpp.Api.SystemInfo._get_supportsStoreAndResolveAction() == 1
     }
 
     static GetOperatingSystem(): System_String {
@@ -265,11 +265,11 @@ class UnityEngine_SystemInfo_Impl extends mscorlib_System_Object_impl {
     }
 
     static SupportsMultiview(): System_Boolean {
-        return Il2Cpp.Api.SystemInfo._SupportsMultiview()
+        return Il2Cpp.Api.SystemInfo._SupportsMultiview() == 1
     }
 
     static SupportsStoreAndResolveAction(): System_Boolean {
-        return Il2Cpp.Api.SystemInfo._SupportsStoreAndResolveAction()
+        return Il2Cpp.Api.SystemInfo._SupportsStoreAndResolveAction() == 1
     }
 
     static GetRenderTextureSupportedMSAASampleCount_Injected(desc: UnityEngine_RenderTextureDescriptor): System_Int32 {

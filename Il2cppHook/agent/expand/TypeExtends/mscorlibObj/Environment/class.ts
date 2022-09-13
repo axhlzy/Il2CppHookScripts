@@ -74,7 +74,7 @@ class System_Environment_Impl extends mscorlib_System_Object_impl {
     }
 
     static get_TickCount(): System_Int32 {
-        return mscorlib.Api.Environment._get_TickCount().toInt32()
+        return mscorlib.Api.Environment._get_TickCount()
     }
 
     static Exit(exitCode: System_Int32): System_Void {
@@ -134,7 +134,7 @@ class System_Environment_Impl extends mscorlib_System_Object_impl {
     }
 
     static get_ProcessorCount(): System_Int32 {
-        return mscorlib.Api.Environment._get_ProcessorCount().toInt32()
+        return mscorlib.Api.Environment._get_ProcessorCount()
     }
 
     static get_IsRunningOnWindows(): System_Boolean {
@@ -154,7 +154,7 @@ class System_Environment_Impl extends mscorlib_System_Object_impl {
     }
 
     static GetPageSize(): System_Int32 {
-        return mscorlib.Api.Environment._GetPageSize().toInt32()
+        return mscorlib.Api.Environment._GetPageSize()
     }
 
     static GetStackTrace(e: System_Exception, needFileInfo: System_Boolean): System_String {

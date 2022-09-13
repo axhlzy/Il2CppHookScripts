@@ -76,7 +76,7 @@ class System_Environment_API {
     // public static Int32 get_TickCount()
     @cache
     static get _get_TickCount() {
-        return Il2Cpp.Api.o("mscorlib", "System.Environment", "get_TickCount", 0, [], "pointer", [])
+        return Il2Cpp.Api.o("mscorlib", "System.Environment", "get_TickCount", 0, [], "uint32", [])
     }
 
     // public static Void Exit(Int32 exitCode)
@@ -166,7 +166,7 @@ class System_Environment_API {
     // public static Int32 get_ProcessorCount()
     @cache
     static get _get_ProcessorCount() {
-        return Il2Cpp.Api.o("mscorlib", "System.Environment", "get_ProcessorCount", 0, [], "pointer", [])
+        return Il2Cpp.Api.o("mscorlib", "System.Environment", "get_ProcessorCount", 0, [], "uint32", [])
     }
 
     // internal static Boolean get_IsRunningOnWindows()
@@ -196,7 +196,7 @@ class System_Environment_API {
     // internal static Int32 GetPageSize()
     @cache
     static get _GetPageSize() {
-        return Il2Cpp.Api.o("mscorlib", "System.Environment", "GetPageSize", 0, [], "pointer", [])
+        return Il2Cpp.Api.o("mscorlib", "System.Environment", "GetPageSize", 0, [], "uint32", [])
     }
 
     // internal static String GetStackTrace(Exception e,Boolean needFileInfo)

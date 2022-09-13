@@ -20,4 +20,5 @@ export function SystemInfo() {
     LOGD(`[*] supportsShadows\t\t\t${Il2Cpp.SystemInfo.SupportsShadows()}\n${getLine(20)}`)
     LOGD(`[*] supportsMultisampleAutoResolve\t${Il2Cpp.SystemInfo.SupportsMultisampleAutoResolve()}\n${getLine(20)}`)
     LOGD(`[*] SupportsMultiview\t\t\t${Il2Cpp.SystemInfo.SupportsMultiview()}\n${getLine(20)}`)
+    LOGD(`[*] SupportsStoreAndResolveAction\t${Il2Cpp.SystemInfo.SupportsStoreAndResolveAction()}\n${getLine(20)}`)
 }
