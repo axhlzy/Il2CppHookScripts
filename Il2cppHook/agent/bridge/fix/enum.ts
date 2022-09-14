@@ -1,3 +1,5 @@
+import { PackDictionary } from "./packer/packDictionary"
+
 export const enumNumToName = (enumValue: number, classInfo: string) => {
     let retValue: string = "Unknown"
     enumForEach(classInfo, (field: NativePointer, fieldName: string, value: number) => {
@@ -42,7 +44,7 @@ export const enumForEach = (className: string, callback: (field: NativePointer, 
 // }
 
 globalThis.testCall = () => {
-    // LOGW(enumNumToName1(0x2, "OperatingSystemFamily"))
+    LOGW(enumNumToName(0x2, "OperatingSystemFamily"))
 
     LOGD(mscorlib.Environment.GetEnvironmentVariableNames().toString())
 
@@ -50,6 +52,8 @@ globalThis.testCall = () => {
         LOGD(`${index} ${item}`)
     })
 
+    // LOGD(new PackDictionary(ptr(0x6c88f188)).entries.handle)
+    // LOGD(new PackDictionary(ptr(0x6c88f188)).get_Entry().get_Item(0))
 }
 
 declare global {
