@@ -1,4 +1,7 @@
-export class PackArray<T> {
+/**
+ * PackArray 用于打包一个 array, 解析 array 的值
+ */
+export class PackArray {
 
     public handle: NativePointer
     public Obj: Il2Cpp.Object
@@ -17,15 +20,22 @@ export class PackArray<T> {
         return this.get_Count()
     }
 
+    public get itemClass(): Il2Cpp.Class | null {
+        if (this.length == 0) return null
+        return this.get_Item(0).class
+    }
+
     public get_Count(): number {
         return this.Obj.method("System.Collections.Generic.ICollection`1.get_Count").invoke() as number
     }
 
+    // 注意此处的返回值直接是一个 Il2Cpp.Object
     public get_Item(index: number): Il2Cpp.Object {
         if (index >= this.get_Count()) throw new Error(`Index out of range: ${index} >= ${this.get_Count()}`)
         return this.Obj.method("System.Collections.Generic.IList`1.get_Item").invoke(index) as Il2Cpp.Object
     }
 
+    // setValue 如果是str，应该 set_Item(0,allocUStr('xxx'))
     public set_Item(index: number, value: NativePointer): void {
         if (index >= this.get_Count()) throw new Error(`Index out of range: ${index} >= ${this.get_Count()}`)
         this.Obj.method("System.Collections.Generic.IList`1.set_Item").invoke(index, value)
@@ -51,14 +61,14 @@ export class PackArray<T> {
         return result
     }
 
-    toArraySimple(): string[] {
+    toArrayStr(): string[] {
         let result: string[] = []
         this.forEach((item: Il2Cpp.Object) => result.push(item.toString()))
         return result
     }
 
     toString(): string {
-        return JSON.stringify(this.toArray())
+        return this.toArrayStr().toString()
     }
 
 }

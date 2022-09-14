@@ -1,8 +1,9 @@
-import { getMethodMaxArgNameLength, getMethodModifier, methodToString } from "../bridge/fix/il2cppM"
+import { getMethodDesFromMethodInfo, getMethodMaxArgNameLength, getMethodModifier, methodToString } from "../bridge/fix/il2cppM"
 import { closest } from "fastest-levenshtein"
 import { formartClass } from "../utils/formart"
 import { HookerBase } from "./base"
 import ValueResolve from "./valueResolve"
+import { time } from "console"
 
 export { Breaker }
 declare global {
@@ -21,6 +22,7 @@ declare global {
     var maxCallTimes: number
     var attathing: boolean
     var printDesertedMethods: (filterName?: string) => void
+    var printCurrentMethods: () => void
 }
 
 type SpecialClass = "CommonClass" | "JNI" | "AUI" | "Soon"
@@ -29,11 +31,11 @@ class Breaker {
 
     public static maxCallTimes: number = 10     // 出现 ${maxCallTimes} 次后不再显示
     public static detachTimes: number = 500     // 出现 ${detachTimes}  次后取消 hook
-    private static map_attachedMethodInfos: Map<Il2Cpp.Method, InvocationListener> = new Map()
+    public static map_attachedMethodInfos: Map<Il2Cpp.Method, InvocationListener> = new Map()
     private static map_methodInfo_callTimes: Map<Il2Cpp.Method, number> = new Map()
     private static array_methodInfo_detached: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
-    private static array_attach_failed: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
     private static array_methodValue_cache: Array<ValueResolve> = new Array<ValueResolve>() // 日志相关,记录参数
+    private static array_attach_failed: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
     // private static array_log_cache: Map<string, [string, NativePointer[], NativePointer]> = new Map()
 
     static addBreakPoint(imgOrClsPtr: NativePointer | number | string | SpecialClass = "CommonClass"): void {
@@ -363,6 +365,31 @@ globalThis.b = (mPtr: NativePointer | string | number) => {
 }
 
 globalThis.printDesertedMethods = Breaker.printDesertedMethods
+
+/**
+ * 原 print_list_result
+ * 用来列出已经 attach的方法
+ */
+globalThis.printCurrentMethods = () => {
+    let currentTime = Date.now()
+    new Promise((resolve: Function) => {
+        let methodInfos = new Array<Il2Cpp.Method>()
+        Breaker.map_attachedMethodInfos.forEach((value: InvocationListener, key: Il2Cpp.Method) => { methodInfos.push(key) })
+        resolve(methodInfos)
+    }).then((methodInfos) => {
+        let localT = <Array<Il2Cpp.Method>>methodInfos
+        let address = localT.flatMap((method: Il2Cpp.Method) => method.relativeVirtualAddress)
+        let names = localT.flatMap((method: Il2Cpp.Method) => `${method.class.name}::${getMethodDesFromMethodInfo(method)}`)
+        return [address, names]
+    }).then((addressAndnames) => {
+        let value: [Array<NativePointer>, Array<string>] = <[Array<NativePointer>, Array<string>]>addressAndnames
+        LOGD(`\nvar arrayAddr = \n${JSON.stringify(value[0])}\n\nvar arrayName = \n${JSON.stringify(value[1])}\n`)
+    }).catch((error) => {
+        LOGE(error)
+    }).finally(() => {
+        LOGZ(`list ${Breaker.map_attachedMethodInfos.size} methods in ${Date.now() - currentTime} ms \n`)
+    })
+}
 
 globalThis.BF = (filterStr: string): void => {
     if (typeof filterStr != "string") return

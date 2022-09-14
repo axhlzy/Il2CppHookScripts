@@ -145,7 +145,7 @@ class System_Environment_Impl extends mscorlib_System_Object_impl {
     // static GetEnvironmentVariableNames(): System_String[] {
     //     return mscorlib.Api.Environment._GetEnvironmentVariableNames()
     // }
-    static GetEnvironmentVariableNames(): PackArray<string> {
+    static GetEnvironmentVariableNames(): PackArray {
         return new PackArray(mscorlib.Api.Environment._GetEnvironmentVariableNames())
     }
 
