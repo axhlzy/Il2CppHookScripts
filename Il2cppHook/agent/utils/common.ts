@@ -182,7 +182,7 @@ var runOnMain = (UpDatePtr: NativePointer, Callback: Function) => {
     })
 }
 
-var SendMessage = (str0: string, str1: string, str2: string = ""): void => {
+const SendMessage = (str0: string, str1: string, str2: string = ""): void => {
     // Java 
     Java.perform(() => Java.use("com.unity3d.player.UnityPlayer").UnitySendMessage(str0, str1, str2))
 
@@ -190,7 +190,7 @@ var SendMessage = (str0: string, str1: string, str2: string = ""): void => {
     // callFunction(Module.findExportByName("libunity.so","UnitySendMessage"),allocStr(str0,1),allocStr(str1,1),allocStr(str2,1))
 }
 
-var SendMessageImpl = (platform: string | "IronSource" | "MaxSdkCallbacks" | "MoPubManager" | "TPluginsGameObject"): void => {
+const SendMessageImpl = (platform: string | "IronSource" | "MaxSdkCallbacks" | "MoPubManager" | "TPluginsGameObject" | 'ALL' = 'ALL'): void => {
 
     switch (platform) {
         case "IronSource":
@@ -205,11 +205,13 @@ var SendMessageImpl = (platform: string | "IronSource" | "MaxSdkCallbacks" | "Mo
         case "TPluginsGameObject":
             TTPluginsGameObject()
             break
-        default:
+        case "ALL":
             IronSourceEvents()
             MaxSdkCallbacks()
             MoPubManager()
             TTPluginsGameObject()
+        default:
+            DefaultClass(platform)
             break
     }
 
@@ -285,6 +287,17 @@ var SendMessageImpl = (platform: string | "IronSource" | "MaxSdkCallbacks" | "Mo
         SendMessage("TTPluginsGameObject", "OnRewardedAdsShown", "")
         SendMessage("TTPluginsGameObject", "OnRewardedAdsClosed", "{\"shouldReward\":true,\"network\":\"admob-unityads\",\"revenue\":0.00138,\"currency\":\"USD\",\"precision\":\"ESTIMATED\"}")
         SendMessage("TTPluginsGameObject", "OnRewardedAdsReady", "{\"loaded\":true}")
+    }
+
+    function DefaultClass(className: string = "OmEvents") {
+        SendMessage(className, "OnRewardedVideoAdLoaded", "")
+        SendMessage(className, "OnRewardedVideoAdOpened", "")
+        SendMessage(className, "onRewardedVideoShowed", "")
+        SendMessage(className, "onRewardedVideoStarted", "")
+        SendMessage(className, "onRewardedVideoEnded", "")
+        SendMessage(className, "onRewardedVideoRewarded", "{'placement_reward_name':'Virtual Item','placement_name':'rewardedVideo','placement_reward_amount':'1','placement_id':'2'}")
+        SendMessage(className, "OnRewardedVideoAdClosed", "")
+        SendMessage(className, "onRewardedVideoAvailabilityChanged", "true")
     }
 }
 

@@ -1,12 +1,12 @@
-import { distance } from "fastest-levenshtein"
-import { HookerBase } from "../base/base"
 import { Breaker } from "../base/breaker"
-import { getMethodDesFromMethodInfo } from "../bridge/fix/il2cppM"
+import { HookerBase } from "../base/base"
+import { distance } from "fastest-levenshtein"
+import { formartClass } from "../utils/formart"
+import { Time } from "../expand/TypeExtends/mscorlibObj/Times/export"
+import { getMethodDesFromMethodInfo as DesMethodStr } from "../bridge/fix/il2cppM"
 import { Application } from "../expand/TypeExtends/mscorlibObj/Application/export"
 import { Environment } from "../expand/TypeExtends/mscorlibObj/Environment/export"
 import { SystemInfo } from "../expand/TypeExtends/mscorlibObj/SystemInfo/export"
-import { Time } from "../expand/TypeExtends/mscorlibObj/Times/export"
-import { formartClass } from "../utils/formart"
 
 /**
  * 获取APK的一些基本信息
@@ -20,8 +20,13 @@ function getApkInfo() {
         // var appInfo = context.getApplicationInfo()
         let appInfo = pkgInfo.applicationInfo.value
 
-        let labelRes = appInfo.labelRes.value
-        let strName = context.getResources().getString(labelRes)
+        let labelRes: number = -1
+        let strName: string = "Error Reading Name"
+        try {
+            labelRes = appInfo.labelRes.value
+            strName = context.getResources().getString(labelRes)
+        } catch { }
+
         LOGD("[*]AppName\t\t" + strName + " (UID:" + appInfo.uid.value + ")\t ID:0x" + (appInfo.labelRes.value).toString(16))
         let flags = appInfo.flags.value
         LOGZ("\t\t\tBackupable -> " + ((flags & 32768) != 0) + "\t" + "Debugable -> " + ((flags & 2) != 0))
@@ -206,7 +211,7 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
         }
         let index = formartClass.alignStr(`[${++countIndex}]`, 6)
         let virAddr = item.virtualAddress.isNull() ? "" : `  --->   ${item.relativeVirtualAddress}`
-        let result = `${index} ${formartClass.alignStr(item.handle, p_size * 4)}${virAddr}\t${item.class.name}( ${item.class.handle} ) | ${getMethodDesFromMethodInfo(item)}`
+        let result = `${index} ${formartClass.alignStr(item.handle, p_size * 4)}${virAddr}\t${item.class.name}( ${item.class.handle} ) | ${DesMethodStr(item)}`
         if (formartMaxLine != -1 && formartMaxLine > 10) result = formartClass.alignStr(result, formartMaxLine)
         if (!item.virtualAddress.isNull()) {
             arrStrResult.push(result)
@@ -245,7 +250,7 @@ const AddressToMethodToString = (mPtr: NativePointer, simple: boolean = true): v
     let line2 = `namespace\t${NameSpace.trim().length == 0 ? formartClass.centerStr("---", maxLen) : NameSpace} @ ${method.class.handle}`
     let line3 = `class\t\t${MethodName} @ ${method.class.handle}`
     let line4 = `methodInfo\t${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress}`
-    let line5 = `methodName\t${getMethodDesFromMethodInfo(method)}`
+    let line5 = `methodName\t${DesMethodStr(method)}`
     let maxDispLen = Math.max(line1.length, line2.length, line3.length, line4.length, line5.length) + 4
     LOGW(getLine(maxDispLen))
     LOGD(`${line1}\n${line2}\n${line3}\n${line4}\n${line5}`)
