@@ -301,6 +301,8 @@ const SendMessageImpl = (platform: string | "IronSource" | "MaxSdkCallbacks" | "
     }
 }
 
+export const TIME_SIMPLE = (): string => new Date().toLocaleTimeString().split(" ")[0]
+
 /**
  * 大于最大出现次数返回值为 -1
  * 主要是为了过滤比如setActive中重复出现的一直频繁调用的obj

@@ -63,8 +63,10 @@ class ValueResolve {
         return this.method.parameterCount
     }
 
+    // `value` looks like a `NativePointer[]` type, but it may actually be a `never` type
     public setArgs(value: InvocationArguments): ValueResolve {
-        if (value == undefined || value.length === 0 || value.length < this.method.parameterCount) return this
+        if (value == undefined) return this
+        if (value instanceof Array && (value.length === 0 || value.length < this.method.parameterCount)) return this
         this.args = value
         return this
     }

@@ -1,9 +1,13 @@
-import { getMethodDesFromMethodInfo, getMethodMaxArgNameLength, getMethodModifier, methodToString } from "../bridge/fix/il2cppM"
+import {
+    getMethodDesFromMethodInfo as getMethodDes,
+    getMethodMaxArgNameLength as getMethodArgLen,
+    getMethodModifier, methodToString
+} from "../bridge/fix/il2cppM"
 import { closest } from "fastest-levenshtein"
-import { formartClass } from "../utils/formart"
+import { formartClass as FC } from "../utils/formart"
 import { HookerBase } from "./base"
+import { TIME_SIMPLE } from "../utils/common"
 import ValueResolve from "./valueResolve"
-import { time } from "console"
 
 export { Breaker }
 declare global {
@@ -52,7 +56,7 @@ class Breaker {
                 // ImageName
                 HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
                     if (image.name.includes(imgOrClsPtr)) {
-                        formartClass.printTitile("Found : ImageName: " + imgOrClsPtr + " at " + image.handle)
+                        FC.printTitile("Found : ImageName: " + imgOrClsPtr + " at " + image.handle)
                         innerImage(image.handle)
                     }
                 })
@@ -60,7 +64,7 @@ class Breaker {
                 // className
                 let clsPtr: NativePointer = findClass(imgOrClsPtr)
                 if (!clsPtr.isNull()) {
-                    formartClass.printTitile("Found : ClassName: " + imgOrClsPtr + " at " + clsPtr)
+                    FC.printTitile("Found : ClassName: " + imgOrClsPtr + " at " + clsPtr)
                     innerImage(clsPtr)
                 } else {
                     let imageName = closest(imgOrClsPtr, HookerBase._list_images_names)
@@ -88,14 +92,14 @@ class Breaker {
             if (type == "CommonClass") {
                 HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
                     if (CommonClass.includes(image.assembly.name)) {
-                        formartClass.printTitile("Found : ImageName: " + image.name + " at " + image.handle)
+                        FC.printTitile("Found : ImageName: " + image.name + " at " + image.handle)
                         innerImage(image.handle)
                     }
                 })
             } else if (type == "JNI") {
                 let clsTmp = Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNI")
                 if (clsTmp.isNull()) throw new Error("can't find class UnityEngine.AndroidJNI")
-                formartClass.printTitile("Found : ClassName: " + clsTmp.name + " at " + clsTmp.handle)
+                FC.printTitile("Found : ClassName: " + clsTmp.name + " at " + clsTmp.handle)
                 innerImage(clsTmp.handle)
                 // innerImage(Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNIHelper").handle)
             } else if ("AUI") {
@@ -136,13 +140,13 @@ class Breaker {
                     if (!Breaker.needShowLOG(method, "onEnter")) return
                     if (!detailLog) {
                         // 批量版 B() 针对单个classes/Images
-                        let cacheID = `[${++Breaker.callTimesInline}|${new Date().toLocaleTimeString().split(" ")[0]}]`
+                        let cacheID = `[${++Breaker.callTimesInline}|${TIME_SIMPLE()}]`
                         this.passValue = new ValueResolve(cacheID, method).setArgs(args)
                         return LOGD((this.passValue as ValueResolve).toString())
                     } else {
                         // 详细版 b() 针对单个函数
                         let tmp_content: Array<string> = new Array<string>()
-                        let parameterNameMax: number = getMethodMaxArgNameLength(method) + 1
+                        let parameterNameMax: number = getMethodArgLen(method) + 1
                         this.passParameterNameMaxStr = getLine(parameterNameMax, " ")
                         if (!method.isStatic) {
                             // 非static方法
@@ -151,9 +155,9 @@ class Breaker {
                                 let start = `  arg${index}  | `
                                 let parameterName: string
                                 try {
-                                    parameterName = formartClass.alignStr(`${method.parameters[index - 1].name}`, parameterNameMax)
-                                } catch { parameterName = formartClass.alignStr(` `, parameterNameMax) }
-                                let mid = `${parameterName}\t--->\t\t${formartClass.getPtrFormart(args[index])}\t\t`
+                                    parameterName = FC.alignStr(`${method.parameters[index - 1].name}`, parameterNameMax)
+                                } catch { parameterName = FC.alignStr(` `, parameterNameMax) }
+                                let mid = `${parameterName}\t--->\t\t${FC.getPtrFormart(args[index])}\t\t`
                                 let end = `${method.parameters[index - 1].type.name} (${method.parameters[index - 1].type.class.handle})`
                                 let res = `\t ${ValueResolve.fakeValue(args[index], method.parameters[index - 1].type, method)}`
                                 tmp_content[tmp_content.length] = `${start}${mid}${end}${res}`
@@ -164,9 +168,9 @@ class Breaker {
                                 let start = `  arg${index}  | `
                                 let parameterName: string
                                 try {
-                                    parameterName = formartClass.alignStr(`${method.parameters[index - 1].name}`, parameterNameMax)
-                                } catch { parameterName = formartClass.alignStr(` `, parameterNameMax) }
-                                let mid = `${parameterName}\t--->\t\t${formartClass.getPtrFormart(args[index])}\t\t`
+                                    parameterName = FC.alignStr(`${method.parameters[index - 1].name}`, parameterNameMax)
+                                } catch { parameterName = FC.alignStr(` `, parameterNameMax) }
+                                let mid = `${parameterName}\t--->\t\t${FC.getPtrFormart(args[index])}\t\t`
                                 let end = `${method.parameters[index].type.name} (${method.parameters[index].type.class.handle})\t `
                                 let res = `${ValueResolve.fakeValue(args[index], method.parameters[index].type, method)}`
                                 tmp_content[tmp_content.length] = `${start}${mid}${end}${res}`
@@ -175,7 +179,7 @@ class Breaker {
                         this.content = tmp_content
                         let clsStr = `${method.class.namespace}`
                         let classTitle = `${clsStr.length == 0 ? "" : clsStr + "."}${method.class.name}`
-                        let disptitle = `${classTitle} | ${methodToString(method, true)}\t [${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress}] | ${new Date().toLocaleTimeString().split(" ")[0]}`
+                        let disptitle = `${classTitle} | ${methodToString(method, true)}\t [${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress}] | ${TIME_SIMPLE()}`
                         this.disp_title = disptitle
                     }
                 },
@@ -185,7 +189,7 @@ class Breaker {
                         Breaker.array_methodValue_cache.push((this.passValue as ValueResolve).setRetval(retval))
                     if (this.content == null || this.disp_title == null) return
                     let start = `  ret\t| `
-                    let mid = `${this.passParameterNameMaxStr}\t\t\t${formartClass.getPtrFormart(retval)}\t\t`
+                    let mid = `${this.passParameterNameMaxStr}\t\t\t${FC.getPtrFormart(retval)}\t\t`
                     let end = `${method.returnType.name} (${method.returnType.class.handle})\t `
                     let res = `${new ValueResolve("", method).setRetval(retval).resolve(-1)}`
                     this.content[this.content.length] = `${start}${mid}${end}${res}`
@@ -379,7 +383,7 @@ globalThis.printCurrentMethods = () => {
     }).then((methodInfos) => {
         let localT = <Array<Il2Cpp.Method>>methodInfos
         let address = localT.flatMap((method: Il2Cpp.Method) => method.relativeVirtualAddress)
-        let names = localT.flatMap((method: Il2Cpp.Method) => `${method.class.name}::${getMethodDesFromMethodInfo(method)}`)
+        let names = localT.flatMap((method: Il2Cpp.Method) => `${method.class.name}::${getMethodDes(method)}`)
         return [address, names]
     }).then((addressAndnames) => {
         let value: [Array<NativePointer>, Array<string>] = <[Array<NativePointer>, Array<string>]>addressAndnames

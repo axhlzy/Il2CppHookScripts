@@ -37,7 +37,9 @@ var printCtx = (mPtr: NativePointer | number, range: number = 5, type: number = 
 }
 
 globalThis.printCtx = printCtx
+
 declare global {
     var printCtx: (mPtr: NativePointer | number, range?: number, type?: number, redLine?: number, space?: number) => void
 }
+
 export { printCtx }

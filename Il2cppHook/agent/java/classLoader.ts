@@ -1,4 +1,4 @@
-import { formartClass } from "../utils/formart";
+import { formartClass } from "../utils/formart"
 
 type T_loader = any
 
@@ -7,7 +7,7 @@ class classLoaderManager {
         Java.perform(() => {
             Java.enumerateClassLoaders({
                 onMatch: function (loader) {
-                    if (log) LOGD('classLoader' + loader.toString());
+                    if (log) LOGD('classLoader' + loader.toString())
                     if (loader.toString().indexOf('dalvik.system.DexClassLoader') > -1) {
                         if (callback != null) interCall(loader, callback)
                     } else {
@@ -18,8 +18,8 @@ class classLoaderManager {
         })
 
         function interCall(loader: T_loader, interCallBack: (loader: T_loader) => void) {
-            (Java.classFactory.loader as T_loader) = loader;
-            interCallBack(loader);
+            (Java.classFactory.loader as T_loader) = loader
+            interCallBack(loader)
         }
     }
 
@@ -61,12 +61,43 @@ class classLoaderManager {
     static getClassLoaderByIndex = (index: number): T_loader => {
         return classLoaderManager.loaders[index]
     }
+
+    static HookClassLoader() {
+        Java.perform(function () {
+            let base_loader = Java.use("dalvik.system.BaseDexClassLoader")
+            let lang_class = Java.use("java.lang.Class")
+            if (base_loader != null) {
+                base_loader.$init.overload("java.lang.String", "java.io.File", "java.lang.String", "java.lang.ClassLoader").implementation = function (str1, file, str2, loader) {
+                    let ret = this.$init(str1, file, str2, loader)
+                    let clazz_obj = Java.cast(this.getClass(), lang_class)
+                    LOG("[I] " + clazz_obj.getName())
+                    return ret
+                }
+                base_loader.loadClass.overload("java.lang.String", "boolean").implementation = function (name: string) {
+                    let clazz_obj = Java.cast(this.getClass(), lang_class)
+                    LOGD("[L] " + clazz_obj.getName() + " load  --->  " + name)
+                    let result = this.loadClass(name, false)
+                    return result
+                }
+                base_loader.findClass.implementation = function (name: string) {
+                    let result = this.findClass(name)
+                    let clazz_obj = Java.cast(this.getClass(), lang_class)
+                    LOGD("[F] " + clazz_obj.getName() + " find  --->  " + name)
+                    return result
+                }
+            }
+        })
+    }
 }
 
-const listClassLoaderTMP = classLoaderManager.listClassLoader;
-const iterClassLoaderTMP = classLoaderManager.iterClassLoader;
-const getClassLoaderByDescriptorTMP = classLoaderManager.getClassLoaderByDescriptor;
-const getClassLoaderByIndexTMP = classLoaderManager.getClassLoaderByIndex;
+const listClassLoaderTMP = classLoaderManager.listClassLoader
+const iterClassLoaderTMP = classLoaderManager.iterClassLoader
+
+globalThis.listClassLoader = classLoaderManager.listClassLoader
+globalThis.iterClassLoader = classLoaderManager.iterClassLoader
+globalThis.getClassLoaderByDescriptor = classLoaderManager.getClassLoaderByDescriptor
+globalThis.getClassLoaderByIndex = classLoaderManager.getClassLoaderByIndex
+globalThis.HookClassLoader = classLoaderManager.HookClassLoader
 
 export { listClassLoaderTMP as listClassLoader, iterClassLoaderTMP as iterClassLoader }
 
@@ -75,9 +106,5 @@ declare global {
     var listClassLoader: (formart?: boolean) => void
     var getClassLoaderByDescriptor: (descriptor: string) => any
     var getClassLoaderByIndex: (index: number) => any
+    var HookClassLoader: () => void
 }
-
-globalThis.listClassLoader = listClassLoaderTMP;
-globalThis.iterClassLoader = iterClassLoaderTMP;
-globalThis.getClassLoaderByDescriptor = getClassLoaderByDescriptorTMP;
-globalThis.getClassLoaderByIndex = getClassLoaderByIndexTMP;

@@ -11,5 +11,7 @@ import "./reader"
 import "./stack"
 import "./context"
 import "./stdString"
+import "./dumper"
+import "./system"
 // 不需要就注释减小体积
 // import "./http"
