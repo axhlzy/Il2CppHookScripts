@@ -52,6 +52,7 @@ $ frida -FU -l ../_Ufunc.js
      * [HookSetActive : Hook SetActive](#HookSetActive)
      * [HookPlayerPrefs : Hook PlayerPrefs](#HookPlayerPrefs)
      * [B_Button : HookOnPointerClick to get actions](#B_Button)
+     * [PrintHierarchy : 打印当前场景的层级结构](#PrintHierarchy)
      * ...
   4. Module/Thread相关
      * [listModule : (filterName?: string) => void](#listModule)
@@ -180,6 +181,10 @@ $ frida -FU -l ../_Ufunc.js
     ![B_Button](img/B_Button.png)
 
     ![B_Button](img/B_Button_1.png)
+
+- **PrintHierarchy : 打印当前场景的层级结构** <a id="PrintHierarchy"></a>
+  - 注意：arm64的地址用双引号包裹起来，arm32直接传递即可
+    ![PrintHierarchy](img/PrintHierarchy.png)
 
 - **listModule (filterName: string) => void** <a id="listModule"></a>
   
