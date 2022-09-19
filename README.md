@@ -43,6 +43,7 @@ $ frida -FU -l ../_Ufunc.js
      * [breakInline : InlineHook](#breakInline)
      * [breakWithArgs : 带参数断点](#breakWithArgs)
      * [breakWithStack : 带堆栈断点](#breakWithStack)
+     * [dlopen.ts : 提供早期函数hook位置的回调](#dlopen)
      * [watch/watchDisabled : MemoryAccessMonitor的简单封装（arm32易崩）](#watch)
      * [StalkerTracePath : StalkerTrace封装,分析调用顺序](#StalkerTracePath)
      * [StalkerTraceEvent : StalkerTraceEvent,分析事件](#StalkerTraceEvent)
@@ -148,6 +149,10 @@ $ frida -FU -l ../_Ufunc.js
     
     ![breakWithStack](img/breakWithStack.png)
 
+- **dlopen : 提供一个早期的函数hook点** <a id="dlopen"></a>
+  
+    ![dlopen](img/dlopen.png)
+
 - **watch/watchDisabled MemoryAccessMonitor的简单封装（arm32易崩）** <a id="watch"></a>
   
     ![watch](img/watch.png)
@@ -216,7 +221,7 @@ $ frida -FU -l ../_Ufunc.js
   - api.ts 
     - 用作解析常用函数 (exp: ptr(Il2Cpp.Api.Application._Quit) )
     - 函数的命名使用 '_' + 具体的函数名，多参数使用后缀 '_x' 结尾i (exp: Il2Cpp.Api.Application._Quit_1)
-    - api class 命名为 类名 + 'API'
+    - api class 命名为 类名 + 'API' (exp: System_ValueType_API)
   - class.ts
     - NativePointer转换为Class的实现 (把ptr当成class来解析)
     - 包含一些（静态）字段，（静态）方法，以及方便调用的一些函数封装
@@ -224,12 +229,14 @@ $ frida -FU -l ../_Ufunc.js
   - export.ts
     - 主要用作拓展类的一些导出方法
 - TODO 按照这个文件结构可以拓展到整个UnityAPI
+    (提供了 generateApi / generateClass / generateFieldEnum 方便的拓展类，生成的东西不太准，需要稍微修改点点)
 
 #### Tips
-- 由于JS特性的问题，再arm64下的指针大小是8字节，存在计算精度的问题，所以arm64下控制台传参指针值的时候建议使用string类型 
-    use "0x12345678" instead of 0x12345678 or ptr(0x12345678)
-    这部分后续发现了问题，但是还没做好优化
-- 我这里使用的是 frida==15.1.14 | frida-tools==10.5.4 , 测试机 piex 4 原生 android 11
+- 由于JS特性的问题，再arm64下的指针大小是8字节，所以arm64下控制台传参指针值的时候建议使用string类型 
+    存在计算精度的问题(js命令行传参最大值为Number.MAX_SAFE_INTEGER = 9007199254740991,直接给值超出范围导致精度丢失)
+    use ptr("0x12345678") instead of ptr(0x12345678)
+    这部分发现的比较晚后续很多东西都没有做好优化
+- 我这里用的环境： frida==15.2.2 | frida-tools==10.5.4 , 测试机 ：piex 4 原生android 11
     1. 确认手机端server与电脑端frida版本一致，如果你的版本不一致概率性出问题
     2. 已确认高版本的 frida-tools 在使用老版 Ufunc.js （ts版不受影响）会出问题，所以建议直接使用 10.5.4 版本
     

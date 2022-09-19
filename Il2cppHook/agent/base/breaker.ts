@@ -246,14 +246,14 @@ class Breaker {
         mPtr = checkPointer(mPtr)
         Interceptor.attach(mPtr, {
             onEnter(this: InvocationContext, args: InvocationArguments) {
-                LOGO("\n" + getLine(65))
-                LOGH("Called from " + mPtr + " ---> " + mPtr.sub(soAddr) + "\t|  LR : " + checkCtx(getPlatformCtx(this.context)) + "\n")
+                LOGO(`\n${getLine(85)}`)
+                LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(this.context))}`)
                 let tStr = String(args[0])
                 for (let t = 1; t < argCount; ++t) tStr += "\t" + args[t]
-                LOGD(tStr)
+                LOGD(`Args\t---> ${tStr}`)
             },
             onLeave(this: InvocationContext, retval: InvocationReturnValue) {
-                LOGD("End Function return ---> " + retval)
+                LOGD(`Retval\t---> ${retval}`)
             },
         })
     }
@@ -262,10 +262,10 @@ class Breaker {
         mPtr = checkPointer(mPtr)
         Interceptor.attach(mPtr, {
             onEnter(this: InvocationContext, args: InvocationArguments) {
-                LOGO("\n" + getLine(65))
-                LOGH("Called from " + mPtr + " ---> " + mPtr.sub(soAddr) + "\t|  LR : " + checkCtx(getPlatformCtx(this.context)) + "\n")
+                LOGO(`\n${getLine(65)}`)
+                LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(this.context))}\n`)
                 PrintStackTraceN(this.context)
-                LOGO("\n" + getLine(65))
+                LOGO(`\n${getLine(65)}`)
             }
         })
     }
@@ -274,8 +274,8 @@ class Breaker {
         mPtr = checkPointer(mPtr)
         Interceptor.attach(mPtr, {
             onEnter(this: InvocationContext, args: InvocationArguments) {
-                LOGO("\n" + getLine(65))
-                LOGH("Called from " + mPtr + " ---> " + mPtr.sub(soAddr) + "\n")
+                LOGO(`\n${getLine(65)}`)
+                LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(this.context))}\n`)
                 LOGD(JSON.stringify(this.context))
                 if (callback != undefined) callback(this)
             }
@@ -374,11 +374,11 @@ globalThis.printDesertedMethods = Breaker.printDesertedMethods
  * 原 print_list_result
  * 用来列出已经 attach的方法
  */
-globalThis.printCurrentMethods = () => {
+globalThis.printCurrentMethods = (types: boolean = true) => {
     let currentTime = Date.now()
     new Promise((resolve: Function) => {
         let methodInfos = new Array<Il2Cpp.Method>()
-        Breaker.map_attachedMethodInfos.forEach((value: InvocationListener, key: Il2Cpp.Method) => { methodInfos.push(key) })
+        Breaker.map_attachedMethodInfos.forEach((_value: InvocationListener, key: Il2Cpp.Method) => { methodInfos.push(key) })
         resolve(methodInfos)
     }).then((methodInfos) => {
         let localT = <Array<Il2Cpp.Method>>methodInfos
@@ -387,7 +387,11 @@ globalThis.printCurrentMethods = () => {
         return [address, names]
     }).then((addressAndnames) => {
         let value: [Array<NativePointer>, Array<string>] = <[Array<NativePointer>, Array<string>]>addressAndnames
-        LOGD(`\nvar arrayAddr = \n${JSON.stringify(value[0])}\n\nvar arrayName = \n${JSON.stringify(value[1])}\n`)
+        if (types) {
+            LOGD(`\nvar arrayAddr : string[] = \n${JSON.stringify(value[0])}\n\nvar arrayName : string[] = \n${JSON.stringify(value[1])}\n`)
+        } else {
+            LOGD(`\nvar arrayAddr = \n${JSON.stringify(value[0])}\n\nvar arrayName = \n${JSON.stringify(value[1])}\n`)
+        }
     }).catch((error) => {
         LOGE(error)
     }).finally(() => {

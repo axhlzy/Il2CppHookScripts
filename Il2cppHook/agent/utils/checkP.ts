@@ -6,9 +6,17 @@ import { TYPE_CHECK_POINTER } from "../base/globle"
  * @param {TYPE_CHECK_POINTER} value
  * @returns {NativePointer}
  */
-var baseAddress = Process.findModuleByName("libil2cpp.so")!.base
+var baseAddress: NativePointer = ptr(0)
+setImmediate(() => {
+    let s = setInterval(() => {
+        baseAddress = Process.findModuleByName("libil2cpp.so")!.base
+        if (baseAddress != null) clearInterval(s)
+    }, 200)
+})
 export const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, showLog: boolean = false): NativePointer => {
     if (baseAddress.isNull()) throw new Error("checkPointer: libil2cpp.so not found ! \n please call setBaseAddress first")
+    // if (String(value).startsWith("0x") || String(value).startsWith("0X") && String(value).length >= 15)  // 0xb400007096672af0
+    //     throw new Error("checkPointer: Error type")
     if (Process.arch == 'arm64' && typeof value === "string" && value.trim().startsWith('0x')) value = Number(value)
     switch (typeof value) {
         case 'number':
@@ -78,14 +86,6 @@ export const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = fals
     }
 }
 
-declare global {
-    var checkPointer: (args: NativePointer | number) => NativePointer
-    var checkCmdInput: (mPtr: NativePointer | number | string | Function) => NativePointer
-    var getSubBasePtr: (mPtr: NativePointer, mdName?: string) => NativePointer
-    var getSubBaseDes: (mPtr: NativePointer, mdName?: string) => string
-    var setBaseAddress: (mPtr: NativePointer) => void
-}
-
 globalThis.checkPointer = checkPointer as any
 
 globalThis.checkCmdInput = (mPtr: NativePointer | number | string | Function): NativePointer => {
@@ -118,17 +118,14 @@ const getMD = (mdName: string | NativePointer = "libil2cpp.so"): Module => {
             } catch (error) { throw error }
             break
         default:
-            mdName = ptr(mdName as unknown as string)
+            mdName = ptr(<string><unknown>mdName)
             break
     }
     if (md == null) throw new Error("getSubBasePtr: can't find module")
     return md
 }
 
-globalThis.getSubBasePtr = (mPtr: NativePointer): NativePointer => {
-    let md: Module = getMD(mPtr)
-    return mPtr.sub(md.base)
-}
+globalThis.getSubBasePtr = (mPtr: NativePointer): NativePointer => mPtr.sub(getMD(mPtr).base)
 
 globalThis.getSubBaseDes = (mPtr: NativePointer): string => {
     let md: Module = getMD(mPtr)
@@ -137,4 +134,12 @@ globalThis.getSubBaseDes = (mPtr: NativePointer): string => {
 
 globalThis.setBaseAddress = (mPtr: NativePointer): void => {
     baseAddress = checkCmdInput(mPtr)
+}
+
+declare global {
+    var checkPointer: (args: NativePointer | number) => NativePointer
+    var checkCmdInput: (mPtr: NativePointer | number | string | Function) => NativePointer
+    var getSubBasePtr: (mPtr: NativePointer, mdName?: string) => NativePointer
+    var getSubBaseDes: (mPtr: NativePointer, mdName?: string) => string
+    var setBaseAddress: (mPtr: NativePointer) => void
 }

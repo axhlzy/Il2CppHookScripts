@@ -2,7 +2,7 @@ import { getMethodDesFromMethodInfo } from "../../../bridge/fix/il2cppM"
 
 // 
 const generateClass = (className: string, classPtr: NativePointer = ptr(0)) => {
-
+    if (className == undefined) return
     LOGW(getLine(80))
 
     let clsInstance: Il2Cpp.Class
@@ -110,6 +110,7 @@ globalThis.incorLib = (name: string) => {
 }
 
 const generateApi = (className: string, classPtr: NativePointer = ptr(0)) => {
+    if (className == undefined) return
     LOGW(getLine(80))
 
     let clsInstance: Il2Cpp.Class

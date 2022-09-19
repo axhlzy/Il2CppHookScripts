@@ -6,5 +6,6 @@ import "./enum"
 import "./functions"
 import "./asmHelper"
 import "./offsetManager"
+import "./dlopen"
 
 import "./packer/include"

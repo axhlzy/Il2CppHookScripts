@@ -1,8 +1,8 @@
-import { cache } from "decorator-cache-getter";
-import { getMethodDesFromMethodInfo, getMethodModifier } from "../bridge/fix/il2cppM";
-import { allocCStr } from "../utils/alloc";
-import { FieldAccess, LogColor } from "./enum";
-import { formartClass } from "../utils/formart";
+import { getMethodDesFromMethodInfo, getMethodModifier } from "../bridge/fix/il2cppM"
+import { cache } from "decorator-cache-getter"
+import { allocCStr } from "../utils/alloc"
+import { FieldAccess, LogColor } from "./enum"
+import { formartClass } from "../utils/formart"
 
 class HookerBase {
     constructor() { }
@@ -182,7 +182,7 @@ class HookerBase {
         klass.fields.forEach((field: Il2Cpp.Field) => {
             LOGD(`[*] ${field.handle} ${field.type.name} ${field.toString()} [type:${field.type.class.handle}]`)
         })
-        LOGO(``)
+        newLine()
     }
 
     private static inputCheck(input: NativePointer | String | number): Il2Cpp.Class {
