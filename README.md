@@ -62,8 +62,9 @@ $ frida -FU -l ../_Ufunc.js
      * [attachCurrentThread : Il2Cpp.Api._threadCurrent()](#attachCurrentThread)
      * [findExport : (exportName: string, moduleName?: string, callback?: (exp: ModuleExportDetails) => void) => void](#findExport)
      * [findImport : (moduleName: string, importName?: string) => void](#findImport)
-
-  ...
+  5. lf 系列 （list fields ... ）
+    * [lfs => Il2cppHook\agent\bridge\fix\parseFields.ts](#lfs)
+    * ...
 
 --- 
 #### Examples
@@ -210,6 +211,10 @@ $ frida -FU -l ../_Ufunc.js
 - **findImport (moduleName: string, importName?: string) => void** <a id="findImport"></a>
 
     ![findImport](img/findImport.png)
+
+- **lfs 详见 Il2cppHook\agent\bridge\fix\parseFields.ts，需要一个参数实例地址，B()中有** <a id="lfs"></a>
+
+    ![lfs](img/lfs0.png)
 
 
 ...
