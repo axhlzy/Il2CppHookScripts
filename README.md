@@ -63,8 +63,8 @@ $ frida -FU -l ../_Ufunc.js
      * [findExport : (exportName: string, moduleName?: string, callback?: (exp: ModuleExportDetails) => void) => void](#findExport)
      * [findImport : (moduleName: string, importName?: string) => void](#findImport)
   5. lf 系列 （list fields ... ）
-    * [lfs => Il2cppHook\agent\bridge\fix\parseFields.ts](#lfs)
-    * ...
+     * [lfs => Il2cppHook\agent\bridge\fix\parseFields.ts](#lfs)
+     * ...
 
 --- 
 #### Examples
