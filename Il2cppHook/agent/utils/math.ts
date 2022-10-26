@@ -3,10 +3,10 @@ export function randomSeed(): number {
 }
 
 export class Random {
-  private seed: number;
+  private seed: number
 
   constructor(seed: number) {
-    this.seed = seed;
+    this.seed = seed
   }
 
   next = (): number => this.seed ? ((2 ** 31 - 1) & (this.seed = Math.imul(48271, this.seed))) / 2 ** 31 : Math.random()

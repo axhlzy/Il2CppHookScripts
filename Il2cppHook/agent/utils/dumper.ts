@@ -7,10 +7,10 @@ function dump_so(soName: string = "libil2cpp.so") {
     LOGW("[path]:" + module.path)
     LOGE(getLine(30))
     const fileName = `${module.name}_${module.base}_${ptr(module.size)}.so`
-    dump(module.base, module.size, fileName)
+    dump_mem(module.base, module.size, fileName)
 }
 
-function dump(from: NativePointer, length: number, fileName: string | undefined) {
+function dump_mem(from: NativePointer, length: number, fileName: string | undefined) {
     from = checkCmdInput(from)
     if (length <= 0) return
 
@@ -41,10 +41,10 @@ function dump(from: NativePointer, length: number, fileName: string | undefined)
 
 declare global {
     var dumpSo: (soName: string) => void
-    var dump: (from: NativePointer, length: number, fileName: string | undefined) => void
+    var dumpMem: (from: NativePointer, length: number, fileName: string | undefined) => void
 }
 
 globalThis.dumpSo = dump_so
-globalThis.dump = dump
+globalThis.dumpMem = dump_mem
 
 export { }

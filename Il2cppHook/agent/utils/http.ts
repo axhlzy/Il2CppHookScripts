@@ -1,10 +1,10 @@
-import { get, IncomingMessage, request, RequestOptions } from "http";
+import { get, IncomingMessage, request, RequestOptions } from "http"
 
 // http://v0.yiketianqi.com/api?unescape=1&version=v91&appid=43656176&appsecret=I42og6Lm&ext=&cityid=&city=%E5%B9%BF%E5%B7%9E
 const httpGet = (url: string) => {
     if (!url.startsWith("http")) url = "http://" + url
     get(url, (res: IncomingMessage) => {
-        res.setEncoding('utf8');
+        res.setEncoding('utf8')
         res.on("data", (chunk) => LOGD(chunk))
     })
 }

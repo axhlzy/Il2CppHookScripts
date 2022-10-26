@@ -18,6 +18,7 @@ setImmediate(() => {
         if (!baseAddress.isNull() || errorTimes > 10) clearInterval(task)
     }, 200)
 })
+
 export const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, showLog: boolean = false): NativePointer => {
     if (baseAddress.isNull()) throw new Error("checkPointer: libil2cpp.so not found ! \n please call setBaseAddress first")
     // if (String(value).startsWith("0x") || String(value).startsWith("0X") && String(value).length >= 15)  // 0xb400007096672af0

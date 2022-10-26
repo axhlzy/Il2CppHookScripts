@@ -15,7 +15,7 @@ $ git clone https://github.com/axhlzy/Il2CppHookScripts.git
 $ cd Il2cppHook/
 $ npm install
 
-$ frida -U --no-pause -f com.xxx.xxx -l  ../_Ufunc.js
+$ frida -U --no-pause -f com.xxx.xxx -l ../_Ufunc.js
 OR
 $ frida -FU -l ../_Ufunc.js
 ```
@@ -23,7 +23,6 @@ $ frida -FU -l ../_Ufunc.js
 #### API
 
 ##### Contents
-
 
   1. 基础函数
      * [i() == list_images : 列出所有的 Images](#list_images)
@@ -65,6 +64,15 @@ $ frida -FU -l ../_Ufunc.js
   5. lf 系列 （list fields ... ）
      * [lfs => Il2cppHook\agent\bridge\fix\parseFields.ts](#lfs)
      * ...
+  6. 其他
+     * [get = httpGet / post = httpPost : get/post请求，不需要时注释减小体积](#httpGet)
+     * [allocCStr / allocUStr / allocVector / alloc / alloc : 分配字符串，分配内存]()
+     * [dumpSo / dumpMem : dump So / dump mem]()
+     * [HookJavaLog / HookMotionEvent / findJavaClass]()
+     * [iterClassLoader / listClassLoader ...]()
+     * [system/systemSU : 执行cmd命令]()
+     * [Toast : 弹出Toast]()
+  
 
 --- 
 #### Examples
@@ -215,7 +223,10 @@ $ frida -FU -l ../_Ufunc.js
 - **lfs 详见 Il2cppHook\agent\bridge\fix\parseFields.ts，需要一个参数实例地址，B()中有** <a id="lfs"></a>
 
     ![lfs](img/lfs0.png)
+    
+- **HttpGet** <a id="httpGet"></a>
 
+    ![httpGet](img/httpGet.png)
 
 ...
 

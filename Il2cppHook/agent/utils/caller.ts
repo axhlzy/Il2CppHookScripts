@@ -1,6 +1,4 @@
 
-
-import { PTR } from "../base/enum"
 import { TYPE_CHECK_POINTER } from "../base/globle"
 import { checkPointer } from "./checkP"
 import { readSingle, readU16, showArray } from "./reader"
@@ -60,15 +58,15 @@ const callFunctionRA = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): void => showA
 export { callFunction, callFunctionRB, callFunctionRI, callFunctionRS, callFunctionRF, callFunctionRUS, callFunctionRCS, callFunctionRA }
 
 declare global {
-    var callFunction: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => NativePointer;
-    var callFunctionRB: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => boolean;
-    var callFunctionRI: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => number;
-    var callFunctionRS: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => number;
-    var callFunctionRF: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => number;
-    var callFunctionRUS: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => string;
-    var callFunctionRCS: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => string;
-    var callFunctionRA: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => void;
-    var callFunctionWithOutError: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => NativePointer;
+    var callFunction: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => NativePointer
+    var callFunctionRB: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => boolean
+    var callFunctionRI: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => number
+    var callFunctionRS: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => number
+    var callFunctionRF: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => number
+    var callFunctionRUS: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => string
+    var callFunctionRCS: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => string
+    var callFunctionRA: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => void
+    var callFunctionWithOutError: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => NativePointer
 }
 
 globalThis.callFunction = callFunction
