@@ -1,7 +1,7 @@
 import './frida-qbdi'
-import { QBDI } from './frida-qbdi';
+import { QBDI } from './frida-qbdi'
 
-setTimeout(() => main(), 0);
+setTimeout(() => main(), 0)
 
 function main() {
     const vm = new QBDI();

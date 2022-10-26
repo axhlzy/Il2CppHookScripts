@@ -1,3 +1,5 @@
+import { checkCmdInput } from "../../utils/checkP"
+
 /**
  * 参数值的修改
  * @param mPtr 指定函数地址
@@ -6,9 +8,8 @@
  */
 export let setFunctionValue = (mPtr: NativePointer, retValue: NativePointer = ptr(0), index: number = -1) => {
     let srcPtr = mPtr
-    if (!retValue.equals(0) && !retValue.equals(1)) retValue = checkCmdInput(retValue)
-    mPtr = checkPointer(checkCmdInput(mPtr))
-    Interceptor.attach(mPtr, {
+    retValue = checkCmdInput(retValue)
+    Interceptor.attach(checkPointer(checkCmdInput(mPtr)), {
         onEnter: function (args) {
             if (index != -1) {
                 args[index] = retValue

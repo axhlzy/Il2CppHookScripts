@@ -8,9 +8,14 @@ import { TYPE_CHECK_POINTER } from "../base/globle"
  */
 var baseAddress: NativePointer = ptr(0)
 setImmediate(() => {
-    let s = setInterval(() => {
-        baseAddress = Process.findModuleByName("libil2cpp.so")!.base
-        if (baseAddress != null) clearInterval(s)
+    let errorTimes:number = 0
+    let task = setInterval(() => {
+        try {
+            baseAddress = Process.findModuleByName("libil2cpp.so")!.base
+        } catch {
+            ++errorTimes
+        }
+        if (!baseAddress.isNull() || errorTimes > 10) clearInterval(task)
     }, 200)
 })
 export const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, showLog: boolean = false): NativePointer => {
@@ -88,7 +93,7 @@ export const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = fals
 
 globalThis.checkPointer = checkPointer as any
 
-globalThis.checkCmdInput = (mPtr: NativePointer | number | string | Function): NativePointer => {
+export const checkCmdInput = (mPtr: NativePointer | number | string | Function): NativePointer => {
     if (mPtr instanceof NativePointer) return mPtr
     switch (typeof mPtr) {
         case "number":
@@ -136,10 +141,15 @@ globalThis.setBaseAddress = (mPtr: NativePointer): void => {
     baseAddress = checkCmdInput(mPtr)
 }
 
+globalThis.getBaseAddress = (): NativePointer => baseAddress
+
 declare global {
     var checkPointer: (args: NativePointer | number) => NativePointer
     var checkCmdInput: (mPtr: NativePointer | number | string | Function) => NativePointer
     var getSubBasePtr: (mPtr: NativePointer, mdName?: string) => NativePointer
     var getSubBaseDes: (mPtr: NativePointer, mdName?: string) => string
     var setBaseAddress: (mPtr: NativePointer) => void
+    var getBaseAddress: () => NativePointer
 }
+
+globalThis.checkCmdInput = checkCmdInput
