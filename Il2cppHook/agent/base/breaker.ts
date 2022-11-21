@@ -4,7 +4,7 @@ import {
     getMethodModifier, methodToString
 } from "../bridge/fix/il2cppM"
 import { closest } from "fastest-levenshtein"
-import { formartClass as FC } from "../utils/formart"
+import { formartClass as FC, formartClass } from "../utils/formart"
 import { HookerBase } from "./base"
 import { TIME_SIMPLE } from "../utils/common"
 import ValueResolve from "./valueResolve"
@@ -42,7 +42,7 @@ class Breaker {
     private static array_attach_failed: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
     // private static array_log_cache: Map<string, [string, NativePointer[], NativePointer]> = new Map()
 
-    static addBreakPoint(imgOrClsPtr: NativePointer | number | string | SpecialClass = "CommonClass"): void {
+    static addBreakPoint(imgOrClsPtr: NativePointer | number | string | SpecialClass = "CommonClass",nSp:string=""): void {
         if (imgOrClsPtr instanceof NativePointer) {
             innerImage(imgOrClsPtr)
         } else if (typeof imgOrClsPtr == "number") {
@@ -51,9 +51,10 @@ class Breaker {
         } else if (typeof imgOrClsPtr == "string") {
             if (Process.arch == "arm64" && imgOrClsPtr.trim().startsWith("0x")) return innerImage(ptr(imgOrClsPtr))
             if (imgOrClsPtr == "CommonClass" || imgOrClsPtr == "JNI" || imgOrClsPtr == "Soon") return checkSpecialClass(imgOrClsPtr)
+            if (imgOrClsPtr == "AUI") return BF("Update")
             // is ImageName or className
             if (HookerBase._list_images_names.toString().includes(imgOrClsPtr)) { // is ImageName.dll / assemblyName
-                // ImageName
+                // ---> ImageName case to Pointer
                 HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
                     if (image.name.includes(imgOrClsPtr)) {
                         FC.printTitile("Found : ImageName: " + imgOrClsPtr + " at " + image.handle)
@@ -61,12 +62,13 @@ class Breaker {
                     }
                 })
             } else {
-                // className
+                // ---> className case to Pointer
                 let clsPtr: NativePointer = findClass(imgOrClsPtr)
                 if (!clsPtr.isNull()) {
                     FC.printTitile("Found : ClassName: " + imgOrClsPtr + " at " + clsPtr)
                     innerImage(clsPtr)
                 } else {
+                    // Do not found className
                     let imageName = closest(imgOrClsPtr, HookerBase._list_images_names)
                     LOGE(`You mean this ? ${imageName} @ ${Il2Cpp.Domain.assemblies.filter(item => item.name.includes)[0].handle}`)
                 }
@@ -77,11 +79,14 @@ class Breaker {
             let lastSize = Breaker.map_attachedMethodInfos.size
             if (imgOrClsPtr.isNull()) throw new Error("can't attach nullptr")
             if (HookerBase._list_images_pointers.map(item => Number(item)).includes(Number(imgOrClsPtr))) {
+                // find classPtr from images cache then and attach it(class)
                 let imageHandle = imgOrClsPtr
                 new Il2Cpp.Image(imageHandle).classes
+                    .filter(cls => cls.namespace.includes(nSp)) // filter namespace
                     .flatMap(cls => cls.methods)
                     .forEach(Breaker.attachMethod)
             } else {
+                // string status
                 let classHandle = imgOrClsPtr
                 new Il2Cpp.Class(classHandle).methods.forEach(Breaker.attachMethod)
             }
@@ -297,23 +302,23 @@ class Breaker {
 
     static printDesertedMethods = (filterName: string = "") => {
         if (Breaker.map_methodInfo_callTimes.size == 0) return
-        let title = `${getLine(20)} detached methods ${getLine(20)}`
+        let title = `\n${getLine(20)} detached methods ${getLine(20)}`
         let countHideFunctions: number = 0
-        LOG(`${title}`, LogColor.C92)
+        LOGM(`${title}`)
         // 筛选 Breaker.map_methodInfo_callTimes 调用次数大雨 maxCallTimes 的方法
-        Breaker.map_methodInfo_callTimes.forEach((value: number, key: Il2Cpp.Method) => {
+        Breaker.map_methodInfo_callTimes.forEach((value: number, method: Il2Cpp.Method) => {
             if (value >= Breaker.maxCallTimes) {
-                if (filterName == "" || key.name.indexOf(filterName) != -1) {
-                    let arr = methodToArray(key)
-                    let times = this.map_methodInfo_callTimes.get(key)
+                if (filterName == "" || method.name.indexOf(filterName) != -1) {
+                    let arr = methodToArray(method)
+                    let times = this.map_methodInfo_callTimes.get(method)
                     ++countHideFunctions
-                    LOGD(`[*] ${arr[0]} ---> ${arr[1]} ${arr[2]}\t\t${times}\t${arr[3]}`)
+                    LOGD(`[*] ${arr[0]}  --->  ${arr[1]}\t${formartClass.alignStr(arr[2],p_size*2+2)}\t${formartClass.alignStr(times,4)}   | ${formartClass.alignStr(method.class.name,16)} |  \t${arr[3]}`)
                 }
             }
         })
-        LOG(`${getLine(20)}`, LogColor.C92)
+        LOGM(`${getLine(40)}`)
         LOGD(` ${Breaker.map_attachedMethodInfos.size} attached / ${Breaker.array_methodInfo_detached.length} detached / ${countHideFunctions} hidden`)
-        LOG(getLine(title.length), LogColor.C92)
+        LOGM(getLine(title.length) + '\n')
     }
 
     static printHistoryLog = (filterStr: string = "", countLogs: number = 50, reverse: boolean = false, detachAll: boolean = true) => {

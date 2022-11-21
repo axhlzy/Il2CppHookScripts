@@ -40,6 +40,7 @@ export const LOGE = (msg: any): void => LOG(msg, LogColor.RED)
 export const LOGG = (msg: any): void => LOG(msg, LogColor.C32)
 export const LOGD = (msg: any): void => LOG(msg, LogColor.C36)
 export const LOGO = (msg: any): void => LOG(msg, LogColor.C33)
+export const LOGM = (msg: any): void => LOG(msg, LogColor.C92)
 export const LOGH = (msg: any): void => LOG(msg, LogColor.C96)
 export const LOGZ = (msg: any): void => LOG(msg, LogColor.C90)
 
@@ -88,6 +89,7 @@ declare global {
     var LOGG: (msg: any) => void // LogColor.C32
     var LOGO: (msg: any) => void // LogColor.C33
     var LOGH: (msg: any) => void // LogColor.C96
+    var LOGM: (msg: any) => void // LogColor.C96
     var LOGZ: (msg: any) => void // LogColor.C90
     var newLine: (lines?: number) => void
     var getLine: (length: number, fillStr?: string) => string
@@ -105,6 +107,7 @@ globalThis.LOGG = LOGG
 globalThis.LOGD = LOGD
 globalThis.LOGO = LOGO
 globalThis.LOGH = LOGH
+globalThis.LOGM = LOGM
 globalThis.LOGZ = LOGZ
 globalThis.getLine = getLine
 globalThis.printLogColors = printLogColors

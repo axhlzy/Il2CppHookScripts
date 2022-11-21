@@ -1,8 +1,8 @@
-import { getMethodDesFromMethodInfo, getMethodModifier } from "../bridge/fix/il2cppM"
+import { getMethodDesFromMethodInfo as GMD, getMethodModifier as GMM} from "../bridge/fix/il2cppM"
 import { cache } from "decorator-cache-getter"
 import { allocCStr } from "../utils/alloc"
 import { FieldAccess, LogColor } from "./enum"
-import { formartClass } from "../utils/formart"
+import { formartClass as FM } from "../utils/formart"
 
 class HookerBase {
     constructor() { }
@@ -46,7 +46,7 @@ class HookerBase {
     }
 
     static showImages(filter: string = "", sort: boolean = true): void {
-        formartClass.printTitile("List Images { assembly -> image -> classCount -> imageName }")
+        FM.printTitile("List Images { assembly -> image -> classCount -> imageName }")
         HookerBase._list_images.filter((image: Il2Cpp.Image) => {
             return filter != "" ? image.name.indexOf(filter) != -1 : true
         }).sort((first, secend) => {
@@ -61,7 +61,7 @@ class HookerBase {
         LOGO(getLine(85))
     }
 
-    static showClasses(imageOrName: string | NativePointer | number, filterNameSpace: string = "", filterClassName: string = "",): void {
+    static showClasses(imageOrName: string | NativePointer | number, filterNameSpace: string = "", filterClassName: string = ""): void {
         let image: Il2Cpp.Image = new Il2Cpp.Image(ptr(1))
         try {
             if (typeof imageOrName == "string") {
@@ -88,6 +88,7 @@ class HookerBase {
             throw new Error("Il2Cpp.Image can not be found")
         }
 
+        // namespace as key:string ， classes as value:Array<class>
         let tMap = new Map<string, Array<Il2Cpp.Class>>()
         let countNameSpace: number = 0
         let countFilterCls: number = 0
@@ -100,16 +101,16 @@ class HookerBase {
         }
 
         LOG(`\n Current -> ${image.name} @ ${image.handle}\n`, LogColor.C104)
-        let titleLen = formartClass.printTitileA("List Classes { namespace {classPtr->filedsCount->methodsCount->enumClass->className} }", LogColor.C90)
+        let titleLen = FM.printTitileA("List Classes { namespace {classPtr->filedsCount->methodsCount->enumClass->className} }", LogColor.C90)
         for (let key of tMap.keys()) {
-            let nameSpace = key
+            let nameSpace:string= key
             if (nameSpace != undefined) {
-                let array = tMap.get(nameSpace)
+                let nameSpaces:Array<Il2Cpp.Class> = tMap.get(nameSpace)!
                 // filterNameSpace 不区分大小写
                 if (nameSpace.toLowerCase().indexOf(filterNameSpace.toLowerCase()) == -1) continue
                 ++countNameSpace
                 LOGD(`\n${nameSpace}`)
-                array?.forEach((klass: Il2Cpp.Class) => {
+                nameSpaces?.forEach((klass: Il2Cpp.Class) => {
                     // filterClassName 不区分大小写
                     if (klass.name.toLowerCase().indexOf(filterClassName.toLowerCase()) != -1) {
                         ++countFilterCls
@@ -147,12 +148,12 @@ class HookerBase {
         let klass: Il2Cpp.Class = HookerBase.inputCheck(mPtr)
         if (klass.methods.length == 0) return
         newLine()
-        formartClass.printTitile(`Found ${klass.methods.length} Methods ${klass.isEnum ? "(enum) " : ""} in class: ${klass.name} @ ${klass.handle}`)
+        FM.printTitile(`Found ${klass.methods.length} Methods ${klass.isEnum ? "(enum) " : ""} in class: ${klass.name} @ ${klass.handle}`)
         if (detailed) {
             let maxStrLen: number = 0
             klass.methods.forEach((method: Il2Cpp.Method) => {
                 LOGD(`\n[*] ${method.handle} ---> ${method.virtualAddress} ---> ${method.relativeVirtualAddress}`)
-                let methodInfoDes = `\t${getMethodDesFromMethodInfo(method)}`
+                let methodInfoDes = `\t${GMD(method)}`
                 LOGD(methodInfoDes)
                 maxStrLen = Math.max(maxStrLen, methodInfoDes.length)
                 let countArgs: number = -1
@@ -165,7 +166,7 @@ class HookerBase {
             LOGO(getLine(maxStrLen))
         } else {
             klass.methods.forEach((method: Il2Cpp.Method) => {
-                LOGD(`[*] ${method.handle} ---> ${method.virtualAddress} ---> ${method.relativeVirtualAddress}\t|  ${getMethodDesFromMethodInfo(method)}`)
+                LOGD(`[*] ${method.handle} ---> ${method.virtualAddress} ---> ${method.relativeVirtualAddress}\t|  ${GMD(method)}`)
             })
             newLine()
         }
@@ -178,7 +179,7 @@ class HookerBase {
             LOGE(`\n[!] ${klass.assemblyName}.${klass.namespace}.${klass.name} @ ${klass.handle} has no fields\n`)
             return
         }
-        formartClass.printTitile(`Found ${klass.fields.length} Fields ${klass.isEnum ? "(enum) " : ""}in class: ${klass.name} (${klass.handle})`)
+        FM.printTitile(`Found ${klass.fields.length} Fields ${klass.isEnum ? "(enum) " : ""}in class: ${klass.name} (${klass.handle})`)
         klass.fields.forEach((field: Il2Cpp.Field) => {
             LOGD(`[*] ${field.handle} ${field.type.name} ${field.toString()} [type:${field.type.class.handle}]`)
         })
@@ -340,7 +341,7 @@ class HookerBase {
             arr_args.push(TypeName + " " + currentParamter.name)
             arr_args_type_addr.push(TypeName + " " + typeClass)
         }
-        let disStr = getMethodModifier(method) + il2cppMethod.returnType.name + " " +
+        let disStr = GMM(method) + il2cppMethod.returnType.name + " " +
             il2cppMethod.name + " " +
             "(" + arr_args + ")" + "\t"
         LOGO(getLine(85))
@@ -359,7 +360,7 @@ class HookerBase {
             method = new Il2Cpp.Method(ptr(method))
         }
         if (typeof method == "number") method = new Il2Cpp.Method(ptr(method))
-        let methodDes = getMethodDesFromMethodInfo(method)
+        let methodDes = GMD(method)
         let nameSpace = method.class.namespace
         let classBelow = `${nameSpace.length == 0 ? '' : nameSpace + '.'}${method.class.name}`
         let title = `${classBelow}\t${methodDes}`

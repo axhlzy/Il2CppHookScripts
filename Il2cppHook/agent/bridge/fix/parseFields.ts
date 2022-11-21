@@ -159,7 +159,7 @@ globalThis.lfs = (mPtr: NativePointer, classHandle: NativePointer | string | obj
 
 // 解析实例的 fields 以及 class 父级 fields （p means parents）
 globalThis.lfp = (mPtr: NativePointer) => {
-    let classType: Array<mscorlib.Type> = getTypeParent(mPtr) as Array<mscorlib.Type>
+    let classType: Array<mscorlib.Type> = (getTypeParent(mPtr) as Array<mscorlib.Type>).reverse()
     setTimeout(() => {
         classType.reverse().forEach(type => new FieldsParser(mPtr, type.class).toShow(true))
     }, 200)
@@ -179,5 +179,7 @@ globalThis.lfo = (mPtr: NativePointer, fieldName: string, classHandle?: NativePo
 globalThis.lfvt = (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => {
     try {
         return new FieldsParser(mPtr, classHandle).fieldValue(fieldName)
-    } catch { return new NativePointer(0) }
+    } catch { 
+        return new NativePointer(0) 
+    }
 }
