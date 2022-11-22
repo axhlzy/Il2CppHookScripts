@@ -1,4 +1,4 @@
-import { formartClass } from "../../../../utils/formart"
+import { formartClass as FM} from "../../../../utils/formart"
 
 export { }
 declare global {
@@ -60,7 +60,7 @@ globalThis.HookLoadSceneLisener = (): void => {
 // }
 globalThis.SceneInfo = (): void => {
     let sceneCount = Il2Cpp.SceneManager.get_sceneCount
-    formartClass.printTitileA(`Scene Count: ${sceneCount}`)
+    FM.printTitileA(`Scene Count: ${sceneCount}`)
     for (let index = 0; index < sceneCount; index++) {
         let scene = Il2Cpp.SceneManager.GetSceneAt(index)
         LOGD(`[${index}] Scene Name: '${scene.get_name()}'`)

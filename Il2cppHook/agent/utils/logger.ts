@@ -1,7 +1,6 @@
 import { GKEY, LogColor } from "../base/enum"
 import { GET_GT, SET_G } from "../base/globle"
-import { formartClass } from "./formart"
-import chalk from 'chalk'
+import { formartClass as FM } from "./formart"
 
 const logL = console.log
 
@@ -29,8 +28,8 @@ export const LOGS = (str: string, colorDescription: [number, number, LogColor][]
     for (let i = 0; i < colorDescription.length; i++) {
         const [start, end, color] = colorDescription[i]
         let strStart = colorStartDes(color)
-        localStr = formartClass.insertStr(localStr, start, strStart)
-        localStr = formartClass.insertStr(localStr, end + strStart.length, colorEndDes)
+        localStr = FM.insertStr(localStr, start, strStart)
+        localStr = FM.insertStr(localStr, end + strStart.length, colorEndDes)
     }
     logL(localStr)
 }

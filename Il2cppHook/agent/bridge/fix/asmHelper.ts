@@ -1,6 +1,6 @@
 import { LogColor } from "../../base/enum"
 import { cacheMethods } from "../../java/info"
-import { formartClass } from "../../utils/formart"
+import { formartClass as FM} from "../../utils/formart"
 import { getMethodDesFromMethodInfo } from "./il2cppM"
 
 class ItemInfo {
@@ -140,7 +140,7 @@ globalThis.showAsm = (mPtr: NativePointer, len: number = 0x40, needAsm: boolean 
 
     mapInfo.forEach((value: ItemInfo, key: NativePointer) => {
         // 解析的 Unity 方法名称
-        if (value.title.length > 0) formartClass.printTitile(value.title)
+        if (value.title.length > 0) FM.printTitile(value.title)
         // 正常汇编代码
         if (needAsm) {
             if (value.info.indexOf('= ') != -1) {

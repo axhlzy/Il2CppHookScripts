@@ -23,6 +23,7 @@ declare global {
     var breakWithStack: (mPtr: NativePointer) => void
     var getPlatform: () => string
     var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
+    var getPlatformCtxWithArgV: (ctx: CpuContext, argIndex: number) => NativePointer | undefined
     var maxCallTimes: number
     var attathing: boolean
     var printDesertedMethods: (filterName?: string) => void
@@ -342,8 +343,6 @@ class Breaker {
     }
 }
 
-globalThis.getPlatform = (): string => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
-globalThis.getPlatformCtx = (ctx: CpuContext): ArmCpuContext | Arm64CpuContext => getPlatform() == "arm" ? ctx as ArmCpuContext : ctx as Arm64CpuContext
 globalThis.maxCallTimes = Breaker.maxCallTimes
 globalThis.D = Breaker.clearBreak
 globalThis.DD = Breaker.clearBreakAll
@@ -353,6 +352,71 @@ globalThis.hn = Breaker.printHistoryNum
 globalThis.breakWithArgs = Breaker.breakWithArgs
 globalThis.breakWithStack = Breaker.breakWithStack
 globalThis.breakInline = Breaker.breakInline as any
+
+globalThis.getPlatform = (): string => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
+globalThis.getPlatformCtx = (ctx: CpuContext): ArmCpuContext | Arm64CpuContext => getPlatform() == "arm" ? ctx as ArmCpuContext : ctx as Arm64CpuContext
+globalThis.getPlatformCtxWithArgV = (ctx: CpuContext,argIndex:number): NativePointer|undefined => {
+    if ((ctx as ArmCpuContext).r0 != undefined) {
+        // case arm32
+        switch (argIndex) {
+            case 0: return (ctx as ArmCpuContext).r0
+            case 1: return (ctx as ArmCpuContext).r1
+            case 2: return (ctx as ArmCpuContext).r2
+            case 3: return (ctx as ArmCpuContext).r3
+            case 4: return (ctx as ArmCpuContext).r4
+            case 5: return (ctx as ArmCpuContext).r5
+            case 6: return (ctx as ArmCpuContext).r6
+            case 7: return (ctx as ArmCpuContext).r7
+            case 8: return (ctx as ArmCpuContext).r8
+            case 9: return (ctx as ArmCpuContext).r9
+            case 10: return (ctx as ArmCpuContext).r10
+            case 11: return (ctx as ArmCpuContext).r11
+            case 12: return (ctx as ArmCpuContext).r12
+            case 13: return (ctx as ArmCpuContext).sp
+            case 14: return (ctx as ArmCpuContext).lr
+            case 15: return (ctx as ArmCpuContext).pc
+            default: throw new Error(`ARM32 -> argIndex ${argIndex} is out of range`)
+        } 
+    } else {
+        // case arm64
+        switch (argIndex) {
+            case 0: return (ctx as Arm64CpuContext).x0
+            case 1: return (ctx as Arm64CpuContext).x1
+            case 2: return (ctx as Arm64CpuContext).x2
+            case 3: return (ctx as Arm64CpuContext).x3
+            case 4: return (ctx as Arm64CpuContext).x4
+            case 5: return (ctx as Arm64CpuContext).x5
+            case 6: return (ctx as Arm64CpuContext).x6
+            case 7: return (ctx as Arm64CpuContext).x7
+            case 8: return (ctx as Arm64CpuContext).x8
+            case 9: return (ctx as Arm64CpuContext).x9
+            case 10: return (ctx as Arm64CpuContext).x10
+            case 11: return (ctx as Arm64CpuContext).x11
+            case 12: return (ctx as Arm64CpuContext).x12
+            case 13: return (ctx as Arm64CpuContext).x13
+            case 14: return (ctx as Arm64CpuContext).x14
+            case 15: return (ctx as Arm64CpuContext).x15
+            case 16: return (ctx as Arm64CpuContext).x16
+            case 17: return (ctx as Arm64CpuContext).x17
+            case 18: return (ctx as Arm64CpuContext).x18
+            case 19: return (ctx as Arm64CpuContext).x19
+            case 20: return (ctx as Arm64CpuContext).x20
+            case 21: return (ctx as Arm64CpuContext).x21
+            case 22: return (ctx as Arm64CpuContext).x22
+            case 23: return (ctx as Arm64CpuContext).x23
+            case 24: return (ctx as Arm64CpuContext).x24
+            case 25: return (ctx as Arm64CpuContext).x25
+            case 26: return (ctx as Arm64CpuContext).x26
+            case 27: return (ctx as Arm64CpuContext).x27
+            case 28: return (ctx as Arm64CpuContext).x28
+            case 29: return (ctx as Arm64CpuContext).fp
+            case 30: return (ctx as Arm64CpuContext).lr
+            case 31: return (ctx as Arm64CpuContext).sp
+            case 32: return (ctx as Arm64CpuContext).pc
+            default: throw new Error(`ARM64 -> argIndex ${argIndex} is out of range`)
+        }
+    }
+}
 
 globalThis.b = (mPtr: NativePointer | string | number) => {
     if (typeof mPtr == "number") {

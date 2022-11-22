@@ -3,15 +3,33 @@ import { TYPE_CHECK_POINTER } from "../base/globle"
 import { checkPointer } from "./checkP"
 import { readSingle, readU16, showArray } from "./reader"
 
-// callFunction("strcmp",allocStr("123"),allocStr("123"))
-// callFunction(["strcmp"],allocStr("123"),allocStr("123"))
-// callFunction(["libc.so","strcmp"],allocStr("123"),allocStr("123"))
 function callFunction(value: TYPE_CHECK_POINTER, ...args: any[]): NativePointer {
     try {
         if (value == undefined) return ptr(0x0)
+        let G_Value : NativePointer =ptr(0)
+        // deal with array of string as the first argument
+        {
+            let L_Value : NativePointer| null = ptr(0)
+            if (value instanceof Array){
+                // callFunction(["UnityEngine.CoreModule", "Component", "get_gameObject", 0], args[0])
+                if (value.length == 4) L_Value = find_method(value[0] as string,value[1] as string,value[2] as string,value[3] as number)
+                // callFunction(["libc.so","strcmp"],allocCStr("123"),allocCStr("123"))
+                if (value.length == 2) L_Value = Module.findExportByName(value[0] as string,value[1] as string)
+                // callFunction(["strcmp"],allocCStr("123"),allocCStr("123"))
+                if (value.length == 1) L_Value = Module.findExportByName(null,value[1] as string)
+                if (L_Value == undefined || L_Value.isNull()) return ptr(0x0)
+                G_Value = L_Value
+            } else if (value instanceof String){
+                // callFunction("strcmp",allocCStr("123"),allocCStr("123"))
+                if (value.length == 1) L_Value = Module.findExportByName(null,value[1])
+                if (L_Value == undefined || L_Value.isNull()) return ptr(0x0)
+                G_Value = L_Value
+            }
+        }
+        // in common use
         for (let i = 1; i <= (arguments.length < 5 ? 5 : arguments.length) - 1; i++)
             arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))
-        return new NativeFunction(checkPointer(value, true), 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
+        return new NativeFunction(checkPointer(G_Value, true), 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
             (arguments[1], arguments[2], arguments[3], arguments[4])
     } catch (e) {
         LOG(e, LogColor.C95)

@@ -330,7 +330,7 @@ export {
 }
 
 declare global {
-    var d: () => void
+    var d: (mPtr?: ARGM) => void
     var A: (mPtr: NativePointer | number, mOnEnter?: OnEnterType, mOnLeave?: OnExitType, needRecord?: boolean) => void
     var n: (mPtr: NativePointer) => void
     var nn: (mPtr: NativePointer) => void

@@ -48,7 +48,11 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
     }
 
     static get temporaryCachePath(): string {
-        return readU16(Il2Cpp.Api.Application._get_temporaryCachePath())
+        try {
+            return readU16(Il2Cpp.Api.Application._get_temporaryCachePath())
+        } catch (error) {
+            return "Function : temporaryCachePath not found"
+        }
     }
 
     static get unityVersion(): string {
@@ -66,7 +70,11 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
     }
 
     static get productName(): string {
-        return readU16(Il2Cpp.Api.Application._get_productName())
+        try {
+            return readU16(Il2Cpp.Api.Application._get_productName())
+        } catch (error) {
+            return "Function : productName not found"
+        }
     }
 
     static get companyName(): string {
@@ -118,11 +126,19 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
     }
 
     static get systemLanguage(): SystemLanguage {
-        return <SystemLanguage>Il2Cpp.Api.Application._get_platform()
+        try {
+            return <SystemLanguage>Il2Cpp.Api.Application._get_platform()
+        } catch (error) {
+            return -1
+        }
     }
 
     static get systemLanguage_toString(): string {
-        return enumNumToName(UnityEngine_Application_impl.systemLanguage, 'SystemLanguage')
+        try {
+            return enumNumToName(UnityEngine_Application_impl.systemLanguage, 'SystemLanguage')
+        } catch (error) {
+            return "Function : systemLanguage not found"
+        }        
     }
 
     static CallLowMemory(): void {

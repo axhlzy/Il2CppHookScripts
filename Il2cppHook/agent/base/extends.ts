@@ -1,4 +1,4 @@
-import { formartClass } from "../utils/formart"
+import { formartClass as FM} from "../utils/formart"
 
 export { }
 
@@ -296,7 +296,7 @@ globalThis.listThreads = (maxCountThreads: number = 20) => {
         .sort((a, b) => b.id - a.id)
         .slice(0, maxCountThreads)
         .forEach((thread: ThreadDetails) => {
-            let indexText = formartClass.alignStr(`[${++index_threads}]`, 6)
+            let indexText = FM.alignStr(`[${++index_threads}]`, 6)
             let text = `${indexText} ${thread.id} ${thread.state}`
             let ctx = thread.context
             current == thread.id ? LOGE(text) : LOGD(text)
@@ -329,7 +329,7 @@ globalThis.listModule = (moduleName: string, printItems: number = 5) => {
         LOGO(`\t[-] enumerateRanges ( ${range.length} )`)
         range.sort((f: RangeDetails, s: RangeDetails) => f.base.compare(s.base))
             .forEach((item: RangeDetails) => {
-                LOGZ(`\t\t${item.protection}\t${item.base} - ${item.base.add(item.size)} | ${formartClass.alignStr(String(ptr(item.size)), p_size + 8)} <- ${item.size}`)
+                LOGZ(`\t\t${item.protection}\t${item.base} - ${item.base.add(item.size)} | ${FM.alignStr(String(ptr(item.size)), p_size + 8)} <- ${item.size}`)
             })
         LOG("")
     }
@@ -340,13 +340,13 @@ globalThis.listModule = (moduleName: string, printItems: number = 5) => {
         let arrTmpRecord: Array<string> = []
         imp.sort((a: ModuleImportDetails, b: ModuleImportDetails) => a.name.length - b.name.length)
             .slice(0, printItems).forEach((item: ModuleImportDetails) => {
-                let address = formartClass.alignStr(String(item.address), p_size + 8)
+                let address = FM.alignStr(String(item.address), p_size + 8)
                 let importFromDes: string = "\t<---\t"
                 try {
                     let tmd = Process.findModuleByAddress(item.address!)! //this can throw exception
                     let baseStr = ` @ ${tmd.base}`
                     if (item.type == "function" || item.type == "variable") // not undefined
-                        importFromDes += `${tmd.name} ${arrTmpRecord.includes(tmd.name) ? formartClass.centerStr("...", baseStr.length) : baseStr}` //show base once
+                        importFromDes += `${tmd.name} ${arrTmpRecord.includes(tmd.name) ? FM.centerStr("...", baseStr.length) : baseStr}` //show base once
                     arrTmpRecord.push(tmd.name)
                 } catch { importFromDes = "" }
                 LOGZ(`\t\t${item.type}   ${address}  ${item.name} ${importFromDes}`)
@@ -359,7 +359,7 @@ globalThis.listModule = (moduleName: string, printItems: number = 5) => {
         LOGO(`\t[-] enumerateExports ( ${exp.length} )`)
         exp.sort((a: ModuleExportDetails, b: ModuleExportDetails) => a.name.length - b.name.length)
             .slice(0, printItems).forEach((item: ModuleExportDetails) => {
-                let address = formartClass.alignStr(String(item.address), p_size + 8)
+                let address = FM.alignStr(String(item.address), p_size + 8)
                 LOGZ(`\t\t${item.type}   ${address}  ${item.name}`)
             })
         if (exp.length > printItems) LOGZ("\t\t......\n")
@@ -469,7 +469,7 @@ globalThis.StalkerTraceEvent = (mPtr: NativePointer, range: NativePointer[] | un
     }
     A(mPtr, (args, ctx, passValue) => {
         LOG("")
-        passValue.set("len", formartClass.printTitileA(`Enter ---> arg0:${args[0]}  arg1:${args[1]}  arg2:${args[2]}  arg3:${args[3]} | ${Process.getCurrentThreadId()}`, LogColor.YELLOW))
+        passValue.set("len", FM.printTitileA(`Enter ---> arg0:${args[0]}  arg1:${args[1]}  arg2:${args[2]}  arg3:${args[3]} | ${Process.getCurrentThreadId()}`, LogColor.YELLOW))
         stalkerEnter(Process.getCurrentThreadId())
     }, (ret, ctx, passValue) => {
         LOGW(`${getLine(20)}\n Exit ---> ret : ${ret}\n${getLine(passValue.get("len"))}`)
@@ -524,7 +524,7 @@ globalThis.StalkerTracePath = (mPtr: NativePointer, range: NativePointer[] | und
     }
     A(mPtr, (args, ctx, passValue) => {
         LOG("")
-        passValue.set("len", formartClass.printTitileA(`Enter ---> arg0:${args[0]}  arg1:${args[1]}  arg2:${args[2]}  arg3:${args[3]} | ${Process.getCurrentThreadId()}`, LogColor.YELLOW))
+        passValue.set("len", FM.printTitileA(`Enter ---> arg0:${args[0]}  arg1:${args[1]}  arg2:${args[2]}  arg3:${args[3]} | ${Process.getCurrentThreadId()}`, LogColor.YELLOW))
         stalkerEnter(Process.getCurrentThreadId())
     }, (ret, ctx, passValue) => {
         LOGW(`${getLine(20)}\n Exit ---> ret : ${ret}\n${getLine(passValue.get("len"))}`)

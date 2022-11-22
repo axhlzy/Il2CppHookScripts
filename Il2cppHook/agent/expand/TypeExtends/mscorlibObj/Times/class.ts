@@ -21,7 +21,11 @@ class UnityEngine_Time_impl extends Il2Cpp.Object {
     }
 
     static get get_fixedDeltaTime(): number {
-        return Il2Cpp.Api.Time._get_fixedDeltaTime()
+        try {
+            return Il2Cpp.Api.Time._get_fixedDeltaTime()
+        } catch (error) {
+            return -1
+        }
     }
 
     static get get_smoothDeltaTime(): number {

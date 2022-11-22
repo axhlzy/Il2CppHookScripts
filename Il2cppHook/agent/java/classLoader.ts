@@ -1,4 +1,4 @@
-import { formartClass } from "../utils/formart"
+import { formartClass as FM } from "../utils/formart"
 
 type T_loader = any
 
@@ -35,7 +35,7 @@ class classLoaderManager {
             fillCacle()
             let classLoaderList = ["java.lang.BootClassLoader", "dalvik.system.DexClassLoader", "dalvik.system.PathClassLoader", "dalvik.system.InMemoryDexClassLoader"]
             classLoaderList.forEach((classLoaderName) => {
-                formartClass.printTitile(classLoaderName)
+                FM.printTitile(classLoaderName)
                 this.loaders.forEach((loader: T_loader) => {
                     if (loader.toString().indexOf(classLoaderName) > -1) LOGD('  [' + classLoaderManager.loaders.indexOf(loader) + '] ' + loader.toString())
                 })

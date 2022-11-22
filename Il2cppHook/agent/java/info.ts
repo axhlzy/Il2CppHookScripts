@@ -1,7 +1,7 @@
 import { Breaker } from "../base/breaker"
 import { HookerBase } from "../base/base"
 import { distance } from "fastest-levenshtein"
-import { formartClass } from "../utils/formart"
+import { formartClass as FM} from "../utils/formart"
 import { Time } from "../expand/TypeExtends/mscorlibObj/Times/export"
 import { getMethodDesFromMethodInfo as DesMethodStr } from "../bridge/fix/il2cppM"
 import { Application } from "../expand/TypeExtends/mscorlibObj/Application/export"
@@ -198,9 +198,9 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
 
     function formartAndSaveModuleDetails(item: ModuleExportDetails) {
         if (retArr) return
-        let index = formartClass.alignStr(`[${++countIndex}]`, 6)
-        let result = `${index} ${formartClass.alignStr(item.address, p_size * 4)}  --->   ${item.address.sub(soAddr)}\t${item.name}`
-        if (formartMaxLine != -1 && formartMaxLine > 10) result = formartClass.alignStr(result, formartMaxLine)
+        let index = FM.alignStr(`[${++countIndex}]`, 6)
+        let result = `${index} ${FM.alignStr(item.address, p_size * 4)}  --->   ${item.address.sub(soAddr)}\t${item.name}`
+        if (formartMaxLine != -1 && formartMaxLine > 10) result = FM.alignStr(result, formartMaxLine)
         arrStrResult.push(result)
     }
 
@@ -209,10 +209,10 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
             arrPtrResult.push(item)
             return
         }
-        let index = formartClass.alignStr(`[${++countIndex}]`, 6)
+        let index = FM.alignStr(`[${++countIndex}]`, 6)
         let virAddr = item.virtualAddress.isNull() ? "" : `  --->   ${item.relativeVirtualAddress}`
-        let result = `${index} ${formartClass.alignStr(item.handle, p_size * 4)}${virAddr}\t${item.class.name}( ${item.class.handle} ) | ${DesMethodStr(item)}`
-        if (formartMaxLine != -1 && formartMaxLine > 10) result = formartClass.alignStr(result, formartMaxLine)
+        let result = `${index} ${FM.alignStr(item.handle, p_size * 4)}${virAddr}\t${item.class.name}( ${item.class.handle} ) | ${DesMethodStr(item)}`
+        if (formartMaxLine != -1 && formartMaxLine > 10) result = FM.alignStr(result, formartMaxLine)
         if (!item.virtualAddress.isNull()) {
             arrStrResult.push(result)
         } else {
@@ -243,11 +243,11 @@ const AddressToMethodToString = (mPtr: NativePointer, simple: boolean = true): v
     let NameSpace = method.class.namespace
     let MethodName = method.class.name
     let maxLen = Math.max(ImageName.length, NameSpace.length, MethodName.length) + 1
-    ImageName = formartClass.alignStr(ImageName, maxLen)
-    NameSpace = formartClass.alignStr(NameSpace, maxLen)
-    MethodName = formartClass.alignStr(MethodName, maxLen)
+    ImageName = FM.alignStr(ImageName, maxLen)
+    NameSpace = FM.alignStr(NameSpace, maxLen)
+    MethodName = FM.alignStr(MethodName, maxLen)
     let line1 = `image\t\t${ImageName} @ ${method.class.image.handle}`
-    let line2 = `namespace\t${NameSpace.trim().length == 0 ? formartClass.centerStr("---", maxLen) : NameSpace} @ ${method.class.handle}`
+    let line2 = `namespace\t${NameSpace.trim().length == 0 ? FM.centerStr("---", maxLen) : NameSpace} @ ${method.class.handle}`
     let line3 = `class\t\t${MethodName} @ ${method.class.handle}`
     let line4 = `methodInfo\t${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress}`
     let line5 = `methodName\t${DesMethodStr(method)}`

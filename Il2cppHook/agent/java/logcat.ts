@@ -1,4 +1,4 @@
-import { formartClass } from "../utils/formart"
+import { formartClass as FM} from "../utils/formart"
 
 const HookJavaLog = (): void => {
     Java.perform(() => {
@@ -12,7 +12,7 @@ const HookJavaLog = (): void => {
         // }
         //DEBUG
         class_name.d.overload("java.lang.String", "java.lang.String").implementation = function (tag: string, message: string) {
-            LOGD("[*] " + formartClass.getTime() + " DEBUG (d):")
+            LOGD("[*] " + FM.getTime() + " DEBUG (d):")
             LOGD("\targ1 : " + tag.toString())
             LOGD("\targ2 : " + message.toString())
             return this.d(arguments)
@@ -26,13 +26,13 @@ const HookJavaLog = (): void => {
         // }
         //ERROR
         class_name.e.overload("java.lang.String", "java.lang.String").implementation = function (tag: string, message: string) {
-            LOGD("[*] " + formartClass.getTime() + " ERROR (e):")
+            LOGD("[*] " + FM.getTime() + " ERROR (e):")
             LOGD("\targ1 : " + tag.toString())
             LOGD("\targ2 : " + message.toString())
             return this.e(arguments)
         }
         class_name.e.overload("java.lang.String", "java.lang.String", "java.lang.Throwable").implementation = function (tag: string, message: string, error: any) {
-            LOGD("[*] " + formartClass.getTime() + " ERROR (e):")
+            LOGD("[*] " + FM.getTime() + " ERROR (e):")
             LOGD("\targ1 : " + tag.toString())
             LOGD("\targ2 : " + message.toString())
             LOGD("\targ3 : " + error.toString())
@@ -40,13 +40,13 @@ const HookJavaLog = (): void => {
         }
         //INFO
         class_name.i.overload("java.lang.String", "java.lang.String").implementation = function (tag: string, message: string) {
-            LOGD("[*] " + formartClass.getTime() + " INFO (i):")
+            LOGD("[*] " + FM.getTime() + " INFO (i):")
             LOGD("\targ1 : " + tag.toString())
             LOGD("\targ2 : " + message.toString())
             return this.i(arguments)
         }
         class_name.i.overload("java.lang.String", "java.lang.String", "java.lang.Throwable").implementation = function (tag: string, message: string, error: any) {
-            LOGD("[*] " + formartClass.getTime() + " INFO (i):")
+            LOGD("[*] " + FM.getTime() + " INFO (i):")
             LOGD("\targ1 : " + tag.toString())
             LOGD("\targ2 : " + message.toString())
             LOGD("\targ3 : " + error.toString())
@@ -54,13 +54,13 @@ const HookJavaLog = (): void => {
         }
         //VERBOSE
         class_name.v.overload("java.lang.String", "java.lang.String").implementation = function (tag: string, message: string) {
-            LOGD("[*] " + formartClass.getTime() + " VERBOSE (v):")
+            LOGD("[*] " + FM.getTime() + " VERBOSE (v):")
             LOGD("\targ1 : " + tag.toString())
             LOGD("\targ2 : " + message.toString())
             return this.v(arguments)
         }
         class_name.v.overload("java.lang.String", "java.lang.String", "java.lang.Throwable").implementation = function (tag: string, message: string, error: any) {
-            LOGD("[*] " + formartClass.getTime() + " VERBOSE (v):")
+            LOGD("[*] " + FM.getTime() + " VERBOSE (v):")
             LOGD("\targ1 : " + tag.toString())
             LOGD("\targ2 : " + message.toString())
             LOGD("\targ3 : " + error.toString())
@@ -68,19 +68,19 @@ const HookJavaLog = (): void => {
         }
         //WARNING
         class_name.w.overload("java.lang.String", "java.lang.String").implementation = function (tag: string, message: string) {
-            LOGD("[*] " + formartClass.getTime() + " WARNING (w):")
+            LOGD("[*] " + FM.getTime() + " WARNING (w):")
             LOGD("\targ1 : " + tag.toString())
             LOGD("\targ2 : " + message.toString())
             return this.w(arguments)
         }
         class_name.w.overload("java.lang.String", "java.lang.Throwable").implementation = function (tag: string, message: string) {
-            LOGD("[*] " + formartClass.getTime() + " WARNING (w):")
+            LOGD("[*] " + FM.getTime() + " WARNING (w):")
             LOGD("\targ1 : " + tag.toString())
             LOGD("\targ2 : " + message.toString())
             return this.w(arguments)
         }
         class_name.w.overload("java.lang.String", "java.lang.String", "java.lang.Throwable").implementation = function (tag: string, message: string, error: any) {
-            LOGD("[*] " + formartClass.getTime() + " WARNING (w):")
+            LOGD("[*] " + FM.getTime() + " WARNING (w):")
             LOGD("\targ1 : " + tag.toString())
             LOGD("\targ2 : " + message.toString())
             LOGD("\targ3 : " + error.toString())
@@ -88,19 +88,19 @@ const HookJavaLog = (): void => {
         }
         //What a Terrible Failure (WTF)
         class_name.wtf.overload("java.lang.String", "java.lang.String").implementation = function (tag: string, message: string) {
-            LOGD("[*] " + formartClass.getTime() + " WTF (wtf):")
+            LOGD("[*] " + FM.getTime() + " WTF (wtf):")
             LOGD("\targ1 : " + tag.toString())
             LOGD("\targ2 : " + message.toString())
             return this.wtf(arguments)
         }
         class_name.wtf.overload("java.lang.String", "java.lang.Throwable").implementation = function (tag: string, message: string) {
-            LOGD("[*] " + formartClass.getTime() + " WTF (wtf):")
+            LOGD("[*] " + FM.getTime() + " WTF (wtf):")
             LOGD("\targ1 : " + tag.toString())
             LOGD("\targ2 : " + message.toString())
             return this.wtf(arguments)
         }
         class_name.wtf.overload("java.lang.String", "java.lang.String", "java.lang.Throwable").implementation = function (tag: string, message: string, error: any) {
-            LOGD("[*] " + formartClass.getTime() + " WTF (wtf):")
+            LOGD("[*] " + FM.getTime() + " WTF (wtf):")
             LOGD("\targ1 : " + tag.toString())
             LOGD("\targ2 : " + message.toString())
             LOGD("\targ3 : " + error.toString())

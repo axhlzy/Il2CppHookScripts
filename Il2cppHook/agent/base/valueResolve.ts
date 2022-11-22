@@ -2,7 +2,7 @@ import { methodToString } from "../bridge/fix/il2cppM"
 import { UnityEngine_Object } from "../expand/TypeExtends/mscorlibObj/Object/class"
 import { getObjName } from "../expand/TypeExtends/mscorlibObj/Object/export"
 import { UnityEngine_Color_Impl } from "../expand/TypeExtends/mscorlibObj/ValueType/Color/class"
-import { formartClass } from "../utils/formart"
+import { formartClass as FM} from "../utils/formart"
 import { readInt, readInt64, readSingle, readU16, readUInt } from "../utils/reader"
 
 class ValueResolve {
@@ -80,12 +80,12 @@ class ValueResolve {
         let length = String(this.method.class.handle).length + 1
         try {
             append += ","
-            append += formartClass.alignStr(String(this.args[0]), length, " ")
+            append += FM.alignStr(String(this.args[0]), length, " ")
         } catch {
             append += "  "
-            append += formartClass.getLine(length, " ")
+            append += FM.getLine(length, " ")
         }
-        let classInfo = `${formartClass.alignStr(this.method.class.name, 18)}(${this.method.class.handle}${append.trim()})`
+        let classInfo = `${FM.alignStr(this.method.class.name, 18)}(${this.method.class.handle}${append.trim()})`
         let infoContent = `===>  ${methodToString(this.method, true)}\t `
         let retStr = `${this.cacheId}\t${addressInfo}\t|  ${classInfo}  ${infoContent}`
         ValueResolve.MapCacheStringWithOutValue.set(this.cacheId, retStr)

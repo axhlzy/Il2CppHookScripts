@@ -1,4 +1,4 @@
-import { formartClass } from "../../utils/formart"
+import { formartClass as FM } from "../../utils/formart"
 import { getModifier } from "./il2cppM"
 
 export class FieldsParser {
@@ -65,7 +65,7 @@ export class FieldsParser {
         this.mClass.fields
             .sort((f1: Il2Cpp.Field, f2: Il2Cpp.Field) => f1.offset - f2.offset)
             .forEach((field: Il2Cpp.Field) => {
-                let index: string = formartClass.alignStr(`[${++countNum}]`, 6)
+                let index: string = FM.alignStr(`[${++countNum}]`, 6)
                 let offset: NativePointer = ptr(field.offset)
                 let modifier: string = getModifier(field.flags).trim()
                 let classDes: string = `${field.type.class.name} (${field.type.class.handle})`
@@ -106,7 +106,7 @@ export class FieldsParser {
                         // 实在莫得解析代码那就直接空着吧...
                         catch { thisString = "" }
                     }
-                    LOGZ(`\t${thisHandle}  --->  ${formartClass.alignStr(thisValue)}  ${thisString}`)
+                    LOGZ(`\t${thisHandle}  --->  ${FM.alignStr(thisValue)}  ${thisString}`)
                 }
                 // 对 class 只展示 fields，无法值解析
                 else { }

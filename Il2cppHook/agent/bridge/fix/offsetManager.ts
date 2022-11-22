@@ -1,4 +1,4 @@
-import { formartClass } from "../../utils/formart"
+import { formartClass as FM } from "../../utils/formart"
 
 export class OffsetManager {
 
@@ -44,7 +44,7 @@ export class OffsetManager {
 
     public showCache(filter: string = ""): void {
         OffsetManager._offsets.forEach((value, key) => {
-            if (key.includes(filter)) LOGD(`[*] ${formartClass.alignStr(ptr(value), 7)} <---   ${key}`)
+            if (key.includes(filter)) LOGD(`[*] ${FM.alignStr(ptr(value), 7)} <---   ${key}`)
         })
     }
 
