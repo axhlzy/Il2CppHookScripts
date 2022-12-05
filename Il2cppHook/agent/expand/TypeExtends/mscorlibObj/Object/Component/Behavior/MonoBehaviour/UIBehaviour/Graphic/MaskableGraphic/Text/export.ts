@@ -14,6 +14,7 @@ const B_Text = (): void => {
     let strMap = new Map()
 
     strMap.set("SETTINGS", "设置")
+    strMap.set("選擇角色", "选择角色")
     strMap.set("ADDED", "已添加")
     strMap.set("ON", "开")
     strMap.set("Loading...", "加载中...")

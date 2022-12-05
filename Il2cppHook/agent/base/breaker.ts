@@ -468,11 +468,11 @@ globalThis.printCurrentMethods = (types: boolean = true) => {
     })
 }
 
-globalThis.BF = (filterStr: string): void => {
+globalThis.BF = (filterStr: string, allImg:boolean=false): void => {
     if (typeof filterStr != "string") return
     DD()
     HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
-        if (CommonClass.includes(image.assembly.name)) {
+        if (allImg || CommonClass.includes(image.assembly.name)) {
             image.classes.flatMap((cls: Il2Cpp.Class) => cls.methods).forEach((mPtr: Il2Cpp.Method) => {
                 if (mPtr.name.indexOf(filterStr) != -1) Breaker.attachMethodInfo(mPtr, false)
             })

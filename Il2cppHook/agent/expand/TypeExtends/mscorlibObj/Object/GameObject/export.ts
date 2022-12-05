@@ -16,6 +16,18 @@ globalThis.HookSetActive = (defaltActive: number = 1) => {
     })
 }
 
+globalThis.HookSendMessage = () => {
+    try {
+        var UnityPlayer = Java.use("com.unity3d.player.UnityPlayer")
+        UnityPlayer.UnitySendMessage.implementation = function (str0:string, str1:string, str2:string) {
+            console.warn("\n--------------\tCalled UnitySendMessage\t--------------")
+            console.log("UnityPlayer.UnitySendMessage(\x1b[96m'" + str0 + "','" + str1 + "','" + str2 + "'\x1b[0m)")
+            this.UnitySendMessage(str0, str1, str2)
+            PrintStackTrace()
+        }
+    } catch (e) {}
+}
+
 globalThis.showGameObject = (mPtr: NativePointer) => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     let gameObject: Il2Cpp.GameObject
@@ -95,6 +107,7 @@ declare global {
     var getTransform: (gameObjOrComponent: NativePointer) => NativePointer
     var setActive: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void
     var setActiveC: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void
+    var HookSendMessage: () => void
 }
 
-export { showGameObject, HookSetActive, getTransform } 
+export { showGameObject, HookSetActive, getTransform, HookSendMessage }
