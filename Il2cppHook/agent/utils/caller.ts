@@ -3,6 +3,19 @@ import { TYPE_CHECK_POINTER } from "../base/globle"
 import { checkPointer } from "./checkP"
 import { readSingle, readU16, showArray } from "./reader"
 
+// callNativePointer
+function callNp(value: NativePointer, ...args: any[]): NativePointer {
+    try {
+        for (let i = 1; i <= (arguments.length < 5 ? 5 : arguments.length) - 1; i++)
+            arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))
+        return new NativeFunction(value, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
+            (arguments[1], arguments[2], arguments[3], arguments[4])
+    } catch (e) {
+        LOG(e, LogColor.C95)
+        return ptr(0)
+    }
+}
+
 function callFunction(value: TYPE_CHECK_POINTER, ...args: any[]): NativePointer {
     try {
         if (value == undefined) return ptr(0x0)
@@ -76,6 +89,7 @@ const callFunctionRA = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): void => showA
 export { callFunction, callFunctionRB, callFunctionRI, callFunctionRS, callFunctionRF, callFunctionRUS, callFunctionRCS, callFunctionRA }
 
 declare global {
+    var callNp: (mPtr: NativePointer, ...args: any[]) => NativePointer
     var callFunction: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => NativePointer
     var callFunctionRB: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => boolean
     var callFunctionRI: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => number
@@ -87,6 +101,7 @@ declare global {
     var callFunctionWithOutError: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => NativePointer
 }
 
+globalThis.callNp = callNp
 globalThis.callFunction = callFunction
 globalThis.callFunctionRB = callFunctionRB
 globalThis.callFunctionRI = callFunctionRI

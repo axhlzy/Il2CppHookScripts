@@ -247,6 +247,13 @@ class HookerBase {
      * findMethod("GetHashCode","Color") functionName ClassName(简称)
      * findMethod("LerpUnclamped") // 最慢
      * 
+     * 以下三种写法等价:
+     * Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Texture").method("get_width",1).virtualAddress
+     * ===
+     * find_method("UnityEngine.CoreModule","Texture","get_width",0)
+     * ===
+     * findMethod("UnityEngine.CoreModule","UnityEngine.Texture","get_width",0,undefined,false)
+     * 
      * @param assemblyName  Assembly 名称
      * @param className     类名称(全称)
      * @param methodName    函数名称
