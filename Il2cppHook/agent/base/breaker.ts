@@ -23,6 +23,7 @@ declare global {
     var breakWithStack: (mPtr: NativePointer) => void
     var getPlatform: () => string
     var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
+    // getPlatformCtxWithArgV 用于获取参数, argIndex 从 0 开始 (arm32 r0 / arm64 x0)
     var getPlatformCtxWithArgV: (ctx: CpuContext, argIndex: number) => NativePointer | undefined
     var maxCallTimes: number
     var attathing: boolean
@@ -352,9 +353,31 @@ globalThis.hn = Breaker.printHistoryNum
 globalThis.breakWithArgs = Breaker.breakWithArgs
 globalThis.breakWithStack = Breaker.breakWithStack
 globalThis.breakInline = Breaker.breakInline as any
-
+globalThis.printDesertedMethods = Breaker.printDesertedMethods
 globalThis.getPlatform = (): string => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
 globalThis.getPlatformCtx = (ctx: CpuContext): ArmCpuContext | Arm64CpuContext => getPlatform() == "arm" ? ctx as ArmCpuContext : ctx as Arm64CpuContext
+
+globalThis.b = (mPtr: NativePointer | string | number) => {
+    if (typeof mPtr == "number") {
+        if (Process.arch == "arm") mPtr = ptr(mPtr)
+        // arm64 指针长度超过15位使用String传参
+        else if (Process.arch == "arm64" && (mPtr.toString().length > 15)) 
+            throw new Error("\nNot support parameter typed number at arm64\n\n\tUse b('0x...') instead\n")
+        else mPtr = ptr(mPtr)
+    } else if (typeof mPtr == "string") {
+        mPtr = mPtr.trim()
+        if (mPtr.startsWith("0x")) mPtr = ptr(mPtr)
+        else throw new Error("Only support String format (like '0x...')")
+    }
+    try {
+        new Il2Cpp.Method(mPtr).name // 用报错来判断是method指针还是一个普通的地址
+        if (mPtr instanceof Il2Cpp.Method) return Breaker.attachMethodInfo(mPtr, true)
+        Breaker.attachMethodInfo(new Il2Cpp.Method(mPtr), true)
+    } catch (error) {
+        Breaker.breakWithArgs(mPtr)
+    }
+}
+
 globalThis.getPlatformCtxWithArgV = (ctx: CpuContext,argIndex:number): NativePointer|undefined => {
     if ((ctx as ArmCpuContext).r0 != undefined) {
         // case arm32
@@ -417,27 +440,6 @@ globalThis.getPlatformCtxWithArgV = (ctx: CpuContext,argIndex:number): NativePoi
         }
     }
 }
-
-globalThis.b = (mPtr: NativePointer | string | number) => {
-    if (typeof mPtr == "number") {
-        if (Process.arch == "arm") mPtr = ptr(mPtr)
-        else if (Process.arch == "arm64") throw new Error("Not support parameter typed number at arm64")
-        else mPtr = ptr(mPtr)
-    } else if (typeof mPtr == "string") {
-        mPtr = mPtr.trim()
-        if (mPtr.startsWith("0x")) mPtr = ptr(mPtr)
-        else throw new Error("Only support String format (like '0x...')")
-    }
-    try {
-        new Il2Cpp.Method(mPtr).name // 用报错来判断是method指针还是一个普通的地址
-        if (mPtr instanceof Il2Cpp.Method) return Breaker.attachMethodInfo(mPtr, true)
-        Breaker.attachMethodInfo(new Il2Cpp.Method(mPtr), true)
-    } catch (error) {
-        Breaker.breakWithArgs(mPtr)
-    }
-}
-
-globalThis.printDesertedMethods = Breaker.printDesertedMethods
 
 /**
  * 原 print_list_result

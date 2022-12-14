@@ -1,19 +1,31 @@
 import { filterDuplicateOBJ, PassType } from "../../../../../utils/common"
 import { setActiveT, setActiveTChange } from "../Component/export"
 
-globalThis.HookSetActive = (defaltActive: number = 1) => {
-    A(Il2Cpp.Api.GameObject._SetActive, (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
-        if (args[0].isNull()) return
-        let gameObject = new Il2Cpp.GameObject(args[0])
+globalThis.HookSetActive = (defaltActive: boolean = true) => {
+
+    try {
+        A(Il2Cpp.Api.GameObject._SetActive, (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
+            innerSetActive(args[0],ctx)
+        })
+    } catch (error) {
+        // 优化一下当dobby inlinehook生效时，hook不上报错的情况
+        A(Il2Cpp.Api.GameObject._SetActive.add(p_size*3), (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
+            innerSetActive(getPlatformCtxWithArgV(ctx,0)!,ctx)
+        })
+    }
+
+    function innerSetActive(mPtr:NativePointer,ctx:CpuContext){
+        if (mPtr.isNull()) return
+        let gameObject = new Il2Cpp.GameObject(ptr(mPtr as unknown as number))
         if (filterDuplicateOBJ(gameObject.toString()) == -1) return
-        if (defaltActive == 2 || args[1].toInt32() == defaltActive) {
-            let strTmp = "public extern void SetActive( " + (args[1].toInt32() == 0 ? "false" : "true") + " );  LR:" + checkCtx(ctx)
+        if (defaltActive && !mPtr.isNull()) {
+            let strTmp = "public extern void SetActive( " + (mPtr.toInt32() == 0 ? "false" : "true") + " );  LR:" + checkCtx(ctx)
             LOGW("\n" + getLine(strTmp.length))
             LOGD(strTmp)
             LOGO(getLine(strTmp.length / 2))
-            showGameObject(args[0])
+            showGameObject(mPtr)
         }
-    })
+    }
 }
 
 globalThis.HookSendMessage = () => {
@@ -102,7 +114,7 @@ export const setActiveG = (gameObject: Il2Cpp.GameObject, active: boolean = fals
 export const setActiveGChange = (gameObject: Il2Cpp.GameObject) => gameObject.SetActive(!gameObject.get_activeSelf())
 
 declare global {
-    var HookSetActive: (defaltActive?: number) => void
+    var HookSetActive: (defaltActive?: boolean) => void
     var showGameObject: (gameObjOrTransform: NativePointer) => void
     var getTransform: (gameObjOrComponent: NativePointer) => NativePointer
     var setActive: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void

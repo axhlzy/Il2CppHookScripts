@@ -1,8 +1,8 @@
 import { getMethodDesFromMethodInfo as GMD, getMethodModifier as GMM} from "../bridge/fix/il2cppM"
+import { formartClass as FM } from "../utils/formart"
+import { FieldAccess, LogColor } from "./enum"
 import { cache } from "decorator-cache-getter"
 import { allocCStr } from "../utils/alloc"
-import { FieldAccess, LogColor } from "./enum"
-import { formartClass as FM } from "../utils/formart"
 
 class HookerBase {
     constructor() { }
@@ -62,7 +62,7 @@ class HookerBase {
     }
 
     static showClasses(imageOrName: string | NativePointer | number, filterNameSpace: string = "", filterClassName: string = ""): void {
-        let image: Il2Cpp.Image = new Il2Cpp.Image(ptr(1))
+        let image: Il2Cpp.Image 
         try {
             if (typeof imageOrName == "string") {
                 // 处理arm64以参数形式传递会出bug的问题,长十六进制参数用引号包裹起来当String传递
@@ -74,8 +74,8 @@ class HookerBase {
                     image = Il2Cpp.Domain.assembly(imageOrName).image
                 }
             } else if (typeof imageOrName == "number") {
-                // 按照以下写法在arm64上会有奇奇怪怪的bug (64位精度丢失)
-                // 这段代码也就在arm32上是没问题的
+                if (Process.arch == "arm64" && (imageOrName.toString().length > 15))
+                    throw new Error("\nNot support parameter typed number at arm64\n\n\tUse b('0x...') instead\n")
                 image = new Il2Cpp.Image(ptr(imageOrName))
             } else if (arguments[0] == undefined) {
                 throw new Error("imageOrName can not be null")
@@ -85,7 +85,8 @@ class HookerBase {
             if (image.handle.equals(1)) throw new Error("image handle can not be null")
         } catch (error) {
             LOGE(error)
-            throw new Error("Il2Cpp.Image can not be found")
+            // throw new Error("Il2Cpp.Image can not be found")
+            return
         }
 
         // namespace as key:string ， classes as value:Array<class>
@@ -94,9 +95,7 @@ class HookerBase {
         let countFilterCls: number = 0
         for (let i = 0; i < image.classes.length; i++) {
             let key = "[*] " + image.classes[i].namespace
-            if (tMap.get(key) == undefined) {
-                tMap.set(key, new Array<Il2Cpp.Class>())
-            }
+            if (tMap.get(key) == undefined) tMap.set(key, new Array<Il2Cpp.Class>())
             tMap.get(key)?.push(image.classes[i])
         }
 
@@ -134,7 +133,8 @@ class HookerBase {
         if (mPtr instanceof NativePointer) {
             klass = new Il2Cpp.Class(mPtr)
         } else if (typeof mPtr == "string") {
-            klass = new Il2Cpp.Class(findClass(mPtr))
+            if (mPtr.startsWith("0x")) klass = new Il2Cpp.Class(ptr(mPtr.trim()))
+            else klass = new Il2Cpp.Class(findClass(mPtr))
         } else if (typeof mPtr == "number") {
             klass = new Il2Cpp.Class(ptr(mPtr))
         } else {
@@ -180,9 +180,7 @@ class HookerBase {
             return
         }
         FM.printTitile(`Found ${klass.fields.length} Fields ${klass.isEnum ? "(enum) " : ""}in class: ${klass.name} (${klass.handle})`)
-        klass.fields.forEach((field: Il2Cpp.Field) => {
-            LOGD(`[*] ${field.handle} ${field.type.name} ${field.toString()} [type:${field.type.class.handle}]`)
-        })
+        klass.fields.forEach((field: Il2Cpp.Field) => LOGD(`[*] ${field.handle} ${field.type.name} ${field.toString()} [type:${field.type.class.handle}]`))
         newLine()
     }
 
@@ -193,8 +191,8 @@ class HookerBase {
         } else if (typeof input == "string") {
             klass = HookerBase.checkType(input.trim())
         } else if (typeof input == "number") {
-            // arm64 使用 '0x...' (String(mPtr)这个参数本身就是错的，如果是正确的判断十三位十六进制数即可)
-            if (String(input).length > 18 && Process.arch == "arm64") throw ("please use '0x...' instead of number")
+            if (Process.arch == "arm64" && (input.toString().length > 15))
+                throw new Error("\nNot support parameter typed number at arm64\n\n\tUse b('0x...') instead\n")
             // arm32 使用 number
             klass = HookerBase.checkType(ptr(input))
         } else {
@@ -227,7 +225,6 @@ class HookerBase {
                 if (ret != undefined) return ret.handle
             }
         }
-
         function innerCall(kclasses: Il2Cpp.Class[]): Il2Cpp.Class | undefined {
             for (let index = 0; index < kclasses.length; index++)
                 if (kclasses[index].name == searchClassName) {
@@ -237,7 +234,6 @@ class HookerBase {
         }
         return ptr(0)
     }
-
 
     /**
      * using example:

@@ -248,10 +248,8 @@ $ frida -FU -l ../_Ufunc.js
     (提供了 generateApi / generateClass / generateFieldEnum 方便的拓展类，生成的东西不太准，需要稍微修改点点)
 
 #### Tips
-- 由于JS特性的问题，再arm64下的指针大小是8字节，所以arm64下控制台传参指针值的时候建议使用string类型 
-    存在计算精度的问题(js命令行传参最大值为Number.MAX_SAFE_INTEGER = 9007199254740991,直接给值超出范围导致精度丢失)
-    use ptr("0x12345678") instead of ptr(0x12345678)
-    这部分发现的比较晚后续很多东西都没有做好优化
+- 由于JS特性在64位hook下存在精度问题，arm64下的指针大小是8字节，但是js命令行传参最大值是 Number.MAX_SAFE_INTEGER = 9007199254740991 (0x1fffffffffffff)，所以命令行直接给值超出范围导致精度丢失，这时候建议使用string类型 
+    use ptr("0xb400007d17736990") instead of ptr(0xb400007d17736990)，这部分发现的比较晚后续很多东西都没有做好优化
 - 我这里用的环境： frida==15.2.2 | frida-tools==10.5.4 , 测试机 ：piex 4 原生android 11
     1. 确认手机端server与电脑端frida版本一致，如果你的版本不一致概率性出问题
     2. 已确认高版本的 frida-tools 在使用老版 Ufunc.js （ts版不受影响）会出问题，所以建议直接使用 10.5.4 版本

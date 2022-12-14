@@ -17,8 +17,25 @@ export const showMethodInfo = (methodInfoPtr: NativePointer): void => {
     newLine()
 }
 
+export const getClassFromMethodInfo = (methodInfoPtr: NativePointer): Il2Cpp.Class => {
+    if (typeof methodInfoPtr == "number") {
+        if (Process.arch == "arm64" && (String(methodInfoPtr).toString().length > 15))
+            throw new Error("\nNot support parameter typed number at arm64\n\n\tUse b('0x...') instead\n")
+        methodInfoPtr = ptr(methodInfoPtr)
+    }else if (typeof methodInfoPtr == "string") {
+        if (!String(methodInfoPtr).startsWith("0x"))
+            throw new Error("\nNot a Pointer\n")
+        methodInfoPtr = ptr(String(methodInfoPtr))
+    }
+    return new Il2Cpp.Method(methodInfoPtr).class
+}
+
 declare global {
     var showMethodInfo: (methodInfo: NativePointer) => void
+    var methodToClass: (methodInfo: NativePointer) => NativePointer
+    var methodToClassShow: (methodInfo: NativePointer) => void
 }
 
 globalThis.showMethodInfo = showMethodInfo
+globalThis.methodToClass = (methodInfo:NativePointer) => getClassFromMethodInfo(methodInfo).handle
+globalThis.methodToClassShow = (methodInfo:NativePointer) => m(methodToClass(methodInfo))
