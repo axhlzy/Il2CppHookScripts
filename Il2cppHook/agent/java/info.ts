@@ -198,7 +198,7 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
     arrVirResult.sort(distance).forEach(LOGZ)
     LOGZ(`\nTake ${Date.now() - enterTime}ms to find ${arrStrResult.length} ${arrStrResult.length <= 1 ? "result" : "results"}`)
     if (formartMaxLine != -1 && formartMaxLine < 100) LOGZ(`\n${formartMaxLine} lines of results are shown recommended to be greater than 100`)
-    newLine(1)
+    newLine()
 
     function formartAndSaveModuleDetails(item: ModuleExportDetails) {
         if (retArr) return
@@ -214,8 +214,9 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
             return
         }
         let index = FM.alignStr(`[${++countIndex}]`, 6)
-        let virAddr = item.virtualAddress.isNull() ? "" : `  --->   ${item.relativeVirtualAddress}`
-        let result = `${index} ${FM.alignStr(item.handle, p_size * 4)}${virAddr}\t${item.class.name}( ${item.class.handle} ) | ${DesMethodStr(item)}`
+        let virAddr = FM.alignStr(item.handle, p_size * 3) + (item.virtualAddress.isNull() ? "" : ` --->  ${item.relativeVirtualAddress}`)
+        let className = FM.alignStr(item.class.name, 15)
+        let result = `${index} ${virAddr}  |  ${className} @ ${item.class.handle} | ${DesMethodStr(item)}`
         if (formartMaxLine != -1 && formartMaxLine > 10) result = FM.alignStr(result, formartMaxLine)
         if (!item.virtualAddress.isNull()) {
             arrStrResult.push(result)
@@ -291,13 +292,13 @@ Reflect.set(globalThis, "AddressToMethodNoException", AddressToMethodNoException
 Reflect.set(globalThis, "showAddressInfo", showAddressInfo)
 
 declare global {
-    var launchApp: (pkgName: string) => void
     var getApkInfo: () => void
-    var printExp: (filter: string, findAll?: boolean, formartMaxLine?: number) => void | Array<Il2Cpp.Method>
     var getUnityInfo: () => void
+    var launchApp: (pkgName: string) => void
+    var showAddressInfo: (mPtr: NativePointer) => void
+    var AddressToMethodToString: (mPtr: NativePointer) => void
     var bp: (filterName: string, breakMethodInfo?: boolean) => void
     var AddressToMethod: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method
-    var AddressToMethodToString: (mPtr: NativePointer) => void
     var AddressToMethodNoException: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method | null
-    var showAddressInfo: (mPtr: NativePointer) => void
+    var printExp: (filter: string, findAll?: boolean, formartMaxLine?: number, retArr?: boolean) => void | Array<Il2Cpp.Method>
 }

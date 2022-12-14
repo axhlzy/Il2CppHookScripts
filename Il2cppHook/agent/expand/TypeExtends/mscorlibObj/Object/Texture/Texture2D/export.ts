@@ -17,6 +17,8 @@ globalThis.B_Texture2D = () => {
             if (EncodeToJPG.isNull()) throw new Error("EncodeToJPG is null")
             let EncodeToJPG_ab = EncodeToJPG.sub(libunity)
             LOGD("EncodeToJPG ->" + EncodeToJPG + " | " + EncodeToJPG_ab)
+
+            // printExp("get_mainTexture",true)
     
             A(Il2Cpp.Domain.assembly("UnityEngine.UI").image.class("UnityEngine.UI.Image").method("get_mainTexture").virtualAddress,undefined,(ret:InvocationReturnValue)=>{
                 callOnce(newLine)
