@@ -153,10 +153,6 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
     }
     // 查找常用的一些函数
     else {
-        new Il2Cpp.Class(findClass("Text")).methods.forEach((item: Il2Cpp.Method) => {
-            if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
-        })
-
         new Il2Cpp.Class(findClass("Transform")).methods.forEach((item: Il2Cpp.Method) => {
             if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
         })
@@ -184,6 +180,14 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
         new Il2Cpp.Class(findClass("Object", ["mscorlib"], false)).methods.forEach((item: Il2Cpp.Method) => {
             if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
         })
+
+        try {
+            new Il2Cpp.Class(findClass("Text")).methods.forEach((item: Il2Cpp.Method) => {
+                if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
+            })
+        } catch (error) {
+            LOGE("Not found 'Text' class") 
+        }
     }
 
     if (retArr) return arrPtrResult

@@ -4,7 +4,17 @@ import { formartClass as FM} from "../utils/formart"
 // 侧重参数信息 还有一个 MethodToShow() 用在 findMethod / find_method 侧重基本信息
 export const showMethodInfo = (methodInfoPtr: NativePointer): void => {
     newLine()
-    if (typeof methodInfoPtr == "number") methodInfoPtr = ptr(methodInfoPtr)
+    if (typeof methodInfoPtr == "number"){
+        if (Process.arch == "arm64" && (String(methodInfoPtr).toString().length > 15))
+            throw new Error("\nNot support parameter typed number at arm64\n\n\tUse b('0x...') instead\n")
+        methodInfoPtr = ptr(methodInfoPtr)
+    } else if (typeof methodInfoPtr == "string") {
+        if (String(methodInfoPtr).startsWith("0x")) {
+            methodInfoPtr = ptr(methodInfoPtr)
+        } else {
+            throw new Error("\nNot a Pointer\n")
+        }
+    }
     let packMethod = new Il2Cpp.Method(methodInfoPtr)
     let params = packMethod.parameters.map((param: Il2Cpp.Parameter) => {
         return (`${getLine(8, ' ')}[-]${FM.alignStr(param.name)} | type: ${param.type.handle} | @ class:${param.type.class.handle} | ${param.type.name}`)

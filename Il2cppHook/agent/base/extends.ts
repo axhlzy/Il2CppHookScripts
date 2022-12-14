@@ -109,7 +109,7 @@ globalThis.sqliteTest = () => {
         console.log('Name:', name);
         console.log('Bio:', bio);
     }
-    smt.reset();
+    smt.reset()
 }
 
 globalThis.patchTest = (mPtr: NativePointer, size: number = 1) => {
