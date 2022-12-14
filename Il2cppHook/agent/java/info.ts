@@ -125,7 +125,7 @@ const cacheMethods = (withLog: boolean = true) => {
 }
 
 // filter and show useful address
-const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine: number = -1, retArr: boolean = false): void | Array<Il2Cpp.Method> => {
+const printExp = (filter: string = "", findAll: boolean = true, formartMaxLine: number = -1, retArr: boolean = false): void | Array<Il2Cpp.Method> => {
 
     let countIndex: number = -1
     let arrStrResult: Array<string> = new Array<string>()
@@ -186,7 +186,7 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
                 if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
             })
         } catch (error) {
-            LOGE("Not found 'Text' class") 
+            // LOGE("Not found 'Text' class") 
         }
     }
 
@@ -284,7 +284,7 @@ export { getApkInfo, launchApp, cacheMethods }
 
 Reflect.set(globalThis, "launchApp", launchApp)
 Reflect.set(globalThis, "getApkInfo", getApkInfo)
-Reflect.set(globalThis, "printExp", printExp)
+Reflect.set(globalThis, "findMethods", printExp)
 Reflect.set(globalThis, "getUnityInfo", getUnityInfo)
 Reflect.set(globalThis, "AddressToMethod", AddressToMethod)
 Reflect.set(globalThis, "AddressToMethodToString", AddressToMethodToString)
@@ -300,5 +300,5 @@ declare global {
     var bp: (filterName: string, breakMethodInfo?: boolean) => void
     var AddressToMethod: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method
     var AddressToMethodNoException: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method | null
-    var printExp: (filter: string, findAll?: boolean, formartMaxLine?: number, retArr?: boolean) => void | Array<Il2Cpp.Method>
+    var findMethods: (filter: string, findAll?: boolean, formartMaxLine?: number, retArr?: boolean) => void | Array<Il2Cpp.Method>
 }

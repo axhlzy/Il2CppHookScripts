@@ -4,7 +4,7 @@ import {
     getMethodModifier, methodToString
 } from "../bridge/fix/il2cppM"
 import { closest } from "fastest-levenshtein"
-import { formartClass as FC, formartClass } from "../utils/formart"
+import { formartClass as FC } from "../utils/formart"
 import { HookerBase } from "./base"
 import { TIME_SIMPLE } from "../utils/common"
 import ValueResolve from "./valueResolve"
@@ -145,6 +145,7 @@ class Breaker {
             let handleFunc: InvocationListener = Interceptor.attach(method.virtualAddress, {
                 onEnter: function (this: InvocationContext, args: InvocationArguments) {
                     if (!Breaker.needShowLOG(method, "onEnter")) return
+                    // detailLog 详细或者粗略的LOG（是否带参数解析）
                     if (!detailLog) {
                         // 批量版 B() 针对单个classes/Images
                         let cacheID = `[${++Breaker.callTimesInline}|${TIME_SIMPLE()}]`
@@ -314,7 +315,7 @@ class Breaker {
                     let arr = methodToArray(method)
                     let times = this.map_methodInfo_callTimes.get(method)
                     ++countHideFunctions
-                    LOGD(`[*] ${arr[0]}  --->  ${arr[1]}\t${formartClass.alignStr(arr[2],p_size*2+2)}\t${formartClass.alignStr(times,4)}   | ${formartClass.alignStr(method.class.name,16)} |  \t${arr[3]}`)
+                    LOGD(`[*] ${arr[0]}  --->  ${arr[1]}\t${FC.alignStr(arr[2],p_size*2+2)}\t${FC.alignStr(times,4)}   | ${FC.alignStr(method.class.name,16)} |  \t${arr[3]}`)
                 }
             }
         })
@@ -470,7 +471,8 @@ globalThis.printCurrentMethods = (types: boolean = true) => {
     })
 }
 
-globalThis.BF = (filterStr: string, allImg:boolean=false): void => {
+// 默认改到全部img中的所有方法 filterStr 为方法名的关键字
+globalThis.BF = (filterStr: string, allImg:boolean = true): void => {
     if (typeof filterStr != "string") return
     DD()
     HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
