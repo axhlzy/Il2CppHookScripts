@@ -12,11 +12,19 @@ function OnPointerClick() {
             funcAddr = ptr(Il2Cpp.Api.Button._OnPointerClick)
             if (funcAddr == undefined || funcAddr.isNull()) break
             LOGE("\nEnable Hook OnPointerClick at " + funcAddr + "(" + funcAddr.sub(soAddr) + ")" + "\n")
-            A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
-                LOGW("\n" + getLine(38))
-                LOGD("public void OnPointerClick( " + args[0] + " , " + args[1] + " )")
-                FakePointerEventData(args[1])
-            })
+            try {
+                A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
+                    LOGW("\n" + getLine(38))
+                    LOGD("public void OnPointerClick( " + args[0] + " , " + args[1] + " )")
+                    FakePointerEventData(args[1])
+                })
+            } catch (error) {
+                A(Il2Cpp.Api.Button._OnPointerClick.add(p_size*2), (args: InvocationArguments, ctx: CpuContext) => {
+                    LOGW("\n" + getLine(38))
+                    LOGD("public void OnPointerClick( " + getPlatformCtxWithArgV(ctx,0) + " , " + getPlatformCtxWithArgV(ctx,1) + " )")
+                    FakePointerEventData(args[1])
+                })
+            }
             break
         case 0:
             funcAddr = ptr(Il2Cpp.Api.PointerInputModule._DeselectIfSelectionChanged)
@@ -112,10 +120,20 @@ function OnPointerClick() {
 
 const OnButtonClick = () => {
     // OnPointerClick(instance, PointerEventData) : Void
-    A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
-        let currentGameobj: GameObject = getGameObjectPack(args[0])
-        let button: Button = new Button(args[0])
-        let pointerEventData: PointerEventData = new PointerEventData(args[1])
+    try {
+        A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
+            innerFunction(args[0],args[1])
+        })
+    } catch (error) {
+        A(Il2Cpp.Api.Button._OnPointerClick, (_args,ctx:CpuContext) => {
+            innerFunction(getPlatformCtxWithArgV(ctx,0)!,getPlatformCtxWithArgV(ctx,1)!)
+        })
+    }
+
+    function innerFunction(arg0:NativePointer,arg1:NativePointer){
+        let button: Button = new Button(arg0)
+        let currentGameobj: GameObject = getGameObjectPack(arg0)
+        let pointerEventData: PointerEventData = new PointerEventData(arg1)
         let buttonOnclickEvent: ButtonClickedEvent = button.get_onClick()
         LOGD(`\n[*] ${pointerEventData.handle} ---> ${currentGameobj.get_name()} { G:${currentGameobj.handle} | T:${currentGameobj.get_transform().handle} }`)
 
@@ -146,7 +164,7 @@ const OnButtonClick = () => {
                 })
             })
         }, 20)
-    })
+    }
 }
 
 /**

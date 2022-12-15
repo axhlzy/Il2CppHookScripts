@@ -8,6 +8,16 @@ const setNeedLog = (flag: boolean): void => SET_G(GKEY.LogFlag, flag) as unknown
 
 const getNeedLog = (): boolean => GET_GT<boolean>(GKEY.LogFlag)
 
+function callOnce<T extends Function>(func: T): T {
+    let called = false
+    return ((...args: any[]) => {
+        if (!called) {
+            called = true
+            return func(...args)
+        }
+    }) as unknown as T
+}
+
 export const LOG = (str: any, type: LogColor = LogColor.WHITE): void => {
     switch (type) {
         case LogColor.WHITE: logL(str); break
@@ -90,6 +100,7 @@ declare global {
     var LOGH: (msg: any) => void // LogColor.C96
     var LOGM: (msg: any) => void // LogColor.C96
     var LOGZ: (msg: any) => void // LogColor.C90
+    var callOnce: (func: Function) => Function
     var newLine: (lines?: number) => void
     var getLine: (length: number, fillStr?: string) => string
     var printLogColors: () => void
@@ -111,5 +122,6 @@ globalThis.LOGZ = LOGZ
 globalThis.getLine = getLine
 globalThis.printLogColors = printLogColors
 globalThis.newLine = (lines: number = 1) => LOG(getLine(lines, "\n"))
+globalThis.callOnce = callOnce
 globalThis.LogColor = LogColor
 // globalThis.log = logFormart // alias log <= logFormart

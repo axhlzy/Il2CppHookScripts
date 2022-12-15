@@ -4,7 +4,7 @@ import {
     getMethodModifier, methodToString
 } from "../bridge/fix/il2cppM"
 import { closest } from "fastest-levenshtein"
-import { formartClass as FC, formartClass } from "../utils/formart"
+import { formartClass as FC } from "../utils/formart"
 import { HookerBase } from "./base"
 import { TIME_SIMPLE } from "../utils/common"
 import ValueResolve from "./valueResolve"
@@ -23,6 +23,7 @@ declare global {
     var breakWithStack: (mPtr: NativePointer) => void
     var getPlatform: () => string
     var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
+    // getPlatformCtxWithArgV 用于获取参数, argIndex 从 0 开始 (arm32 r0 / arm64 x0)
     var getPlatformCtxWithArgV: (ctx: CpuContext, argIndex: number) => NativePointer | undefined
     var maxCallTimes: number
     var attathing: boolean
@@ -144,6 +145,7 @@ class Breaker {
             let handleFunc: InvocationListener = Interceptor.attach(method.virtualAddress, {
                 onEnter: function (this: InvocationContext, args: InvocationArguments) {
                     if (!Breaker.needShowLOG(method, "onEnter")) return
+                    // detailLog 详细或者粗略的LOG（是否带参数解析）
                     if (!detailLog) {
                         // 批量版 B() 针对单个classes/Images
                         let cacheID = `[${++Breaker.callTimesInline}|${TIME_SIMPLE()}]`
@@ -313,7 +315,7 @@ class Breaker {
                     let arr = methodToArray(method)
                     let times = this.map_methodInfo_callTimes.get(method)
                     ++countHideFunctions
-                    LOGD(`[*] ${arr[0]}  --->  ${arr[1]}\t${formartClass.alignStr(arr[2],p_size*2+2)}\t${formartClass.alignStr(times,4)}   | ${formartClass.alignStr(method.class.name,16)} |  \t${arr[3]}`)
+                    LOGD(`[*] ${arr[0]}  --->  ${arr[1]}\t${FC.alignStr(arr[2],p_size*2+2)}\t${FC.alignStr(times,4)}   | ${FC.alignStr(method.class.name,16)} |  \t${arr[3]}`)
                 }
             }
         })
@@ -352,9 +354,31 @@ globalThis.hn = Breaker.printHistoryNum
 globalThis.breakWithArgs = Breaker.breakWithArgs
 globalThis.breakWithStack = Breaker.breakWithStack
 globalThis.breakInline = Breaker.breakInline as any
-
+globalThis.printDesertedMethods = Breaker.printDesertedMethods
 globalThis.getPlatform = (): string => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
 globalThis.getPlatformCtx = (ctx: CpuContext): ArmCpuContext | Arm64CpuContext => getPlatform() == "arm" ? ctx as ArmCpuContext : ctx as Arm64CpuContext
+
+globalThis.b = (mPtr: NativePointer | string | number) => {
+    if (typeof mPtr == "number") {
+        if (Process.arch == "arm") mPtr = ptr(mPtr)
+        // arm64 指针长度超过15位使用String传参
+        else if (Process.arch == "arm64" && (mPtr.toString().length > 15)) 
+            throw new Error("\nNot support parameter typed number at arm64\n\n\tUse b('0x...') instead\n")
+        else mPtr = ptr(mPtr)
+    } else if (typeof mPtr == "string") {
+        mPtr = mPtr.trim()
+        if (mPtr.startsWith("0x")) mPtr = ptr(mPtr)
+        else throw new Error("Only support String format (like '0x...')")
+    }
+    try {
+        new Il2Cpp.Method(mPtr).name // 用报错来判断是method指针还是一个普通的地址
+        if (mPtr instanceof Il2Cpp.Method) return Breaker.attachMethodInfo(mPtr, true)
+        Breaker.attachMethodInfo(new Il2Cpp.Method(mPtr), true)
+    } catch (error) {
+        Breaker.breakWithArgs(mPtr)
+    }
+}
+
 globalThis.getPlatformCtxWithArgV = (ctx: CpuContext,argIndex:number): NativePointer|undefined => {
     if ((ctx as ArmCpuContext).r0 != undefined) {
         // case arm32
@@ -418,27 +442,6 @@ globalThis.getPlatformCtxWithArgV = (ctx: CpuContext,argIndex:number): NativePoi
     }
 }
 
-globalThis.b = (mPtr: NativePointer | string | number) => {
-    if (typeof mPtr == "number") {
-        if (Process.arch == "arm") mPtr = ptr(mPtr)
-        else if (Process.arch == "arm64") throw new Error("Not support parameter typed number at arm64")
-        else mPtr = ptr(mPtr)
-    } else if (typeof mPtr == "string") {
-        mPtr = mPtr.trim()
-        if (mPtr.startsWith("0x")) mPtr = ptr(mPtr)
-        else throw new Error("Only support String format (like '0x...')")
-    }
-    try {
-        new Il2Cpp.Method(mPtr).name // 用报错来判断是method指针还是一个普通的地址
-        if (mPtr instanceof Il2Cpp.Method) return Breaker.attachMethodInfo(mPtr, true)
-        Breaker.attachMethodInfo(new Il2Cpp.Method(mPtr), true)
-    } catch (error) {
-        Breaker.breakWithArgs(mPtr)
-    }
-}
-
-globalThis.printDesertedMethods = Breaker.printDesertedMethods
-
 /**
  * 原 print_list_result
  * 用来列出已经 attach的方法
@@ -468,11 +471,12 @@ globalThis.printCurrentMethods = (types: boolean = true) => {
     })
 }
 
-globalThis.BF = (filterStr: string): void => {
+// 默认改到全部img中的所有方法 filterStr 为方法名的关键字
+globalThis.BF = (filterStr: string, allImg:boolean = true): void => {
     if (typeof filterStr != "string") return
     DD()
     HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
-        if (CommonClass.includes(image.assembly.name)) {
+        if (allImg || CommonClass.includes(image.assembly.name)) {
             image.classes.flatMap((cls: Il2Cpp.Class) => cls.methods).forEach((mPtr: Il2Cpp.Method) => {
                 if (mPtr.name.indexOf(filterStr) != -1) Breaker.attachMethodInfo(mPtr, false)
             })

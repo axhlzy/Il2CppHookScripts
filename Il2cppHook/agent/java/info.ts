@@ -125,7 +125,7 @@ const cacheMethods = (withLog: boolean = true) => {
 }
 
 // filter and show useful address
-const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine: number = -1, retArr: boolean = false): void | Array<Il2Cpp.Method> => {
+const printExp = (filter: string = "", findAll: boolean = true, formartMaxLine: number = -1, retArr: boolean = false): void | Array<Il2Cpp.Method> => {
 
     let countIndex: number = -1
     let arrStrResult: Array<string> = new Array<string>()
@@ -153,10 +153,6 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
     }
     // 查找常用的一些函数
     else {
-        new Il2Cpp.Class(findClass("Text")).methods.forEach((item: Il2Cpp.Method) => {
-            if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
-        })
-
         new Il2Cpp.Class(findClass("Transform")).methods.forEach((item: Il2Cpp.Method) => {
             if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
         })
@@ -184,6 +180,14 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
         new Il2Cpp.Class(findClass("Object", ["mscorlib"], false)).methods.forEach((item: Il2Cpp.Method) => {
             if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
         })
+
+        try {
+            new Il2Cpp.Class(findClass("Text")).methods.forEach((item: Il2Cpp.Method) => {
+                if (item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveIl2cppMehods(item)
+            })
+        } catch (error) {
+            // LOGE("Not found 'Text' class") 
+        }
     }
 
     if (retArr) return arrPtrResult
@@ -194,7 +198,7 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
     arrVirResult.sort(distance).forEach(LOGZ)
     LOGZ(`\nTake ${Date.now() - enterTime}ms to find ${arrStrResult.length} ${arrStrResult.length <= 1 ? "result" : "results"}`)
     if (formartMaxLine != -1 && formartMaxLine < 100) LOGZ(`\n${formartMaxLine} lines of results are shown recommended to be greater than 100`)
-    newLine(1)
+    newLine()
 
     function formartAndSaveModuleDetails(item: ModuleExportDetails) {
         if (retArr) return
@@ -210,8 +214,9 @@ const printExp = (filter: string = "", findAll: boolean = false, formartMaxLine:
             return
         }
         let index = FM.alignStr(`[${++countIndex}]`, 6)
-        let virAddr = item.virtualAddress.isNull() ? "" : `  --->   ${item.relativeVirtualAddress}`
-        let result = `${index} ${FM.alignStr(item.handle, p_size * 4)}${virAddr}\t${item.class.name}( ${item.class.handle} ) | ${DesMethodStr(item)}`
+        let virAddr = FM.alignStr(item.handle, p_size * 3) + (item.virtualAddress.isNull() ? "" : ` --->  ${item.relativeVirtualAddress}`)
+        let className = FM.alignStr(item.class.name, 15)
+        let result = `${index} ${virAddr}  |  ${className} @ ${item.class.handle} | ${DesMethodStr(item)}`
         if (formartMaxLine != -1 && formartMaxLine > 10) result = FM.alignStr(result, formartMaxLine)
         if (!item.virtualAddress.isNull()) {
             arrStrResult.push(result)
@@ -279,7 +284,7 @@ export { getApkInfo, launchApp, cacheMethods }
 
 Reflect.set(globalThis, "launchApp", launchApp)
 Reflect.set(globalThis, "getApkInfo", getApkInfo)
-Reflect.set(globalThis, "printExp", printExp)
+Reflect.set(globalThis, "findMethods", printExp)
 Reflect.set(globalThis, "getUnityInfo", getUnityInfo)
 Reflect.set(globalThis, "AddressToMethod", AddressToMethod)
 Reflect.set(globalThis, "AddressToMethodToString", AddressToMethodToString)
@@ -287,13 +292,13 @@ Reflect.set(globalThis, "AddressToMethodNoException", AddressToMethodNoException
 Reflect.set(globalThis, "showAddressInfo", showAddressInfo)
 
 declare global {
-    var launchApp: (pkgName: string) => void
     var getApkInfo: () => void
-    var printExp: (filter: string, findAll?: boolean, formartMaxLine?: number) => void | Array<Il2Cpp.Method>
     var getUnityInfo: () => void
+    var launchApp: (pkgName: string) => void
+    var showAddressInfo: (mPtr: NativePointer) => void
+    var AddressToMethodToString: (mPtr: NativePointer) => void
     var bp: (filterName: string, breakMethodInfo?: boolean) => void
     var AddressToMethod: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method
-    var AddressToMethodToString: (mPtr: NativePointer) => void
     var AddressToMethodNoException: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method | null
-    var showAddressInfo: (mPtr: NativePointer) => void
+    var findMethods: (filter: string, findAll?: boolean, formartMaxLine?: number, retArr?: boolean) => void | Array<Il2Cpp.Method>
 }

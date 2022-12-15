@@ -22,7 +22,7 @@ class UnityEngine_Texture2D_API {
     // public override Boolean get_isReadable()
     @cache
     static get _get_isReadable() {
-        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Texture2D", "get_isReadable", 0, [], "pointer", ["pointer"])
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Texture2D", "get_isReadable", 0, [], "bool", ["pointer"])
     }
 
     // private Void ApplyImpl(Boolean updateMipmaps,Boolean makeNoLongerReadable)

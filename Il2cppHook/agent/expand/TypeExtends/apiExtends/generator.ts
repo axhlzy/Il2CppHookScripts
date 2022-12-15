@@ -1,6 +1,5 @@
 import { getMethodDesFromMethodInfo } from "../../../bridge/fix/il2cppM"
 
-// 
 const generateClass = (className: string, classPtr: NativePointer = ptr(0)) => {
     if (className == undefined) return
     LOGW(getLine(80))

@@ -1,19 +1,43 @@
 import { filterDuplicateOBJ, PassType } from "../../../../../utils/common"
 import { setActiveT, setActiveTChange } from "../Component/export"
 
-globalThis.HookSetActive = (defaltActive: number = 1) => {
-    A(Il2Cpp.Api.GameObject._SetActive, (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
-        if (args[0].isNull()) return
-        let gameObject = new Il2Cpp.GameObject(args[0])
+globalThis.HookSetActive = (defaltActive: boolean = true) => {
+
+    try {
+        A(Il2Cpp.Api.GameObject._SetActive, (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
+            innerSetActive(args[0],ctx)
+        })
+    } catch (error) {
+        // 优化一下当dobby inlinehook生效时，hook不上报错的情况
+        A(Il2Cpp.Api.GameObject._SetActive.add(p_size*3), (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
+            innerSetActive(getPlatformCtxWithArgV(ctx,0)!,ctx)
+        })
+    }
+
+    function innerSetActive(mPtr:NativePointer,ctx:CpuContext){
+        if (mPtr.isNull()) return
+        let gameObject = new Il2Cpp.GameObject(ptr(mPtr as unknown as number))
         if (filterDuplicateOBJ(gameObject.toString()) == -1) return
-        if (defaltActive == 2 || args[1].toInt32() == defaltActive) {
-            let strTmp = "public extern void SetActive( " + (args[1].toInt32() == 0 ? "false" : "true") + " );  LR:" + checkCtx(ctx)
+        if (defaltActive && !mPtr.isNull()) {
+            let strTmp = "public extern void SetActive( " + (mPtr.toInt32() == 0 ? "false" : "true") + " );  LR:" + checkCtx(ctx)
             LOGW("\n" + getLine(strTmp.length))
             LOGD(strTmp)
             LOGO(getLine(strTmp.length / 2))
-            showGameObject(args[0])
+            showGameObject(mPtr)
         }
-    })
+    }
+}
+
+globalThis.HookSendMessage = () => {
+    try {
+        var UnityPlayer = Java.use("com.unity3d.player.UnityPlayer")
+        UnityPlayer.UnitySendMessage.implementation = function (str0:string, str1:string, str2:string) {
+            console.warn("\n--------------\tCalled UnitySendMessage\t--------------")
+            console.log("UnityPlayer.UnitySendMessage(\x1b[96m'" + str0 + "','" + str1 + "','" + str2 + "'\x1b[0m)")
+            this.UnitySendMessage(str0, str1, str2)
+            PrintStackTrace()
+        }
+    } catch (e) {}
 }
 
 globalThis.showGameObject = (mPtr: NativePointer) => {
@@ -127,12 +151,13 @@ export const setActiveGChange = (gameObject: Il2Cpp.GameObject) => gameObject.Se
 globalThis.findGameObject = findGameObject
 
 declare global {
-    var HookSetActive: (defaltActive?: number) => void
+    var HookSetActive: (defaltActive?: boolean) => void
     var showGameObject: (gameObjOrTransform: NativePointer) => void
     var getTransform: (gameObjOrComponent: NativePointer) => NativePointer
     var setActive: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void
     var setActiveC: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void
     var findGameObject: (path:string, transform?:NativePointer) => void
+    var HookSendMessage: () => void
 }
 
-export { showGameObject, HookSetActive, getTransform } 
+export { showGameObject, HookSetActive, getTransform, HookSendMessage }
