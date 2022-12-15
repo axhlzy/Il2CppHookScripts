@@ -97,8 +97,8 @@ class GameObjectImpl extends UnityEngine_Object {
     }
 
     // public static extern GameObject Find(string name);
-    static Find(name: string): Il2Cpp.GameObject {
-        return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._Find(allocUStr(name)))
+    static Find(path: string): Il2Cpp.GameObject {
+        return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._Find(allocUStr(path)))
     }
 
     // public static extern GameObject[] FindGameObjectsWithTag(string tag);

@@ -89,12 +89,50 @@ export const setActiveG = (gameObject: Il2Cpp.GameObject, active: boolean = fals
 
 export const setActiveGChange = (gameObject: Il2Cpp.GameObject) => gameObject.SetActive(!gameObject.get_activeSelf())
 
+/**
+ * 两种方式查找 根据路径查找指定gameobj
+ * @param {String} path 路径或者是顶层gobjName
+ */
+ export function findGameObject(path:string, transform?:NativePointer) {
+    if (path == undefined) throw new Error("findGameObject: path is undefined")
+
+    try {
+        if (transform == undefined) {
+            if (arguments[2] != undefined) {
+                // 返回 gameobject
+                let gobj:Il2Cpp.GameObject = Il2Cpp.GameObject.Find(path)
+                if (gobj.handle.isNull()) throw "Not Found ..."
+                showGameObject(gobj.handle)
+                return gobj.handle
+            } else {
+                // GameObject.find（静态方法）得到GameObject,路径查找
+                showGameObject(callFunction(["UnityEngine.CoreModule", "GameObject", "Find", 1], allocCStr(path)))
+            }
+        } else if (getType(transform).name.indexOf("Transform")!=-1) {
+            if (arguments[2] != undefined) {
+                // 返回 transform
+                return callFunction(["UnityEngine.CoreModule", "Transform", "Find", 1], transform, allocCStr(path))
+            } else {
+                // Transform.find(非静态方法) 得到的也是transform，指定查找起始点，可以查找隐藏对象
+                let gobj = getGameObject(callFunction(["UnityEngine.CoreModule", "Transform", "Find", 1], transform, allocCStr(path)))
+                if (gobj != undefined) showGameObject(gobj)
+            }
+        } else {
+            LOGE("\narguments[1] Need a Transform Ptr\n")
+        }
+    } catch (error) {
+        LOGE("\nNot Found ...\n")
+    }
+}
+globalThis.findGameObject = findGameObject
+
 declare global {
     var HookSetActive: (defaltActive?: number) => void
     var showGameObject: (gameObjOrTransform: NativePointer) => void
     var getTransform: (gameObjOrComponent: NativePointer) => NativePointer
     var setActive: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void
     var setActiveC: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void
+    var findGameObject: (path:string, transform?:NativePointer) => void
 }
 
 export { showGameObject, HookSetActive, getTransform } 

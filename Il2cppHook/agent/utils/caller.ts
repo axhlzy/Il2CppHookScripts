@@ -9,28 +9,34 @@ function callFunction(value: TYPE_CHECK_POINTER, ...args: any[]): NativePointer 
         let G_Value : NativePointer =ptr(0)
         // deal with array of string as the first argument
         {
-            let L_Value : NativePointer| null = ptr(0)
+            let L_Value : NativePointer | null | undefined = ptr(0)
             if (value instanceof Array){
                 // callFunction(["UnityEngine.CoreModule", "Component", "get_gameObject", 0], args[0])
-                if (value.length == 4) L_Value = find_method(value[0] as string,value[1] as string,value[2] as string,value[3] as number)
+                if (value.length == 4) {
+                    if (!(value[1] as string).includes(".")){
+                        L_Value = find_method(value[0] as string, value[1] as string, value[2] as string, value[3] as number)
+                    }else{
+                        L_Value = findMethod(value[0] as string, value[1] as string, value[2] as string, value[3] as number)?.relativeVirtualAddress
+                    }
+                }
                 // callFunction(["libc.so","strcmp"],allocCStr("123"),allocCStr("123"))
-                if (value.length == 2) L_Value = Module.findExportByName(value[0] as string,value[1] as string)
+                if (value.length == 2) L_Value = Module.findExportByName(value[0] as string, value[1] as string)
                 // callFunction(["strcmp"],allocCStr("123"),allocCStr("123"))
-                if (value.length == 1) L_Value = Module.findExportByName(null,value[1] as string)
+                if (value.length == 1) L_Value = Module.findExportByName(null, value[1] as string)
                 if (L_Value == undefined || L_Value.isNull()) return ptr(0x0)
                 G_Value = L_Value
             } else if (value instanceof String){
                 // callFunction("strcmp",allocCStr("123"),allocCStr("123"))
-                if (value.length == 1) L_Value = Module.findExportByName(null,value[1])
+                if (value.length == 1) L_Value = Module.findExportByName(null, value[1])
                 if (L_Value == undefined || L_Value.isNull()) return ptr(0x0)
                 G_Value = L_Value
             }
         }
         // in common use
-        for (let i = 1; i <= (arguments.length < 5 ? 5 : arguments.length) - 1; i++)
+        for (let i = 1; i <= (arguments.length < 6 ? 6 : arguments.length) - 1; i++)
             arguments[i] = arguments[i] == undefined ? ptr(0x0) : ptr(String(arguments[i]))
-        return new NativeFunction(checkPointer(G_Value, true), 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
-            (arguments[1], arguments[2], arguments[3], arguments[4])
+        return new NativeFunction(checkPointer(G_Value, true), 'pointer', ['pointer', 'pointer', 'pointer', 'pointer', 'pointer'])
+            (arguments[1], arguments[2], arguments[3], arguments[4], arguments[5])
     } catch (e) {
         LOG(e, LogColor.C95)
         return ptr(0)

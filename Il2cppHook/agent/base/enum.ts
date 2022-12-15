@@ -106,22 +106,6 @@ export enum ADS_TYPE {
     IronSource, MaxSdkCallbacks, MoPubManager, TTPluginsGameObject,
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // (NativePointer as any).prototype.callFunction = function (...args: any[]): NativePointer {
 //     return callFunction(this, ...args)
 // }
