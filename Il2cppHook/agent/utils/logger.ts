@@ -49,6 +49,7 @@ export const LOGE = (msg: any): void => LOG(msg, LogColor.RED)
 export const LOGG = (msg: any): void => LOG(msg, LogColor.C32)
 export const LOGD = (msg: any): void => LOG(msg, LogColor.C36)
 export const LOGO = (msg: any): void => LOG(msg, LogColor.C33)
+export const LOGP = (msg: any): void => LOG(msg, LogColor.C34)
 export const LOGM = (msg: any): void => LOG(msg, LogColor.C92)
 export const LOGH = (msg: any): void => LOG(msg, LogColor.C96)
 export const LOGZ = (msg: any): void => LOG(msg, LogColor.C90)
@@ -97,6 +98,7 @@ declare global {
     var LOGD: (msg: any) => void // LogColor.C36
     var LOGG: (msg: any) => void // LogColor.C32
     var LOGO: (msg: any) => void // LogColor.C33
+    var LOGP: (msg: any) => void // LogColor.C33
     var LOGH: (msg: any) => void // LogColor.C96
     var LOGM: (msg: any) => void // LogColor.C96
     var LOGZ: (msg: any) => void // LogColor.C90
@@ -110,12 +112,12 @@ declare global {
 
 globalThis.LOG = LOG
 globalThis.LOGJSON = LOGJSON
-// globalThis.LOGS = LOGS
 globalThis.LOGW = LOGW
 globalThis.LOGE = LOGE
 globalThis.LOGG = LOGG
 globalThis.LOGD = LOGD
 globalThis.LOGO = LOGO
+globalThis.LOGP = LOGP
 globalThis.LOGH = LOGH
 globalThis.LOGM = LOGM
 globalThis.LOGZ = LOGZ

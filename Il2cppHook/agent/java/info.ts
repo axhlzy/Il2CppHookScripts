@@ -126,6 +126,28 @@ const cacheMethods = (withLog: boolean = true) => {
     if (withLog) LOGZ(`Caching methods done. ${allMethodsCacheArray.length} Methods . cost ${Date.now() - timeCurrent} ms\n`)
 }
 
+const findClasses = (filterClassName: string): void => {
+    let index: number = 0
+    HookerBase._list_classes
+        .filter((item: Il2Cpp.Class) => item.name.toLocaleLowerCase().indexOf(filterClassName.toLocaleLowerCase()) != -1)
+        .sort((a: Il2Cpp.Class, b: Il2Cpp.Class) => (b.isAbstract ? -1 : 1) - (a.isAbstract ? -1 : 1))
+        .sort((a: Il2Cpp.Class, b: Il2Cpp.Class) => (b.isEnum ? 1 : -1) - (a.isEnum ? 1 : -1))
+        .forEach((item: Il2Cpp.Class) => {
+            if (index == 0) newLine(1)
+            // M:${item.methods.length}
+            let M = FM.alignStr(`M:${item.methods.length}`, 6)
+            let F = FM.alignStr(`F:${item.fields.length}`, 6)
+            let E = FM.alignStr(`E:${item.isEnum}`, 8)
+            let A = FM.alignStr(`A:${item.isAbstract}`, 8)
+            if (item.isAbstract || item.isEnum){
+                LOGZ(`${FM.alignStr(`[${++index}]`,6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${item.name}`)
+            }else{
+                LOGD(`${FM.alignStr(`[${++index}]`,6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${item.name}`)
+            }
+        })
+    newLine(1)
+}
+
 // filter and show useful address
 const printExp = (filter: string = "", findAll: boolean = true, formartMaxLine: number = -1, retArr: boolean = false): void | Array<Il2Cpp.Method> => {
 
@@ -216,9 +238,9 @@ const printExp = (filter: string = "", findAll: boolean = true, formartMaxLine: 
             return
         }
         let index = FM.alignStr(`[${++countIndex}]`, 6)
-        let virAddr = FM.alignStr(item.handle, p_size * 3) + (item.virtualAddress.isNull() ? "" : ` --->  ${item.relativeVirtualAddress}`)
-        let className = FM.alignStr(item.class.name, 15)
-        let result = `${index} ${virAddr}  |  ${className} @ ${item.class.handle} | ${DesMethodStr(item)}`
+        let virAddr = FM.alignStr(item.handle, p_size * 3) + (item.virtualAddress.isNull() ? "" : ` --->  ${FM.alignStr(item.relativeVirtualAddress,12)}`)
+        let className = FM.alignStr(item.class.name, 20)
+        let result = `${index} ${virAddr}  |  ${className} @ ${item.class.handle} |  ${DesMethodStr(item)}`
         if (formartMaxLine != -1 && formartMaxLine > 10) result = FM.alignStr(result, formartMaxLine)
         if (!item.virtualAddress.isNull()) {
             arrStrResult.push(result)
@@ -282,11 +304,12 @@ globalThis.bp = (filterName: string, breakMethodInfo: boolean = false) => {
         })
 }
 
-export { getApkInfo, launchApp, cacheMethods }
+export { getApkInfo, launchApp, cacheMethods, findClasses }
 
 Reflect.set(globalThis, "launchApp", launchApp)
 Reflect.set(globalThis, "getApkInfo", getApkInfo)
 Reflect.set(globalThis, "findMethods", printExp)
+Reflect.set(globalThis, "findClasses", findClasses)
 Reflect.set(globalThis, "getUnityInfo", getUnityInfo)
 Reflect.set(globalThis, "AddressToMethod", AddressToMethod)
 Reflect.set(globalThis, "AddressToMethodToString", AddressToMethodToString)
@@ -303,4 +326,5 @@ declare global {
     var AddressToMethod: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method
     var AddressToMethodNoException: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method | null
     var findMethods: (filter: string, findAll?: boolean, formartMaxLine?: number, retArr?: boolean) => void | Array<Il2Cpp.Method>
+    var findClasses: (filterClassName: string)=> void
 }
