@@ -166,7 +166,8 @@ class HookerBase {
             LOGO(getLine(maxStrLen))
         } else {
             klass.methods.forEach((method: Il2Cpp.Method) => {
-                LOGD(`[*] ${method.handle} ---> ${method.virtualAddress} ---> ${method.relativeVirtualAddress}\t|  ${GMD(method)}`)
+                let RVirAddr = method.virtualAddress.isNull() ? ptr(0) : method.relativeVirtualAddress
+                LOGD(`[*] ${method.handle} ---> ${method.virtualAddress} ---> ${RVirAddr}\t|  ${GMD(method)}`)
             })
             newLine()
         }
@@ -374,7 +375,7 @@ class HookerBase {
         LOGZ("Il2CppImage\t---->\t" + method.class.image.handle)
         LOGZ("Il2CppClass\t---->\t" + method.class.handle)
         LOGZ("MethodInfo\t---->\t" + method.handle)
-        LOGD("methodPointer\t---->\t" + method.virtualAddress + "\t===>\t" + method.relativeVirtualAddress)
+        LOGD("methodPointer\t---->\t" + method.virtualAddress + "\t===>\t" + (method.virtualAddress.isNull() ? ptr(0) : method.relativeVirtualAddress))
         LOGW(getLine(lineLen, "-"))
     }
 

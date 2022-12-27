@@ -22,7 +22,7 @@ export const showMethodInfo = (methodInfoPtr: NativePointer): void => {
     LOGZ(`[-]${packMethod.class.image.assembly.name} @ ${packMethod.class.image.assembly.handle}`)
     LOGZ(`${getLine(2, ' ')}[-]${packMethod.class.image.name} @ ${packMethod.class.image.handle} | C:${packMethod.class.image.classCount}`)
     LOGZ(`${getLine(4, ' ')}[-]${packMethod.class.name} @ ${packMethod.class.handle} | M:${packMethod.class.methods.length} | F:${packMethod.class.fields.length}`)
-    LOGD(`${getLine(6, ' ')}[-]${methodDEs(packMethod)} @ MI:${packMethod.handle} & MP: ${packMethod.virtualAddress} ( ${packMethod.relativeVirtualAddress} ) `)
+    LOGD(`${getLine(6, ' ')}[-]${methodDEs(packMethod)} @ MI:${packMethod.handle} & MP: ${packMethod.virtualAddress} ( ${packMethod.virtualAddress.isNull() ? ptr(0) : packMethod.relativeVirtualAddress} ) `)
     LOGZ(`${params}`)
     newLine()
 }
