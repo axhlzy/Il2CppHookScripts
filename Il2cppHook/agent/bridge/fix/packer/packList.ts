@@ -26,8 +26,17 @@ export class PackList implements list_impl {
             this.object = new Il2Cpp.Object(mPtr)
             this.class = this.object.class
             if (!this.class.name.includes('List`')) throw new Error('Input mPtr is not a list')
-            this._defaultCapacity = this.class.field('_defaultCapacity').value as number
-            this._emptyArray = this.class.field('_emptyArray').value as NativePointer
+            // _defaultCapacity 和 _emptyArray 不同unity版本可能不太一样
+            try {
+                this._defaultCapacity = this.class.field('_defaultCapacity').value as number
+            } catch {
+                this._defaultCapacity = this.class.field('DefaultCapacity').value as number
+            }
+            try {
+                this._emptyArray = this.class.field('_emptyArray').value as NativePointer
+            } catch {
+                this._emptyArray = this.class.field('s_emptyArray').value as NativePointer
+            }
             this._items = this.class.field('_items').value as NativePointer
             this._size = this.class.field('_size').value as number
             this._version = this.class.field('_version').value as number
