@@ -56,7 +56,9 @@ function getApkInfo() {
             "\n\t\t\tSHA-1\t " + hexdigest(hexDigist, 'SHA-1') +
             "\n\t\t\tSHA-256\t " + hexdigest(hexDigist, 'SHA-256'))
         let buildId = getMetaData('unity.build-id')
-        if (buildId.length != 0) LOGD("\n[*]unity.build-id\t" + getMetaData('unity.build-id'))
+        try {
+            if (buildId.length != 0) LOGD("\n[*]unity.build-id\t" + getMetaData('unity.build-id'))
+        } catch {}
         LOGO(getLine(100))
     })
 
