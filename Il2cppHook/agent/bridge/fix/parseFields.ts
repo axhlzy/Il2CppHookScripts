@@ -1,3 +1,4 @@
+import { FakeCommonType } from "../../base/valueResolve"
 import { formartClass as FM } from "../../utils/formart"
 import { enumNumToName } from "./enum"
 import { getModifier } from "./il2cppM"
@@ -48,7 +49,7 @@ export class FieldsParser {
 
     fieldValue(fieldName: string): NativePointer {
         let field: Il2Cpp.Field = this.fieldInstance(fieldName)
-        if (field.isStatic) return this.fakeStaticField(field).readPointer()
+        if (field.isStatic) return fakeStaticField(field).readPointer()
         return this.mPtr.add(this.fieldOffset(fieldName)).readPointer()
     }
 
@@ -71,46 +72,12 @@ export class FieldsParser {
                 let modifier: string = getModifier(field.flags).trim()
                 let classDes: string = `${field.type.class.name} (${field.type.class.handle})`
                 let fieldName: string = field.name
-                // 字段通用信息打印
-                LOGD(`${index}  ${offset} ${modifier} ${classDes}\t${fieldName}`)
-                // 即对静态变量进行值解析
-                if (field.isStatic) {
-                    let tmpOut: NativePointer = this.fakeStaticField(field)
-                    let realPtr: NativePointer = tmpOut.readPointer()
-                    // LOGZ(`\t${tmpOut}  --->  ${realPtr}  ---> ${new Il2Cpp.Object(realPtr).toString()}`)
-                    let value: string
-                    try {
-                        value = `---> ${field.value}`
-                    } catch (error) { value = '' }
-                    LOGZ(`\t${tmpOut}  --->  ${realPtr}  ${value}`)
-                }
-                // 对枚举的解析
-                else if (field.type.class.isEnum) {
-                    let value = this.mPtr.add(field.offset)
-                    LOGZ(`\t${value}  --->  Enum : ${enumNumToName(value.readPointer().toInt32(), field.type.class.name)}`)
-                }
-                // 即对实例进行值解析
-                else if (!this.mPtr.isNull()) {
-                    let thisHandle: NativePointer = this.mPtr.add(field.offset)
-                    let thisValue: NativePointer = thisHandle.readPointer()
-                    let thisString: string = "--->  "
-                    try {
-                        // 需要考虑一些自定义处理(包含基本数据类型)，手动解析的一些常用类型
-                        let retDes = dealWithSpecialType(field, thisValue)
-                        // 其次才是包含大多数情况的通用处理逻辑（Object.toString()）（这个方法可能会抛异常）
-                        thisString += retDes === "" ? new Il2Cpp.Object(thisValue).toString() : retDes
-                    } catch {
-                        try {
-                            // 使用 frida-il2cpp-bridge 提供的手段来解析（这个方法可能会抛异常）
-                            thisString += field.value.toString()
-                        }
-                        // 实在莫得解析代码那就直接空着吧...
-                        catch { thisString = "" }
-                    }
-                    LOGZ(`\t${thisHandle}  --->  ${FM.alignStr(thisValue)}  ${thisString}`)
-                }
-                // 对 class 只展示 fields，无法值解析
-                else { }
+                LOGD(`${index}  ${offset} ${modifier} ${classDes}\t${fieldName}`) // 字段通用信息打印
+                let disp = dealWithSpecialType(field, this.mPtr)
+                let thisHandle: NativePointer = this.mPtr.add(field.offset)
+                let thisValue: NativePointer = thisHandle.readPointer()
+                let splitStr = "  --->  "
+                LOGZ(`\t${thisHandle}${splitStr}${FM.alignStr(thisValue)}${String(disp).length==0?"":splitStr}${disp}`)
                 if (!retB) newLine()
             })
         LOGO(getLine(50))
@@ -126,29 +93,32 @@ export class FieldsParser {
             })
         return JSON.stringify([...retMap]).replace(/\"/g, "'").replace(/,/g, ':')
     }
-
-    private fakeStaticField(field: Il2Cpp.Field): NativePointer {
-        let tmpOut: NativePointer = alloc()
-        Il2Cpp.Api._fieldGetStaticValue(field.handle, tmpOut)
-        return tmpOut
-    }
 }
 
-const dealWithSpecialType = (field: Il2Cpp.Field, thisValue: NativePointer) => {
-    // LOGE("" + field.type.class.name)
+const dealWithSpecialType = (field: Il2Cpp.Field, thisValueP: NativePointer): any =>  {
 
-    // todo 判断枚举类型
+    if (field.handle.isNull()) return ""
 
-    switch (field.type.class.name) {
-        case "Boolean":
-            return thisValue.isNull() ? "FALSE" : "TRUE"
-        case "Int32":
-            return thisValue.toInt32()
-        // 此处拓展解析逻辑
-        default:
-            // 空字符串即不处理，留在后面走通用处理逻辑
-            return ""
+    // 即对静态变量进行值解析
+    if (field.isStatic) {
+        return fakeStaticField(field).toString()
     }
+    // 对枚举的解析
+    else if (field.type.class.isEnum) {
+        let value = thisValueP.add(field.offset)
+        return `Enum : ${enumNumToName(value.readPointer().toInt32(), field.type.class.name)}`
+    }
+
+    if (thisValueP.isNull()) return ""
+    let thisValue: NativePointer = thisValueP.add(field.offset).readPointer()
+
+    return FakeCommonType(field.type, thisValue)
+}
+
+function fakeStaticField(field: Il2Cpp.Field): NativePointer {
+    let tmpOut: NativePointer = alloc()
+    Il2Cpp.Api._fieldGetStaticValue(field.handle, tmpOut)
+    return tmpOut
 }
 
 declare global {

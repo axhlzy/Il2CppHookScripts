@@ -511,11 +511,12 @@ class HookerBase {
             }
             return outPut
         }
+
+        // 已弃用 现换做 dealWithSpecialType @ FieldsParser.ts
+        function FackKnownType(...args: any[]) {
+
+        }
     }
-}
-
-function FackKnownType(...args: any[]) {
-
 }
 
 const find_method = HookerBase.findMethodSync as find_MethodType
@@ -530,7 +531,7 @@ globalThis.i = HookerBase.showImages
 globalThis.c = HookerBase.showClasses
 globalThis.m = HookerBase.showMethods
 globalThis.f = HookerBase.showFields
-globalThis.F = HookerBase.listFieldsFromCls
+globalThis.F = HookerBase.listFieldsFromCls // 弃用
 globalThis.fc = HookerBase.findClass
 globalThis.findClass = HookerBase.findClass
 globalThis.findMethod = HookerBase.findMethodNew
@@ -549,7 +550,7 @@ declare global {
     var c: (imageOrName: string | NativePointer, filter: string) => void
     var m: (klass: NativePointer, detailed?: boolean) => void
     var f: (klass: NativePointer) => void
-    var F: (klass: NativePointer | number, instance: NativePointer | number) => void
+    var F: (klass: NativePointer | number, instance: NativePointer | number) => void // 老版本写法已弃用
     var findClass: (name: string, fromAssebly?: string[], fromCache?: boolean) => NativePointer
     var fc: (name: string, fromAssebly?: string[]) => NativePointer
     var af: (className: string) => void

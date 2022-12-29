@@ -82,7 +82,9 @@ export class PackList implements list_impl {
                 simpleStr += res
                 arrayResult.push(res.toString().replace('"', '').replace('"', ''))
             }
-            LOGD(`[${++count}]  ${item.handle} -> ${item.toString()}  ${lfss(item.handle)} ${simpleCallback == undefined ? '' : simpleStr}`)
+            let detail = lfss(item.handle).toString()
+            detail.length > 200 ? detail = " " :  detail = " " + detail + " " 
+            LOGD(`[${++count}]  ${item.handle} -> ${item.toString()}${detail}${simpleCallback == undefined ? '' : simpleStr}`)
         })
         if (arrayResult.length != 0) {
             newLine()

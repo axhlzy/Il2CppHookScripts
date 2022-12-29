@@ -109,7 +109,7 @@ class ValueResolve {
         if (!method.class.isNull() && type.name.includes("Dictionary")) return dictionaryType()
         if (!method.class.isNull() && method.class.isEnum) return enumType()
 
-        return CommonType(type)
+        return FakeCommonType(type, insPtr)
 
         function arrayType(): string {
             return ""
@@ -121,43 +121,6 @@ class ValueResolve {
 
         function enumType(): string {
             return ""
-        }
-
-        function CommonType(type: Il2Cpp.Type): string {
-            switch (type.name) {
-                case "System.Void":
-                    return ""
-                case "System.Boolean":
-                    return !insPtr.isNull() ? "True" : "False"
-                case "System.Int32":
-                    return readInt(insPtr).toString()
-                case "System.UInt32":
-                    return readUInt(insPtr).toString()
-                case "System.Int64":
-                    return readInt64(insPtr).toString()
-                case "System.Single":
-                    return readSingle(insPtr).toString()
-                case "System.String":
-                    return readU16(insPtr)
-                case "System.Object":
-                    return getObjName(insPtr)
-                case "System.UnityEngine":
-                    return new UnityEngine_Object(insPtr).get_name()
-                case "UnityEngine.Color":
-                    return new UnityEngine_Color_Impl(insPtr).toString()
-                case "Vector2":
-                    return `${insPtr.readFloat()} ${insPtr.add(4).readFloat()}`
-                case "System.Action":
-                case "System.Action`1":
-                case "System.Action`2":
-                    return insPtr.add(Process.pageSize === 4 ? 0x14 : 0x10).readPointer().readPointer().sub(soAddr).toString()
-                default:
-                    try {
-                        return new Il2Cpp.Object(insPtr).toString()
-                    } catch (error) {
-                        return ""
-                    }
-            }
         }
 
         function getParentsStr(clsPtr: Il2Cpp.Class): string {
@@ -176,4 +139,40 @@ class ValueResolve {
     }
 }
 
+export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
+    switch (type.name) {
+        case "System.Void":
+            return ""
+        case "System.Boolean":
+            return !mPtr.isNull() ? "True" : "False"
+        case "System.Int32":
+            return readInt(mPtr).toString()
+        case "System.UInt32":
+            return readUInt(mPtr).toString()
+        case "System.Int64":
+            return readInt64(mPtr).toString()
+        case "System.Single":
+            return readSingle(mPtr).toString()
+        case "System.String":
+            return readU16(mPtr)
+        case "System.Object":
+            return getObjName(mPtr)
+        case "System.UnityEngine":
+            return new UnityEngine_Object(mPtr).get_name()
+        case "UnityEngine.Color":
+            return new UnityEngine_Color_Impl(mPtr).toString()
+        case "Vector2":
+            return `${mPtr.readFloat()} ${mPtr.add(4).readFloat()}`
+        case "System.Action":
+        case "System.Action`1":
+        case "System.Action`2":
+            return mPtr.add(Process.pageSize === 4 ? 0x14 : 0x10).readPointer().readPointer().sub(soAddr).toString()
+        default:
+            try {
+                return new Il2Cpp.Object(mPtr).toString()
+            } catch {
+                return mPtr.toString()
+            }
+    }
+}
 export default ValueResolve
