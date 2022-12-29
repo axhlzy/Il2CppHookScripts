@@ -446,19 +446,21 @@ globalThis.getPlatformCtxWithArgV = (ctx: CpuContext,argIndex:number): NativePoi
  * 原 print_list_result
  * 用来列出已经 attach的方法
  */
-globalThis.printCurrentMethods = (types: boolean = true) => {
+globalThis.printCurrentMethods = (filterName:string ="",types: boolean = false) => {
     let currentTime = Date.now()
     new Promise((resolve: Function) => {
         let methodInfos = new Array<Il2Cpp.Method>()
         Breaker.map_attachedMethodInfos.forEach((_value: InvocationListener, key: Il2Cpp.Method) => { methodInfos.push(key) })
+        if (filterName != "")
+            methodInfos = methodInfos.filter((method: Il2Cpp.Method) => method.name.includes(filterName))
         resolve(methodInfos)
     }).then((methodInfos) => {
         let localT = <Array<Il2Cpp.Method>>methodInfos
         let address = localT.flatMap((method: Il2Cpp.Method) => method.relativeVirtualAddress)
         let names = localT.flatMap((method: Il2Cpp.Method) => `${method.class.name}::${getMethodDes(method)}`)
         return [address, names]
-    }).then((addressAndnames) => {
-        let value: [Array<NativePointer>, Array<string>] = <[Array<NativePointer>, Array<string>]>addressAndnames
+    }).then((addressAndNames) => {
+        let value: [Array<NativePointer>, Array<string>] = <[Array<NativePointer>, Array<string>]>addressAndNames
         if (types) {
             LOGD(`\nvar arrayAddr : string[] = \n${JSON.stringify(value[0])}\n\nvar arrayName : string[] = \n${JSON.stringify(value[1])}\n`)
         } else {

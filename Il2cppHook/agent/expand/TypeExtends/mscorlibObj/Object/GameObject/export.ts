@@ -1,7 +1,7 @@
 import { filterDuplicateOBJ, PassType } from "../../../../../utils/common"
 import { setActiveT, setActiveTChange } from "../Component/export"
 
-globalThis.HookSetActive = (defaltActive: boolean = true) => {
+globalThis.HookSetActive = (defaltActive: boolean = true, PrintStackTrace: boolean = false) => {
 
     try {
         A(Il2Cpp.Api.GameObject._SetActive, (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
@@ -25,6 +25,7 @@ globalThis.HookSetActive = (defaltActive: boolean = true) => {
             LOGO(getLine(strTmp.length / 2))
             showGameObject(mPtr)
         }
+        if (PrintStackTrace) PrintStackTraceN(ctx)
     }
 }
 
