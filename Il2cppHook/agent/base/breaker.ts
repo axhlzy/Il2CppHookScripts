@@ -11,13 +11,14 @@ import ValueResolve from "./valueResolve"
 
 export { Breaker }
 declare global {
-    var b: (mPtr: NativePointer) => void
+    var b: (mPtr: NativePointer | string | number) => void
     var h: (filterStr?: string, countLogs?: number, reverse?: boolean, detachAll?: boolean) => void
     var hn: (start?: number, end?: number) => void
     var B: (mPtr: NativePointer | number | string | SpecialClass) => void
     var D: () => void
     var DD: () => void
     var BF: (filterStr: string) => void
+    var BM: (className: string) => void
     var breakWithArgs: (mPtr: NativePointer, argCount?: number) => void
     var breakInline: (mPtr: NativePointer, callback?: (value: InvocationContext) => void) => void
     var breakWithStack: (mPtr: NativePointer) => void
@@ -324,6 +325,7 @@ class Breaker {
         LOGM(getLine(title.length) + '\n')
     }
 
+    // 打印历史日志记录
     static printHistoryLog = (filterStr: string = "", countLogs: number = 50, reverse: boolean = false, detachAll: boolean = true) => {
         if (detachAll) D()
         // attathing = true
@@ -358,6 +360,7 @@ globalThis.printDesertedMethods = Breaker.printDesertedMethods
 globalThis.getPlatform = (): string => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
 globalThis.getPlatformCtx = (ctx: CpuContext): ArmCpuContext | Arm64CpuContext => getPlatform() == "arm" ? ctx as ArmCpuContext : ctx as Arm64CpuContext
 
+// b(MethodInfo)带参数断点指定函数 == attachMethodInfo / b(ptr) 断点指定函数 == breakWithArgs
 globalThis.b = (mPtr: NativePointer | string | number) => {
     if (typeof mPtr == "number") {
         if (Process.arch == "arm") mPtr = ptr(mPtr)
@@ -377,6 +380,57 @@ globalThis.b = (mPtr: NativePointer | string | number) => {
     } catch (error) {
         Breaker.breakWithArgs(mPtr)
     }
+}
+
+// 原 print_list_result, 用来列出已经 attach 的方法
+globalThis.printCurrentMethods = (filterName:string = "", types: boolean = false) => {
+    let currentTime = Date.now()
+    new Promise((resolve: Function) => {
+        let methodInfos = new Array<Il2Cpp.Method>()
+        Breaker.map_attachedMethodInfos.forEach((_value: InvocationListener, key: Il2Cpp.Method) => { methodInfos.push(key) })
+        if (filterName != "")
+            methodInfos = methodInfos.filter((method: Il2Cpp.Method) => method.name.includes(filterName))
+        resolve(methodInfos)
+    }).then((methodInfos) => {
+        let localT = <Array<Il2Cpp.Method>>methodInfos
+        let address = localT.flatMap((method: Il2Cpp.Method) => method.relativeVirtualAddress)
+        let names = localT.flatMap((method: Il2Cpp.Method) => `${method.class.name}::${getMethodDes(method)}`)
+        return [address, names]
+    }).then((addressAndNames) => {
+        let value: [Array<NativePointer>, Array<string>] = <[Array<NativePointer>, Array<string>]>addressAndNames
+        if (types) {
+            LOGD(`\nvar arrayAddr : string[] = \n${JSON.stringify(value[0])}\n\nvar arrayName : string[] = \n${JSON.stringify(value[1])}\n`)
+        } else {
+            LOGD(`\nvar arrayAddr = \n${JSON.stringify(value[0])}\n\nvar arrayName = \n${JSON.stringify(value[1])}\n`)
+        }
+    }).catch((error) => {
+        LOGE(error)
+    }).finally(() => {
+        LOGZ(`list ${Breaker.map_attachedMethodInfos.size} methods in ${Date.now() - currentTime} ms \n`)
+    })
+}
+
+// 带参数解析批量断点Class中的所有方法
+globalThis.BM = (className: string):void => {
+    if (typeof className != "string") throw new Error("\n\tclassName must be a string\n")
+    let classPtr = findClass(className)
+    if (classPtr.isNull()) throw new Error(`\n\tCan't find class ${className}\n`)
+    new Il2Cpp.Class(classPtr).methods.forEach((methodInfo: Il2Cpp.Method) => {
+        Breaker.attachMethodInfo(methodInfo, true)
+    })
+}
+
+// 查找所有包含filterStr的方法并断点
+globalThis.BF = (filterStr: string, allImg:boolean = true): void => {
+    if (typeof filterStr != "string") throw new Error("\n\tfilterStr must be a string\n")
+    DD()
+    HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
+        if (allImg || CommonClass.includes(image.assembly.name)) {
+            image.classes.flatMap((cls: Il2Cpp.Class) => cls.methods).forEach((mPtr: Il2Cpp.Method) => {
+                if (mPtr.name.indexOf(filterStr) != -1) Breaker.attachMethodInfo(mPtr, false)
+            })
+        }
+    })
 }
 
 globalThis.getPlatformCtxWithArgV = (ctx: CpuContext,argIndex:number): NativePointer|undefined => {
@@ -440,48 +494,4 @@ globalThis.getPlatformCtxWithArgV = (ctx: CpuContext,argIndex:number): NativePoi
             default: throw new Error(`ARM64 -> argIndex ${argIndex} is out of range`)
         }
     }
-}
-
-/**
- * 原 print_list_result
- * 用来列出已经 attach的方法
- */
-globalThis.printCurrentMethods = (filterName:string ="",types: boolean = false) => {
-    let currentTime = Date.now()
-    new Promise((resolve: Function) => {
-        let methodInfos = new Array<Il2Cpp.Method>()
-        Breaker.map_attachedMethodInfos.forEach((_value: InvocationListener, key: Il2Cpp.Method) => { methodInfos.push(key) })
-        if (filterName != "")
-            methodInfos = methodInfos.filter((method: Il2Cpp.Method) => method.name.includes(filterName))
-        resolve(methodInfos)
-    }).then((methodInfos) => {
-        let localT = <Array<Il2Cpp.Method>>methodInfos
-        let address = localT.flatMap((method: Il2Cpp.Method) => method.relativeVirtualAddress)
-        let names = localT.flatMap((method: Il2Cpp.Method) => `${method.class.name}::${getMethodDes(method)}`)
-        return [address, names]
-    }).then((addressAndNames) => {
-        let value: [Array<NativePointer>, Array<string>] = <[Array<NativePointer>, Array<string>]>addressAndNames
-        if (types) {
-            LOGD(`\nvar arrayAddr : string[] = \n${JSON.stringify(value[0])}\n\nvar arrayName : string[] = \n${JSON.stringify(value[1])}\n`)
-        } else {
-            LOGD(`\nvar arrayAddr = \n${JSON.stringify(value[0])}\n\nvar arrayName = \n${JSON.stringify(value[1])}\n`)
-        }
-    }).catch((error) => {
-        LOGE(error)
-    }).finally(() => {
-        LOGZ(`list ${Breaker.map_attachedMethodInfos.size} methods in ${Date.now() - currentTime} ms \n`)
-    })
-}
-
-// 默认改到全部img中的所有方法 filterStr 为方法名的关键字
-globalThis.BF = (filterStr: string, allImg:boolean = true): void => {
-    if (typeof filterStr != "string") return
-    DD()
-    HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
-        if (allImg || CommonClass.includes(image.assembly.name)) {
-            image.classes.flatMap((cls: Il2Cpp.Class) => cls.methods).forEach((mPtr: Il2Cpp.Method) => {
-                if (mPtr.name.indexOf(filterStr) != -1) Breaker.attachMethodInfo(mPtr, false)
-            })
-        }
-    })
 }

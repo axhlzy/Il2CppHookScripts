@@ -115,6 +115,17 @@ export class FieldsParser {
         LOGO(getLine(50))
     }
 
+    toString(): string {
+        let retMap: Map<string,any> = new Map()
+        this.mClass.fields
+            .sort((f1: Il2Cpp.Field, f2: Il2Cpp.Field) => f1.offset - f2.offset)
+            .forEach((field: Il2Cpp.Field) => {
+                if (!field.isStatic)
+                    retMap.set(field.name, this.mPtr.add(field.offset).readPointer())
+            })
+        return JSON.stringify([...retMap]).replace(/\"/g, "'").replace(/,/g, ':')
+    }
+
     private fakeStaticField(field: Il2Cpp.Field): NativePointer {
         let tmpOut: NativePointer = alloc()
         Il2Cpp.Api._fieldGetStaticValue(field.handle, tmpOut)
@@ -140,6 +151,8 @@ const dealWithSpecialType = (field: Il2Cpp.Field, thisValue: NativePointer) => {
 }
 
 declare global {
+    // list fields to string
+    var lfss: (mPtr: NativePointer, classHandle?: NativePointer) => string
     // list fields to show
     var lfs: (mPtr: NativePointer, classHandle?: NativePointer) => void
     // list filed contain parent class
@@ -153,6 +166,9 @@ declare global {
     // list filedoffset to return
     var lfo: (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => number
 }
+
+
+globalThis.lfss = (mPtr: NativePointer, classHandle: NativePointer | string | object | number = 0) => new FieldsParser(mPtr, classHandle).toString()
 
 // 解析当前实例的 fields / 非实例不解析值 （s means show）
 globalThis.lfs = (mPtr: NativePointer, classHandle: NativePointer | string | object | number = 0) => new FieldsParser(mPtr, classHandle).toShow()
