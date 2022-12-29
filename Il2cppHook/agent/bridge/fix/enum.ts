@@ -1,9 +1,8 @@
-import { PackDictionary } from "./packer/packDictionary"
-
 export const enumNumToName = (enumValue: number, classInfo: string) => {
     let retValue: string = "Unknown"
-    enumForEach(classInfo, (field: NativePointer, fieldName: string, value: number) => {
-        if (Number(enumValue) === Number(value)) retValue = `${fieldName} ( ${value} ) `
+    enumForEach(classInfo, (_field: NativePointer, fieldName: string, value: number) => {
+        if (!fieldName.includes("value__"))
+            if (Number(enumValue) === Number(value)) retValue = `${fieldName} ( ${value} ) `
     })
     return retValue
 }

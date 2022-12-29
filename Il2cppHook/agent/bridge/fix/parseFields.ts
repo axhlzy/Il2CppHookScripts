@@ -1,4 +1,5 @@
 import { formartClass as FM } from "../../utils/formart"
+import { enumNumToName } from "./enum"
 import { getModifier } from "./il2cppM"
 
 export class FieldsParser {
@@ -85,8 +86,8 @@ export class FieldsParser {
                 }
                 // 对枚举的解析
                 else if (field.type.class.isEnum) {
-                    let value = field.value
-                    LOGZ(`\tEnum -> ${value}`)
+                    let value = this.mPtr.add(field.offset)
+                    LOGZ(`\t${value}  --->  Enum : ${enumNumToName(value.readPointer().toInt32(), field.type.class.name)}`)
                 }
                 // 即对实例进行值解析
                 else if (!this.mPtr.isNull()) {
