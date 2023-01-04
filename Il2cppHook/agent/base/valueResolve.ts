@@ -1,3 +1,4 @@
+import { enumNumToName } from "../bridge/fix/enum"
 import { methodToString } from "../bridge/fix/il2cppM"
 import { UnityEngine_Object } from "../expand/TypeExtends/mscorlibObj/Object/class"
 import { getObjName } from "../expand/TypeExtends/mscorlibObj/Object/export"
@@ -120,7 +121,7 @@ class ValueResolve {
         }
 
         function enumType(): string {
-            return ""
+            return `Enum : ${enumNumToName(insPtr.toInt32(), type.class.name)}`
         }
 
         function getParentsStr(clsPtr: Il2Cpp.Class): string {
