@@ -14,8 +14,9 @@
 $ git clone https://github.com/axhlzy/Il2CppHookScripts.git
 $ cd Il2cppHook/
 $ npm install
+$ npm watch
 
-$ frida -U --no-pause -f com.xxx.xxx -l ../_Ufunc.js
+$ frida -U -f com.xxx.xxx -l ../_Ufunc.js
 OR
 $ frida -FU -l ../_Ufunc.js
 ```
