@@ -1,4 +1,3 @@
-
 const HookDebugLog = () => {
     // public static void Log(object message)
     // A(find_method("UnityEngine.CoreModule", "Debug", "Log", 1, true), (args) => {
@@ -24,7 +23,7 @@ const HookDebugLog = () => {
 export { HookDebugLog }
 
 declare global {
-    var HookDebugLog: () => void;
+    var HookDebugLog: () => void
 }
 
-globalThis.HookDebugLog = HookDebugLog;
+globalThis.HookDebugLog = HookDebugLog
