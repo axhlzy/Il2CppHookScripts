@@ -1,10 +1,10 @@
+import { UnityEngine_Rect_Impl as UnityEngine_Rect } from "../../../../../../../ValueType/Rect/class"
+import { UnityEngine_Material_Impl as UnityEngine_Material } from "../../../../../../Material/class"
 import { UnityEngine_UI_Graphic_Impl } from "../class"
 
-type UnityEngine_Material = NativePointer
 type UnityEngine_UI_RectMask2D = NativePointer
 type UnityEngine_UI_MaskableGraphic_CullStateChangedEvent = NativePointer
 type UnityEngine_Vector3 = NativePointer
-type UnityEngine_Rect = NativePointer
 type UnityEngine_Vector2 = NativePointer
 
 class UnityEngine_UI_MaskableGraphic_Impl extends UnityEngine_UI_Graphic_Impl {

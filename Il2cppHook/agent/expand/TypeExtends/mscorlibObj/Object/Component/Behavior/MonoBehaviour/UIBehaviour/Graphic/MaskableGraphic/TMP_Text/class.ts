@@ -5,6 +5,7 @@ import { UnityEngine_Vector2_Impl as Vector2 } from "../../../../../../../../Val
 import { UnityEngine_Vector3_Impl as Vector3 } from "../../../../../../../../ValueType/Vector3/class"
 import { UnityEngine_Vector4_Impl as Vector4 } from "../../../../../../../../ValueType/Vector4/class"
 import { UnityEngine_Material_Impl as Material } from "../../../../../../../Material/class"
+import { UnityEngine_MeshRenderer_Impl as UnityEngine_MeshRenderer } from "../../../../../../Renderer/MeshRenderer/class"
 import { UnityEngine_Transform_Impl as Transform } from "../../../../../../Transform/class"
 import { UnityEngine_RectTransform_Impl as RectTransform } from "../../../../../../Transform/RectTransform/class"
 import { UnityEngine_UI_MaskableGraphic_Impl as MaskableGraphic } from "../class"
@@ -32,8 +33,10 @@ type TMPro_RichTextTagAttribute = NativePointer
 type TMPro_WordWrapState = NativePointer
 type TMPro_Extents = NativePointer
 type TMPro_TMP_TextElementType = NativePointer
+type UnityEngine_Material_array = NativePointer
 type TMPro_TMP_TextElement = NativePointer
 type TMPro_TMP_Character = NativePointer
+type UnityEngine_Mesh = NativePointer
 type UnityEngine_Bounds = NativePointer
 type TMPro_TMP_VertexDataUpdateFlags = NativePointer
 type System_Boolean = NativePointer
@@ -42,8 +45,6 @@ type System_Int32 = NativePointer
 type System_Text_StringBuilder = NativePointer
 type TMPro_TMP_Text_UnicodeChar = NativePointer
 type System_String = NativePointer
-
-type UnityEngine_Mesh = NativePointer
 
 class TMPro_TMP_Text_Impl extends MaskableGraphic {
 
@@ -158,7 +159,7 @@ class TMPro_TMP_Text_Impl extends MaskableGraphic {
     m_rectTransform: RectTransform = new RectTransform(lfv(this.handle, "m_rectTransform"))
     // < autoSizeTextContainer > k__BackingField: boolean = lfv(this.handle, "<autoSizeTextContainer>k__BackingField") as unknown as boolean
     m_autoSizeTextContainer: boolean = lfv(this.handle, "m_autoSizeTextContainer") as unknown as boolean
-    m_mesh: UnityEngine_Mesh = lfv(this.handle, "m_mesh") as unknown as UnityEngine_Mesh
+    m_mesh: UnityEngine_MeshRenderer = lfv(this.handle, "m_mesh") as unknown as UnityEngine_MeshRenderer
     m_isVolumetricText: boolean = lfv(this.handle, "m_isVolumetricText") as unknown as boolean
     m_spriteAnimator: TMPro_TMP_SpriteAnimator = lfv(this.handle, "m_spriteAnimator") as unknown as TMPro_TMP_SpriteAnimator
     m_flexibleHeight: number = lfv(this.handle, "m_flexibleHeight") as unknown as number
@@ -780,7 +781,7 @@ class TMPro_TMP_Text_Impl extends MaskableGraphic {
         return Il2Cpp.Api.TMP_Text._set_autoSizeTextContainer(this.handle, value)
     }
 
-    get_mesh(): UnityEngine_Mesh {
+    get_mesh(): UnityEngine_MeshRenderer {
         return Il2Cpp.Api.TMP_Text._get_mesh(this.handle)
     }
 
@@ -868,15 +869,15 @@ class TMPro_TMP_Text_Impl extends MaskableGraphic {
         return Il2Cpp.Api.TMP_Text._SetFontBaseMaterial(this.handle, mat)
     }
 
-    GetSharedMaterials(): Material[] {
+    GetSharedMaterials(): UnityEngine_Material_array {
         return Il2Cpp.Api.TMP_Text._GetSharedMaterials(this.handle)
     }
 
-    SetSharedMaterials(materials: Material[]): void {
+    SetSharedMaterials(materials: UnityEngine_Material_array): void {
         return Il2Cpp.Api.TMP_Text._SetSharedMaterials(this.handle, materials)
     }
 
-    GetMaterials(mats: Material[]): Material[] {
+    GetMaterials(mats: UnityEngine_Material_array): UnityEngine_Material_array {
         return Il2Cpp.Api.TMP_Text._GetMaterials(this.handle, mats)
     }
 
@@ -968,7 +969,7 @@ class TMPro_TMP_Text_Impl extends MaskableGraphic {
         return Il2Cpp.Api.TMP_Text._CrossFadeAlpha(this.handle, alpha, duration, ignoreTimeScale)
     }
 
-    InternalCrossFadeColor(targetColor: Color, duration: number, ignoreTimeScale: boolean, useAlpha: System_Boolean): void {
+    InternalCrossFadeColor(targetColor: Color, duration: number, ignoreTimeScale: System_Boolean, useAlpha: System_Boolean): void {
         return Il2Cpp.Api.TMP_Text._InternalCrossFadeColor(this.handle, targetColor, duration, ignoreTimeScale, useAlpha)
     }
 

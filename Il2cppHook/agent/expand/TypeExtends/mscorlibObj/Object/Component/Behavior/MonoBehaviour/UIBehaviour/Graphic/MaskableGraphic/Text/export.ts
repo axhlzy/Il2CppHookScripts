@@ -55,7 +55,7 @@ const B_Text = (): void => {
         LOGE("NGUIText.Print NOT FOUND !")
     }
 
-    function TMP_Text(showGobj:boolean) {
+    function TMP_Text(showGobj: boolean) {
         A(find_method("Unity.TextMeshPro", "TMP_Text", "get_transform", 0), (args, ctx) => {
             let aimStr = "|" + readU16(callFunction(["Unity.TextMeshPro", "TMP_Text", "get_text", 0], args[0])) + "|"
             if (filterDuplicateOBJ(String(args[0]), 30) == -1) return
@@ -75,8 +75,9 @@ const B_Text = (): void => {
     }
 
     function TextMeshPro() {
-        A(find_method("Unity.TextMeshPro", "TextMeshPro", "get_transform", 0), (args) => {
-            let aimStr = "|" + readU16(callFunction(["Unity.TextMeshPro", "TextMeshPro", "get_text", 0], args[0])) + "|"
+        // A(find_method("Unity.TextMeshPro", "TextMeshPro", "get_transform", 0), (args) => {
+        A(Il2Cpp.Api.TextMeshPro._get_transform, (args) => {
+            let aimStr = "|" + new Il2Cpp.TMP_Text(args[0]).get_text() + "|"
             if (filterDuplicateOBJ(String(args[0])) == -1) return
             worksWithText(args[0], "TextMeshPro")
             LOG("\n[TextMeshPro]  " + args[0] + "\t" + aimStr, LogColor.C35)
@@ -90,17 +91,17 @@ const B_Text = (): void => {
         })
     }
 
-    function UnityEngine_UI_Text(showGameObj:boolean) {
+    function UnityEngine_UI_Text(showGameObj: boolean) {
         if (showGameObj == undefined) showGameObj = false;
-        A(find_method("UnityEngine.UI", "Text", "get_text", 0), (args) => {
+        // A(find_method("UnityEngine.UI", "Text", "get_text", 0), (args) => {
+        A(Il2Cpp.Api.Text._get_text, (args) => {
             worksWithText(args[0], "Text")
-            if (showGameObj)
-                showGameObject(callFunction(["UnityEngine.CoreModule", "Component", "get_gameObject", 0], args[0]))
+            if (showGameObj) new Il2Cpp.Component(args[0]).get_gameObject().showSelf()
         }, (ret, ctx) => {
             let aimStr = "|" + readU16(ret) + "|"
             if (filterDuplicateOBJ(String(ret)) == -1) return
             getPlatformCtx
-            LOGG("\n[Text_Get]  " + getPlatformCtxWithArgV(ctx,0) + "\t" + aimStr)
+            LOGG("\n[Text_Get]  " + getPlatformCtxWithArgV(ctx, 0) + "\t" + aimStr)
             if (strMap.size != 0) {
                 let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
@@ -111,7 +112,8 @@ const B_Text = (): void => {
             }
         })
 
-        A(find_method("UnityEngine.UI", "Text", "set_text", 1), (args, ctx) => {
+        // A(find_method("UnityEngine.UI", "Text", "set_text", 1), (args, ctx) => {
+        A(Il2Cpp.Api.Text._set_text, (args, ctx) => {
             if (filterDuplicateOBJ(String(args[1])) == -1) return
             worksWithText(args[0], "Text")
             let aimStr = "|" + readU16(args[1]) + "|"
@@ -123,7 +125,8 @@ const B_Text = (): void => {
                     LOGH(` \n\t {REP} ${aimStr} ---> ${repStr}`)
                 }
                 if (showGameObj)
-                    showGameObject(callFunction(["UnityEngine.CoreModule", "Component", "get_gameObject", 0], args[0]))
+                    // showGameObject(callFunction(["UnityEngine.CoreModule", "Component", "get_gameObject", 0], args[0]))
+                    new Il2Cpp.Component(args[0]).get_gameObject().showSelf()
             }
         })
     }
@@ -163,8 +166,8 @@ const B_Text = (): void => {
     function TMP() {
         let get_Ins = find_method("Unity.TextMeshPro", "TMP_Settings", "get_instance", 0)
         if (get_Ins.isNull()) return
-        let INS:NativePointer = ptr(0)
-        A(get_Ins, () => {}, (ret) => {
+        let INS: NativePointer = ptr(0)
+        A(get_Ins, () => { }, (ret) => {
             INS = ret
             d(get_Ins)
             LOGD(`[*] TMPro.TMP_Settings ---> ${ret}`)
@@ -177,7 +180,7 @@ const B_Text = (): void => {
         })
     }
 
-    function worksWithText(textPtr:NativePointer, typeStr:string, printHex:boolean = false) {
+    function worksWithText(textPtr: NativePointer, typeStr: string, printHex: boolean = false) {
         if (mapRecord.get(typeStr) == null) {
             mapRecord.set(typeStr, 1)
             getTypeParent(textPtr)
@@ -190,7 +193,7 @@ const B_Text = (): void => {
                     length: endPtr.sub(startPtr).sub(p_size).toInt32(),
                     header: false
                 }))
-            } catch (e) {}
+            } catch (e) { }
         }
     }
 
@@ -232,7 +235,7 @@ const B_Text = (): void => {
                 '    var ret = srcFunc(arg0, arg1, arg2, arg3)\n' +
                 '    LOG(ret + " = GetTermData(string " + readU16(arg1) + " , bool allowCategoryMistmatch = " + (arg2 == 0x0 ? false : true) + ") ")\n' +
                 '    if (ret == 0x0) return ret\n' +
-                '    var strArr = ptr(ret).add(' +  new Il2Cpp.Class(findClass("TermData")).field("Languages").offset + ').readPointer()\n' +
+                '    var strArr = ptr(ret).add(' + new Il2Cpp.Class(findClass("TermData")).field("Languages").offset + ').readPointer()\n' +
                 '    var size = ptr(strArr).add(' + p_size + ' * 3).readUInt()\n' +
                 '    console.error("\tSize  -> " + size)\n' +
                 '    var tmpArr = []\n' +
