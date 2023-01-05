@@ -13,15 +13,15 @@ class UnityEngine_WWWForm_Impl extends mscorlib_System_Object_impl {
     // boundary: System_Byte[] = lfv(this.handle, "boundary") as unknown as System_Byte[]
     // containsFiles: System_Boolean = lfv(this.handle, "containsFiles") as unknown as System_Boolean
 
-    formData : any = lfv(this.handle, "formData")
-    fieldNames : any = lfv(this.handle, "fieldNames")
-    fileNames : any = lfv(this.handle, "fileNames")
-    types : any = lfv(this.handle, "types")
-    boundary : any = lfv(this.handle, "boundary")
-    containsFiles : any = lfv(this.handle, "containsFiles")
+    formData: any = lfv(this.handle, "formData")
+    fieldNames: any = lfv(this.handle, "fieldNames")
+    fileNames: any = lfv(this.handle, "fileNames")
+    types: any = lfv(this.handle, "types")
+    boundary: any = lfv(this.handle, "boundary")
+    containsFiles: any = lfv(this.handle, "containsFiles")
 
     constructor(handleOrWrapper: NativePointer) {
-             super(handleOrWrapper)
+        super(handleOrWrapper)
     }
     static get_DefaultEncoding(): System_Text_Encoding {
         return Il2Cpp.Api.WWWForm._get_DefaultEncoding()
@@ -31,12 +31,12 @@ class UnityEngine_WWWForm_Impl extends mscorlib_System_Object_impl {
         return Il2Cpp.Api.WWWForm.__ctor(this.handle)
     }
 
-    AddField(fieldName:System_String, value:System_String): System_Void {
-        return Il2Cpp.Api.WWWForm._AddField(this.handle , fieldName, value)
+    AddField(fieldName: System_String, value: System_String): System_Void {
+        return Il2Cpp.Api.WWWForm._AddField(this.handle, fieldName, value)
     }
 
-    AddField_3(fieldName:System_String, value:System_String, e:System_Text_Encoding): System_Void {
-        return Il2Cpp.Api.WWWForm._AddField(this.handle , fieldName, value, e)
+    AddField_3(fieldName: System_String, value: System_String, e: System_Text_Encoding): System_Void {
+        return Il2Cpp.Api.WWWForm._AddField(this.handle, fieldName, value, e)
     }
 
     // AddBinaryData(fieldName:System_String, contents:System_Byte[]): System_Void {
@@ -68,8 +68,8 @@ class UnityEngine_WWWForm_Impl extends mscorlib_System_Object_impl {
 Il2Cpp.WWWForm = UnityEngine_WWWForm_Impl
 
 declare global {
-    namespace Il2Cpp{
-            class WWWForm extends UnityEngine_WWWForm_Impl { }
+    namespace Il2Cpp {
+        class WWWForm extends UnityEngine_WWWForm_Impl { }
     }
 }
 

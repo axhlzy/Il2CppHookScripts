@@ -16,25 +16,25 @@ class UnityEngine_WWWForm_API {
         // public Void AddField(String fieldName,String value)
         @cache
         static get _AddField() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.WWWForm", "AddField", 2, ["System.String","System.String"], "void", ["pointer","pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.WWWForm", "AddField", 2, ["System.String", "System.String"], "void", ["pointer", "pointer", "pointer"])
         }
 
         // public Void AddField(String fieldName,String value,Encoding e)
         @cache
         static get _AddField_fieldName_value_e() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.WWWForm", "AddField", 3, ["System.String","System.String","System.Text.Encoding"], "void", ["pointer","pointer","pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.WWWForm", "AddField", 3, ["System.String", "System.String", "System.Text.Encoding"], "void", ["pointer", "pointer", "pointer", "pointer"])
         }
 
         // public Void AddBinaryData(String fieldName,Byte[] contents)
         @cache
         static get _AddBinaryData() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.WWWForm", "AddBinaryData", 2, ["System.String","System.Byte[]"], "void", ["pointer","pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.WWWForm", "AddBinaryData", 2, ["System.String", "System.Byte[]"], "void", ["pointer", "pointer", "pointer"])
         }
 
         // public Void AddBinaryData(String fieldName,Byte[] contents,String fileName,String mimeType)
         @cache
         static get _AddBinaryData_fieldName_contents_fileName_mimeType() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.WWWForm", "AddBinaryData", 4, ["System.String","System.Byte[]","System.String","System.String"], "void", ["pointer","pointer","pointer","pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.WWWForm", "AddBinaryData", 4, ["System.String", "System.Byte[]", "System.String", "System.String"], "void", ["pointer", "pointer", "pointer", "pointer", "pointer"])
         }
 
         // public String> get_headers()
@@ -54,7 +54,7 @@ class UnityEngine_WWWForm_API {
 Il2Cpp.Api.WWWForm = UnityEngine_WWWForm_API
 
 declare global {
-        namespace Il2Cpp.Api{
+        namespace Il2Cpp.Api {
                 class WWWForm extends UnityEngine_WWWForm_API { }
         }
 }

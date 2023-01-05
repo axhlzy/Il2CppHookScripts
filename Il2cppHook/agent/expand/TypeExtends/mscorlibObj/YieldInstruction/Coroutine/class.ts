@@ -19,11 +19,11 @@ class UnityEngine_Coroutine_Impl extends UnityEngine_YieldInstruction_Impl {
         return Il2Cpp.Api.Coroutine._Finalize(this.handle)
     }
 
-    static ReleaseCoroutine(ptr:System_IntPtr): System_Void {
+    static ReleaseCoroutine(ptr: System_IntPtr): System_Void {
         return Il2Cpp.Api.Coroutine._ReleaseCoroutine(ptr)
     }
 
-    toFieldsString(){
+    toFieldsString() {
         return `${this.handle} | ${lfss(this.handle)}`
     }
 
@@ -32,7 +32,7 @@ class UnityEngine_Coroutine_Impl extends UnityEngine_YieldInstruction_Impl {
 Il2Cpp.Coroutine = UnityEngine_Coroutine_Impl
 
 declare global {
-    namespace Il2Cpp{
+    namespace Il2Cpp {
         class Coroutine extends UnityEngine_Coroutine_Impl { }
     }
 }

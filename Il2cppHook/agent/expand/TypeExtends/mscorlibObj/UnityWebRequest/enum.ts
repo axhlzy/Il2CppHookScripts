@@ -19,7 +19,7 @@ export enum UnityEngine_Networking_UnityWebRequest_Result {
     ProtocolError = 3,
     DataProcessingError = 4,
 }
- 
+
 // internal enum UnityWebRequestMethod
 // {
 //     [Token(Token="0x400001F")]

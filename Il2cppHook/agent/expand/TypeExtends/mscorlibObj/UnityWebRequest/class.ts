@@ -1,8 +1,8 @@
 import { mscorlib_System_Object_impl } from "../class"
 import { UnityEngine_WWWForm_Impl as UnityEngine_WWWForm } from "../WWWForm/class"
-import { 
-    UnityEngine_Networking_UnityWebRequest_Result as UnityWebRequest_Result, 
-    UnityEngine_Networking_UnityWebRequest_UnityWebRequestError as UnityWebRequestError, 
+import {
+    UnityEngine_Networking_UnityWebRequest_Result as UnityWebRequest_Result,
+    UnityEngine_Networking_UnityWebRequest_UnityWebRequestError as UnityWebRequestError,
     UnityEngine_Networking_UnityWebRequest_UnityWebRequestMethod as UnityWebRequestMethod
 } from "./enum"
 
@@ -31,13 +31,13 @@ class UnityEngine_Networking_UnityWebRequest_Impl extends mscorlib_System_Object
     // <disposeUploadHandlerOnDispose>k__BackingField: System_Boolean = lfv(this.handle, "<disposeUploadHandlerOnDispose>k__BackingField") as unknown as System_Boolean
 
     constructor(handleOrWrapper: NativePointer) {
-             super(handleOrWrapper)
+        super(handleOrWrapper)
     }
-    static GetWebErrorString(err:UnityWebRequestError): System_String {
+    static GetWebErrorString(err: UnityWebRequestError): System_String {
         return readU16(Il2Cpp.Api.UnityWebRequest._GetWebErrorString(err))
     }
 
-    static GetHTTPStatusString(responseCode:System_Int64): System_String {
+    static GetHTTPStatusString(responseCode: System_Int64): System_String {
         return readU16(Il2Cpp.Api.UnityWebRequest._GetHTTPStatusString(responseCode))
     }
 
@@ -45,24 +45,24 @@ class UnityEngine_Networking_UnityWebRequest_Impl extends mscorlib_System_Object
         return Il2Cpp.Api.UnityWebRequest._get_disposeCertificateHandlerOnDispose(this.handle)
     }
 
-    set_disposeCertificateHandlerOnDispose(value:System_Boolean): System_Void {
-        return Il2Cpp.Api.UnityWebRequest._set_disposeCertificateHandlerOnDispose(this.handle , value)
+    set_disposeCertificateHandlerOnDispose(value: System_Boolean): System_Void {
+        return Il2Cpp.Api.UnityWebRequest._set_disposeCertificateHandlerOnDispose(this.handle, value)
     }
 
     get_disposeDownloadHandlerOnDispose(): System_Boolean {
         return Il2Cpp.Api.UnityWebRequest._get_disposeDownloadHandlerOnDispose(this.handle)
     }
 
-    set_disposeDownloadHandlerOnDispose(value:System_Boolean): System_Void {
-        return Il2Cpp.Api.UnityWebRequest._set_disposeDownloadHandlerOnDispose(this.handle , value)
+    set_disposeDownloadHandlerOnDispose(value: System_Boolean): System_Void {
+        return Il2Cpp.Api.UnityWebRequest._set_disposeDownloadHandlerOnDispose(this.handle, value)
     }
 
     get_disposeUploadHandlerOnDispose(): System_Boolean {
         return Il2Cpp.Api.UnityWebRequest._get_disposeUploadHandlerOnDispose(this.handle)
     }
 
-    set_disposeUploadHandlerOnDispose(value:System_Boolean): System_Void {
-        return Il2Cpp.Api.UnityWebRequest._set_disposeUploadHandlerOnDispose(this.handle , value)
+    set_disposeUploadHandlerOnDispose(value: System_Boolean): System_Void {
+        return Il2Cpp.Api.UnityWebRequest._set_disposeUploadHandlerOnDispose(this.handle, value)
     }
 
     static Create(): System_IntPtr {
@@ -81,12 +81,12 @@ class UnityEngine_Networking_UnityWebRequest_Impl extends mscorlib_System_Object
         return Il2Cpp.Api.UnityWebRequest._InternalSetDefaults(this.handle)
     }
 
-    _ctor(url:System_String, method:System_String): System_Void {
-        return Il2Cpp.Api.UnityWebRequest.__ctor(this.handle , url, method)
+    _ctor(url: System_String, method: System_String): System_Void {
+        return Il2Cpp.Api.UnityWebRequest.__ctor(this.handle, url, method)
     }
 
-    _ctor_4(url:System_String, method:System_String, downloadHandler:UnityEngine_Networking_DownloadHandler, uploadHandler:UnityEngine_Networking_UploadHandler): System_Void {
-        return Il2Cpp.Api.UnityWebRequest.__ctor(this.handle , url, method, downloadHandler, uploadHandler)
+    _ctor_4(url: System_String, method: System_String, downloadHandler: UnityEngine_Networking_DownloadHandler, uploadHandler: UnityEngine_Networking_UploadHandler): System_Void {
+        return Il2Cpp.Api.UnityWebRequest.__ctor(this.handle, url, method, downloadHandler, uploadHandler)
     }
 
     Finalize(): System_Void {
@@ -113,24 +113,24 @@ class UnityEngine_Networking_UnityWebRequest_Impl extends mscorlib_System_Object
         return Il2Cpp.Api.UnityWebRequest._Abort(this.handle)
     }
 
-    SetMethod(methodType:UnityWebRequestMethod): UnityWebRequestError {
-        return Il2Cpp.Api.UnityWebRequest._SetMethod(this.handle , methodType)
+    SetMethod(methodType: UnityWebRequestMethod): UnityWebRequestError {
+        return Il2Cpp.Api.UnityWebRequest._SetMethod(this.handle, methodType)
     }
 
-    InternalSetMethod(methodType:UnityWebRequestMethod): System_Void {
-        return Il2Cpp.Api.UnityWebRequest._InternalSetMethod(this.handle , methodType)
+    InternalSetMethod(methodType: UnityWebRequestMethod): System_Void {
+        return Il2Cpp.Api.UnityWebRequest._InternalSetMethod(this.handle, methodType)
     }
 
-    SetCustomMethod(customMethodName:System_String): UnityWebRequestError {
-        return Il2Cpp.Api.UnityWebRequest._SetCustomMethod(this.handle , customMethodName)
+    SetCustomMethod(customMethodName: System_String): UnityWebRequestError {
+        return Il2Cpp.Api.UnityWebRequest._SetCustomMethod(this.handle, customMethodName)
     }
 
-    InternalSetCustomMethod(customMethodName:System_String): System_Void {
-        return Il2Cpp.Api.UnityWebRequest._InternalSetCustomMethod(this.handle , customMethodName)
+    InternalSetCustomMethod(customMethodName: System_String): System_Void {
+        return Il2Cpp.Api.UnityWebRequest._InternalSetCustomMethod(this.handle, customMethodName)
     }
 
-    set_method(value:System_String): System_Void {
-        return Il2Cpp.Api.UnityWebRequest._set_method(this.handle , value)
+    set_method(value: System_String): System_Void {
+        return Il2Cpp.Api.UnityWebRequest._set_method(this.handle, value)
     }
 
     GetError(): UnityWebRequestError {
@@ -145,20 +145,20 @@ class UnityEngine_Networking_UnityWebRequest_Impl extends mscorlib_System_Object
         return readU16(Il2Cpp.Api.UnityWebRequest._get_url(this.handle))
     }
 
-    set_url(value:System_String): System_Void {
-        return Il2Cpp.Api.UnityWebRequest._set_url(this.handle , value)
+    set_url(value: System_String): System_Void {
+        return Il2Cpp.Api.UnityWebRequest._set_url(this.handle, value)
     }
 
     GetUrl(): System_String {
         return readU16(Il2Cpp.Api.UnityWebRequest._GetUrl(this.handle))
     }
 
-    SetUrl(url:System_String): UnityWebRequestError {
-        return Il2Cpp.Api.UnityWebRequest._SetUrl(this.handle , url)
+    SetUrl(url: System_String): UnityWebRequestError {
+        return Il2Cpp.Api.UnityWebRequest._SetUrl(this.handle, url)
     }
 
-    InternalSetUrl(url:System_String): System_Void {
-        return Il2Cpp.Api.UnityWebRequest._InternalSetUrl(this.handle , url)
+    InternalSetUrl(url: System_String): System_Void {
+        return Il2Cpp.Api.UnityWebRequest._InternalSetUrl(this.handle, url)
     }
 
     get_responseCode(): System_Int64 {
@@ -205,24 +205,24 @@ class UnityEngine_Networking_UnityWebRequest_Impl extends mscorlib_System_Object
         return Il2Cpp.Api.UnityWebRequest._get_downloadProgress(this.handle)
     }
 
-    SetChunked(chunked:System_Boolean): UnityWebRequestError {
-        return Il2Cpp.Api.UnityWebRequest._SetChunked(this.handle , chunked)
+    SetChunked(chunked: System_Boolean): UnityWebRequestError {
+        return Il2Cpp.Api.UnityWebRequest._SetChunked(this.handle, chunked)
     }
 
-    set_chunkedTransfer(value:System_Boolean): System_Void {
-        return Il2Cpp.Api.UnityWebRequest._set_chunkedTransfer(this.handle , value)
+    set_chunkedTransfer(value: System_Boolean): System_Void {
+        return Il2Cpp.Api.UnityWebRequest._set_chunkedTransfer(this.handle, value)
     }
 
-    InternalSetRequestHeader(name:System_String, value:System_String): UnityWebRequestError {
-        return Il2Cpp.Api.UnityWebRequest._InternalSetRequestHeader(this.handle , name, value)
+    InternalSetRequestHeader(name: System_String, value: System_String): UnityWebRequestError {
+        return Il2Cpp.Api.UnityWebRequest._InternalSetRequestHeader(this.handle, name, value)
     }
 
-    SetRequestHeader(name:System_String, value:System_String): System_Void {
-        return Il2Cpp.Api.UnityWebRequest._SetRequestHeader(this.handle , name, value)
+    SetRequestHeader(name: System_String, value: System_String): System_Void {
+        return Il2Cpp.Api.UnityWebRequest._SetRequestHeader(this.handle, name, value)
     }
 
-    GetResponseHeader(name:System_String): System_String {
-        return readU16(Il2Cpp.Api.UnityWebRequest._GetResponseHeader(this.handle , name))
+    GetResponseHeader(name: System_String): System_String {
+        return readU16(Il2Cpp.Api.UnityWebRequest._GetResponseHeader(this.handle, name))
     }
 
     GetResponseHeaderKeys(): System_String[] {
@@ -233,51 +233,51 @@ class UnityEngine_Networking_UnityWebRequest_Impl extends mscorlib_System_Object
     //     return Il2Cpp.Api.UnityWebRequest._GetResponseHeaders(this.handle)
     // }
 
-    SetUploadHandler(uh:UnityEngine_Networking_UploadHandler): UnityWebRequestError {
-        return Il2Cpp.Api.UnityWebRequest._SetUploadHandler(this.handle , uh)
+    SetUploadHandler(uh: UnityEngine_Networking_UploadHandler): UnityWebRequestError {
+        return Il2Cpp.Api.UnityWebRequest._SetUploadHandler(this.handle, uh)
     }
 
     get_uploadHandler(): UnityEngine_Networking_UploadHandler {
         return Il2Cpp.Api.UnityWebRequest._get_uploadHandler(this.handle)
     }
 
-    set_uploadHandler(value:UnityEngine_Networking_UploadHandler): System_Void {
-        return Il2Cpp.Api.UnityWebRequest._set_uploadHandler(this.handle , value)
+    set_uploadHandler(value: UnityEngine_Networking_UploadHandler): System_Void {
+        return Il2Cpp.Api.UnityWebRequest._set_uploadHandler(this.handle, value)
     }
 
-    SetDownloadHandler(dh:UnityEngine_Networking_DownloadHandler): UnityWebRequestError {
-        return Il2Cpp.Api.UnityWebRequest._SetDownloadHandler(this.handle , dh)
+    SetDownloadHandler(dh: UnityEngine_Networking_DownloadHandler): UnityWebRequestError {
+        return Il2Cpp.Api.UnityWebRequest._SetDownloadHandler(this.handle, dh)
     }
 
     get_downloadHandler(): UnityEngine_Networking_DownloadHandler {
         return Il2Cpp.Api.UnityWebRequest._get_downloadHandler(this.handle)
     }
 
-    set_downloadHandler(value:UnityEngine_Networking_DownloadHandler): System_Void {
-        return Il2Cpp.Api.UnityWebRequest._set_downloadHandler(this.handle , value)
+    set_downloadHandler(value: UnityEngine_Networking_DownloadHandler): System_Void {
+        return Il2Cpp.Api.UnityWebRequest._set_downloadHandler(this.handle, value)
     }
 
     get_certificateHandler(): UnityEngine_Networking_CertificateHandler {
         return Il2Cpp.Api.UnityWebRequest._get_certificateHandler(this.handle)
     }
 
-    SetTimeoutMsec(timeout:System_Int32): UnityWebRequestError {
-        return Il2Cpp.Api.UnityWebRequest._SetTimeoutMsec(this.handle , timeout)
+    SetTimeoutMsec(timeout: System_Int32): UnityWebRequestError {
+        return Il2Cpp.Api.UnityWebRequest._SetTimeoutMsec(this.handle, timeout)
     }
 
-    set_timeout(value:System_Int32): System_Void {
-        return Il2Cpp.Api.UnityWebRequest._set_timeout(this.handle , value)
+    set_timeout(value: System_Int32): System_Void {
+        return Il2Cpp.Api.UnityWebRequest._set_timeout(this.handle, value)
     }
 
-    static Get(uri:System_String): UnityEngine_Networking_UnityWebRequest_Impl {
+    static Get(uri: System_String): UnityEngine_Networking_UnityWebRequest_Impl {
         return Il2Cpp.Api.UnityWebRequest._Get(allocUStr(uri))
     }
 
-    static Post(uri:System_String, formData:UnityEngine_WWWForm): UnityEngine_Networking_UnityWebRequest_Impl {
+    static Post(uri: System_String, formData: UnityEngine_WWWForm): UnityEngine_Networking_UnityWebRequest_Impl {
         return Il2Cpp.Api.UnityWebRequest._Post(allocUStr(uri), formData)
     }
 
-    static SetupPost(request:UnityEngine_Networking_UnityWebRequest_Impl, formData:UnityEngine_WWWForm): System_Void {
+    static SetupPost(request: UnityEngine_Networking_UnityWebRequest_Impl, formData: UnityEngine_WWWForm): System_Void {
         return Il2Cpp.Api.UnityWebRequest._SetupPost(request, formData)
     }
 }
@@ -285,8 +285,8 @@ class UnityEngine_Networking_UnityWebRequest_Impl extends mscorlib_System_Object
 Il2Cpp.UnityWebRequest = UnityEngine_Networking_UnityWebRequest_Impl
 
 declare global {
-    namespace Il2Cpp{
-            class UnityWebRequest extends UnityEngine_Networking_UnityWebRequest_Impl { }
+    namespace Il2Cpp {
+        class UnityWebRequest extends UnityEngine_Networking_UnityWebRequest_Impl { }
     }
 }
 

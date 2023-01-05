@@ -1,4 +1,4 @@
-export {}
+export { }
 
 declare global {
     var HookUnityWebRequest: () => void
@@ -7,4 +7,3 @@ declare global {
 const UnityWebRequest = (): void => BM("UnityWebRequest")
 
 globalThis.HookUnityWebRequest = UnityWebRequest
-

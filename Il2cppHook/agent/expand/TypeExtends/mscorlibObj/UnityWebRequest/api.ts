@@ -22,7 +22,7 @@ class UnityEngine_Networking_UnityWebRequest_API {
         // public Void set_disposeCertificateHandlerOnDispose(Boolean value)
         @cache
         static get _set_disposeCertificateHandlerOnDispose() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_disposeCertificateHandlerOnDispose", 1, ["System.Boolean"], "void", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_disposeCertificateHandlerOnDispose", 1, ["System.Boolean"], "void", ["pointer", "pointer"])
         }
 
         // public Boolean get_disposeDownloadHandlerOnDispose()
@@ -34,7 +34,7 @@ class UnityEngine_Networking_UnityWebRequest_API {
         // public Void set_disposeDownloadHandlerOnDispose(Boolean value)
         @cache
         static get _set_disposeDownloadHandlerOnDispose() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_disposeDownloadHandlerOnDispose", 1, ["System.Boolean"], "void", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_disposeDownloadHandlerOnDispose", 1, ["System.Boolean"], "void", ["pointer", "pointer"])
         }
 
         // public Boolean get_disposeUploadHandlerOnDispose()
@@ -46,7 +46,7 @@ class UnityEngine_Networking_UnityWebRequest_API {
         // public Void set_disposeUploadHandlerOnDispose(Boolean value)
         @cache
         static get _set_disposeUploadHandlerOnDispose() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_disposeUploadHandlerOnDispose", 1, ["System.Boolean"], "void", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_disposeUploadHandlerOnDispose", 1, ["System.Boolean"], "void", ["pointer", "pointer"])
         }
 
         // internal static IntPtr Create()
@@ -76,13 +76,13 @@ class UnityEngine_Networking_UnityWebRequest_API {
         // public Void .ctor(String url,String method)
         @cache
         static get __ctor() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", ".ctor", 2, ["System.String","System.String"], "void", ["pointer","pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", ".ctor", 2, ["System.String", "System.String"], "void", ["pointer", "pointer", "pointer"])
         }
 
         // public Void .ctor(String url,String method,DownloadHandler downloadHandler,UploadHandler uploadHandler)
         @cache
         static get __ctor_url_method_downloadHandler_uploadHandler() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", ".ctor", 4, ["System.String","System.String","UnityEngine.Networking.DownloadHandler","UnityEngine.Networking.UploadHandler"], "void", ["pointer","pointer","pointer","pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", ".ctor", 4, ["System.String", "System.String", "UnityEngine.Networking.DownloadHandler", "UnityEngine.Networking.UploadHandler"], "void", ["pointer", "pointer", "pointer", "pointer", "pointer"])
         }
 
         // protected override Void Finalize()
@@ -124,31 +124,31 @@ class UnityEngine_Networking_UnityWebRequest_API {
         // private UnityWebRequestError SetMethod(UnityWebRequestMethod methodType)
         @cache
         static get _SetMethod() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetMethod", 1, ["UnityEngine.Networking.UnityWebRequest.UnityWebRequestMethod"], "pointer", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetMethod", 1, ["UnityEngine.Networking.UnityWebRequest.UnityWebRequestMethod"], "pointer", ["pointer", "pointer"])
         }
 
         // internal Void InternalSetMethod(UnityWebRequestMethod methodType)
         @cache
         static get _InternalSetMethod() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "InternalSetMethod", 1, ["UnityEngine.Networking.UnityWebRequest.UnityWebRequestMethod"], "void", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "InternalSetMethod", 1, ["UnityEngine.Networking.UnityWebRequest.UnityWebRequestMethod"], "void", ["pointer", "pointer"])
         }
 
         // private UnityWebRequestError SetCustomMethod(String customMethodName)
         @cache
         static get _SetCustomMethod() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetCustomMethod", 1, ["System.String"], "pointer", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetCustomMethod", 1, ["System.String"], "pointer", ["pointer", "pointer"])
         }
 
         // internal Void InternalSetCustomMethod(String customMethodName)
         @cache
         static get _InternalSetCustomMethod() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "InternalSetCustomMethod", 1, ["System.String"], "void", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "InternalSetCustomMethod", 1, ["System.String"], "void", ["pointer", "pointer"])
         }
 
         // public Void set_method(String value)
         @cache
         static get _set_method() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_method", 1, ["System.String"], "void", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_method", 1, ["System.String"], "void", ["pointer", "pointer"])
         }
 
         // private UnityWebRequestError GetError()
@@ -172,7 +172,7 @@ class UnityEngine_Networking_UnityWebRequest_API {
         // public Void set_url(String value)
         @cache
         static get _set_url() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_url", 1, ["System.String"], "void", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_url", 1, ["System.String"], "void", ["pointer", "pointer"])
         }
 
         // private String GetUrl()
@@ -184,13 +184,13 @@ class UnityEngine_Networking_UnityWebRequest_API {
         // private UnityWebRequestError SetUrl(String url)
         @cache
         static get _SetUrl() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetUrl", 1, ["System.String"], "pointer", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetUrl", 1, ["System.String"], "pointer", ["pointer", "pointer"])
         }
 
         // private Void InternalSetUrl(String url)
         @cache
         static get _InternalSetUrl() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "InternalSetUrl", 1, ["System.String"], "void", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "InternalSetUrl", 1, ["System.String"], "void", ["pointer", "pointer"])
         }
 
         // public Int64 get_responseCode()
@@ -262,31 +262,31 @@ class UnityEngine_Networking_UnityWebRequest_API {
         // private UnityWebRequestError SetChunked(Boolean chunked)
         @cache
         static get _SetChunked() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetChunked", 1, ["System.Boolean"], "pointer", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetChunked", 1, ["System.Boolean"], "pointer", ["pointer", "pointer"])
         }
 
         // public Void set_chunkedTransfer(Boolean value)
         @cache
         static get _set_chunkedTransfer() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_chunkedTransfer", 1, ["System.Boolean"], "void", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_chunkedTransfer", 1, ["System.Boolean"], "void", ["pointer", "pointer"])
         }
 
         // internal UnityWebRequestError InternalSetRequestHeader(String name,String value)
         @cache
         static get _InternalSetRequestHeader() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "InternalSetRequestHeader", 2, ["System.String","System.String"], "pointer", ["pointer","pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "InternalSetRequestHeader", 2, ["System.String", "System.String"], "pointer", ["pointer", "pointer", "pointer"])
         }
 
         // public Void SetRequestHeader(String name,String value)
         @cache
         static get _SetRequestHeader() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetRequestHeader", 2, ["System.String","System.String"], "void", ["pointer","pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetRequestHeader", 2, ["System.String", "System.String"], "void", ["pointer", "pointer", "pointer"])
         }
 
         // public String GetResponseHeader(String name)
         @cache
         static get _GetResponseHeader() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "GetResponseHeader", 1, ["System.String"], "pointer", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "GetResponseHeader", 1, ["System.String"], "pointer", ["pointer", "pointer"])
         }
 
         // internal String[] GetResponseHeaderKeys()
@@ -304,7 +304,7 @@ class UnityEngine_Networking_UnityWebRequest_API {
         // private UnityWebRequestError SetUploadHandler(UploadHandler uh)
         @cache
         static get _SetUploadHandler() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetUploadHandler", 1, ["UnityEngine.Networking.UploadHandler"], "pointer", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetUploadHandler", 1, ["UnityEngine.Networking.UploadHandler"], "pointer", ["pointer", "pointer"])
         }
 
         // public UploadHandler get_uploadHandler()
@@ -316,13 +316,13 @@ class UnityEngine_Networking_UnityWebRequest_API {
         // public Void set_uploadHandler(UploadHandler value)
         @cache
         static get _set_uploadHandler() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_uploadHandler", 1, ["UnityEngine.Networking.UploadHandler"], "void", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_uploadHandler", 1, ["UnityEngine.Networking.UploadHandler"], "void", ["pointer", "pointer"])
         }
 
         // private UnityWebRequestError SetDownloadHandler(DownloadHandler dh)
         @cache
         static get _SetDownloadHandler() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetDownloadHandler", 1, ["UnityEngine.Networking.DownloadHandler"], "pointer", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetDownloadHandler", 1, ["UnityEngine.Networking.DownloadHandler"], "pointer", ["pointer", "pointer"])
         }
 
         // public DownloadHandler get_downloadHandler()
@@ -334,7 +334,7 @@ class UnityEngine_Networking_UnityWebRequest_API {
         // public Void set_downloadHandler(DownloadHandler value)
         @cache
         static get _set_downloadHandler() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_downloadHandler", 1, ["UnityEngine.Networking.DownloadHandler"], "void", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_downloadHandler", 1, ["UnityEngine.Networking.DownloadHandler"], "void", ["pointer", "pointer"])
         }
 
         // public CertificateHandler get_certificateHandler()
@@ -346,13 +346,13 @@ class UnityEngine_Networking_UnityWebRequest_API {
         // private UnityWebRequestError SetTimeoutMsec(Int32 timeout)
         @cache
         static get _SetTimeoutMsec() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetTimeoutMsec", 1, ["System.Int32"], "pointer", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetTimeoutMsec", 1, ["System.Int32"], "pointer", ["pointer", "pointer"])
         }
 
         // public Void set_timeout(Int32 value)
         @cache
         static get _set_timeout() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_timeout", 1, ["System.Int32"], "void", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "set_timeout", 1, ["System.Int32"], "void", ["pointer", "pointer"])
         }
 
         // public static UnityWebRequest Get(String uri)
@@ -364,20 +364,20 @@ class UnityEngine_Networking_UnityWebRequest_API {
         // public static UnityWebRequest Post(String uri,WWWForm formData)
         @cache
         static get _Post() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "Post", 2, ["System.String","UnityEngine.WWWForm"], "pointer", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "Post", 2, ["System.String", "UnityEngine.WWWForm"], "pointer", ["pointer", "pointer"])
         }
 
         // private static Void SetupPost(UnityWebRequest request,WWWForm formData)
         @cache
         static get _SetupPost() {
-                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetupPost", 2, ["UnityEngine.Networking.UnityWebRequest","UnityEngine.WWWForm"], "void", ["pointer","pointer"])
+                return Il2Cpp.Api.o("UnityEngine.UnityWebRequestModule", "UnityEngine.Networking.UnityWebRequest", "SetupPost", 2, ["UnityEngine.Networking.UnityWebRequest", "UnityEngine.WWWForm"], "void", ["pointer", "pointer"])
         }
 }
 
 Il2Cpp.Api.UnityWebRequest = UnityEngine_Networking_UnityWebRequest_API
 
 declare global {
-        namespace Il2Cpp.Api{
+        namespace Il2Cpp.Api {
                 class UnityWebRequest extends UnityEngine_Networking_UnityWebRequest_API { }
         }
 }

@@ -24,7 +24,7 @@ class UnityEngine_Coroutine_API {
 Il2Cpp.Api.Coroutine = UnityEngine_Coroutine_API
 
 declare global {
-        namespace Il2Cpp.Api{
+        namespace Il2Cpp.Api {
                 class Coroutine extends UnityEngine_Coroutine_API { }
         }
 }
