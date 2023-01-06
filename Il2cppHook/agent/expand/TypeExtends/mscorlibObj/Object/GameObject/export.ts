@@ -39,14 +39,10 @@ globalThis.HookSendMessage = () => {
     //         PrintStackTrace()
     //     }
     // } catch (e) {}
-
-    Interceptor.attach(Module.findExportByName("libunity.so", "UnitySendMessage")!, {
-        onEnter: function (args) {
-            console.warn("\n--------------\tCalled UnitySendMessage\t--------------")
-            console.log("UnitySendMessage => " + args[0].readCString() + " " + args[1].readCString() + " " + args[2].readCString())
-        }
+    A(Module.findExportByName("libunity.so", "UnitySendMessage")!, (args) => {
+        LOGW("\n--------------\tCalled UnitySendMessage\t--------------")
+        LOGD("UnitySendMessage => " + args[0].readCString() + " " + args[1].readCString() + " " + args[2].readCString())
     })
-
 }
 
 globalThis.showGameObject = (mPtr: NativePointer) => {

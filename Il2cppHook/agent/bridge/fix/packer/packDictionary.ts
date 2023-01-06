@@ -1,7 +1,6 @@
 import { PackArray } from "./packArray"
 import { PackList } from "./packList"
 
-
 // 还没修改好 用不了。。。。 
 export class PackDictionary {
 
