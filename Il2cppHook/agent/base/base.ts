@@ -1,4 +1,4 @@
-import { getMethodDesFromMethodInfo as GMD, getMethodModifier as GMM} from "../bridge/fix/il2cppM"
+import { getMethodDesFromMethodInfo as GMD, getMethodModifier as GMM } from "../bridge/fix/il2cppM"
 import { formartClass as FM } from "../utils/formart"
 import { FieldAccess, LogColor } from "./enum"
 import { cache } from "decorator-cache-getter"
@@ -62,7 +62,7 @@ class HookerBase {
     }
 
     static showClasses(imageOrName: string | NativePointer | number, filterNameSpace: string = "", filterClassName: string = ""): void {
-        let image: Il2Cpp.Image 
+        let image: Il2Cpp.Image
         try {
             if (typeof imageOrName == "string") {
                 // 处理arm64以参数形式传递会出bug的问题,长十六进制参数用引号包裹起来当String传递
@@ -102,9 +102,9 @@ class HookerBase {
         LOG(`\n Current -> ${image.name} @ ${image.handle}\n`, LogColor.C104)
         let titleLen = FM.printTitileA("List Classes { namespace {classPtr->filedsCount->methodsCount->enumClass->className} }", LogColor.C90)
         for (let key of tMap.keys()) {
-            let nameSpace:string= key
+            let nameSpace: string = key
             if (nameSpace != undefined) {
-                let nameSpaces:Array<Il2Cpp.Class> = tMap.get(nameSpace)!
+                let nameSpaces: Array<Il2Cpp.Class> = tMap.get(nameSpace)!
                 // filterNameSpace 不区分大小写
                 if (nameSpace.toLowerCase().indexOf(filterNameSpace.toLowerCase()) == -1) continue
                 ++countNameSpace
