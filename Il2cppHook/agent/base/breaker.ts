@@ -11,7 +11,8 @@ import ValueResolve from "./valueResolve"
 
 export { Breaker }
 declare global {
-    var b: (mPtr: NativePointer | string | number) => void
+    var b: (mPtr: NativePointer | string | number | Il2Cpp.Method) => void
+    var bt: (mPtr: NativePointer) => void
     var h: (filterStr?: string, countLogs?: number, reverse?: boolean, detachAll?: boolean) => void
     var hn: (start?: number, end?: number) => void
     var B: (mPtr: NativePointer | number | string | SpecialClass) => void
@@ -357,11 +358,12 @@ globalThis.breakWithArgs = Breaker.breakWithArgs
 globalThis.breakWithStack = Breaker.breakWithStack
 globalThis.breakInline = Breaker.breakInline as any
 globalThis.printDesertedMethods = Breaker.printDesertedMethods
+globalThis.bt = (mPtr: NativePointer) => b(AddressToMethod(mPtr))
 globalThis.getPlatform = (): string => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
 globalThis.getPlatformCtx = (ctx: CpuContext): ArmCpuContext | Arm64CpuContext => getPlatform() == "arm" ? ctx as ArmCpuContext : ctx as Arm64CpuContext
 
 // b(MethodInfo)带参数断点指定函数 == attachMethodInfo / b(ptr) 断点指定函数 == breakWithArgs
-globalThis.b = (mPtr: NativePointer | string | number) => {
+globalThis.b = (mPtr: NativePointer | string | number | Il2Cpp.Method) => {
     if (typeof mPtr == "number") {
         if (Process.arch == "arm") mPtr = ptr(mPtr)
         // arm64 指针长度超过15位使用String传参
@@ -374,11 +376,11 @@ globalThis.b = (mPtr: NativePointer | string | number) => {
         else throw new Error("Only support String format (like '0x...')")
     }
     try {
-        new Il2Cpp.Method(mPtr).name // 用报错来判断是method指针还是一个普通的地址
         if (mPtr instanceof Il2Cpp.Method) return Breaker.attachMethodInfo(mPtr, true)
+        new Il2Cpp.Method(mPtr).name // 用报错来判断是method指针还是一个普通的地址
         Breaker.attachMethodInfo(new Il2Cpp.Method(mPtr), true)
     } catch (error) {
-        Breaker.breakWithArgs(mPtr)
+        Breaker.breakWithArgs(mPtr as NativePointer)
     }
 }
 
