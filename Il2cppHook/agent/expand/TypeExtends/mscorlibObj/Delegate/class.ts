@@ -173,7 +173,8 @@ class System_Delegate_Impl extends System_Object {
     }
 
     toString(): string {
-        return `MP:${this.method} | MI:${this.method_ptr} | TG:${this.m_target} | virtual:${this.method_is_virtual}`
+        let method = new Il2Cpp.Method(this.method)
+        return `${method.name} | MI:${this.method} | MP:${method.relativeVirtualAddress} | TG:${this.m_target} | virtual:${this.method_is_virtual}`
     }
 
     toArray(): any[] {
