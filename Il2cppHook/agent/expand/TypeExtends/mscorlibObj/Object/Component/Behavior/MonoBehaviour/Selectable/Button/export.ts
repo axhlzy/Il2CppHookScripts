@@ -19,9 +19,9 @@ function OnPointerClick() {
                     FakePointerEventData(args[1])
                 })
             } catch (error) {
-                A(Il2Cpp.Api.Button._OnPointerClick.add(p_size*2), (args: InvocationArguments, ctx: CpuContext) => {
+                A(Il2Cpp.Api.Button._OnPointerClick.add(p_size * 2), (args: InvocationArguments, ctx: CpuContext) => {
                     LOGW("\n" + getLine(38))
-                    LOGD("public void OnPointerClick( " + getPlatformCtxWithArgV(ctx,0) + " , " + getPlatformCtxWithArgV(ctx,1) + " )")
+                    LOGD("public void OnPointerClick( " + getPlatformCtxWithArgV(ctx, 0) + " , " + getPlatformCtxWithArgV(ctx, 1) + " )")
                     FakePointerEventData(args[1])
                 })
             }
@@ -121,16 +121,14 @@ function OnPointerClick() {
 const OnButtonClick = () => {
     // OnPointerClick(instance, PointerEventData) : Void
     try {
-        A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
-            innerFunction(args[0],args[1])
-        })
+        A(Il2Cpp.Api.Button._OnPointerClick, (args) => innerFunction(args[0], args[1]))
     } catch (error) {
-        A(Il2Cpp.Api.Button._OnPointerClick, (_args,ctx:CpuContext) => {
-            innerFunction(getPlatformCtxWithArgV(ctx,0)!,getPlatformCtxWithArgV(ctx,1)!)
+        A(Il2Cpp.Api.Button._OnPointerClick, (_args, ctx: CpuContext) => {
+            innerFunction(getPlatformCtxWithArgV(ctx, 0)!, getPlatformCtxWithArgV(ctx, 1)!)
         })
     }
 
-    function innerFunction(arg0:NativePointer,arg1:NativePointer){
+    function innerFunction(arg0: NativePointer, arg1: NativePointer) {
         let button: Button = new Button(arg0)
         let currentGameobj: GameObject = getGameObjectPack(arg0)
         let pointerEventData: PointerEventData = new PointerEventData(arg1)
