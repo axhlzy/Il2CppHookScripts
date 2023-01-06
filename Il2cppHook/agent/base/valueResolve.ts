@@ -3,7 +3,7 @@ import { methodToString } from "../bridge/fix/il2cppM"
 import { UnityEngine_Object } from "../expand/TypeExtends/mscorlibObj/Object/class"
 import { getObjName } from "../expand/TypeExtends/mscorlibObj/Object/export"
 import { UnityEngine_Color_Impl } from "../expand/TypeExtends/mscorlibObj/ValueType/Color/class"
-import { formartClass as FM} from "../utils/formart"
+import { formartClass as FM } from "../utils/formart"
 import { readInt, readInt64, readSingle, readU16, readUInt } from "../utils/reader"
 
 class ValueResolve {
@@ -164,11 +164,8 @@ export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
             return new UnityEngine_Color_Impl(mPtr).toString()
         case "Vector2":
             return `${mPtr.readFloat()} ${mPtr.add(4).readFloat()}`
-        case "System.Action":
-        case "System.Action`1":
-        case "System.Action`2":
-            return mPtr.add(Process.pageSize === 4 ? 0x14 : 0x10).readPointer().readPointer().sub(soAddr).toString()
         default:
+            if (type.name.includes("System.Action")) return new mscorlib.Delegate(mPtr).toString()
             try {
                 return new Il2Cpp.Object(mPtr).toString()
             } catch {

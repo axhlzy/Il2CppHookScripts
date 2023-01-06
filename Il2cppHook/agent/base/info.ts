@@ -1,21 +1,21 @@
 import { getMethodDesFromMethodInfo as methodDEs } from "../bridge/fix/il2cppM"
-import { formartClass as FM} from "../utils/formart"
+import { formartClass as FM } from "../utils/formart"
 
 // 侧重参数信息 还有一个 MethodToShow() 用在 findMethod / find_method 侧重基本信息
-export const showMethodInfo = (methodInfoPtr: NativePointer): void => {
+export const showMethodInfo = (mPtr: NativePointer): void => {
     newLine()
-    if (typeof methodInfoPtr == "number"){
-        if (Process.arch == "arm64" && (String(methodInfoPtr).toString().length > 15))
+    if (typeof mPtr == "number") {
+        if (Process.arch == "arm64" && (String(mPtr).toString().length > 15))
             throw new Error("\nNot support parameter typed number at arm64\n\n\tUse b('0x...') instead\n")
-        methodInfoPtr = ptr(methodInfoPtr)
-    } else if (typeof methodInfoPtr == "string") {
-        if (String(methodInfoPtr).startsWith("0x")) {
-            methodInfoPtr = ptr(methodInfoPtr)
+        mPtr = ptr(mPtr)
+    } else if (typeof mPtr == "string") {
+        if (String(mPtr).startsWith("0x")) {
+            mPtr = ptr(mPtr)
         } else {
             throw new Error("\nNot a Pointer\n")
         }
     }
-    let packMethod = new Il2Cpp.Method(methodInfoPtr)
+    let packMethod = new Il2Cpp.Method(mPtr)
     let params = packMethod.parameters.map((param: Il2Cpp.Parameter) => {
         return (`${getLine(8, ' ')}[-]${FM.alignStr(param.name)} | type: ${param.type.handle} | @ class:${param.type.class.handle} | ${param.type.name}`)
     }).join("\n")
@@ -32,7 +32,7 @@ export const getClassFromMethodInfo = (methodInfoPtr: NativePointer): Il2Cpp.Cla
         if (Process.arch == "arm64" && (String(methodInfoPtr).toString().length > 15))
             throw new Error("\nNot support parameter typed number at arm64\n\n\tUse b('0x...') instead\n")
         methodInfoPtr = ptr(methodInfoPtr)
-    }else if (typeof methodInfoPtr == "string") {
+    } else if (typeof methodInfoPtr == "string") {
         if (!String(methodInfoPtr).startsWith("0x"))
             throw new Error("\nNot a Pointer\n")
         methodInfoPtr = ptr(String(methodInfoPtr))
@@ -47,5 +47,5 @@ declare global {
 }
 
 globalThis.showMethodInfo = showMethodInfo
-globalThis.methodToClass = (methodInfo:NativePointer) => getClassFromMethodInfo(methodInfo).handle
-globalThis.methodToClassShow = (methodInfo:NativePointer) => m(methodToClass(methodInfo))
+globalThis.methodToClass = (methodInfo: NativePointer) => getClassFromMethodInfo(methodInfo).handle
+globalThis.methodToClassShow = (methodInfo: NativePointer) => m(methodToClass(methodInfo))

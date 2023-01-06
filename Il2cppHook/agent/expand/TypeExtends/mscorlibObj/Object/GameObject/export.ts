@@ -5,16 +5,16 @@ globalThis.HookSetActive = (defaltActive: boolean = true, PrintStackTrace: boole
 
     try {
         A(Il2Cpp.Api.GameObject._SetActive, (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
-            innerSetActive(args[0],ctx)
+            innerSetActive(args[0], ctx)
         })
     } catch (error) {
         // 优化一下当dobby inlinehook生效时，hook不上报错的情况
-        A(Il2Cpp.Api.GameObject._SetActive.add(p_size*3), (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
-            innerSetActive(getPlatformCtxWithArgV(ctx,0)!,ctx)
+        A(Il2Cpp.Api.GameObject._SetActive.add(p_size * 3), (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
+            innerSetActive(getPlatformCtxWithArgV(ctx, 0)!, ctx)
         })
     }
 
-    function innerSetActive(mPtr:NativePointer,ctx:CpuContext){
+    function innerSetActive(mPtr: NativePointer, ctx: CpuContext) {
         if (mPtr.isNull()) return
         let gameObject = new Il2Cpp.GameObject(ptr(mPtr as unknown as number))
         if (filterDuplicateOBJ(gameObject.toString()) == -1) return
@@ -30,15 +30,23 @@ globalThis.HookSetActive = (defaltActive: boolean = true, PrintStackTrace: boole
 }
 
 globalThis.HookSendMessage = () => {
-    try {
-        var UnityPlayer = Java.use("com.unity3d.player.UnityPlayer")
-        UnityPlayer.UnitySendMessage.implementation = function (str0:string, str1:string, str2:string) {
+    // try {
+    //     var UnityPlayer = Java.use("com.unity3d.player.UnityPlayer")
+    //     UnityPlayer.UnitySendMessage.implementation = function (str0:string, str1:string, str2:string) {
+    //         console.warn("\n--------------\tCalled UnitySendMessage\t--------------")
+    //         console.log("UnityPlayer.UnitySendMessage(\x1b[96m'" + str0 + "','" + str1 + "','" + str2 + "'\x1b[0m)")
+    //         this.UnitySendMessage(str0, str1, str2)
+    //         PrintStackTrace()
+    //     }
+    // } catch (e) {}
+
+    Interceptor.attach(Module.findExportByName("libunity.so", "UnitySendMessage")!, {
+        onEnter: function (args) {
             console.warn("\n--------------\tCalled UnitySendMessage\t--------------")
-            console.log("UnityPlayer.UnitySendMessage(\x1b[96m'" + str0 + "','" + str1 + "','" + str2 + "'\x1b[0m)")
-            this.UnitySendMessage(str0, str1, str2)
-            PrintStackTrace()
+            console.log("UnitySendMessage => " + args[0].readCString() + " " + args[1].readCString() + " " + args[2].readCString())
         }
-    } catch (e) {}
+    })
+
 }
 
 globalThis.showGameObject = (mPtr: NativePointer) => {
@@ -118,14 +126,14 @@ export const setActiveGChange = (gameObject: Il2Cpp.GameObject) => gameObject.Se
  * 两种方式查找 根据路径查找指定gameobj
  * @param {String} path 路径或者是顶层gobjName
  */
- export function findGameObject(path:string, transform?:NativePointer) {
+export function findGameObject(path: string, transform?: NativePointer) {
     if (path == undefined) throw new Error("findGameObject: path is undefined")
 
     try {
         if (transform == undefined) {
             if (arguments[2] != undefined) {
                 // 返回 gameobject
-                let gobj:Il2Cpp.GameObject = Il2Cpp.GameObject.Find(path)
+                let gobj: Il2Cpp.GameObject = Il2Cpp.GameObject.Find(path)
                 if (gobj.handle.isNull()) throw "Not Found ..."
                 showGameObject(gobj.handle)
                 return gobj.handle
@@ -133,7 +141,7 @@ export const setActiveGChange = (gameObject: Il2Cpp.GameObject) => gameObject.Se
                 // GameObject.find（静态方法）得到GameObject,路径查找
                 showGameObject(callFunction(["UnityEngine.CoreModule", "GameObject", "Find", 1], allocCStr(path)))
             }
-        } else if (getType(transform).name.indexOf("Transform")!=-1) {
+        } else if (getType(transform).name.indexOf("Transform") != -1) {
             if (arguments[2] != undefined) {
                 // 返回 transform
                 return callFunction(["UnityEngine.CoreModule", "Transform", "Find", 1], transform, allocCStr(path))
@@ -157,7 +165,7 @@ declare global {
     var getTransform: (gameObjOrComponent: NativePointer) => NativePointer
     var setActive: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void
     var setActiveC: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void
-    var findGameObject: (path:string, transform?:NativePointer) => void
+    var findGameObject: (path: string, transform?: NativePointer) => void
     var HookSendMessage: () => void
 }
 

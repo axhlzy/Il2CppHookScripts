@@ -22,7 +22,7 @@ class System_Delegate_Impl extends System_Object {
     method_info: System_Reflection_MethodInfo = lfv(this.handle, "method_info") as unknown as System_Reflection_MethodInfo
     original_method_info: System_Reflection_MethodInfo = lfv(this.handle, "original_method_info") as unknown as System_Reflection_MethodInfo
     data: System_DelegateData = lfv(this.handle, "data") as unknown as System_DelegateData
-    method_is_virtual: boolean = lfv(this.handle, "method_is_virtual") as unknown as boolean
+    method_is_virtual: boolean = !lfv(this.handle, "method_is_virtual").isNull()
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
@@ -170,6 +170,15 @@ class System_Delegate_Impl extends System_Object {
 
     static AllocDelegateLike_internal(d: System_Delegate_Impl): System_MulticastDelegate {
         return mscorlib.Api.Delegate._AllocDelegateLike_internal(d.handle)
+    }
+
+    toString(): string {
+        let method = new Il2Cpp.Method(this.method)
+        return `${method.name} | MI:${this.method} | MP:${method.relativeVirtualAddress} | TG:${this.m_target} | virtual:${this.method_is_virtual}`
+    }
+
+    toArray(): any[] {
+        return [this.method, this.method_ptr, this.m_target, this.method_is_virtual]
     }
 
 }
