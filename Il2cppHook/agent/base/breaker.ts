@@ -45,7 +45,7 @@ class Breaker {
     private static array_attach_failed: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
     // private static array_log_cache: Map<string, [string, NativePointer[], NativePointer]> = new Map()
 
-    static addBreakPoint(imgOrClsPtr: NativePointer | number | string | SpecialClass = "CommonClass",nSp:string=""): void {
+    static addBreakPoint(imgOrClsPtr: NativePointer | number | string | SpecialClass = "CommonClass", nSp: string = ""): void {
         if (imgOrClsPtr instanceof NativePointer) {
             innerImage(imgOrClsPtr)
         } else if (typeof imgOrClsPtr == "number") {
@@ -177,7 +177,7 @@ class Breaker {
                                 let start = `  arg${index}  | `
                                 let parameterName: string
                                 try {
-                                    parameterName = FC.alignStr(`${method.parameters[index - 1].name}`, parameterNameMax)
+                                    parameterName = FC.alignStr(`${method.parameters[index].name}`, parameterNameMax)
                                 } catch { parameterName = FC.alignStr(` `, parameterNameMax) }
                                 let mid = `${parameterName}\t--->\t\t${FC.getPtrFormart(args[index])}\t\t`
                                 let end = `${method.parameters[index].type.name} (${method.parameters[index].type.class.handle})\t `
@@ -316,7 +316,7 @@ class Breaker {
                     let arr = methodToArray(method)
                     let times = this.map_methodInfo_callTimes.get(method)
                     ++countHideFunctions
-                    LOGD(`[*] ${arr[0]}  --->  ${arr[1]}\t${FC.alignStr(arr[2],p_size*2+2)}\t${FC.alignStr(times,4)}   | ${FC.alignStr(method.class.name,16)} |  \t${arr[3]}`)
+                    LOGD(`[*] ${arr[0]}  --->  ${arr[1]}\t${FC.alignStr(arr[2], p_size * 2 + 2)}\t${FC.alignStr(times, 4)}   | ${FC.alignStr(method.class.name, 16)} |  \t${arr[3]}`)
                 }
             }
         })
@@ -365,7 +365,7 @@ globalThis.b = (mPtr: NativePointer | string | number) => {
     if (typeof mPtr == "number") {
         if (Process.arch == "arm") mPtr = ptr(mPtr)
         // arm64 指针长度超过15位使用String传参
-        else if (Process.arch == "arm64" && (mPtr.toString().length > 15)) 
+        else if (Process.arch == "arm64" && (mPtr.toString().length > 15))
             throw new Error("\nNot support parameter typed number at arm64\n\n\tUse b('0x...') instead\n")
         else mPtr = ptr(mPtr)
     } else if (typeof mPtr == "string") {
@@ -383,7 +383,7 @@ globalThis.b = (mPtr: NativePointer | string | number) => {
 }
 
 // 原 print_list_result, 用来列出已经 attach 的方法
-globalThis.printCurrentMethods = (filterName:string = "", types: boolean = false) => {
+globalThis.printCurrentMethods = (filterName: string = "", types: boolean = false) => {
     let currentTime = Date.now()
     new Promise((resolve: Function) => {
         let methodInfos = new Array<Il2Cpp.Method>()
@@ -411,7 +411,7 @@ globalThis.printCurrentMethods = (filterName:string = "", types: boolean = false
 }
 
 // 带参数解析批量断点Class中的所有方法
-globalThis.BM = (className: string):void => {
+globalThis.BM = (className: string): void => {
     if (typeof className != "string") throw new Error("\n\tclassName must be a string\n")
     let classPtr = findClass(className)
     if (classPtr.isNull()) throw new Error(`\n\tCan't find class ${className}\n`)
@@ -421,7 +421,7 @@ globalThis.BM = (className: string):void => {
 }
 
 // 查找所有包含filterStr的方法并断点
-globalThis.BF = (filterStr: string, allImg:boolean = true): void => {
+globalThis.BF = (filterStr: string, allImg: boolean = true): void => {
     if (typeof filterStr != "string") throw new Error("\n\tfilterStr must be a string\n")
     DD()
     HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
@@ -433,7 +433,7 @@ globalThis.BF = (filterStr: string, allImg:boolean = true): void => {
     })
 }
 
-globalThis.getPlatformCtxWithArgV = (ctx: CpuContext,argIndex:number): NativePointer|undefined => {
+globalThis.getPlatformCtxWithArgV = (ctx: CpuContext, argIndex: number): NativePointer | undefined => {
     if ((ctx as ArmCpuContext).r0 != undefined) {
         // case arm32
         switch (argIndex) {
@@ -454,7 +454,7 @@ globalThis.getPlatformCtxWithArgV = (ctx: CpuContext,argIndex:number): NativePoi
             case 14: return (ctx as ArmCpuContext).lr
             case 15: return (ctx as ArmCpuContext).pc
             default: throw new Error(`ARM32 -> argIndex ${argIndex} is out of range`)
-        } 
+        }
     } else {
         // case arm64
         switch (argIndex) {
