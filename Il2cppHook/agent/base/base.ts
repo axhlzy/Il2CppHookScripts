@@ -32,7 +32,6 @@ class HookerBase {
         return HookerBase._list_assemblies.map((assembly: Il2Cpp.Assembly) => assembly.image.name.split(".dll")[0])
     }
 
-    // @cache
     private static getMapImagesCacheMap = new Map()
     static getMapImages(): Map<string, NativePointer> {
         if (HookerBase.getMapImagesCacheMap.size != 0) return HookerBase.getMapImagesCacheMap

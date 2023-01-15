@@ -5,5 +5,5 @@ declare global {
 }
 
 globalThis.main = () => {
-    
+
 }

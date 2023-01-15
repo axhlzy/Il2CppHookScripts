@@ -38,7 +38,7 @@ globalThis.HookSendMessage = () => {
     //         this.UnitySendMessage(str0, str1, str2)
     //         PrintStackTrace()
     //     }
-    // } catch (e) {}
+    // } catch (e) {}  
     A(Module.findExportByName("libunity.so", "UnitySendMessage")!, (args) => {
         LOGW("\n--------------\tCalled UnitySendMessage\t--------------")
         LOGD("UnitySendMessage => " + args[0].readCString() + " " + args[1].readCString() + " " + args[2].readCString())
