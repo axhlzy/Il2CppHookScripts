@@ -385,7 +385,7 @@ export var VMError = Object.freeze({
 /**
  * Synchronisation direction between Frida and QBDI GPR contexts
  */
-export var SyncDirection = Object.freeze({
+export var SyncDirection = {
     /**
      * Constant variable used to synchronize QBDI's context to Frida's.
      *
@@ -396,7 +396,7 @@ export var SyncDirection = Object.freeze({
      * Constant variable used to synchronize Frida's context to QBDI's.
      */
     FRIDA_TO_QBDI: 1
-});
+};
 
 /**
  * The callback results.
