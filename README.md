@@ -82,19 +82,19 @@ $ frida -FU -l ../_Ufunc.js
   
     ![list_images](img/list_images.png)
 
-- **c() == list_classes 列出所有的 Classes list_classes(ptr/strFilter)** <a id="list_classes"></a>
+- **c() == list_classes 列出所有的类 list_classes(ptr/strFilter)** <a id="list_classes"></a>
   
     ![list_classes](img/list_classes.png)
 
-- **m() == list_methods 列出所有的 Methods** <a id="list_methods"></a>
+- **m() == list_methods 列出所有的方法** <a id="list_methods"></a>
   
     ![list_methods](img/list_methods.png)
 
-- **f() == list_fields 列出所有的 Fields** <a id="list_fields"></a>
+- **f() == list_fields 列出所有的字段** <a id="list_fields"></a>
   
     ![list_fields](img/list_fields.png)
 
-- **findClass(className) 查找类,一般配合 m() 使用 , m(findClass('className')) === m('className')** <a id="findClass"></a>
+- **findClass(className) 查找类,一般配合m()使用  m(findClass('className')) === m('className')** <a id="findClass"></a>
   
     ![findClass](img/findClass.png)
 
@@ -167,11 +167,11 @@ $ frida -FU -l ../_Ufunc.js
   
     ![watch](img/watch.png)
 
-- **StalkerTracePath StalkerTrace封装,分析调用顺序** <a id="StalkerTracePath"></a>
+- **StalkerTracePath StalkerTrace封装 分析调用顺序** <a id="StalkerTracePath"></a>
     
     ![StalkerTracePath](img/StalkerTracePath.png)
 
-- **StalkerTraceEvent StalkerTraceEvent,分析事件** <a id="StalkerTraceEvent"></a>
+- **StalkerTraceEvent StalkerTraceEvent 分析事件** <a id="StalkerTraceEvent"></a>
     
     ![StalkerTraceEvent](img/StalkerTraceEvent.png)
 
@@ -221,7 +221,7 @@ $ frida -FU -l ../_Ufunc.js
 
     ![findImport](img/findImport.png)
 
-- **lfs 详见 Il2cppHook\agent\bridge\fix\parseFields.ts，需要一个参数实例地址，B()中有** <a id="lfs"></a>
+- **lfs 详见 Il2cppHook\agent\bridge\fix\parseFields.ts 需要一个参数实例地址 可以去B()中找** <a id="lfs"></a>
 
     ![lfs](img/lfs0.png)
     
@@ -255,6 +255,10 @@ $ frida -FU -l ../_Ufunc.js
     1. 确认手机端server与电脑端frida版本一致，如果你的版本不一致概率性出问题
     2. 已确认高版本的 frida-tools 在使用老版 Ufunc.js （ts版不受影响）会出问题，所以建议直接使用 10.5.4 版本
 - 建议使用真机,尽量不在x86模拟器中使用,x86中找不到对应so,其次frida对于模拟器的兼容性也并不好
+
+todo：
+    qbdi 调用栈
+    ...
     
 
 <!--
