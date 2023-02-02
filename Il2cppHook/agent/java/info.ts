@@ -1,7 +1,7 @@
 import { Breaker } from "../base/breaker"
 import { HookerBase } from "../base/base"
 import { distance } from "fastest-levenshtein"
-import { formartClass as FM} from "../utils/formart"
+import { formartClass as FM } from "../utils/formart"
 import { Time } from "../expand/TypeExtends/mscorlibObj/Times/export"
 import { getMethodDesFromMethodInfo as DesMethodStr } from "../bridge/fix/il2cppM"
 import { Application } from "../expand/TypeExtends/mscorlibObj/Application/export"
@@ -58,7 +58,7 @@ function getApkInfo() {
         let buildId = getMetaData('unity.build-id')
         try {
             if (buildId.length != 0) LOGD("\n[*]unity.build-id\t" + getMetaData('unity.build-id'))
-        } catch {}
+        } catch { }
         LOGO(getLine(100))
     })
 
@@ -139,10 +139,10 @@ const findClasses = (filterClassName: string): void => {
             let F = FM.alignStr(`F:${item.fields.length}`, 6)
             let E = FM.alignStr(`E:${item.isEnum}`, 8)
             let A = FM.alignStr(`A:${item.isAbstract}`, 8)
-            if (item.isAbstract || item.isEnum){
-                LOGZ(`${FM.alignStr(`[${++index}]`,6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${item.name}`)
-            }else{
-                LOGD(`${FM.alignStr(`[${++index}]`,6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${item.name}`)
+            if (item.isAbstract || item.isEnum) {
+                LOGZ(`${FM.alignStr(`[${++index}]`, 6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${item.name}`)
+            } else {
+                LOGD(`${FM.alignStr(`[${++index}]`, 6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${item.name}`)
             }
         })
     newLine(1)
@@ -238,7 +238,7 @@ const printExp = (filter: string = "", findAll: boolean = true, formartMaxLine: 
             return
         }
         let index = FM.alignStr(`[${++countIndex}]`, 6)
-        let virAddr = FM.alignStr(item.handle, p_size * 3) + (item.virtualAddress.isNull() ? "" : ` --->  ${FM.alignStr(item.relativeVirtualAddress,12)}`)
+        let virAddr = FM.alignStr(item.handle, p_size * 3) + (item.virtualAddress.isNull() ? "" : ` --->  ${FM.alignStr(item.relativeVirtualAddress, 12)}`)
         let className = FM.alignStr(item.class.name, 20)
         let result = `${index} ${virAddr}  |  ${className} @ ${item.class.handle} |  ${DesMethodStr(item)}`
         if (formartMaxLine != -1 && formartMaxLine > 10) result = FM.alignStr(result, formartMaxLine)
@@ -326,5 +326,5 @@ declare global {
     var AddressToMethod: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method
     var AddressToMethodNoException: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method | null
     var findMethods: (filter: string, findAll?: boolean, formartMaxLine?: number, retArr?: boolean) => void | Array<Il2Cpp.Method>
-    var findClasses: (filterClassName: string)=> void
+    var findClasses: (filterClassName: string) => void
 }

@@ -3,6 +3,7 @@ import { VM, VMAction, GPRState, FPRState, CallbackPriority, VMError, SyncDirect
 
 // https://qbdi.readthedocs.io/en/stable/api.html
 // https://qbdi.readthedocs.io/en/stable/get_started-frida.html#frida-qbdi-script
+// segment 1: Permission denied [SELinux] -> getenforce == Enforcing ? setenforce 0 : null
 
 const testCall = () => {
     const vm = new VM()
@@ -42,76 +43,46 @@ const testCall = () => {
     LOGD(`U16 ret => ${ret} | '${readU16(ret)}'`)
 }
 
-const test_replace = (mPtr: NativePointer) => {
-
+const qbdi_replace = (mPtr: NativePointer) => {
     let functionAddr = checkPointer(mPtr)
-
-    testCall()
-
-
-
+    const vm = new VM()
     let srcFunc: NativeFunction<NativePointer, [NativePointer, NativePointer, NativePointer, NativePointer, NativePointer]> = new NativeFunction(functionAddr, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer', 'pointer'])
     Interceptor.replace(functionAddr, new NativeCallback(function (arg0: NativePointer, arg1: NativePointer, arg2: NativePointer, arg3: NativePointer, arg4: NativePointer) {
-        LOGD(`replace => ${arg0} ${arg1} ${arg2} ${arg3} ${arg4}`)
-        let ret = srcFunc(arg0, arg1, arg2, arg3, arg4)
-        let ret1 = qbdiExec(this.context, arg0, arg1, arg2, arg3, arg4)
-        LOGD(`replace => ${ret} ${ret1}`)
-        return ret1
-    }, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer', 'pointer', 'pointer']))
-
-
-    function qbdiExec(ctx: CpuContext, arg0: NativePointer, arg1: NativePointer, arg2: NativePointer, arg3: NativePointer, arg4: NativePointer): NativePointer {
-        const vm = new VM()
+        LOGD(`called ${functionAddr}/${mPtr} | args => ${arg0} ${arg1} ${arg2} ${arg3} ${arg4}`)
+        // let ret = srcFunc(arg0, arg1, arg2, arg3, arg4)
+        Interceptor.revert(functionAddr)
+        Interceptor.flush()
         let state: GPRState = vm.getGPRState()
-        let stack: NativePointer = vm.allocateVirtualStack(state, 0x100000)
-        state.synchronizeContext(ctx, SyncDirection.FRIDA_TO_QBDI as unknown as Readonly<{ FRIDA_TO_QBDI: 0; QBDI_TO_FRIDA: 1; }>)
+        let stack: NativePointer = vm.allocateVirtualStack(state, 0x10000)
+        // state.synchronizeContext(this.context, SyncDirection.FRIDA_TO_QBDI as any)
         vm.addInstrumentedModuleFromAddr(functionAddr.toString())
+        LOGD("p call " + (srcFunc as unknown as NativePointer).toString())
         let retval = vm.call((srcFunc as unknown as NativePointer).toString(), [arg0, arg1, arg2, arg3, arg4])
-        console.log(retval.toString(), readU16(retval))
-        // let retval = ptr(0)
-        // vm.alignedFree(stack)
+        // state.synchronizeContext(this.context, SyncDirection.QBDI_TO_FRIDA as any)
+        LOGD(`replace => ${retval} ${retval}`)
         return retval
-    }
-
-
-    function testCall() {
-        const vm = new VM()
-        let state: GPRState = vm.getGPRState()
-        let stack: NativePointer = vm.allocateVirtualStack(state, 0x100000)
-        vm.addInstrumentedModuleFromAddr(functionAddr.toString())
-        let retval = vm.call(functionAddr.toString(), [allocCStr("123123")])
-        LOGD(`testCall U16 ret => ${retval} | '${readU16(retval)}'`)
-        vm.alignedFree(stack)
-    }
-
-
-
-
-
-
+    }, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer', 'pointer', 'pointer']))
 }
 
 /* qbdi test */
 globalThis.qbdi_test = () => {
     // testCall()
-    test_replace(Module.findExportByName(soName, "il2cpp_string_new")!)
+    //     test_replace(Module.findExportByName(soName, "il2cpp_string_new")!)
 }
 
 /* qdbi attach */
-globalThis.qat = () => {
+globalThis.qat = (mPtr: NativePointer) => qbdi_replace(mPtr)
 
-
-}
 
 /* qdbi attach log level (stack) */
-globalThis.qat = () => {
+globalThis.qal = () => {
     // todo
 
 }
 
 declare global {
     var qbdi_test: () => void
-    var qat: () => void
+    var qat: (mPtr: NativePointer) => void
     var qal: () => void
 }
 
