@@ -10,7 +10,9 @@
   },
   "devDependencies": {
     "@types/frida-gum": "^18.2.0",
-    "@types/node": "^17.0.45"
+    "@types/node": "^17.0.45",
+    "@frida/http": "^4.0.2",
+    "@frida/https": "^1.0.0"
   },
   "dependencies": {
     "babelify": "^10.0.0",
