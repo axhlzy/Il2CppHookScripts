@@ -11,10 +11,10 @@ import { SystemInfo } from "../expand/TypeExtends/mscorlibObj/SystemInfo/export"
 /**
  * 获取APK的一些基本信息
  */
-function getApkInfo() {
+const getApkInfo = () => {
+
     Java.perform(() => {
         LOGO(getLine(100))
-
         let context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext()
         let pkgInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0)
         // var appInfo = context.getApplicationInfo()
@@ -306,8 +306,9 @@ globalThis.bp = (filterName: string, breakMethodInfo: boolean = false) => {
 
 export { getApkInfo, launchApp, cacheMethods, findClasses }
 
+globalThis.getApkInfo = getApkInfo
+
 Reflect.set(globalThis, "launchApp", launchApp)
-Reflect.set(globalThis, "getApkInfo", getApkInfo)
 Reflect.set(globalThis, "findMethods", printExp)
 Reflect.set(globalThis, "findClasses", findClasses)
 Reflect.set(globalThis, "getUnityInfo", getUnityInfo)
