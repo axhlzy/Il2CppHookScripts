@@ -1,4 +1,4 @@
-import { PassType } from "../../../../utils/common"
+import { filterDuplicateOBJ as FOBJ, PassType } from "../../../../utils/common"
 
 const HookPlayerPrefs = (isShowPrintStack: boolean = false, needLRInfo: boolean = true): void => {
 
@@ -13,6 +13,9 @@ const HookPlayerPrefs = (isShowPrintStack: boolean = false, needLRInfo: boolean 
             pass.set("arg1", args[1])
         }, (retval: InvocationReturnValue, ctx: CpuContext, pass: Map<PassType, any>) => {
             LOGD("\n[*] '" + retval + "' = GetFloat('" + pass.get("arg0") + "'," + pass.get("arg1") + ")")
+            let disp = `\n[*] ${retval} = GetFloat(${pass.get("arg0")},${pass.get("arg1")})`
+            if (FOBJ(disp, 10)) return
+            LOGD(disp)
             if (needLRInfo) LOGZ("\t\t { LR:" + checkCtx(ctx) + " } | { PC:" + checkCtx(ctx, "PC") + " }")
             if (isShowPrintStack) LOGZ((GetStackTraceN(ctx)))
         })
@@ -22,7 +25,8 @@ const HookPlayerPrefs = (isShowPrintStack: boolean = false, needLRInfo: boolean 
             pass.set("arg0", readU16(args[0]))
             pass.set("arg1", args[1])
         }, (retval: InvocationReturnValue, ctx: CpuContext, pass: Map<PassType, any>) => {
-            LOGD("\n[*] '" + retval.toInt32() + "' = GetInt('" + pass.get("arg0") + "'," + pass.get("arg1") + ")")
+            let disp = `\n[*] ${retval.toInt32()} = GetInt(${pass.get("arg0")},${pass.get("arg1")})`
+            if (FOBJ(disp, 10)) return
             if (needLRInfo) LOGZ("\t\t { LR:" + checkCtx(ctx) + " } | { PC:" + checkCtx(ctx, "PC") + " }")
             if (isShowPrintStack) LOGZ((GetStackTraceN(ctx)))
             if (pass.get("arg0").indexOf("SaleBoughted") != -1) retval.replace(ptr(0x1))
@@ -32,7 +36,8 @@ const HookPlayerPrefs = (isShowPrintStack: boolean = false, needLRInfo: boolean 
         A(Il2Cpp.Api.PlayerPrefs._GetString, (args: InvocationArguments, ctx: CpuContext, pass: Map<PassType, any>) => {
             pass.set("arg0", readU16(args[0]))
         }, (retval: InvocationReturnValue, ctx: CpuContext, pass: Map<PassType, any>) => {
-            LOGD("\n[*] '" + readU16(retval) + "' = GetString('" + pass.get("arg0") + "')")
+            let disp = `\n[*] ${readU16(retval)} = GetString(${pass.get("arg0")})`
+            if (FOBJ(disp, 10)) return
             if (needLRInfo) LOGZ("\t\t { LR:" + checkCtx(ctx) + " } | { PC:" + checkCtx(ctx, "PC") + " }")
             if (isShowPrintStack) LOGZ((GetStackTraceN(ctx)))
         })
@@ -45,7 +50,8 @@ const HookPlayerPrefs = (isShowPrintStack: boolean = false, needLRInfo: boolean 
             pass.set("arg0", readU16(args[0]))
             pass.set("arg1", (args[1].isNull() ? 0 : readSingle(args[1])))
         }, (retval: InvocationReturnValue, ctx: CpuContext, pass: Map<PassType, any>) => {
-            LOGD("\n[*] SetFloat('" + pass.get("arg0") + "'," + pass.get("arg1") + ")")
+            let disp = `\n[*] SetFloat(${pass.get("arg0")},${pass.get("arg1")})`
+            if (FOBJ(disp, 10)) return
             if (needLRInfo) LOGZ("\t\t { LR:" + checkCtx(ctx) + " } | { PC:" + checkCtx(ctx, "PC") + " }")
             if (isShowPrintStack) LOGZ((GetStackTraceN(ctx)))
         })
@@ -55,7 +61,8 @@ const HookPlayerPrefs = (isShowPrintStack: boolean = false, needLRInfo: boolean 
             pass.set("arg0", readU16(args[0]))
             pass.set("arg1", args[1])
         }, (retval: InvocationReturnValue, ctx: CpuContext, pass: Map<PassType, any>) => {
-            LOGD("\n[*] SetInt('" + pass.get("arg0") + "'," + pass.get("arg1") + ")")
+            let disp = `\n[*] SetInt(${pass.get("arg0")},${pass.get("arg1")})`
+            if (FOBJ(disp, 10)) return
             if (needLRInfo) LOGZ("\t\t { LR:" + checkCtx(ctx) + " } | { PC:" + checkCtx(ctx, "PC") + " }")
             if (isShowPrintStack) LOGZ((GetStackTraceN(ctx)))
         })
@@ -65,7 +72,8 @@ const HookPlayerPrefs = (isShowPrintStack: boolean = false, needLRInfo: boolean 
             pass.set("arg0", readU16(args[0]))
             pass.set("arg1", readU16(args[1]))
         }, (retval: InvocationReturnValue, ctx: CpuContext, pass: Map<PassType, any>) => {
-            LOGD("\n[*] SetString('" + pass.get("arg0") + "','" + pass.get("arg1") + "')")
+            let disp = `\n[*] SetString(${pass.get("arg0")},${pass.get("arg1")})`
+            if (FOBJ(disp, 10)) return
             if (needLRInfo) LOGZ("\t\t { LR:" + checkCtx(ctx) + " } | { PC:" + checkCtx(ctx, "PC") + " }")
             if (isShowPrintStack) LOGZ((GetStackTraceN(ctx)))
         })

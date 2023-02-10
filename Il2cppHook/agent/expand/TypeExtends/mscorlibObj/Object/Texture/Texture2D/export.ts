@@ -22,21 +22,25 @@ globalThis.B_Texture2D = () => {
 
             let addr = Il2Cpp.Domain.assembly("UnityEngine.UI").image.class("UnityEngine.UI.Image").method("get_mainTexture").virtualAddress
             LOGD("get_mainTexture => " + addr)
+            let list_text2d = []
 
             A(addr, undefined, (ret: InvocationReturnValue) => {
-
                 let text2d = new Il2Cpp.Texture2D(ret)
+                list_text2d.push(text2d)
                 let height = text2d.get_width()
                 let width = text2d.get_height()
                 // public static RenderTexture GetTemporaryShadowTexture(Int32 width,Int32 height,Int32 bits)
                 LOGD("height " + height + " width " + width)
-                let ins_descripter = alloc(20)
+                // let ins_descripter = alloc(20)
                 // ins_descripter = callFunction(0x4BEE58, ins_descripter, width, height)
                 // let ins_RenderTexture = callFunction(0x4BE988, ins_descripter)
                 // LOGD("ins_RenderTexture " + ins_RenderTexture)
 
                 callOnce(newLine)
                 if (ret.isNull()) return
+
+                let addr = ptr(0)
+                // Memory.scan(addr,)
 
                 let get_width = find_method("UnityEngine.CoreModule", "Texture", "get_width")
                 let get_height = find_method("UnityEngine.CoreModule", "Texture", "get_height")
