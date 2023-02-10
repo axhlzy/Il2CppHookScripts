@@ -23185,7 +23185,14 @@ globalThis.B_Texture2D = () => {
                 throw new Error("EncodeToJPG is null");
             let EncodeToJPG_ab = EncodeToJPG.sub(libunity);
             LOGD("EncodeToJPG ->" + EncodeToJPG + " | " + EncodeToJPG_ab);
-            A(Il2Cpp.Domain.assembly("UnityEngine.UI").image.class("UnityEngine.UI.Image").method("get_mainTexture").virtualAddress, undefined, (ret) => {
+            let addr = Il2Cpp.Domain.assembly("UnityEngine.UI").image.class("UnityEngine.UI.Image").method("get_mainTexture").virtualAddress;
+            LOGD("get_mainTexture => " + addr);
+            A(addr, undefined, (ret) => {
+                let text2d = new Il2Cpp.Texture2D(ret);
+                let height = text2d.get_width();
+                let width = text2d.get_height();
+                LOGD("height " + height + " width " + width);
+                let ins_descripter = alloc(20);
                 callOnce(newLine);
                 if (ret.isNull())
                     return;
@@ -23363,16 +23370,16 @@ class UnityEngine_Texture_Impl extends class_2.UnityEngine_Object {
         return api_1.UnityEngine_Texture_API._GetDataHeight(this.handle);
     }
     get_width() {
-        return api_1.UnityEngine_Texture_API._get_width(this.handle);
+        return api_1.UnityEngine_Texture_API._get_width(this.handle).toInt32();
     }
     set_width(value) {
-        return api_1.UnityEngine_Texture_API._set_width(this.handle, value);
+        return api_1.UnityEngine_Texture_API._set_width(this.handle, ptr(value));
     }
     get_height() {
-        return api_1.UnityEngine_Texture_API._get_height(this.handle);
+        return api_1.UnityEngine_Texture_API._get_height(this.handle).toInt32();
     }
     set_height(value) {
-        return api_1.UnityEngine_Texture_API._set_height(this.handle, value);
+        return api_1.UnityEngine_Texture_API._set_height(this.handle, ptr(value));
     }
     get_isReadable() {
         return api_1.UnityEngine_Texture_API._get_isReadable(this.handle);

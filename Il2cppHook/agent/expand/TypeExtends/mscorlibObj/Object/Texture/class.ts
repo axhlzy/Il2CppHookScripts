@@ -32,19 +32,19 @@ class UnityEngine_Texture_Impl extends UnityEngine_Object {
     }
 
     get_width(): number {
-        return UnityEngine_Texture_API._get_width(this.handle)
+        return UnityEngine_Texture_API._get_width(this.handle).toInt32()
     }
 
     set_width(value: number): void {
-        return UnityEngine_Texture_API._set_width(this.handle, value)
+        return UnityEngine_Texture_API._set_width(this.handle, ptr(value))
     }
 
     get_height(): number {
-        return UnityEngine_Texture_API._get_height(this.handle)
+        return UnityEngine_Texture_API._get_height(this.handle).toInt32()
     }
 
     set_height(value: number): void {
-        return UnityEngine_Texture_API._set_height(this.handle, value)
+        return UnityEngine_Texture_API._set_height(this.handle, ptr(value))
     }
 
     get_isReadable(): boolean {
