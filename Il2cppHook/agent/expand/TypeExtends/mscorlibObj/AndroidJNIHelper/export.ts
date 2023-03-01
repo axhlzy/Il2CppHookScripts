@@ -3,15 +3,19 @@ import { formartClass } from "../../../../utils/formart"
 let MethodIDs: Map<string, [NativePointer, string, string, boolean]> = new Map()
 let FieldIDs: Map<string, [NativePointer, string, string, boolean]> = new Map()
 
-setTimeout(() => {
-    Il2Cpp.perform(() => {
-        let address = Module.findBaseAddress("libil2cpp.so")
-        if (!address) return
-        setBaseAddress(address)
-        recordMethodID()
-        recordFieldID()
-    })
-}, 1000)
+// setTimeout(() => {
+//     Il2Cpp.perform(() => {
+//         let address = Module.findBaseAddress("libil2cpp.so")
+//         if (!address) return
+//         setBaseAddress(address)
+//         try {
+//             recordMethodID()
+//             recordFieldID()
+//         } catch (error) {
+//             // LOGE(error)
+//         }
+//     })
+// }, 1000)
 
 // UnityEngine.AndroidJNIHelper | public static IntPtr GetFieldID(IntPtr javaClass,String fieldName,String signature,Boolean isStatic)
 const recordMethodID = () => {

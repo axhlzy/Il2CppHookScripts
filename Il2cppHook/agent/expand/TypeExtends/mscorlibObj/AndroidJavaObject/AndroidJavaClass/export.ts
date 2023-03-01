@@ -2,21 +2,25 @@
 let classMap = new Map<string, Il2Cpp.AndroidJavaClass>()
 
 // 想要使用 classMap 需要再启动时候附加，AndroidJavaClass的构造不出意外的话只走了一次
-setTimeout(() => {
-    Il2Cpp.perform(() => {
-        let address = Module.findBaseAddress("libil2cpp.so")
-        if (!address) return
-        setBaseAddress(address)
-        recordClasses()
-    })
-}, 1000)
+// setTimeout(() => {
+//     Il2Cpp.perform(() => {
+//         let address = Module.findBaseAddress("libil2cpp.so")
+//         if (!address) return
+//         setBaseAddress(address)
+//         recordClasses()
+//     })
+// }, 1000)
 
 const recordClasses = () => {
-    if (Il2Cpp.Api.AndroidJavaClass.__AndroidJavaClass == undefined) return
-    // UnityEngine.AndroidJavaClass | private Void _AndroidJavaClass(String className)
-    A(Il2Cpp.Api.AndroidJavaClass.__AndroidJavaClass, (args, _ctx) => {
-        classMap.set(readU16(args[1]), new Il2Cpp.AndroidJavaClass(args[0]))
-    })
+    try {
+        if (Il2Cpp.Api.AndroidJavaClass.__AndroidJavaClass == undefined) return
+        // UnityEngine.AndroidJavaClass | private Void _AndroidJavaClass(String className)
+        A(Il2Cpp.Api.AndroidJavaClass.__AndroidJavaClass, (args, _ctx) => {
+            classMap.set(readU16(args[1]), new Il2Cpp.AndroidJavaClass(args[0]))
+        })
+    } catch (error) {
+        // LOGE(error)   
+    }
 }
 
 export const listAndroidClass = () => {

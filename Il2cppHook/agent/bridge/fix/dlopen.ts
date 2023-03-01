@@ -36,14 +36,18 @@ const onSoLoad = (soPath: string) => {
 // @ Editor\Data\il2cpp\libil2cpp\il2cpp-api.cpp
 // int il2cpp_init(const char* domain_name)
 function onIl2cppInit() {
-    Interceptor.attach(Module.findExportByName(soName, 'il2cpp_init')!, {
-        onEnter(this: InvocationContext, _args: InvocationArguments) {
-            // LOGE(`onEnter il2cpp_init('${_args[0].readCString()}')`)
-        },
-        onLeave(this: InvocationContext, _retval: InvocationReturnValue) {
-            dowork() // 初始化完成之后再干活儿，避免使用 Il2Cpp.perform
-        }
-    })
+    try {
+        Interceptor.attach(Module.findExportByName(soName, 'il2cpp_init')!, {
+            onEnter(this: InvocationContext, _args: InvocationArguments) {
+                // LOGE(`onEnter il2cpp_init('${_args[0].readCString()}')`)
+            },
+            onLeave(this: InvocationContext, _retval: InvocationReturnValue) {
+                dowork() // 初始化完成之后再干活儿，避免使用 Il2Cpp.perform
+            }
+        })
+    } catch (error) {
+        // LOGE(error)
+    }
 }
 
 // arrayAddr 和 arrayName 建议从 printCurrentMethods() 获得
