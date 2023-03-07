@@ -48,9 +48,13 @@ export class FieldsParser {
     }
 
     fieldValue(fieldName: string): NativePointer {
-        let field: Il2Cpp.Field = this.fieldInstance(fieldName)
-        if (field.isStatic) return fakeStaticField(field).readPointer()
-        return this.mPtr.add(this.fieldOffset(fieldName)).readPointer()
+        try {
+            let field: Il2Cpp.Field = this.fieldInstance(fieldName)
+            if (field.isStatic) return fakeStaticField(field).readPointer()
+            return this.mPtr.add(this.fieldOffset(fieldName)).readPointer()
+        } catch (error) {
+            return ptr(0)
+        }
     }
 
     fieldOffset(fieldName: string): number {
@@ -77,14 +81,14 @@ export class FieldsParser {
                 let thisHandle: NativePointer = this.mPtr.add(field.offset)
                 let thisValue: NativePointer = thisHandle.readPointer()
                 let splitStr = "  --->  "
-                LOGZ(`\t${thisHandle}${splitStr}${FM.alignStr(thisValue)}${String(disp).length==0?"":splitStr}${disp}`)
+                LOGZ(`\t${thisHandle}${splitStr}${FM.alignStr(thisValue)}${String(disp).length == 0 ? "" : splitStr}${disp}`)
                 if (!retB) newLine()
             })
         LOGO(getLine(50))
     }
 
     toString(): string {
-        let retMap: Map<string,any> = new Map()
+        let retMap: Map<string, any> = new Map()
         this.mClass.fields
             .sort((f1: Il2Cpp.Field, f2: Il2Cpp.Field) => f1.offset - f2.offset)
             .forEach((field: Il2Cpp.Field) => {
@@ -95,7 +99,7 @@ export class FieldsParser {
     }
 }
 
-const dealWithSpecialType = (field: Il2Cpp.Field, thisValueP: NativePointer): any =>  {
+const dealWithSpecialType = (field: Il2Cpp.Field, thisValueP: NativePointer): any => {
 
     if (field.handle.isNull()) return ""
 
@@ -116,9 +120,13 @@ const dealWithSpecialType = (field: Il2Cpp.Field, thisValueP: NativePointer): an
 }
 
 function fakeStaticField(field: Il2Cpp.Field): NativePointer {
-    let tmpOut: NativePointer = alloc()
-    Il2Cpp.Api._fieldGetStaticValue(field.handle, tmpOut)
-    return tmpOut
+    try {
+        let tmpOut: NativePointer = alloc()
+        Il2Cpp.Api._fieldGetStaticValue(field.handle, tmpOut)
+        return tmpOut
+    } catch (error) {
+        return ptr(0)
+    }
 }
 
 declare global {
@@ -146,7 +154,14 @@ globalThis.lfs = (mPtr: NativePointer, classHandle: NativePointer | string | obj
 
 // 解析实例的 fields 以及 class 父级 fields （p means parents）
 globalThis.lfp = (mPtr: NativePointer) => {
-    let classType: Array<mscorlib.Type> = (getTypeParent(mPtr) as Array<mscorlib.Type>).reverse()
+    let classType: Array<mscorlib.Type> = (getTypeParent(mPtr) as Array<mscorlib.Type>).reverse().map((localType: mscorlib.Type) => {
+        let localT = new Il2Cpp.Class(localType.handle)
+        if (localT.isAbstract) {
+            let objT = Il2Cpp.Image.corlib.class("System.Object")
+            return new mscorlib.Type(localT.inflate(objT).type.handle)
+        }
+        return localType
+    })
     setTimeout(() => {
         classType.reverse().forEach(type => new FieldsParser(mPtr, type.class).toShow(true))
     }, 200)
@@ -166,7 +181,7 @@ globalThis.lfo = (mPtr: NativePointer, fieldName: string, classHandle?: NativePo
 globalThis.lfvt = (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => {
     try {
         return new FieldsParser(mPtr, classHandle).fieldValue(fieldName)
-    } catch { 
-        return new NativePointer(0) 
+    } catch {
+        return new NativePointer(0)
     }
 }
