@@ -8,7 +8,7 @@ var Toast = (msg: string) => {
 export { Toast }
 
 declare global {
-    var Toast: (msg: string) => void;
+    var Toast: (msg: string) => void
 }
 
-globalThis.Toast = Toast;
+globalThis.Toast = Toast

@@ -1,13 +1,13 @@
 import { mscorlib_System_Object_impl } from "../class"
+import { UnityEngine_GlobalJavaObjectRef_Impl as GlobalJavaObjectRef } from "../GlobalJavaObjectRef/class"
 
 type System_IntPtr = NativePointer
 type System_Boolean = NativePointer
-type System_Void = string
+type System_Void = void
 type System_String = string
 type UnityEngine_AndroidJavaObject_array = NativePointer
 type UnityEngine_AndroidJavaProxy_array = NativePointer
 type UnityEngine_AndroidJavaClass_array = NativePointer
-type UnityEngine_GlobalJavaObjectRef = NativePointer
 type UnityEngine_AndroidJavaRunnable_array = NativePointer
 type T_array = NativePointer
 type FieldType = NativePointer
@@ -18,8 +18,8 @@ type System_String_array = NativePointer
 class UnityEngine_AndroidJavaObject_Impl extends mscorlib_System_Object_impl {
 
     enableDebugPrints: System_Boolean = lfv(this.handle, "enableDebugPrints")
-    m_jobject: UnityEngine_GlobalJavaObjectRef = lfv(this.handle, "m_jobject")
-    m_jclass: UnityEngine_GlobalJavaObjectRef = lfv(this.handle, "m_jclass")
+    m_jobject: GlobalJavaObjectRef = new GlobalJavaObjectRef(lfv(this.handle, "m_jobject"))
+    m_jclass: GlobalJavaObjectRef = new GlobalJavaObjectRef(lfv(this.handle, "m_jclass"))
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
