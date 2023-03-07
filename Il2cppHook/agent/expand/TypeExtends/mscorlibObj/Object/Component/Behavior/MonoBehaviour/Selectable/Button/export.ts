@@ -5,21 +5,30 @@ import { UnityEngine_UI_Button_ButtonClickedEvent_Impl as ButtonClickedEvent } f
 import { GameObjectImpl as GameObject } from "../../../../../GameObject/class"
 import { ButtonImpl as Button } from "./class"
 
-function OnPointerClick() {
+/**
+ * 打印点击事件GameObject层级
+ * @param arg0 一般不用传，或者给个 -1 即可
+ * @param self_addr 有时候游戏不走Button的OnPointerClick，需要自己找找 OnPointerClick 的地址 `BF("OnPointerClick")`
+ */
+function OnPointerClick(arg0: number = -1, self_addr: NativePointer = ptr(0)) {
     let funcAddr: NativePointer | undefined = undefined
     switch (arguments[0]) {
         default:
-            funcAddr = ptr(Il2Cpp.Api.Button._OnPointerClick)
+            if (self_addr.isNull()) {
+                funcAddr = ptr(Il2Cpp.Api.Button._OnPointerClick)
+            } else {
+                funcAddr = checkCmdInput(self_addr)
+            }
             if (funcAddr == undefined || funcAddr.isNull()) break
             LOGE("\nEnable Hook OnPointerClick at " + funcAddr + "(" + funcAddr.sub(soAddr) + ")" + "\n")
             try {
-                A(Il2Cpp.Api.Button._OnPointerClick, (args) => {
+                A(funcAddr, (args) => {
                     LOGW("\n" + getLine(38))
                     LOGD("public void OnPointerClick( " + args[0] + " , " + args[1] + " )")
                     FakePointerEventData(args[1])
                 })
             } catch (error) {
-                A(Il2Cpp.Api.Button._OnPointerClick.add(p_size * 2), (args: InvocationArguments, ctx: CpuContext) => {
+                A(funcAddr.add(p_size * 2), (args: InvocationArguments, ctx: CpuContext) => {
                     LOGW("\n" + getLine(38))
                     LOGD("public void OnPointerClick( " + getPlatformCtxWithArgV(ctx, 0) + " , " + getPlatformCtxWithArgV(ctx, 1) + " )")
                     FakePointerEventData(args[1])
@@ -196,7 +205,7 @@ const HideClickedObj = (x: number, y: number) => {
 export { OnPointerClick, HideClickedObj }
 
 declare global {
-    var HookOnPointerClick: () => void
+    var HookOnPointerClick: (arg: number) => void
     var B_Button: () => void
     var B_ButtonTest: () => void
     var HideClickedObj: (x: number, y: number) => void
