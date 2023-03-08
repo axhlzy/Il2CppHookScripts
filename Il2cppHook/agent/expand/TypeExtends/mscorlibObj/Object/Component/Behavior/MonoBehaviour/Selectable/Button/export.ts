@@ -127,8 +127,11 @@ function OnPointerClick(arg0: number = -1, self_addr: NativePointer = ptr(0)) {
     }
 }
 
-const OnButtonClick = () => {
-    // OnPointerClick(instance, PointerEventData) : Void
+const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
+    if (!mPtr.isNull()) {
+        A(checkCmdInput(mPtr), (args) => innerFunction(args[0], args[1]))
+        return
+    }
     try {
         A(Il2Cpp.Api.Button._OnPointerClick, (args) => innerFunction(args[0], args[1]))
     } catch (error) {
@@ -205,14 +208,18 @@ const HideClickedObj = (x: number, y: number) => {
 export { OnPointerClick, HideClickedObj }
 
 declare global {
-    var HookOnPointerClick: (arg: number) => void
+    var HookOnPointerClick: (arg: number, mPtr: NativePointer) => void
+    var HookOnPointerClick_S: (mPtr: NativePointer) => void
     var B_Button: () => void
+    var B_Button_S: (mPtr: NativePointer) => void
     var B_ButtonTest: () => void
     var HideClickedObj: (x: number, y: number) => void
 }
 
 globalThis.HookOnPointerClick = OnPointerClick
+globalThis.HookOnPointerClick_S = (mPtr: NativePointer) => HookOnPointerClick(-1, checkCmdInput(mPtr))
 globalThis.B_Button = OnButtonClick
+globalThis.B_Button_S = (mPtr: NativePointer) => OnButtonClick(mPtr)
 globalThis.HideClickedObj = HideClickedObj
 
 // globalThis.B_ButtonTest = () => {

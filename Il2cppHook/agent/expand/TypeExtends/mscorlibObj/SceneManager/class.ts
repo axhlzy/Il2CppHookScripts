@@ -6,139 +6,148 @@ import { UnityEngine_SceneManagement_LoadSceneParameters_Impl as LoadSceneParame
 import { UnityEngine_SceneManagement_Scene_Impl as Scene } from "../ValueType/Scene/class"
 import { UnityEngine_AsyncOperation_Impl as AsyncOperation } from "../YieldInstruction/AsyncOperation/class"
 
-class UnityEngine_SceneManagement_SceneManager_Impl extends System_Object {
+type System_Boolean = NativePointer
+type System_Int32 = NativePointer
+type System_Void = void
+type System_String = string
+type UnityEngine_SceneManagement_CreateSceneParameters = NativePointer
+type UnityEngine_SceneManagement_UnloadSceneOptions = NativePointer
 
-    s_AllowLoadScene: boolean = lfv(this.handle, "s_AllowLoadScene") as unknown as boolean
-    // sceneLoaded: UnityEngine_Events.UnityAction<UnityEngine.SceneManagement.Scene, UnityEngine.SceneManagement.LoadSceneMode> = lfv(this.handle, "sceneLoaded") as unknown as UnityEngine_Events.UnityAction<UnityEngine.SceneManagement.Scene, UnityEngine.SceneManagement.LoadSceneMode>
-    sceneLoaded: NativePointer = lfv(this.handle, "sceneLoaded") as unknown as NativePointer
+class SceneManager_Impl extends System_Object {
+
+    s_AllowLoadScene: System_Boolean = lfv(this.handle, "s_AllowLoadScene") as unknown as System_Boolean
+    // sceneLoaded: UnityEngine_Events.UnityAction<UnityEngine.SceneManagement.Scene,UnityEngine.SceneManagement.LoadSceneMode> = lfv(this.handle, "sceneLoaded") as unknown as UnityEngine_Events.UnityAction<UnityEngine.SceneManagement.Scene,UnityEngine.SceneManagement.LoadSceneMode>
     // sceneUnloaded: UnityEngine_Events.UnityAction<UnityEngine.SceneManagement.Scene> = lfv(this.handle, "sceneUnloaded") as unknown as UnityEngine_Events.UnityAction<UnityEngine.SceneManagement.Scene>
+    // activeSceneChanged: UnityEngine_Events.UnityAction<UnityEngine.SceneManagement.Scene,UnityEngine.SceneManagement.Scene> = lfv(this.handle, "activeSceneChanged") as unknown as UnityEngine_Events.UnityAction<UnityEngine.SceneManagement.Scene,UnityEngine.SceneManagement.Scene>
+    sceneLoaded: NativePointer = lfv(this.handle, "sceneLoaded") as unknown as NativePointer
     sceneUnloaded: NativePointer = lfv(this.handle, "sceneUnloaded") as unknown as NativePointer
-    // activeSceneChanged: UnityEngine_Events.UnityAction<UnityEngine.SceneManagement.Scene, UnityEngine.SceneManagement.Scene> = lfv(this.handle, "activeSceneChanged") as unknown as UnityEngine_Events.UnityAction<UnityEngine.SceneManagement.Scene, UnityEngine.SceneManagement.Scene>
     activeSceneChanged: NativePointer = lfv(this.handle, "activeSceneChanged") as unknown as NativePointer
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
     }
 
-    static get get_sceneCount(): number {
+    static get_sceneCount(): System_Int32 {
         return Il2Cpp.Api.SceneManager._get_sceneCount()
     }
 
-    static get get_sceneCountInBuildSettings(): number {
-        return Il2Cpp.Api.SceneManager._get_sceneCountInBuildSettings()
+    static GetActiveScene(): Scene {
+        return Il2Cpp.Api.SceneManager._GetActiveScene()
     }
 
-    static get GetActiveScene(): Scene {
-        return new Scene(Il2Cpp.Api.SceneManager._GetActiveScene())
+    static SetActiveScene(scene: Scene): System_Boolean {
+        return Il2Cpp.Api.SceneManager._SetActiveScene(scene)
     }
 
-    static GetSceneByBuildIndex(buildIndex: number): Scene {
-        return new Scene(Il2Cpp.Api.SceneManager._GetSceneByBuildIndex(buildIndex))
+    static GetSceneByName(name: System_String): Scene {
+        return Il2Cpp.Api.SceneManager._GetSceneByName(name)
     }
 
-    static GetSceneAt(index: number): Scene {
-        return new Scene(Il2Cpp.Api.SceneManager._GetSceneAt(index))
+    static GetSceneAt(index: System_Int32): Scene {
+        return Il2Cpp.Api.SceneManager._GetSceneAt(index)
     }
 
-    static LoadSceneAsyncNameIndexInternal(sceneName: string, sceneBuildIndex: number, parameters: LoadSceneParameters, mustCompleteNextFrame: boolean): AsyncOperation {
-        return new AsyncOperation(Il2Cpp.Api.SceneManager._LoadSceneAsyncNameIndexInternal(sceneName, sceneBuildIndex, parameters, mustCompleteNextFrame))
+    static CreateScene(sceneName: System_String, parameters: UnityEngine_SceneManagement_CreateSceneParameters): Scene {
+        return Il2Cpp.Api.SceneManager._CreateScene(allocUStr(sceneName), parameters)
     }
 
-    static MoveGameObjectToScene(go: GameObject, scene: Scene): void {
-        return Il2Cpp.Api.SceneManager._MoveGameObjectToScene(go, scene)
+    static UnloadSceneAsyncInternal(scene: Scene, options: UnityEngine_SceneManagement_UnloadSceneOptions): AsyncOperation {
+        return Il2Cpp.Api.SceneManager._UnloadSceneAsyncInternal(scene, options)
     }
 
-    // static add_sceneLoaded(value: UnityEngine_Events_UnityAction<Scene, UnityEngine_SceneManagement_LoadSceneMode>): void {
-    //     return Il2Cpp.Api.SceneManager._add_sceneLoaded(value)
-    // }
-    static add_sceneLoaded(value: NativePointer): void {
-        return Il2Cpp.Api.SceneManager._add_sceneLoaded(value)
+    static LoadSceneAsyncNameIndexInternal(sceneName: System_String, sceneBuildIndex: System_Int32, parameters: LoadSceneParameters, mustCompleteNextFrame: System_Boolean): AsyncOperation {
+        return Il2Cpp.Api.SceneManager._LoadSceneAsyncNameIndexInternal(sceneName, sceneBuildIndex, parameters, mustCompleteNextFrame)
     }
 
-    // static remove_sceneLoaded(value: UnityEngine_Events.UnityAction<UnityEngine.SceneManagement.Scene, UnityEngine.SceneManagement.LoadSceneMode>): void {
-    //     return Il2Cpp.Api.SceneManager._remove_sceneLoaded(value)
-    // }
-    static remove_sceneLoaded(value: NativePointer): void {
-        return Il2Cpp.Api.SceneManager._remove_sceneLoaded(value)
+    static UnloadSceneNameIndexInternal(sceneName: System_String, sceneBuildIndex: System_Int32, immediately: System_Boolean, options: UnityEngine_SceneManagement_UnloadSceneOptions, outSuccess: System_Boolean): AsyncOperation {
+        return Il2Cpp.Api.SceneManager._UnloadSceneNameIndexInternal(sceneName, sceneBuildIndex, immediately, options, outSuccess)
     }
 
-    // static add_sceneUnloaded(value: UnityEngine_Events.UnityAction<UnityEngine.SceneManagement.Scene>): void {
-    //     return Il2Cpp.Api.SceneManager._add_sceneUnloaded(value)
-    // }
-    static add_sceneUnloaded(value: NativePointer): void {
-        return Il2Cpp.Api.SceneManager._add_sceneUnloaded(value)
+    static CreateScene_1(sceneName: System_String): Scene {
+        return Il2Cpp.Api.SceneManager._CreateScene(sceneName)
     }
 
-    // static remove_sceneUnloaded(value: UnityEngine_Events.UnityAction<UnityEngine.SceneManagement.Scene>): void {
-    //     return Il2Cpp.Api.SceneManager._remove_sceneUnloaded(value)
-    // }
-    static remove_sceneUnloaded(value: NativePointer): void {
-        return Il2Cpp.Api.SceneManager._remove_sceneUnloaded(value)
+    static LoadScene(sceneName: System_String, mode: LoadSceneMode): System_Void {
+        return Il2Cpp.Api.SceneManager._LoadScene(sceneName, mode)
     }
 
-    static LoadScene(sceneName: string): void {
-        return Il2Cpp.Api.SceneManager._LoadScene(sceneName)
+    static LoadScene_string_Para(sceneName: System_String, parameters: LoadSceneParameters): Scene {
+        return Il2Cpp.Api.SceneManager._LoadScene(sceneName, parameters)
     }
 
-    static LoadScene_name_param(sceneName: string, parameters: LoadSceneParameters): Scene {
-        return new Scene(Il2Cpp.Api.SceneManager._LoadScene(sceneName, parameters))
+    static LoadScene_string_Mode(sceneBuildIndex: System_Int32, mode: LoadSceneMode): System_Void {
+        return Il2Cpp.Api.SceneManager._LoadScene(sceneBuildIndex, mode)
     }
 
-    static LoadScene_1(sceneBuildIndex: number): void {
-        return Il2Cpp.Api.SceneManager._LoadScene(sceneBuildIndex)
+    static LoadScene_Int_Para(sceneBuildIndex: System_Int32, parameters: LoadSceneParameters): Scene {
+        return Il2Cpp.Api.SceneManager._LoadScene(sceneBuildIndex, parameters)
     }
 
-    static LoadScene_index_param(sceneBuildIndex: number, parameters: LoadSceneParameters): Scene {
-        return new Scene(Il2Cpp.Api.SceneManager._LoadScene(sceneBuildIndex, parameters))
+    static LoadSceneAsync(sceneName: System_String, mode: LoadSceneMode): AsyncOperation {
+        return Il2Cpp.Api.SceneManager._LoadSceneAsync(sceneName, mode)
     }
 
-    static LoadSceneAsync(sceneName: string): AsyncOperation {
-        return new AsyncOperation(Il2Cpp.Api.SceneManager._LoadSceneAsync(sceneName))
+    static LoadSceneAsync_2(sceneName: System_String, parameters: LoadSceneParameters): AsyncOperation {
+        return Il2Cpp.Api.SceneManager._LoadSceneAsync(sceneName, parameters)
     }
 
-    static LoadSceneAsync_2(sceneName: string, parameters: LoadSceneParameters): AsyncOperation {
-        return new AsyncOperation(Il2Cpp.Api.SceneManager._LoadSceneAsync(sceneName, parameters))
+    static UnloadSceneAsync(sceneName: System_String): AsyncOperation {
+        return Il2Cpp.Api.SceneManager._UnloadSceneAsync(sceneName)
     }
 
-    static Internal_SceneLoaded(scene: Scene, mode: LoadSceneMode): void {
+    static UnloadSceneAsync_1(scene: Scene): AsyncOperation {
+        return Il2Cpp.Api.SceneManager._UnloadSceneAsync(scene)
+    }
+
+    static Internal_SceneLoaded(scene: Scene, mode: LoadSceneMode): System_Void {
         return Il2Cpp.Api.SceneManager._Internal_SceneLoaded(scene, mode)
     }
 
-    static Internal_SceneUnloaded(scene: Scene): void {
+    static Internal_SceneUnloaded(scene: Scene): System_Void {
         return Il2Cpp.Api.SceneManager._Internal_SceneUnloaded(scene)
     }
 
-    static Internal_ActiveSceneChanged(previousActiveScene: Scene, newActiveScene: Scene): void {
+    static Internal_ActiveSceneChanged(previousActiveScene: Scene, newActiveScene: Scene): System_Void {
         return Il2Cpp.Api.SceneManager._Internal_ActiveSceneChanged(previousActiveScene, newActiveScene)
     }
 
-    static _cctor(): void {
+    static _cctor(): System_Void {
         return Il2Cpp.Api.SceneManager.__cctor()
     }
 
-    static GetActiveScene_Injected(ret: Scene): void {
+    static GetActiveScene_Injected(ret: Scene): System_Void {
         return Il2Cpp.Api.SceneManager._GetActiveScene_Injected(ret)
     }
 
-    static GetSceneByBuildIndex_Injected(buildIndex: number, ret: Scene): void {
-        return Il2Cpp.Api.SceneManager._GetSceneByBuildIndex_Injected(buildIndex, ret)
+    static SetActiveScene_Injected(scene: Scene): System_Boolean {
+        return Il2Cpp.Api.SceneManager._SetActiveScene_Injected(scene)
     }
 
-    static GetSceneAt_Injected(index: number, ret: Scene): void {
+    static GetSceneByName_Injected(name: System_String, ret: Scene): System_Void {
+        return Il2Cpp.Api.SceneManager._GetSceneByName_Injected(name, ret)
+    }
+
+    static GetSceneAt_Injected(index: System_Int32, ret: Scene): System_Void {
         return Il2Cpp.Api.SceneManager._GetSceneAt_Injected(index, ret)
     }
 
-    static MoveGameObjectToScene_Injected(go: GameObject, scene: Scene): void {
-        return Il2Cpp.Api.SceneManager._MoveGameObjectToScene_Injected(go, scene)
+    static CreateScene_Injected(sceneName: System_String, parameters: UnityEngine_SceneManagement_CreateSceneParameters, ret: Scene): System_Void {
+        return Il2Cpp.Api.SceneManager._CreateScene_Injected(sceneName, parameters, ret)
     }
+
+    static UnloadSceneAsyncInternal_Injected(scene: Scene, options: UnityEngine_SceneManagement_UnloadSceneOptions): AsyncOperation {
+        return Il2Cpp.Api.SceneManager._UnloadSceneAsyncInternal_Injected(scene, options)
+    }
+
 }
 
-Il2Cpp.SceneManager = UnityEngine_SceneManagement_SceneManager_Impl
+
+Il2Cpp.SceneManager = SceneManager_Impl
 
 declare global {
     namespace Il2Cpp {
-        class SceneManager extends UnityEngine_SceneManagement_SceneManager_Impl { }
+        class SceneManager extends SceneManager_Impl { }
     }
 }
 
-export { UnityEngine_SceneManagement_SceneManager_Impl }
+export { SceneManager_Impl }
