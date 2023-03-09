@@ -2,7 +2,7 @@ import { getMethodDesFromMethodInfo as methodDEs } from "../bridge/fix/il2cppM"
 import { formartClass as FM } from "../utils/formart"
 
 // 侧重参数信息 还有一个 MethodToShow() 用在 findMethod / find_method 侧重基本信息
-export function showMethodInfo(mPtr: NativePointer): void {
+export function showMethodInfo(mPtr: NativePointer | Il2Cpp.Method): void {
     newLine()
     if (typeof mPtr == "number") {
         if (Process.arch == "arm64" && (String(mPtr).toString().length > 15))
@@ -14,6 +14,8 @@ export function showMethodInfo(mPtr: NativePointer): void {
         } else {
             throw new Error("\nNot a Pointer\n")
         }
+    } else if (mPtr instanceof Il2Cpp.Method) {
+        mPtr = mPtr.handle
     }
     let packMethod = new Il2Cpp.Method(mPtr)
     let params = packMethod.parameters.map((param: Il2Cpp.Parameter) => {
@@ -41,7 +43,7 @@ export const getClassFromMethodInfo = (methodInfoPtr: NativePointer): Il2Cpp.Cla
 }
 
 declare global {
-    var showMethodInfo: (methodInfo: NativePointer) => void
+    var showMethodInfo: (methodInfo: NativePointer | Il2Cpp.Method) => void
     var methodToClass: (methodInfo: NativePointer) => NativePointer
     var methodToClassShow: (methodInfo: NativePointer) => void
 }

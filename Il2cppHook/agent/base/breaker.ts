@@ -15,7 +15,7 @@ declare global {
     var bt: (mPtr: NativePointer) => void
     var h: (filterStr?: string, countLogs?: number, reverse?: boolean, detachAll?: boolean) => void
     var hn: (start?: number, end?: number) => void
-    var B: (mPtr: NativePointer | number | string | SpecialClass) => void
+    var B: (mPtr: NativePointer | number | string | SpecialClass | Il2Cpp.Class) => void
     var D: () => void
     var DD: () => void
     var BF: (filterStr: string) => void
@@ -46,9 +46,11 @@ class Breaker {
     private static array_attach_failed: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
     // private static array_log_cache: Map<string, [string, NativePointer[], NativePointer]> = new Map()
 
-    static addBreakPoint(imgOrClsPtr: NativePointer | number | string | SpecialClass = "CommonClass", nSp: string = ""): void {
+    static addBreakPoint(imgOrClsPtr: NativePointer | number | string | Il2Cpp.Class | SpecialClass = "CommonClass", nSp: string = ""): void {
         if (imgOrClsPtr instanceof NativePointer) {
             innerImage(imgOrClsPtr)
+        } else if (imgOrClsPtr instanceof Il2Cpp.Class) {
+            innerImage(imgOrClsPtr.handle)
         } else if (typeof imgOrClsPtr == "number") {
             if (Process.arch == "arm64") throw new Error("Use '0x..' instead of number")
             innerImage(ptr(imgOrClsPtr))
