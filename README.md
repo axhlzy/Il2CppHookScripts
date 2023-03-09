@@ -232,7 +232,7 @@ $ frida -FU -l ../_Ufunc.js
 ...
 
 #### Test
-- 详见 Il2cppHook\agent\base\dynamic.ts 
+- 详见 Il2cppHook\agent\base\dynamic.ts (命令行补全)
   ![dynamic_2](img/dynamic_2.png)
   ![dynamic_3](img/dynamic_3.png)
   ![dynamic_1](img/dynamic_1.png)
