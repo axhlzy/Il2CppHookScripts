@@ -231,6 +231,13 @@ $ frida -FU -l ../_Ufunc.js
 
 ...
 
+#### Test
+- 详见 Il2cppHook\agent\base\dynamic.ts 
+  ![dynamic_2](img/dynamic_2.png)
+  ![dynamic_3](img/dynamic_3.png)
+  ![dynamic_1](img/dynamic_1.png)
+
+
 #### Commit
 - 文件结构按照Unity类继承关系实现
 - 文件命名规则以及结构

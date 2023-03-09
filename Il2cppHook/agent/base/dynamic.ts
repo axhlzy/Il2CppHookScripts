@@ -1,8 +1,8 @@
-import { cache } from "decorator-cache-getter"
-
 Reflect.set(globalThis, "Assembly", {})
 
+// 是否启用动态加载
 const enable_dynamic = false
+// 过滤 Assembly
 const filter_assembly: string[] = []
 // const filter_assembly:string[] = ["Assembly"]
 
