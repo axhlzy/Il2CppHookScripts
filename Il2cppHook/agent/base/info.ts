@@ -2,7 +2,7 @@ import { getMethodDesFromMethodInfo as methodDEs } from "../bridge/fix/il2cppM"
 import { formartClass as FM } from "../utils/formart"
 
 // 侧重参数信息 还有一个 MethodToShow() 用在 findMethod / find_method 侧重基本信息
-export const showMethodInfo = (mPtr: NativePointer): void => {
+export function showMethodInfo(mPtr: NativePointer): void {
     newLine()
     if (typeof mPtr == "number") {
         if (Process.arch == "arm64" && (String(mPtr).toString().length > 15))
