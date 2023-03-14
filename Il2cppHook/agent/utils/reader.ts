@@ -42,7 +42,13 @@ const showArray = (mPtr: ARGM, funcTransform?: (itemPtr: NativePointer, objName:
     newLine()
     for (let i = 0; i < arrLength; ++i) {
         let tmpPtr = ptr(retPtr).add(p_size * (4 + i))
-        let relItem = tmpPtr.readPointer()
+        try {
+            var relItem = tmpPtr.readPointer()
+        } catch {
+            LOGE("Not support type")
+            newLine()
+            return
+        }
         let ObjToString = ""
         try {
             ObjToString = `${getType(relItem).toString()} | ${new Il2Cpp.Object(relItem).toString()}`

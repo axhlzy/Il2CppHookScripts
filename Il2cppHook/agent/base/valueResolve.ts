@@ -80,8 +80,7 @@ class ValueResolve {
         let append = ""
         let length = String(this.method.class.handle).length + 1
         try {
-            append += ","
-            append += FM.alignStr(String(this.args[0]), length, " ")
+            this.method.isStatic ? "" : append += "," + FM.alignStr(String(this.args[0]), length, " ")
         } catch {
             append += "  "
             append += FM.getLine(length, " ")
