@@ -85,7 +85,6 @@ class ExceptionTraceClass {
 
             let backAddressPointer = trampoline.add(CodeLength - 0x10)
             backAddressPointer.writePointer(retPC.add(0x4))
-            LOGW(`${retPC} => ${trampoline}`)
 
             var writer: ArmWriter | Arm64Writer
             if (Process.arch == "arm64") {
@@ -96,7 +95,6 @@ class ExceptionTraceClass {
                 writer.putLdrRegU64Ptr("x16", backAddressPointer)
                 writer.putBrReg("x16")
             } else {
-                LOGD("124")
                 writer = new ArmWriter(trampoline)
                 let rel = new ArmRelocator(retPC, writer)
                 rel.readOne()
