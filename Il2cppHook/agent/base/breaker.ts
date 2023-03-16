@@ -26,7 +26,7 @@ declare global {
     var getPlatform: () => string
     var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
     // getPlatformCtxWithArgV 用于获取参数, argIndex 从 0 开始 (arm32 r0 / arm64 x0)
-    var getPlatformCtxWithArgV: (ctx: CpuContext, argIndex: number) => NativePointer | undefined
+    var getPlatformCtxWithArgV: <T extends CpuContext>(ctx: T, argIndex: number) => NativePointer | undefined
     var maxCallTimes: number
     var attathing: boolean
     var printDesertedMethods: (filterName?: string) => void
@@ -437,7 +437,7 @@ globalThis.BF = (filterStr: string, allImg: boolean = true): void => {
     })
 }
 
-globalThis.getPlatformCtxWithArgV = (ctx: CpuContext, argIndex: number): NativePointer | undefined => {
+globalThis.getPlatformCtxWithArgV = <T extends CpuContext>(ctx: T, argIndex: number): NativePointer | undefined => {
     if ((ctx as ArmCpuContext).r0 != undefined) {
         // case arm32
         switch (argIndex) {
