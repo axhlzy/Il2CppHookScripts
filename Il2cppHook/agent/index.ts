@@ -107,7 +107,7 @@ class ExceptionTraceClass {
 
             seeHexA(trampoline)
             details.context.pc = trampoline
-            writeBP(retPC)
+            ExceptionTraceClass.writeBP(retPC)
             return true
         })
     }
@@ -115,17 +115,14 @@ class ExceptionTraceClass {
     public static writeBP = (mPtr: NativePointer) => {
         mPtr = checkPointer(mPtr)
         try {
-            let ins = Instruction.parse(mPtr)
-            if (!ExceptionTraceClass.is_pc_relative(ins)) {
-                LOGD(`AddBP ${mPtr} | ${ins.mnemonic} ${ins.opStr}`)
-            } else {
-                LOGE(`TODO`)
-            }
+            Instruction.parse(mPtr)
         } catch (error) {
             throw new Error(`AddBP ${mPtr} ${error}`)
         }
+        if (ExceptionTraceClass.savedCode.keys.toString().includes(mPtr.toString()))
+            throw new Error(`AddBP ${mPtr} already exists`)
+        ExceptionTraceClass.savedCode.set(mPtr.toString(), mPtr.readPointer().toString())
         Memory.patchCode(mPtr, 0x4, (code: NativePointer) => {
-            ExceptionTraceClass.savedCode.set(mPtr.toString(), code.readPointer().toString())
             var writer: ArmWriter | Arm64Writer
             if (Process.arch == "arm64") {
                 writer = new Arm64Writer(code)
@@ -135,6 +132,11 @@ class ExceptionTraceClass {
             writer.putBytes([0x00, 0x00, 0x00, 0x00])
             writer.flush()
         })
+    }
+
+    public static removeBP = (mPtr: NativePointer) => {
+        if (ExceptionTraceClass.savedCode.keys.toString().includes(mPtr.toString()))
+            ExceptionTraceClass.savedCode.delete(mPtr.toString())
     }
 
     public static is_pc_relative<T extends Instruction>(inst: T) {
@@ -170,52 +172,12 @@ declare global {
     var pause: () => void
     var resume: () => void
     var setException: (callback?: (details: ExceptionDetails) => {}) => void
-    var writeBP: (mPtr: NativePointer) => void
-    var testRelocate: (mPtr: NativePointer) => void
+    var addBP: (mPtr: NativePointer) => void
+    var removeBP: (mPtr: NativePointer) => void
 }
 
 globalThis.pause = PauseHelper.Pause
 globalThis.resume = PauseHelper.Resume
 globalThis.setException = ExceptionTraceClass.setException
-globalThis.writeBP = ExceptionTraceClass.writeBP
-
-var tmp
-globalThis.testRelocate = (mPtr: NativePointer) => {
-    tmp = Memory.alloc(0x200)
-    Memory.protect(tmp, 0x200, "rwx")
-    let writer = new Arm64Writer(tmp)
-    let rel = new Arm64Relocator(mPtr, writer)
-    for (let i = 0; i < 0x200; i += 0x4) {
-        writer.putNop()
-    }
-
-    let backAddressPointer = tmp.add(0x14)
-    backAddressPointer.writePointer(ptr(0))
-    backAddressPointer.writePointer(mPtr.add(0x4))
-
-    for (let i = 0; i < 2; i++) {
-        LOGW(rel.readOne())
-    }
-
-    rel.writeAll()
-    writer.reset(tmp.add(0x4))
-    writer.putLdrRegU64Ptr("x16", backAddressPointer)
-    writer.putBrReg("x16")
-    writer.putNop()
-    writer.putNop()
-    writer.flush()
-
-    LOGE(`Relocate ${mPtr} => ${tmp}`)
-
-    for (let i = 0; i < 20; i++) {
-        let ins = Instruction.parse(tmp.add(i * 4))
-        LOGD(`${ins.address} ${ins.mnemonic} ${ins.opStr}`)
-    }
-
-    LOGD(newLine(20))
-    for (let i = 0; i < 15; i++) {
-        let ins = Instruction.parse(mPtr.add(i * 4))
-        LOGD(`${ins.mnemonic} ${ins.opStr}`)
-    }
-
-}
+globalThis.addBP = ExceptionTraceClass.writeBP
+globalThis.removeBP = ExceptionTraceClass.removeBP
