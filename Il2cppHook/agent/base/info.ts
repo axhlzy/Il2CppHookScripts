@@ -21,9 +21,18 @@ export function showMethodInfo(mPtr: NativePointer | Il2Cpp.Method): void {
     let params = packMethod.parameters.map((param: Il2Cpp.Parameter) => {
         return (`${getLine(8, ' ')}[-]${FM.alignStr(param.name)} | type: ${param.type.handle} | @ class:${param.type.class.handle} | ${param.type.name}`)
     }).join("\n")
+    /** like this ↓
+     * 
+     * [-]Assembly-CSharp @ 0xe21d1520
+        [-]Assembly-CSharp.dll @ 0xd937c290 | C:2265
+            [-]RewardedVideo @ 0xe240fe30 | M:21 | F:3
+            [-]internal Void Show(Boolean> onComplete,String tag) @ MI:0x86aa7f98 & MP: 0xaf1a45f0 ( 0x1e245f0 )
+                [-]onComplete  | type: 0xafc77db8 | @ class:0x86c4d0c0 | System.Action<System.Boolean>
+                [-]tag         | type: 0xafd4c048 | @ class:0xe2243840 | System.String
+     */
     LOGZ(`[-]${packMethod.class.image.assembly.name} @ ${packMethod.class.image.assembly.handle}`)
     LOGZ(`${getLine(2, ' ')}[-]${packMethod.class.image.name} @ ${packMethod.class.image.handle} | C:${packMethod.class.image.classCount}`)
-    LOGZ(`${getLine(4, ' ')}[-]${packMethod.class.name} @ ${packMethod.class.handle} | M:${packMethod.class.methods.length} | F:${packMethod.class.fields.length}`)
+    LOGZ(`${getLine(4, ' ')}[-]${packMethod.class.name} @ ${packMethod.class.handle} | M:${packMethod.class.methods.length} | F:${packMethod.class.fields.length} ${packMethod.class.namespace.length > 0 ? `| N:${packMethod.class.namespace}` : ''}`)
     LOGD(`${getLine(6, ' ')}[-]${methodDEs(packMethod)} @ MI:${packMethod.handle} & MP: ${packMethod.virtualAddress} ( ${packMethod.virtualAddress.isNull() ? ptr(0) : packMethod.relativeVirtualAddress} ) `)
     LOGZ(`${params}`)
     newLine()

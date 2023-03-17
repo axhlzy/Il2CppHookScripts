@@ -10,12 +10,13 @@ export class FieldsParser {
 
     // using instance ptr to parse fields
     constructor(mPtr: NativePointer | Number | String, classHandle: NativePointer | string | object | number = 0) {
+        // LOGD(`constructor ${mPtr} ${classHandle}`)
         if (typeof mPtr === "number") {
             this.mPtr = ptr(mPtr)
         } else if (typeof mPtr === "string") {
             if (mPtr.indexOf('0x') == 0) this.mPtr = ptr(mPtr)
             else this.mPtr = findClass(mPtr)
-            if (this.mPtr.isNull()) throw new Error("FieldsParser : Class not found")
+            if (this.mPtr.isNull()) LOGE("FieldsParser : Class not found")
         }
         else if (mPtr instanceof NativePointer) this.mPtr = mPtr
         else throw new Error("Input type is not support")
@@ -24,8 +25,9 @@ export class FieldsParser {
             try {
                 this.mClass = new Il2Cpp.Object(this.mPtr).class
                 this.mClass.name // use to check if instance is valid
-            } catch (error) {
-                this.mClass = new Il2Cpp.Class(this.mPtr)
+            } catch {
+                if (this.mPtr.isNull()) this.mClass = Il2Cpp.Domain.assembly("mscorlib").image.class("System.Object")
+                else this.mClass = new Il2Cpp.Class(this.mPtr)
                 this.mPtr = ptr(0) // not instance need set it to null
             }
         } else {
@@ -42,14 +44,16 @@ export class FieldsParser {
         }
     }
 
-    fieldInstance(fieldName: string): Il2Cpp.Field {
-        if (this.mPtr.isNull()) throw new Error("fieldInstance : Instance is null")
+    fieldInstance(fieldName: string): Il2Cpp.Field | null {
+        if (this.mPtr.isNull()) return null
         return this.mClass.field(fieldName)
     }
 
     fieldValue(fieldName: string): NativePointer {
+        if (this.mPtr.isNull()) return ptr(0)
         try {
-            let field: Il2Cpp.Field = this.fieldInstance(fieldName)
+            let field: Il2Cpp.Field | null = this.fieldInstance(fieldName)
+            if (field == null) return ptr(0)
             if (field.isStatic) return fakeStaticField(field).readPointer()
             return this.mPtr.add(this.fieldOffset(fieldName)).readPointer()
         } catch (error) {
@@ -58,10 +62,13 @@ export class FieldsParser {
     }
 
     fieldOffset(fieldName: string): number {
-        return this.fieldInstance(fieldName).offset
+        let field: Il2Cpp.Field | null = this.fieldInstance(fieldName)
+        if (field == null) return -1
+        return field.offset
     }
 
     toShow(retB: Boolean = false) {
+        if (this.mPtr.isNull()) return
         newLine()
         let titile = `Found ${this.mClass.fields.length} fields in class: ${this.mClass.name} (${this.mClass.handle})`
         this.mClass.fields.length == 0 ? LOGE(titile) : LOGO(titile)
@@ -88,6 +95,7 @@ export class FieldsParser {
     }
 
     toString(): string {
+        if (this.mPtr.isNull()) return ""
         let retMap: Map<string, any> = new Map()
         this.mClass.fields
             .sort((f1: Il2Cpp.Field, f2: Il2Cpp.Field) => f1.offset - f2.offset)
@@ -137,7 +145,7 @@ declare global {
     // list filed contain parent class
     var lfp: (mPtr: NativePointer) => void
     // list filed to return field type
-    var lft: (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => Il2Cpp.Field
+    var lft: (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => Il2Cpp.Field | null
     // list filed to return value
     var lfv: (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => NativePointer
     // list fields to return whth try catch

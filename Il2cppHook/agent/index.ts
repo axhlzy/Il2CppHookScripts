@@ -4,8 +4,8 @@ setImmediate(() => main())
 
 const main = () => {
     // pause() // <--- Start it directly and comment it out
-    setException()
-    HookExit()
+    // setException()
+    // HookExit()
 }
 
 class PauseHelper {
@@ -75,6 +75,18 @@ class ExceptionTraceClass {
                 callback(details)
             }
 
+            // var message = "An exception occurred: " + "\n"
+            // var title = "Exception caught!"
+            // var activity = Java.use("android.app.ActivityThread").currentActivity()
+            // activity.runOnUiThread(function () {
+            //     var builder = Java.use("android.app.AlertDialog$Builder")
+            //     builder = builder.$new(activity)
+            //     builder.setMessage(message).setTitle(title).setCancelable(false);
+            //     builder.setPositiveButton("OK", null);
+            //     var dialog = builder.create();
+            //     dialog.show();
+            // });
+
             let CodeLength = 0x100
             let retPC = details.context.pc
             let ins: NativePointer = ptr(ExceptionTraceClass.savedCode.get(retPC.toString())!)
@@ -94,14 +106,14 @@ class ExceptionTraceClass {
                 rel.writeOne()
                 writer.putLdrRegU64Ptr("x16", backAddressPointer)
                 writer.putBrReg("x16")
-            } else {
+            } else if (Process.arch == "arm") {
                 writer = new ArmWriter(trampoline)
                 let rel = new ArmRelocator(retPC, writer)
                 rel.readOne()
                 rel.writeOne()
-                writer.putLdrRegU32("r12", retPC.add(0x4).toInt32())
+                writer.putLdrRegU32("r12", backAddressPointer.readU32())
                 writer.putBlxReg("r12")
-            }
+            } else throw new Error("Not support arch")
             writer.putNop()
             writer.flush()
 
@@ -113,6 +125,11 @@ class ExceptionTraceClass {
     }
 
     public static writeBP = (mPtr: NativePointer) => {
+
+        if (Process.arch == "arm") {
+            LOGE("Not test arm32")
+        }
+
         mPtr = checkPointer(mPtr)
         try {
             Instruction.parse(mPtr)
