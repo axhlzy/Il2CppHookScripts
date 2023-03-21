@@ -232,7 +232,7 @@ $ frida -FU -l ../_Ufunc.js
 ...
 
 #### Test
-- 详见 Il2cppHook\agent\base\dynamic.ts (命令行补全)
+- 详见 Il2cppHook\agent\base\dynamic.ts (命令行补全)<a id="dynamic.ts"></a>
   ![dynamic_2](img/dynamic_2.png)
   ![dynamic_3](img/dynamic_3.png)
   ![dynamic_1](img/dynamic_1.png)
@@ -253,17 +253,17 @@ $ frida -FU -l ../_Ufunc.js
   - export.ts
     - 主要用作拓展类的一些导出方法
 - TODO 按照这个文件结构可以拓展到整个UnityAPI
-    (提供了 generateApi / generateClass / generateFieldEnum 方便的拓展类，生成的东西不太准，需要稍微修改点点)
+    (提供了 [generateApi](https://github.com/axhlzy/Il2CppHookScripts/blob/536ecd532bfff140b6bd67a19ae13ea3fd061ff1/Il2cppHook/agent/expand/TypeExtends/apiExtends/generator.ts#L111) / [generateClass](https://github.com/axhlzy/Il2CppHookScripts/blob/536ecd532bfff140b6bd67a19ae13ea3fd061ff1/Il2cppHook/agent/expand/TypeExtends/apiExtends/generator.ts#L3) / [generateFieldEnum](https://github.com/axhlzy/Il2CppHookScripts/blob/536ecd532bfff140b6bd67a19ae13ea3fd061ff1/Il2cppHook/agent/expand/TypeExtends/apiExtends/generator.ts#L202) 方便的拓展类，生成的东西不太准，需要稍微修改点点), 后面在 [dynamic.ts](https://github.com/axhlzy/Il2CppHookScripts/blob/ts/Il2cppHook/agent/base/dynamic.ts) 又提供了反射来时间命令行直接补全的操作，不过因为使用前他会遍历所以导致很慢，所以暂时没用（或者说可以选择[筛选](https://github.com/axhlzy/Il2CppHookScripts/blob/ts/Il2cppHook/agent/base/dynamic.ts#L7)部分常用的class来使用 [具体用法](#dynamic.ts)）
 
 #### Tips
 - 由于JS特性在64位hook下存在精度问题，arm64下的指针大小是8字节，但是js命令行传参最大值是 Number.MAX_SAFE_INTEGER = 9007199254740991 (0x1fffffffffffff)，所以命令行直接给值超出范围导致精度丢失，这时候建议使用string类型 
     use ptr("0xb400007d17736990") instead of ptr(0xb400007d17736990)，这部分发现的比较晚后续很多东西都没有做好优化
-- https://github.com/axhlzy/Il2CppHookScripts/blob/6d3f80b873d8e5e9639c76e4caa5a3ca80c3ddb3/Il2cppHook/agent/index.ts#L14
-    如果需要启动的时候先暂停下来，可以在这里把注释打开，然后在命令行输入 `resume()` 继续执行
+- 
+    如果需要启动的时候先暂停下来，可以在这里，然后在命令行输入 [`resume()`](https://github.com/axhlzy/Il2CppHookScripts/blob/4363eaa243c793a47cb9433911a5c7fd1e618675/Il2cppHook/agent/index.ts#L32) 继续执行
 - 我这里用的环境： frida==15.2.2 | frida-tools==10.5.4 , 测试机 ：piex 4 原生android 11
     1. 确认手机端server与电脑端frida版本一致，如果你的版本不一致概率性出问题
     2. 已确认高版本的 frida-tools 在使用老版 Ufunc.js （ts版不受影响）会出问题，所以建议直接使用 10.5.4 版本
-    3. 由于ts分支版本的 Ufunc.js 是基于frida-il2cpp-bridge 的，所以有一些新版Unity它本身不支持的，自然也会影响脚本的使用，也可以尝试使用老版本（master分支）下的Ufunc.js
+    3. 由于ts分支版本的 Ufunc.js 是基于frida-il2cpp-bridge 的，所以有一些新版Unity它本身不支持的，自然也会影响脚本的使用，也可以尝试使用老版本（master分支）下的[Ufunc.js](https://github.com/axhlzy/Il2CppHookScripts/blob/master/Il2cppHook/Ufun.js)
 - 建议使用真机,尽量不在x86模拟器中使用,x86中找不到对应so,其次frida对于模拟器的兼容性也并不好
 
 todo：
