@@ -81,8 +81,12 @@ globalThis.getGameObjectPack = (mPtr: NativePointer): GameObject => {
     return new GameObject(getGameObject(mPtr) as NativePointer)
 }
 
+globalThis.p = globalThis.PrintHierarchy
+
 declare global {
     var showTransform: (transform: NativePointer) => void
+    // alias for PrintHierarchy
+    var p: (mPtr: NativePointer, level?: number, inCall?: boolean) => void
     var PrintHierarchy: (mPtr: NativePointer, level?: number, inCall?: boolean) => void
     var getGameObject: (transform: NativePointer) => undefined | NativePointer
     var getGameObjectPack: (mPtr: NativePointer) => GameObject

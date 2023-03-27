@@ -3,6 +3,7 @@ import "./include"
 setImmediate(() => main())
 
 const main = () => {
+    fixMoreVerison() // issue # 22
     // pause() // <--- Start it directly and comment it out
     // setException()
     // HookExit()
@@ -181,6 +182,18 @@ const HookExit = () => {
             console.log("called java.lang.System.exit(" + code + ")")
             PrintStackTrace()
         }
+    })
+}
+
+function fixMoreVerison() {
+    /**
+     *  ERROR : il2cpp: couldn't determine the Unity version, please specify it manually
+     *  使用 AssetStudioGUI 确认当前Unity版本后自行修改此处 ↓
+     */
+    Il2Cpp.perform(() => {
+        Reflect.defineProperty(Il2Cpp, "UnityVersion", {
+            value: "2020.3.5f1"
+        })
     })
 }
 

@@ -107,7 +107,7 @@ export class FieldsParser {
     }
 }
 
-const dealWithSpecialType = (field: Il2Cpp.Field, thisValueP: NativePointer): any => {
+const dealWithSpecialType = (field: Il2Cpp.Field, thisValueP: NativePointer): string => {
 
     if (field.handle.isNull()) return ""
 
