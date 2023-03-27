@@ -1,6 +1,6 @@
 import "frida-il2cpp-bridge"
 
-import "./api/include"
+import "./API/include"
 import "./expand/include"
 import "./base/include"
 import "./bridge/include"
