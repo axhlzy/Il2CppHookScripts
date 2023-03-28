@@ -173,6 +173,7 @@ class ExceptionTraceClass {
 }
 
 const HookExit = () => {
+
     Java.perform(function () {
         Java.use("android.app.Activity").finish.overload().implementation = function () {
             console.log("called android.app.Activity.Finish")
@@ -182,6 +183,21 @@ const HookExit = () => {
             console.log("called java.lang.System.exit(" + code + ")")
             PrintStackTrace()
         }
+    })
+
+    Il2Cpp.perform(() => {
+        // UnityEngine.CoreModule UnityEngine.Application Quit(Int32) : Void
+        R(Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Application").method("Quit", 1).virtualAddress, (_srcCall: Function, arg0: NativePointer) => {
+            // srcCall(arg0, arg1, arg2, arg3)
+            LOGE("called UnityEngine.Application.Quit(" + arg0.toInt32() + ")")
+            return ptr(0)
+        })
+        // UnityEngine.CoreModule UnityEngine.Application Quit() : Void
+        R(Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Application").method("Quit").virtualAddress, (_srcCall: Function) => {
+            // srcCall(arg0, arg1, arg2, arg3)
+            LOGE("called UnityEngine.Application.Quit()")
+            return ptr(0)
+        })
     })
 }
 
@@ -204,6 +220,7 @@ declare global {
     var setException: (callback?: (details: ExceptionDetails) => {}) => void
     var addBP: (mPtr: NativePointer) => void
     var removeBP: (mPtr: NativePointer) => void
+    var HookExit: () => void
 }
 
 globalThis.pause = PauseHelper.Pause
@@ -211,3 +228,4 @@ globalThis.resume = PauseHelper.Resume
 globalThis.setException = ExceptionTraceClass.setException
 globalThis.addBP = ExceptionTraceClass.writeBP
 globalThis.removeBP = ExceptionTraceClass.removeBP
+globalThis.HookExit = HookExit

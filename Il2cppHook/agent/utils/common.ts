@@ -351,7 +351,7 @@ declare global {
     var n: (mPtr: NativePointer) => void
     var nn: (mPtr: NativePointer) => void
     var nnn: () => void
-    var R: (mPtr: NativePointer, callBack: ReplaceFuncType, TYPENOP: boolean) => void
+    var R: (mPtr: NativePointer, callBack: ReplaceFuncType, TYPENOP?: boolean) => void
     var getJclassName: (jclsName: NativePointer, ShouldRet: boolean) => string | undefined
     var checkCtx: (ctx: CpuContext, type?: "LR" | "PC" | "SP") => void | string
     // var filterDuplicateOBJ: (objstr: string, maxCount?: number) => number
