@@ -70,7 +70,8 @@ export const getMethodDesFromMethodInfo = (methodPtr: NativePointer | number | I
     let localMethod: Il2Cpp.Method = methodPtr instanceof Il2Cpp.Method ? methodPtr : new Il2Cpp.Method(methodPtr)
     let ret_str: string = ""
     ret_str += getMethodModifier(localMethod)
-    ret_str += `${localMethod.returnType.name} `
+    // If it is a generic function, it will be with generic parameters, otherwise it will retain the name of the last point after the type
+    ret_str += `${localMethod.returnType.name.includes(">") ? `${localMethod.returnType.name}` : `${localMethod.returnType.name.split(".").pop()}`} `
     ret_str += localMethod.name
     ret_str += "(" + localMethod.parameters.map(x => `${simpleType ? (function (name) {
         let sp = name.split(".")

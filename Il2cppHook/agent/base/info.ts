@@ -1,4 +1,4 @@
-import { getMethodDesFromMethodInfo as methodDEs } from "../bridge/fix/il2cppM"
+import { getMethodDesFromMethodInfo as methodDes } from "../bridge/fix/il2cppM"
 import { formartClass as FM } from "../utils/formart"
 
 // 侧重参数信息 还有一个 MethodToShow() 用在 findMethod / find_method 侧重基本信息
@@ -37,7 +37,7 @@ export function showMethodInfo(mPtr: NativePointer | Il2Cpp.Method): void {
     LOGZ(`[-]${packMethod.class.image.assembly.name} @ ${packMethod.class.image.assembly.handle}`)
     LOGZ(`${getLine(2, ' ')}[-]${packMethod.class.image.name} @ ${packMethod.class.image.handle} | C:${packMethod.class.image.classCount}`)
     LOGZ(`${getLine(4, ' ')}[-]${packMethod.class.name} @ ${packMethod.class.handle} | M:${packMethod.class.methods.length} | F:${packMethod.class.fields.length} ${packMethod.class.namespace.length > 0 ? `| N:${packMethod.class.namespace}` : ''}`)
-    LOGD(`${getLine(6, ' ')}[-]${methodDEs(packMethod)} @ MI:${packMethod.handle} & MP: ${packMethod.virtualAddress} ${AppendRelativeVirtualAddress}`)
+    LOGD(`${getLine(6, ' ')}[-]${methodDes(packMethod)} @ MI:${packMethod.handle} & MP: ${packMethod.virtualAddress} ${AppendRelativeVirtualAddress}`)
     LOGZ(`${params}`)
     newLine()
 }
