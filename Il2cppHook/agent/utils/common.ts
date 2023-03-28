@@ -1,5 +1,6 @@
 import { EpFunc, LogColor, MapKAY, PTR } from "../base/enum";
 import { ARGM, GET_F, GET_MAP, GET_MAP_VALUE, SET_MAP_VALUE } from "../base/globle";
+import { il2cppObjAPI } from "../expand/TypeExtends/mscorlibObj/Object/api";
 
 function PTR2NativePtr(mPtr: PTR): NativePointer {
     if (mPtr == undefined) return ptr(0)
@@ -301,6 +302,21 @@ const SendMessageImpl = (platform: string | "IronSource" | "MaxSdkCallbacks" | "
     }
 }
 
+globalThis.HookForwardEvent = () => {
+    Il2Cpp.perform(() => {
+        // MaxSdk.Scripts + MaxSdkCallbacks + ForwardEvent
+        let ass = Il2Cpp.Domain.tryAssembly("MaxSdk.Scripts")
+        if (ass) {
+            ass.image.class("MaxSdkCallbacks").method("ForwardEvent").implementation = function (instance: NativePointer, eventPropsStr: NativePointer) {
+                LOGD(`ForwardEvent: ${instance}  ${readU16(eventPropsStr)}`)
+                return this.method("ForwardEvent").invoke(...arguments)
+            }
+        } else {
+            throw new Error("MaxSdk.Scripts not found")
+        }
+    })
+}
+
 export const TIME_SIMPLE = (): string => new Date().toLocaleTimeString().split(" ")[0]
 
 /**
@@ -342,6 +358,7 @@ declare global {
     var runOnMain: (UpDatePtr: NativePointer, Callback: Function) => void
     var SendMessage: (str0: string, str1: string, str2?: string) => void
     var SendMessageImpl: (platform: "IronSource" | "MaxSdkCallbacks" | "MoPubManager" | "TPluginsGameObject") => void
+    var HookForwardEvent: () => void
 }
 
 globalThis.d = detachAll
