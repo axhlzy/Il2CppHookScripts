@@ -4,6 +4,7 @@ import { formartClass as FM } from "../utils/formart"
 // 侧重参数信息 还有一个 MethodToShow() 用在 findMethod / find_method 侧重基本信息
 export function showMethodInfo(mPtr: NativePointer | Il2Cpp.Method): void {
     newLine()
+    let packMethod: Il2Cpp.Method
     if (typeof mPtr == "number") {
         if (Process.arch == "arm64" && (String(mPtr).toString().length > 15))
             throw new Error("\nNot support parameter typed number at arm64\n\n\tUse b('0x...') instead\n")
@@ -17,25 +18,26 @@ export function showMethodInfo(mPtr: NativePointer | Il2Cpp.Method): void {
     } else if (mPtr instanceof Il2Cpp.Method) {
         mPtr = mPtr.handle
     }
-    let packMethod = new Il2Cpp.Method(mPtr)
+    packMethod = new Il2Cpp.Method(mPtr)
+    let AppendRelativeVirtualAddress = packMethod.virtualAddress.isNull() ? '' : `& RP: ${packMethod.relativeVirtualAddress}`
     let params = packMethod.parameters.map((param: Il2Cpp.Parameter) => {
         return (`${getLine(8, ' ')}[-]${FM.alignStr(param.name)} | type: ${param.type.handle} | @ class:${param.type.class.handle} | ${param.type.name}`)
     }).join("\n")
     if (packMethod.returnType.name != "System.Void")
         params += `\n${getLine(8, ' ')}[-]${FM.alignStr(`_RET_`)} | type: ${packMethod.returnType.handle} | @ class:${packMethod.returnType.class.handle} | ${packMethod.returnType.name}`
     /** like this ↓
-     * 
-     * [-]Assembly-CSharp @ 0xe21d1520
-        [-]Assembly-CSharp.dll @ 0xd937c290 | C:2265
-            [-]RewardedVideo @ 0xe240fe30 | M:21 | F:3
-            [-]internal Void Show(Boolean> onComplete,String tag) @ MI:0x86aa7f98 & MP: 0xaf1a45f0 ( 0x1e245f0 )
-                [-]onComplete  | type: 0xafc77db8 | @ class:0x86c4d0c0 | System.Action<System.Boolean>
-                [-]tag         | type: 0xafd4c048 | @ class:0xe2243840 | System.String
+        [-]Assembly-CSharp @ 0x7c00f74bf0
+        [-]Assembly-CSharp.dll @ 0x7b6bb29850 | C:1001
+            [-]RewardedAdsManager @ 0x7a007245c0 | M:21 | F:8 | N:ZeroX.AdsSystem
+            [-]public WaitToken<ZeroX.AdsSystem.ShowRewardedResult> Show(String where,String reason) @ MI:0x7aec6b6e10 & MP: 0x7ae4358a44 & RP: 0x756a44
+                [-]where               | type: 0x7ae57f9720 | @ class:0x7b0a454e00 | System.String
+                [-]reason              | type: 0x7ae57f9720 | @ class:0x7b0a454e00 | System.String
+                [-]_RET_               | type: 0x7ae56e5b00 | @ class:0x7940de4050 | WaitToken<ZeroX.AdsSystem.ShowRewardedResult>
      */
     LOGZ(`[-]${packMethod.class.image.assembly.name} @ ${packMethod.class.image.assembly.handle}`)
     LOGZ(`${getLine(2, ' ')}[-]${packMethod.class.image.name} @ ${packMethod.class.image.handle} | C:${packMethod.class.image.classCount}`)
     LOGZ(`${getLine(4, ' ')}[-]${packMethod.class.name} @ ${packMethod.class.handle} | M:${packMethod.class.methods.length} | F:${packMethod.class.fields.length} ${packMethod.class.namespace.length > 0 ? `| N:${packMethod.class.namespace}` : ''}`)
-    LOGD(`${getLine(6, ' ')}[-]${methodDEs(packMethod)} @ MI:${packMethod.handle} & MP: ${packMethod.virtualAddress} ( ${packMethod.virtualAddress.isNull() ? ptr(0) : packMethod.relativeVirtualAddress} ) `)
+    LOGD(`${getLine(6, ' ')}[-]${methodDEs(packMethod)} @ MI:${packMethod.handle} & MP: ${packMethod.virtualAddress} ${AppendRelativeVirtualAddress}`)
     LOGZ(`${params}`)
     newLine()
 }
