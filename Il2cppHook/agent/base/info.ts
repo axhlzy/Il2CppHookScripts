@@ -21,6 +21,8 @@ export function showMethodInfo(mPtr: NativePointer | Il2Cpp.Method): void {
     let params = packMethod.parameters.map((param: Il2Cpp.Parameter) => {
         return (`${getLine(8, ' ')}[-]${FM.alignStr(param.name)} | type: ${param.type.handle} | @ class:${param.type.class.handle} | ${param.type.name}`)
     }).join("\n")
+    if (packMethod.returnType.name != "System.Void")
+        params += `\n${getLine(8, ' ')}[-]${FM.alignStr(`_RET_`)} | type: ${packMethod.returnType.handle} | @ class:${packMethod.returnType.class.handle} | ${packMethod.returnType.name}`
     /** like this ↓
      * 
      * [-]Assembly-CSharp @ 0xe21d1520
