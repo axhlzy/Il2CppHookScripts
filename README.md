@@ -265,7 +265,7 @@ $ frida -FU -l ../_Ufunc.js
 - 由于JS特性在64位hook下存在精度问题，arm64下的指针大小是8字节，但是js命令行传参最大值是 Number.MAX_SAFE_INTEGER = 9007199254740991 (0x1fffffffffffff)，所以命令行直接给值超出范围导致精度丢失，这时候建议使用string类型 
     use ptr("0xb400007d17736990") instead of ptr(0xb400007d17736990)，这部分发现的比较晚后续很多东西都没有做好优化
 - 
-    如果需要启动的时候先暂停下来，可以在这里，然后在命令行输入 [`resume()`](https://github.com/axhlzy/Il2CppHookScripts/blob/4363eaa243c793a47cb9433911a5c7fd1e618675/Il2cppHook/agent/index.ts#L32) 继续执行
+    如果需要启动的时候先暂停下来，可以在这里[调用pause](https://github.com/axhlzy/Il2CppHookScripts/blob/ts/Il2cppHook/agent/index.ts#L7)，重新编译ts，然后在命令行输入 [`resume()`](https://github.com/axhlzy/Il2CppHookScripts/blob/4363eaa243c793a47cb9433911a5c7fd1e618675/Il2cppHook/agent/index.ts#L32) 继续执行
 - 我这里用的环境： frida==15.2.2 | frida-tools==10.5.4 , 测试机 ：piex 4 原生android 11
     1. 确认手机端server与电脑端frida版本一致，如果你的版本不一致概率性出问题
     2. 已确认高版本的 frida-tools 在使用老版 Ufunc.js （ts版不受影响）会出问题，所以建议直接使用 10.5.4 版本
