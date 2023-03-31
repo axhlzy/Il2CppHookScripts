@@ -37,6 +37,7 @@ $ frida -FU -l ../_Ufunc.js
      * [callFunction : 函数调用](#callFunction)
      * [showAsm : 基于frida.Instruction结合unity函数信息的反汇编](#showAsm)
      * [showMethodInfo / MethodToShow : 查看MethodInfo信息（后者多用在findMethod）](#MethodInfo)
+     * [showTypeParent : 查看上级类型，参数为实例指针](#showTypeParent)
   2. 断点函数
      * [B : breakPoint 断点函数类 / b : 断点指定的一个函数](#bp)
      * [n/nn : nop 指定的一个函数](#np)
@@ -116,6 +117,7 @@ $ frida -FU -l ../_Ufunc.js
       
      ![callFunction](img/callFunction.png)
 
+
 - **showAsm 基于frida.Instruction结合unity函数信息的反汇编** <a id="showAsm"></a>
     
     ![showAsm](img/showAsm.png)
@@ -125,6 +127,10 @@ $ frida -FU -l ../_Ufunc.js
 - **showMethodInfo / MethodToShow 查看MethodInfo信息（后者多用在findMethod）showAddressInfo alias showMethodInfo(addressToMethod)** <a id="MethodInfo"></a>
     
     ![showMethodInfo](img/showMethodInfo.png)
+
+- **showTypeParent 查看父级类型** <a id="showTypeParent"></a>
+    
+    ![showTypeParent](img/showTypeParent.png)
 
 - **B breakPoint 断点函数类** <a id="bp"></a>
   - B ('ClassName') === B(findClass('ClassName')),不会重复添加已添加的Method,不带参数即断点所有常用的方法

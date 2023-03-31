@@ -1,7 +1,7 @@
-import { PackList } from "../../../../../../../../../bridge/fix/packer/packList"
 import { UnityEngine_EventSystems_PointerEventData_Impl as PointerEventData } from "../../../../../../AbstractEventData/BaseEventData/PointerEventData/class"
-import { UnityEngine_Events_UnityAction_Impl as UnityAction } from "../../../../../../Delegate/MulticastDelegate/UnityAction/class"
 import { UnityEngine_UI_Button_ButtonClickedEvent_Impl as ButtonClickedEvent } from "../../../../../../UnityEventBase/UnityEvent/ButtonClickedEvent/class"
+import { UnityEngine_Events_UnityAction_Impl as UnityAction } from "../../../../../../Delegate/MulticastDelegate/UnityAction/class"
+import { PackList } from "../../../../../../../../../bridge/fix/packer/packList"
 import { GameObjectImpl as GameObject } from "../../../../../GameObject/class"
 import { ButtonImpl as Button } from "./class"
 
@@ -219,7 +219,7 @@ declare global {
 globalThis.HookOnPointerClick = OnPointerClick
 globalThis.HookOnPointerClick_S = (mPtr: NativePointer) => HookOnPointerClick(-1, checkCmdInput(mPtr))
 globalThis.B_Button = OnButtonClick
-globalThis.B_Button_S = (mPtr: NativePointer) => OnButtonClick(mPtr)
+globalThis.B_Button_S = (mPtr: NativePointer) => OnButtonClick(checkCmdInput(mPtr))
 globalThis.HideClickedObj = HideClickedObj
 
 // globalThis.B_ButtonTest = () => {

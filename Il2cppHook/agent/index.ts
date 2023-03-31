@@ -4,7 +4,7 @@ setImmediate(() => main())
 
 const main = () => {
     fixMoreVerison() // issue # 22
-    // pause() // <--- Start it directly and comment it out
+    // pause()
     // setException()
     // HookExit()
 }
