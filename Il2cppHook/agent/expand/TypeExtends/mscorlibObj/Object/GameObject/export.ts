@@ -155,6 +155,69 @@ export function findGameObject(path: string, transform?: NativePointer) {
 }
 globalThis.findGameObject = findGameObject
 
+// 解析挂载在gameObject下的脚本
+globalThis.showScripts = (gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp.Object) => {
+    if (gameObject instanceof Il2Cpp.GameObject || gameObject instanceof Il2Cpp.Object) gameObject = gameObject.handle
+    let localGobj = new Il2Cpp.GameObject(checkCmdInput(gameObject))
+
+    let comp_addr = getComponentsFunction()
+    LOGD(`comp_addr: ${comp_addr}`)
+    let comp_type = GetComponentRuntimeType(localGobj.get_transform())
+    LOGD(`comp_type: ${comp_type}`)
+
+    let comp = callFunction(comp_addr, localGobj.handle, comp_type, 0)
+    LOGD(`ScriptsArray: ${comp}`)
+
+    // 这里不知道是什么问题（线程问题？）总之直接调用就是成功不了，不使用il2cpp-bridge的这一套(使用老版本的ufunc.js)就可以成功
+    if (comp.isNull()) LOGE(`showArray(callFunction(${comp_addr}, ${localGobj.handle}, ${comp_type}, 0))`)
+    else showArray(comp)
+
+    function GetComponentRuntimeType(transform: Il2Cpp.Transform): NativePointer {
+        let retType: Array<mscorlib.Type> = getTypeParent(transform.handle) as Array<mscorlib.Type>
+        let retRuntimeType: NativePointer = ptr(0)
+        retType.forEach((type: mscorlib.Type) => {
+            if (type.name == "Component") retRuntimeType = type.handle
+        })
+        return retRuntimeType
+    }
+
+    function getComponentsFunction() {
+        let InnerFunc = () => {
+            const candidates = [
+                {
+                    moduleName: "UnityEngine.CoreModule",
+                    className: "GameObject",
+                    methodName: "GetComponents",
+                    numArgs: 1
+                },
+                {
+                    moduleName: "UnityEngine.CoreModule",
+                    className: "GameObject",
+                    methodName: "GetComponentsInChildren",
+                    numArgs: 2
+                },
+                {
+                    moduleName: "UnityEngine.CoreModule",
+                    className: "GameObject",
+                    methodName: "GetComponentsInternal",
+                    numArgs: 6
+                }
+            ]
+
+            for (const candidate of candidates) {
+                const method = find_method(candidate.moduleName, candidate.className, candidate.methodName, candidate.numArgs)
+                if (!method.isNull()) return method
+            }
+
+            return Il2Cpp.Api._resolveInternalCall(allocCStr("UnityEngine.GameObject::GetComponentsInternal(System.Type,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Object)"))
+        }
+        return InnerFunc()
+    }
+
+}
+
+// alias for globalThis.showScripts
+globalThis.s = globalThis.showScripts
 declare global {
     var HookSetActive: (defaltActive?: boolean) => void
     var showGameObject: (gameObjOrTransform: NativePointer) => void
@@ -163,6 +226,8 @@ declare global {
     var setActiveC: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void
     var findGameObject: (path: string, transform?: NativePointer) => void
     var HookSendMessage: () => void
+    var showScripts: (gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp.Object) => void
+    var s: (gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp.Object) => void
 }
 
 export { showGameObject, HookSetActive, getTransform, HookSendMessage }

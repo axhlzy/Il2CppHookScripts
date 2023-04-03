@@ -7,6 +7,13 @@ const main = () => {
     // pause()
     // setException()
     // HookExit()
+
+    // Il2Cpp.attachedThreads.forEach((thread) => {
+    //     thread.schedule(()=>{
+    //         LOGD(`Thread: ${thread.id} ${thread.object.toString()}`)
+    //         callFunction(0x1ba49d8,0x7b148b2200,0x79f6d07080,1)
+    //     })
+    // })
 }
 
 class PauseHelper {

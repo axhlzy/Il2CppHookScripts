@@ -183,6 +183,17 @@ var runOnMain = (UpDatePtr: NativePointer, Callback: Function) => {
     })
 }
 
+const runOnNewThread = (Callback: Function): NativePointer => {
+    if (Callback == undefined) return ptr(0)
+    let callback = new NativeCallback(function (arg0, arg1, arg2, arg3) {
+        Callback.apply(null, arguments)
+        return ptr(0x0)
+    }, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
+    let ntid = Memory.alloc(p_size)
+    new NativeFunction(Module.findExportByName(null, "pthread_create")!, 'pointer', ['pointer', 'int', 'pointer', 'int'])(ntid, 0, callback, 0)
+    return ntid
+}
+
 const SendMessage = (str0: string, str1: string, str2: string = ""): void => {
     // Java 
     Java.perform(() => Java.use("com.unity3d.player.UnityPlayer").UnitySendMessage(str0, str1, str2))
@@ -356,6 +367,7 @@ declare global {
     var checkCtx: (ctx: CpuContext, type?: "LR" | "PC" | "SP") => void | string
     // var filterDuplicateOBJ: (objstr: string, maxCount?: number) => number
     var runOnMain: (UpDatePtr: NativePointer, Callback: Function) => void
+    var runOnNewThread: (Callback: Function) => void
     var SendMessage: (str0: string, str1: string, str2?: string) => void
     var SendMessageImpl: (platform: "IronSource" | "MaxSdkCallbacks" | "MoPubManager" | "TPluginsGameObject") => void
     var HookForwardEvent: () => void
@@ -371,5 +383,6 @@ globalThis.getJclassName = getJclassName
 globalThis.checkCtx = checkCtx
 // globalThis.filterDuplicateOBJ = filterDuplicateOBJ
 globalThis.runOnMain = runOnMain
+globalThis.runOnNewThread = runOnNewThread
 globalThis.SendMessage = SendMessage
 globalThis.SendMessageImpl = SendMessageImpl
