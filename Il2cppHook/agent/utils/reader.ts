@@ -37,7 +37,7 @@ const showArray = (mPtr: ARGM, funcTransform?: (itemPtr: NativePointer, objName:
     let retPtr = mPtr
     let arrLength = retPtr.add(p_size * 3).readUInt()
     LOGD(`\n[*] Array length : ${arrLength}  |  RET => ${retPtr}\n`)
-    if (arrLength == 0) return
+    if (arrLength == 0 || arrLength >= 20) return
     seeHexA(retPtr.add(p_size * 4), (arrLength > 32 ? 32 : arrLength) * p_size, false, LogColor.C33)
     newLine()
     for (let i = 0; i < arrLength; ++i) {
