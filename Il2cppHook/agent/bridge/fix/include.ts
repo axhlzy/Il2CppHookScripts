@@ -8,5 +8,6 @@ import "./asmHelper"
 import "./offsetManager"
 import "./dlopen"
 import "./inflater"
+import "./memory"
 
 import "./packer/include"
