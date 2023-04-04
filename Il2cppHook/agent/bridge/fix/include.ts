@@ -7,5 +7,6 @@ import "./functions"
 import "./asmHelper"
 import "./offsetManager"
 import "./dlopen"
+import "./inflater"
 
 import "./packer/include"

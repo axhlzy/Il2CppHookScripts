@@ -1,4 +1,5 @@
 import { getMethodDesFromMethodInfo as methodDes } from "../bridge/fix/il2cppM"
+import { inflaterMethodLocal } from "../bridge/fix/inflater"
 import { formartClass as FM } from "../utils/formart"
 
 // 侧重参数信息 还有一个 MethodToShow() 用在 findMethod / find_method 侧重基本信息
@@ -20,11 +21,11 @@ export function showMethodInfo(mPtr: NativePointer | Il2Cpp.Method): void {
     }
     packMethod = new Il2Cpp.Method(mPtr)
     let AppendRelativeVirtualAddress = packMethod.virtualAddress.isNull() ? '' : `& RP: ${packMethod.relativeVirtualAddress}`
-    let params = packMethod.parameters.map((param: Il2Cpp.Parameter) => {
+    let params: string = packMethod.parameters.map((param: Il2Cpp.Parameter) => {
         return (`${getLine(8, ' ')}[-]${FM.alignStr(param.name)} | type: ${param.type.handle} | @ class:${param.type.class.handle} | ${param.type.name}`)
     }).join("\n")
     if (packMethod.returnType.name != "System.Void")
-        params += `\n${getLine(8, ' ')}[-]${FM.alignStr(`_RET_`)} | type: ${packMethod.returnType.handle} | @ class:${packMethod.returnType.class.handle} | ${packMethod.returnType.name}`
+        params += `${packMethod.parameterCount == 0 ? '' : '\n'}${getLine(8, ' ')}[-]${FM.alignStr(`_RET_`)} | type: ${packMethod.returnType.handle} | @ class:${packMethod.returnType.class.handle} | ${packMethod.returnType.name}`
     /** like this ↓
         [-]Assembly-CSharp @ 0x7c00f74bf0
         [-]Assembly-CSharp.dll @ 0x7b6bb29850 | C:1001
@@ -40,6 +41,12 @@ export function showMethodInfo(mPtr: NativePointer | Il2Cpp.Method): void {
     LOGD(`${getLine(6, ' ')}[-]${methodDes(packMethod)} @ MI:${packMethod.handle} & MP: ${packMethod.virtualAddress} ${AppendRelativeVirtualAddress}`)
     LOGZ(`${params}`)
     newLine()
+
+    if (packMethod.virtualAddress.isNull()) {
+        let localMethod: Il2Cpp.Method = inflaterMethodLocal(packMethod, "Object") as Il2Cpp.Method
+        let info = `${methodDes(localMethod)} @ MI:${localMethod.handle} & MP: ${localMethod.virtualAddress} & RP: ${localMethod.relativeVirtualAddress}`
+        LOGZ(`Inflate Object ↓\n${info}\n`)
+    }
 }
 
 export const getClassFromMethodInfo = (methodInfoPtr: NativePointer): Il2Cpp.Class => {

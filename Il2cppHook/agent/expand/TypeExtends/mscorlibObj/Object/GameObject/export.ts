@@ -167,10 +167,12 @@ export function findGameObject(path: string, transform?: NativePointer) {
 }
 globalThis.findGameObject = findGameObject
 
-// 解析挂载在gameObject下的脚本
+// 解析挂载在gameObject下的脚本 (todo 未完成)
 globalThis.showScripts = (gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp.Object) => {
     if (gameObject instanceof Il2Cpp.GameObject || gameObject instanceof Il2Cpp.Object) gameObject = gameObject.handle
     let localGobj = new Il2Cpp.GameObject(checkCmdInput(gameObject))
+
+    findMethods("Components")
 
     let comp_addr = getComponentsFunction()
     LOGD(`comp_addr: ${comp_addr}`)

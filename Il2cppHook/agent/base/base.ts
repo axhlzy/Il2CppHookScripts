@@ -143,12 +143,59 @@ class HookerBase {
         return klass
     }
 
+    /**
+     * showMethods
+     * @param mPtr class ptr
+     * @param detailed show detail info (default false)
+     * @returns 
+     * @example
+     * [Pixel 4::XXX ]->  m(findClass("GameObject"),1)
+
+            -----------------------------------------------------
+            | Found 46 Methods  in class: GameObject @ 0xe9792c10 |
+            -----------------------------------------------------
+
+            [*] 0xa386d198 ---> 0x0 ---> 0x5a1ff000
+                    public T GetComponent()
+                            ---> retval     0x97f4f350  <-  T
+
+            [*] 0xa386d1c4 ---> 0xa6d24494 ---> 0xf23494
+                    public Component GetComponent(Type type)
+                            ---> args[0]    0xa7b7d734  <-  System.Type
+                            ---> retval     0xe9785470  <-  Component
+
+            [*] 0xa386d1f0 ---> 0xa6d290d4 ---> 0xf280d4
+                    internal Void GetComponentFastPath(Type type,IntPtr oneFurtherThanResultValue)
+                            ---> args[0]    0xa7b7d734  <-  System.Type
+                            ---> args[1]    0xa7b7c9a4  <-  System.IntPtr
+                            ---> retval     0xe9781f00  <-  Void
+
+            [*] 0xa386d21c ---> 0xa6d29134 ---> 0xf28134
+                    internal Component GetComponentByName(String type)
+                            ---> args[0]    0xa7b7d414  <-  System.String
+                            ---> retval     0xe9785470  <-  Component
+            ......
+
+            [Pixel 4::XXX ]->  m(findClass("GameObject"))
+
+            -----------------------------------------------------
+            | Found 46 Methods  in class: GameObject @ 0xe9792c10 |
+            -----------------------------------------------------
+            [*] 0xa386d198 ---> 0x0 ---> 0x0        |  public T GetComponent()
+            [*] 0xa386d1c4 ---> 0xa6d24494 ---> 0xf23494    |  public Component GetComponent(Type type)
+            [*] 0xa386d1f0 ---> 0xa6d290d4 ---> 0xf280d4    |  internal Void GetComponentFastPath(Type type,IntPtr oneFurtherThanResultValue)
+            [*] 0xa386d21c ---> 0xa6d29134 ---> 0xf28134    |  internal Component GetComponentByName(String type)
+            [*] 0xa386d248 ---> 0xa6d2918c ---> 0xf2818c    |  public Component GetComponent(String type)
+            [*] 0xa386d274 ---> 0xa6d245fc ---> 0xf235fc    |  public Component GetComponentInChildren(Type type,Boolean includeInactive)
+            ......
+     */
     static showMethods(mPtr: NativePointer | String | number, detailed: boolean = false): void {
         let klass: Il2Cpp.Class = HookerBase.inputCheck(mPtr)
         if (klass.methods.length == 0) return
         newLine()
         FM.printTitile(`Found ${klass.methods.length} Methods ${klass.isEnum ? "(enum) " : ""} in class: ${klass.name} @ ${klass.handle}`)
         if (detailed) {
+            // 带详细参数解析 => example 1
             let maxStrLen: number = 0
             klass.methods.forEach((method: Il2Cpp.Method) => {
                 LOGD(`\n[*] ${method.handle} ---> ${method.virtualAddress} ---> ${method.relativeVirtualAddress}`)
@@ -164,9 +211,14 @@ class HookerBase {
             newLine()
             LOGO(getLine(maxStrLen))
         } else {
-            klass.methods.forEach((method: Il2Cpp.Method) => {
-                let RVirAddr = method.virtualAddress.isNull() ? ptr(0) : method.relativeVirtualAddress
-                LOGD(`[*] ${method.handle} ---> ${method.virtualAddress} ---> ${RVirAddr}\t|  ${GMD(method)}`)
+            // 不带参数解析的  => example 2
+            // 分开展示泛型方法和非泛型方法 避免看起来混乱
+            klass.methods.filter((method: Il2Cpp.Method) => !method.virtualAddress.isNull()).forEach((method: Il2Cpp.Method) => {
+                LOGD(`[*] ${method.handle} ---> ${method.virtualAddress} ---> ${method.relativeVirtualAddress}\t|  ${GMD(method)}`)
+            })
+            newLine()
+            klass.methods.filter((method: Il2Cpp.Method) => method.virtualAddress.isNull()).forEach((method: Il2Cpp.Method) => {
+                LOGZ(`[*] ${method.handle}\t|  ${GMD(method)}`)
             })
             newLine()
         }
