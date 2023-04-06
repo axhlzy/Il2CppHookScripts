@@ -1,4 +1,5 @@
 import "./include"
+import { PassType } from "./utils/common"
 
 setImmediate(() => main())
 
@@ -213,10 +214,30 @@ function fixMoreVerison() {
      *  ERROR : il2cpp: couldn't determine the Unity version, please specify it manually
      *  使用 AssetStudioGUI 确认当前Unity版本后自行修改此处 ↓
      */
+
+    const UnityVersion = "2020.3.0f1c1"
+
     Il2Cpp.perform(() => {
-        Reflect.defineProperty(Il2Cpp, "UnityVersion", {
-            value: "2020.3.5f1"
-        })
+        setTimeout(() => {
+            if (Il2Cpp.Api._resolveInternalCall(allocCStr('UnityEngine.Application::get_unityVersion')).isNull()) {
+                A(Il2Cpp.Api._resolveInternalCall, (args: InvocationArguments, _ctx: CpuContext, passValue: Map<PassType, any>) => {
+                    if (args[0].readCString() == 'UnityEngine.Application::get_unityVersion') {
+                        passValue.set("RET", allocCStr(UnityVersion))
+                        LOGE(`Can't get UnityVersion, set to ${UnityVersion}`)
+                        Reflect.defineProperty(Il2Cpp, "UnityVersion", {
+                            value: UnityVersion
+                        })
+                    }
+                }, (ret, _ctx, passValue) => {
+                    if (passValue.get("RET") != undefined) {
+                        return new NativeCallback(function () {
+                            return passValue.get("RET")
+                        }, 'pointer', [])
+                    }
+                    return ret
+                })
+            }
+        }, 1000)
     })
 }
 

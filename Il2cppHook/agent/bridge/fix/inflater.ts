@@ -35,4 +35,4 @@ declare global {
     var inflaterMethod: (method_pointer: NativePointer | Il2Cpp.Method, class_pointer: NativePointer | string) => void
 }
 
-globalThis.inflaterMethod = (...args) => { showMethodInfo(inflaterMethodLocal(...args)) }
+globalThis.inflaterMethod = (method_pointer: NativePointer | Il2Cpp.Method, class_pointer: NativePointer | string) => { showMethodInfo(inflaterMethodLocal(method_pointer, class_pointer)) }
