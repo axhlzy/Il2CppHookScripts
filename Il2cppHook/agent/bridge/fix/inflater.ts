@@ -13,26 +13,33 @@
  * @param class_pointer ClassPtr 或者 类名
  * @returns void 或者 Il2cpp.Method
  */
-export const inflaterMethodLocal = (method_pointer: NativePointer | Il2Cpp.Method, class_pointer: NativePointer | string): Il2Cpp.Method => {
+export const inflaterMethodLocal = (method_pointer: NativePointer | Il2Cpp.Method | string, class_pointer: NativePointer | string): Il2Cpp.Method => {
+    let localClassPtr: NativePointer = ptr(0)
     if (class_pointer instanceof NativePointer) {
-        class_pointer = ptr(checkCmdInput(class_pointer) as unknown as string)
-    } else {
-        class_pointer = findClass(class_pointer as string)
-    }
+        localClassPtr = ptr(checkCmdInput(class_pointer) as unknown as string)
+    } else if (typeof method_pointer == "string") {
+        localClassPtr = findClass(class_pointer as string)
+    } else
+        throw new Error("Not support class_pointer type")
+    let localMethodPtr: NativePointer = ptr(0)
     if (method_pointer instanceof NativePointer) {
-        method_pointer = checkCmdInput(method_pointer)
+        localMethodPtr = checkCmdInput(method_pointer)
+    } else if (typeof method_pointer == "string") {
+        localMethodPtr = ptr(method_pointer)
+    } else if (method_pointer instanceof Il2Cpp.Method) {
+        localMethodPtr = method_pointer.handle
     } else {
-        method_pointer = method_pointer.handle
+        localMethodPtr = ptr(method_pointer)
     }
-    if (method_pointer.isNull() || class_pointer.isNull()) throw new Error("method_pointer or class_pointer is null")
-    let method = new Il2Cpp.Method(method_pointer)
-    let klass = new Il2Cpp.Class(class_pointer)
+    if (localMethodPtr.isNull() || localClassPtr.isNull()) throw new Error("method_pointer or class_pointer is null")
+    let method = new Il2Cpp.Method(localMethodPtr)
+    let klass = new Il2Cpp.Class(localClassPtr)
     let refMethod = method.inflate(klass)
     return refMethod
 }
 
 declare global {
-    var inflaterMethod: (method_pointer: NativePointer | Il2Cpp.Method, class_pointer: NativePointer | string) => void
+    var inflaterMethod: (method_pointer: NativePointer | Il2Cpp.Method | string, class_pointer: NativePointer | string) => void
 }
 
-globalThis.inflaterMethod = (method_pointer: NativePointer | Il2Cpp.Method, class_pointer: NativePointer | string) => { showMethodInfo(inflaterMethodLocal(method_pointer, class_pointer)) }
+globalThis.inflaterMethod = (method_pointer: NativePointer | Il2Cpp.Method | string, class_pointer: NativePointer | string) => { showMethodInfo(inflaterMethodLocal(method_pointer, class_pointer)) }
