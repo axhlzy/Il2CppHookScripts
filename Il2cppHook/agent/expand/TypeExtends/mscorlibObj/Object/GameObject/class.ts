@@ -72,20 +72,40 @@ class GameObjectImpl extends UnityEngine_Object {
         return new Il2Cpp.Transform(Il2Cpp.Api.GameObject._get_transform(this.handle))
     }
 
+    get transform(): Il2Cpp.Transform {
+        return this.get_transform()
+    }
+
     get_tag(): string {
         return readU16(Il2Cpp.Api.GameObject._get_tag(this.handle))
+    }
+
+    get tag(): string {
+        return this.get_tag()
     }
 
     set_layer(value: number): void {
         return Il2Cpp.Api.GameObject._set_layer(this.handle, value)
     }
 
+    set layer(value: number) {
+        this.set_layer(value)
+    }
+
     get_layer(): number {
         return Il2Cpp.Api.GameObject._get_layer(this.handle)
     }
 
+    get layer(): number {
+        return this.get_layer()
+    }
+
     get_gameObject(): Il2Cpp.GameObject {
         return new Il2Cpp.GameObject(Il2Cpp.Api.GameObject._get_gameObject(this.handle))
+    }
+
+    get gameObject(): Il2Cpp.GameObject {
+        return this.get_gameObject()
     }
 
     get_activeSelf(): boolean {

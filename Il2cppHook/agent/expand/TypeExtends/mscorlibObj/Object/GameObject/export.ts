@@ -1,3 +1,4 @@
+import { alloc } from "../../../../../utils/alloc"
 import { filterDuplicateOBJ, PassType } from "../../../../../utils/common"
 import { setActiveT, setActiveTChange } from "../Component/export"
 
@@ -169,15 +170,18 @@ globalThis.findGameObject = findGameObject
 
 // 解析挂载在gameObject下的脚本 (todo 未完成)
 globalThis.showScripts = (gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp.Object) => {
+
+    const DEBUG = true
+
     if (gameObject instanceof Il2Cpp.GameObject || gameObject instanceof Il2Cpp.Object) gameObject = gameObject.handle
     let localGobj = new Il2Cpp.GameObject(checkCmdInput(gameObject))
 
-    findMethods("Components")
+    if (DEBUG) findMethods("Components")
 
     let comp_addr = getComponentsFunction()
-    LOGD(`comp_addr: ${comp_addr}`)
+    if (DEBUG) LOGD(`comp_addr: ${comp_addr}`)
     let comp_type = GetComponentRuntimeType(localGobj.get_transform())
-    LOGD(`comp_type: ${comp_type}`)
+    if (DEBUG) LOGD(`comp_type: ${comp_type}`)
 
     let comp = callFunction(comp_addr, localGobj.handle, comp_type, 0)
     LOGD(`ScriptsArray: ${comp}`)
@@ -185,15 +189,6 @@ globalThis.showScripts = (gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp
     // 这里不知道是什么问题（线程问题？）总之直接调用就是成功不了，不使用il2cpp-bridge的这一套(使用老版本的ufunc.js)就可以成功
     if (comp.isNull()) LOGE(`showArray(callFunction(${comp_addr}, ${localGobj.handle}, ${comp_type}, 0))`)
     else showArray(comp)
-
-    function GetComponentRuntimeType(transform: Il2Cpp.Transform): NativePointer {
-        let retType: Array<mscorlib.Type> = getTypeParent(transform.handle) as Array<mscorlib.Type>
-        let retRuntimeType: NativePointer = ptr(0)
-        retType.forEach((type: mscorlib.Type) => {
-            if (type.name == "Component") retRuntimeType = type.handle
-        })
-        return retRuntimeType
-    }
 
     function getComponentsFunction() {
         let InnerFunc = () => {
@@ -223,15 +218,40 @@ globalThis.showScripts = (gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp
                 if (!method.isNull()) return method
             }
 
+            // 这个目前看起来好像是比较通用，GameObject 最底层获取 components array<T> 的方法 
+            // 等价于 private Array GetComponentsInternal(Type type,Boolean useSearchTypeAsArrayReturnType,Boolean recursive,Boolean includeInactive,Boolean reverse,Object resultList)
             return Il2Cpp.Api._resolveInternalCall(allocCStr("UnityEngine.GameObject::GetComponentsInternal(System.Type,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Object)"))
         }
         return InnerFunc()
     }
+}
 
+function GetComponentRuntimeType(transform: Il2Cpp.Transform): NativePointer {
+    let retType: Array<mscorlib.Type> = getTypeParent(transform.handle) as Array<mscorlib.Type>
+    let retRuntimeType: NativePointer = ptr(0)
+    retType.forEach((type: mscorlib.Type) => {
+        if (type.name == "Component") retRuntimeType = type.handle
+    })
+    return retRuntimeType
 }
 
 // alias for globalThis.showScripts
 globalThis.s = globalThis.showScripts
+
+var resultObj = alloc(0x1000)
+globalThis.testCompInter = (gameObject: NativePointer) => {
+
+    // private Array GetComponentsInternal(Type type,Boolean useSearchTypeAsArrayReturnType,Boolean recursive,Boolean includeInactive,Boolean reverse,Object resultList)
+    let method: Il2Cpp.Method = Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.GameObject").method("GetComponentsInternal", 6)
+    let runtimeType = GetComponentRuntimeType(new Il2Cpp.GameObject(gameObject).transform)
+
+    LOGW(`var resultObj = Memory.alloc(0x1000)`)
+    LOGW(`var tmpFunction = new NativeFunction(ptr(${method.virtualAddress}), "pointer", ["pointer", "pointer", "int", "int", "int", "int", "pointer"])`)
+    LOGW(`var ret = tmpFunction(ptr(${gameObject}), ptr(${runtimeType}), 1, 1, 1, 0, resultObj)`)
+    LOGW(`console.log(hexdump(resultObj))`)
+}
+
+
 declare global {
     var HookSetActive: (defaltActive?: boolean, PrintStackTrace?: boolean, filterString?: string | Array<string>) => void
     var showGameObject: (gameObjOrTransform: NativePointer) => void
@@ -242,6 +262,8 @@ declare global {
     var HookSendMessage: () => void
     var showScripts: (gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp.Object) => void
     var s: (gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp.Object) => void
+
+    var testCompInter: (gameObject: NativePointer) => void
 }
 
 export { showGameObject, HookSetActive, getTransform, HookSendMessage }

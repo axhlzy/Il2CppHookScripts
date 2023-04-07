@@ -17,10 +17,9 @@ export const inflaterMethodLocal = (method_pointer: NativePointer | Il2Cpp.Metho
     let localClassPtr: NativePointer = ptr(0)
     if (class_pointer instanceof NativePointer) {
         localClassPtr = ptr(checkCmdInput(class_pointer) as unknown as string)
-    } else if (typeof method_pointer == "string") {
+    } else {
         localClassPtr = findClass(class_pointer as string)
-    } else
-        throw new Error("Not support class_pointer type")
+    }
     let localMethodPtr: NativePointer = ptr(0)
     if (method_pointer instanceof NativePointer) {
         localMethodPtr = checkCmdInput(method_pointer)
@@ -32,9 +31,9 @@ export const inflaterMethodLocal = (method_pointer: NativePointer | Il2Cpp.Metho
         localMethodPtr = ptr(method_pointer)
     }
     if (localMethodPtr.isNull() || localClassPtr.isNull()) throw new Error("method_pointer or class_pointer is null")
-    let method = new Il2Cpp.Method(localMethodPtr)
-    let klass = new Il2Cpp.Class(localClassPtr)
-    let refMethod = method.inflate(klass)
+    let method: Il2Cpp.Method = new Il2Cpp.Method(localMethodPtr)
+    let klass: Il2Cpp.Class = new Il2Cpp.Class(localClassPtr)
+    let refMethod: Il2Cpp.Method<Il2Cpp.Object> = method.inflate(klass)
     return refMethod
 }
 
