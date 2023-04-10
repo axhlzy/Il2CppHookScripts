@@ -64,19 +64,24 @@ export const getModifier = (flags: number): string => {
     return ret_str
 }
 
-export const getMethodDesFromMethodInfo = (methodPtr: NativePointer | number | Il2Cpp.Method, simpleType = true): string => {
+export const getMethodDesFromMethodInfo = (methodPtr: NativePointer | number | Il2Cpp.Method, simpleType: undefined | boolean = undefined): string => {
     if (typeof methodPtr == "number") methodPtr = ptr(methodPtr)
     if (methodPtr == null || methodPtr.isNull()) throw new Error("getMethodDesFromMethodPtr: methodPtr can't be null")
     let localMethod: Il2Cpp.Method = methodPtr instanceof Il2Cpp.Method ? methodPtr : new Il2Cpp.Method(methodPtr)
     let ret_str: string = ""
+    if (simpleType == undefined) simpleType = !localMethod.returnType.name.includes(">")
     ret_str += getMethodModifier(localMethod)
     // If it is a generic function, it will be with generic parameters, otherwise it will retain the name of the last point after the type
     ret_str += `${localMethod.returnType.name.includes(">") ? `${localMethod.returnType.name}` : `${localMethod.returnType.name.split(".").pop()}`} `
     ret_str += localMethod.name
-    ret_str += "(" + localMethod.parameters.map(x => `${simpleType ? (function (name) {
-        let sp = name.split(".")
-        return sp[sp.length - 1]
-    }(x.type.name)) : x.type.name} ${x.name}`).join(",") + ")"
+    ret_str += "("
+    for (let i = 0; i < localMethod.parameterCount; i++) {
+        let param = localMethod.parameters[i].type
+        ret_str += `${param.name.includes(">") ? `${param.name}` : `${param.name.split(".").pop()}`}`
+        ret_str += ` ${localMethod.parameters[i].name}`
+        if (i != localMethod.parameterCount - 1) ret_str += ", "
+        if (i == localMethod.parameterCount - 1) ret_str += ")"
+    }
     return ret_str
 }
 
