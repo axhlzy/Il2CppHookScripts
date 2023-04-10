@@ -1,3 +1,5 @@
+import { PackArray } from "../../../../../bridge/fix/packer/packArray"
+import { PackList } from "../../../../../bridge/fix/packer/packList"
 import { alloc } from "../../../../../utils/alloc"
 import { filterDuplicateOBJ, PassType } from "../../../../../utils/common"
 import { setActiveT, setActiveTChange } from "../Component/export"
@@ -131,6 +133,8 @@ export const setActiveG = (gameObject: Il2Cpp.GameObject, active: boolean = fals
 
 export const setActiveGChange = (gameObject: Il2Cpp.GameObject) => gameObject.SetActive(!gameObject.get_activeSelf())
 
+globalThis.findGameObject = findGameObject
+
 /**
  * 两种方式查找 根据路径查找指定gameobj
  * @param {String} path 路径或者是顶层gobjName
@@ -166,31 +170,93 @@ export function findGameObject(path: string, transform?: NativePointer) {
         LOGE("\nNot Found ...\n")
     }
 }
-globalThis.findGameObject = findGameObject
 
-// 解析挂载在gameObject下的脚本 (todo 未完成)
-globalThis.showScripts = (gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp.Object) => {
+function GetComponentRuntimeType(transform: Il2Cpp.Transform): NativePointer {
+    let retType: Array<mscorlib.Type> = getTypeParent(transform.handle) as Array<mscorlib.Type>
+    let retRuntimeType: NativePointer = ptr(0)
+    retType.forEach((type: mscorlib.Type) => {
+        if (type.name == "Component") retRuntimeType = type.handle
+    })
+    return retRuntimeType
+}
 
-    const DEBUG = true
-
+var allocTmp = ptr(0)
+function list_Components_GameObject(gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp.Object): PackArray | undefined {
     if (gameObject instanceof Il2Cpp.GameObject || gameObject instanceof Il2Cpp.Object) gameObject = gameObject.handle
     let localGobj = new Il2Cpp.GameObject(checkCmdInput(gameObject))
+    let comp_addr: NativePointer = ptr(0)
+    let comp_type = GetComponentRuntimeType(localGobj.get_transform()) // <- got component runtimeType
 
-    if (DEBUG) findMethods("Components")
+    // 这个会获取 child 所有,还得手动分类，故不使用
+    // public Component[] GetComponentsInChildren(Type type, Boolean includeInactive)
+    // comp_addr = find_method("UnityEngine.CoreModule", "GameObject", "GetComponentsInChildren", 2)
+    // if (!comp_addr.isNull())
+    //     return new PackArray(callFunction(comp_addr, localGobj.handle, comp_type, 0))
 
-    let comp_addr = getComponentsFunction()
-    if (DEBUG) LOGD(`comp_addr: ${comp_addr}`)
-    let comp_type = GetComponentRuntimeType(localGobj.get_transform())
-    if (DEBUG) LOGD(`comp_type: ${comp_type}`)
+    // 获取当前对象的所有组件
+    // public Component[] GetComponents(Type type)
+    comp_addr = find_method("UnityEngine.CoreModule", "GameObject", "GetComponents", 1)
+    if (!comp_addr.isNull())
+        return new PackArray(callFunction(comp_addr, localGobj.handle, comp_type))
 
-    let comp = callFunction(comp_addr, localGobj.handle, comp_type, 0)
-    LOGD(`ScriptsArray: ${comp}`)
+    // private Array GetComponentsInternal(Type type, Boolean useSearchTypeAsArrayReturnType, Boolean recursive, Boolean includeInactive, Boolean reverse, Object resultList)
+    comp_addr = find_method("UnityEngine.CoreModule", "GameObject", "GetComponentsInternal", 6)
+    if (!comp_addr.isNull())
+        return new PackArray(callFunctionLong(comp_addr, localGobj.handle, comp_type, 1, 1, 0, allocTmp))  // not test
 
-    // 这里不知道是什么问题（线程问题？）总之直接调用就是成功不了，不使用il2cpp-bridge的这一套(使用老版本的ufunc.js)就可以成功
-    if (comp.isNull()) LOGE(`showArray(callFunction(${comp_addr}, ${localGobj.handle}, ${comp_type}, 0))`)
-    else showArray(comp)
+    throw new Error("list_Components_GameObject: not found method")
+}
 
-    function getComponentsFunction() {
+function list_Components_Component(component: NativePointer | Il2Cpp.Component): PackArray | undefined {
+    if (component instanceof Il2Cpp.Component) component = component.handle
+    let localComp = new Il2Cpp.Component(checkCmdInput(component))
+    let comp_addr: NativePointer = ptr(0)
+    let comp_type = GetComponentRuntimeType(localComp.get_transform())
+
+    // 以下这两条是等价
+    // public Void GetComponents(Type type, System.Collections.Generic.List<UnityEngine.Component> results)
+    comp_addr = find_method("UnityEngine.CoreModule", "Component", "GetComponents", 2)
+    if (comp_addr.isNull()) {
+        // private Void GetComponentsForListInternal(Type searchType, Object resultList)
+        comp_addr = find_method("UnityEngine.CoreModule", "Component", "GetComponentsForListInternal", 2)
+    }
+    if (!comp_addr.isNull()) {
+        allocTmp = alloc(0x1000)
+        callFunction(comp_addr, localComp.handle, comp_type, allocTmp)
+        return new PackArray(PackList.localArray(allocTmp))
+    }
+
+    throw new Error("list_Components_Component: not found method")
+}
+
+globalThis.listScripts = (mPtr: NativePointer): PackArray | undefined => {
+
+    let local_mPtr = checkCmdInput(mPtr)
+    let typeName = getTypeName(local_mPtr)
+    if (typeName == "GameObject") {
+        return list_Components_GameObject(local_mPtr)
+    } else if (typeName == "RectTransform") {
+        return list_Components_Component(local_mPtr)
+    }
+    // todo check extends Component ?
+    else if (checkExtends(local_mPtr)) {
+
+    } else {
+        throw new Error("listScripts: unsport type")
+    }
+
+    function checkExtends(local_mPtr: NativePointer): boolean {
+
+        return false
+    }
+
+    function getFunction() {
+
+        let ret = find_method("UnityEngine.CoreModule", "GameObject", "GetComponentsInChildren", 2)
+
+        if (ret.isNull()) ret = find_method("UnityEngine.CoreModule", "GameObject", "GetComponents", 1)
+        return ret
+
         let InnerFunc = () => {
             const candidates = [
                 {
@@ -226,14 +292,8 @@ globalThis.showScripts = (gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp
     }
 }
 
-function GetComponentRuntimeType(transform: Il2Cpp.Transform): NativePointer {
-    let retType: Array<mscorlib.Type> = getTypeParent(transform.handle) as Array<mscorlib.Type>
-    let retRuntimeType: NativePointer = ptr(0)
-    retType.forEach((type: mscorlib.Type) => {
-        if (type.name == "Component") retRuntimeType = type.handle
-    })
-    return retRuntimeType
-}
+// 解析挂载在gameObject下的脚本 (todo 未完成)
+globalThis.showScripts = (mPtr: NativePointer) => listScripts(mPtr)?.show()
 
 // alias for globalThis.showScripts
 globalThis.s = globalThis.showScripts
@@ -260,8 +320,10 @@ declare global {
     var setActiveC: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void
     var findGameObject: (path: string, transform?: NativePointer) => void
     var HookSendMessage: () => void
-    var showScripts: (gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp.Object) => void
-    var s: (gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp.Object) => void
+
+    var listScripts: (mPtr: NativePointer) => PackArray | undefined
+    var showScripts: (mPtr: NativePointer) => void
+    var s: (mPtr: NativePointer) => void
 
     var testCompInter: (gameObject: NativePointer) => void
 }
