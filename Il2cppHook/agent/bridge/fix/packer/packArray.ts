@@ -71,4 +71,8 @@ export class PackArray {
         return this.toArrayStr().toString()
     }
 
+    show(): void {
+        showArray(this.handle)
+    }
+
 }

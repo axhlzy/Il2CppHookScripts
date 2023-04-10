@@ -8,7 +8,7 @@ import { TYPE_CHECK_POINTER } from "../base/globle"
  */
 var baseAddress: NativePointer = ptr(0)
 setImmediate(() => {
-    let errorTimes:number = 0
+    let errorTimes: number = 0
     let task = setInterval(() => {
         try {
             baseAddress = Process.findModuleByName("libil2cpp.so")!.base

@@ -10,7 +10,7 @@ import { ButtonImpl as Button } from "./class"
  * @param arg0 一般不用传，或者给个 -1 即可
  * @param self_addr 有时候游戏不走Button的OnPointerClick，需要自己找找 OnPointerClick 的地址 `BF("OnPointerClick")`
  */
-function OnPointerClick(arg0: number = -1, self_addr: NativePointer = ptr(0)) {
+export function OnPointerClick(arg0: number = -1, self_addr: NativePointer = ptr(0)) {
     let funcAddr: NativePointer | undefined = undefined
     switch (arguments[0]) {
         default:
@@ -127,7 +127,7 @@ function OnPointerClick(arg0: number = -1, self_addr: NativePointer = ptr(0)) {
     }
 }
 
-const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
+export const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
     if (!mPtr.isNull()) {
         A(checkCmdInput(mPtr), (args) => innerFunction(args[0], args[1]))
         return
@@ -177,13 +177,33 @@ const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
     }
 }
 
+export const OnClickScript = (mPtr: NativePointer = ptr(0)) => {
+    if (!mPtr.isNull()) {
+        A(checkCmdInput(mPtr), (args) => innerFunction(args[0], args[1]))
+        return
+    }
+    try {
+        A(Il2Cpp.Api.Button._OnPointerClick, (args) => innerFunction(args[0], args[1]))
+    } catch (error) {
+        A(Il2Cpp.Api.Button._OnPointerClick, (_args, ctx: CpuContext) => {
+            innerFunction(getPlatformCtxWithArgV(ctx, 0)!, getPlatformCtxWithArgV(ctx, 1)!)
+        })
+    }
+
+    function innerFunction(arg0: NativePointer, arg1: NativePointer) {
+        listScripts(getGameObjectPack(arg0).handle)?.forEach((item: Il2Cpp.Object) => {
+            LOGW(`\t\t[+] ${item.handle} ${item}`)
+        })
+    }
+}
+
 /**
  * 隐藏模拟点击位置的gameobj
  * 这里find_method()在移植的时候写具体的地址就是，不用移植整个js代码
  * @param {*} x 
  * @param {*} y 
  */
-const HideClickedObj = (x: number, y: number) => {
+export const HideClickedObj = (x: number, y: number) => {
     let m_ptr = find_method("UnityEngine.UI", "Button", "OnPointerClick", 1)
     let srcFunc = new NativeFunction(m_ptr, 'void', ['pointer', 'pointer', 'pointer', 'pointer'])
     Interceptor.revert(m_ptr)
@@ -205,22 +225,26 @@ const HideClickedObj = (x: number, y: number) => {
     // 循环调用，出现时destory掉这个gameObj
 }
 
-export { OnPointerClick, HideClickedObj }
-
 declare global {
     var HookOnPointerClick: (arg: number, mPtr: NativePointer) => void
-    var HookOnPointerClick_S: (mPtr: NativePointer) => void
+    var HookOnPointerClick_Custom: (mPtr: NativePointer) => void // Customize the function address of OnPointerClick
     var B_Button: () => void
-    var B_Button_S: (mPtr: NativePointer) => void
+    var B_Button_Custom: (mPtr: NativePointer) => void // Customize the function address of OnPointerClick
+    var B_Click_Script: (mPtr: NativePointer) => void
+    var B_Click_Script_Custom: (mPtr: NativePointer) => void
+
+    // test ↓
     var B_ButtonTest: () => void
     var HideClickedObj: (x: number, y: number) => void
 }
 
 globalThis.HookOnPointerClick = OnPointerClick
-globalThis.HookOnPointerClick_S = (mPtr: NativePointer) => HookOnPointerClick(-1, checkCmdInput(mPtr))
+globalThis.HookOnPointerClick_Custom = (mPtr: NativePointer) => HookOnPointerClick(-1, checkCmdInput(mPtr))
 globalThis.B_Button = OnButtonClick
-globalThis.B_Button_S = (mPtr: NativePointer) => OnButtonClick(checkCmdInput(mPtr))
+globalThis.B_Button_Custom = (mPtr: NativePointer) => OnButtonClick(checkCmdInput(mPtr))
 globalThis.HideClickedObj = HideClickedObj
+globalThis.B_Click_Script = OnClickScript
+globalThis.B_Click_Script_Custom = (mPtr: NativePointer) => OnClickScript(checkCmdInput(mPtr))
 
 // globalThis.B_ButtonTest = () => {
 //     // OnPointerClick(instance, PointerEventData) : Void

@@ -1,3 +1,6 @@
+import { MessagePort } from "worker_threads"
+import { PackArray } from "./packArray"
+
 interface list_impl {
     _defaultCapacity: number
     _emptyArray: NativePointer
@@ -20,12 +23,17 @@ export class PackList implements list_impl {
     public _version: number
     public _syncRoot: NativePointer
 
-    constructor(mPtr: NativePointer) {
+    constructor(mPtr: NativePointer, doNotCheck: boolean = false) {
         this.handle = mPtr
         try {
+            if (doNotCheck) {
+                mPtr.writePointer(findClass("Object"))
+            }
             this.object = new Il2Cpp.Object(mPtr)
             this.class = this.object.class
-            if (!this.class.name.includes('List`')) throw new Error('Input mPtr is not a list')
+            if (!doNotCheck) {
+                if (!this.class.name.includes('List`')) throw new Error('Input mPtr is not a list')
+            }
             // _defaultCapacity 和 _emptyArray 不同unity版本可能不太一样
             try {
                 this._defaultCapacity = this.class.field('_defaultCapacity').value as number
@@ -140,6 +148,10 @@ export class PackList implements list_impl {
 
     Reverse(): void {
         return this.object.method('Reverse').invoke() as void
+    }
+
+    static localArray(mPtr: NativePointer): NativePointer {
+        return mPtr.add(Process.pointerSize * 2).readPointer()
     }
 
 }
