@@ -3,6 +3,7 @@ import { formartClass as FM } from "../utils/formart"
 import { FieldAccess, LogColor } from "./enum"
 import { cache } from "decorator-cache-getter"
 import { allocCStr } from "../utils/alloc"
+import { FakeCommonType } from "./valueResolve"
 
 export class HookerBase {
     constructor() { }
@@ -585,7 +586,9 @@ export const get_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Clas
         if (inputClass.isNull()) throw new Error("inputClass can not be null")
         localClass = inputClass
     } else if (typeof inputClass == "string") {
-        localClass = new Il2Cpp.Class(findClass(inputClass))
+        let localC = findClass(inputClass)
+        if (localC.isNull()) throw new Error("If the class is not found, please pay attention to capitalization")
+        localClass = new Il2Cpp.Class(localC)
     } else {
         throw new Error("inputClass type error")
     }
@@ -593,7 +596,8 @@ export const get_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Clas
 }
 
 export const show_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Class = "GameObject"): void => get_gc_instance(inputClass).forEach((item: Il2Cpp.Object) => {
-    LOGD(`[*] ${item.handle}\t${item}`)
+    let localDes = FakeCommonType(item.class.type, item.handle)
+    LOGD(`[*] ${item.handle}\t${localDes}`)
 })
 
 export const find_method = HookerBase.findMethodSync as find_MethodType

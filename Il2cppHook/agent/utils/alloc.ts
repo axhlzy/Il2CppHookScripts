@@ -28,7 +28,7 @@ function allocVector(x: number = 0, y: number = 0, z: number = 0, w?: number): N
     return temp_vector
 }
 
-export { alloc, allocCStr, allocUStr, allocVector }
+export { alloc, allocP, allocCStr, allocUStr, allocVector }
 
 declare global {
     var allocCStr: (str: string) => NativePointer

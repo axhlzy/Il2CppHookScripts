@@ -190,9 +190,10 @@ export const OnClickScript = (mPtr: NativePointer = ptr(0)) => {
         })
     }
 
-    function innerFunction(arg0: NativePointer, arg1: NativePointer) {
+    function innerFunction(arg0: NativePointer, _arg1: NativePointer) {
         listScripts(getGameObjectPack(arg0).handle)?.forEach((item: Il2Cpp.Object) => {
             LOGW(`\t\t[+] ${item.handle} ${item}`)
+            // todo 格式有点丑陋 有空再做修改
         })
     }
 }

@@ -1,8 +1,8 @@
+import { filterDuplicateOBJ, PassType } from "../../../../../utils/common"
 import { PackArray } from "../../../../../bridge/fix/packer/packArray"
 import { PackList } from "../../../../../bridge/fix/packer/packList"
-import { alloc } from "../../../../../utils/alloc"
-import { filterDuplicateOBJ, PassType } from "../../../../../utils/common"
 import { setActiveT, setActiveTChange } from "../Component/export"
+import { allocP } from "../../../../../utils/alloc"
 
 globalThis.HookSetActive = (defaltActive: boolean = true, PrintStackTrace: boolean = false, filterString: Array<string> | string = "") => {
 
@@ -61,11 +61,12 @@ globalThis.HookSendMessage = () => {
 }
 
 globalThis.showGameObject = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform) => {
-    if (mPtr == undefined || mPtr.isNull()) return
-    if (typeof mPtr == "number") mPtr = ptr(mPtr)
+    if (mPtr == undefined) return
     let gameObject: Il2Cpp.GameObject
     if (mPtr instanceof Il2Cpp.GameObject) {
         gameObject = mPtr
+    } else if (typeof mPtr == "number" || mPtr instanceof NativePointer) {
+        gameObject = new Il2Cpp.GameObject(ptr(mPtr as unknown as number))
     } else if (mPtr instanceof Il2Cpp.Transform) {
         gameObject = new Il2Cpp.GameObject(mPtr.get_transform().handle)
     } else if (getTypeName(mPtr) == "GameObject") {
@@ -212,25 +213,26 @@ function list_Components_GameObject(gameObject: NativePointer | Il2Cpp.GameObjec
     throw new Error("list_Components_GameObject: not found method")
 }
 
+const ALLOC_SIZE = 0x1000
 function list_Components_Component(component: NativePointer | Il2Cpp.Component): PackArray | undefined {
     if (component instanceof Il2Cpp.Component) component = component.handle
     let localComp = new Il2Cpp.Component(checkCmdInput(component))
     let comp_addr: NativePointer = ptr(0)
     let comp_type = GetComponentRuntimeType(localComp.get_transform())
 
-    // 以下这两条是等价
     // public Void GetComponents(Type type, System.Collections.Generic.List<UnityEngine.Component> results)
     comp_addr = find_method("UnityEngine.CoreModule", "Component", "GetComponents", 2)
     if (comp_addr.isNull()) {
-        // private Void GetComponentsForListInternal(Type searchType, Object resultList)
+        // private Void GetComponentsForListInternal(Type searchType, Object resultList) 同上条其实是等价的
         comp_addr = find_method("UnityEngine.CoreModule", "Component", "GetComponentsForListInternal", 2)
     }
     if (!comp_addr.isNull()) {
-        allocTmp = alloc(0x1000)
+        allocTmp = allocP(ALLOC_SIZE)
         callFunction(comp_addr, localComp.handle, comp_type, allocTmp)
+        // 这里因为我们直接alloc的一块地址来存放list返回值，故list头并不带类型指针，所以不可使用new PackList来解析
+        // 反之直接直接使用静态方法（PackList.localArray）去读取指定位置即可
         return new PackArray(PackList.localArray(allocTmp))
     }
-
     throw new Error("list_Components_Component: not found method")
 }
 
@@ -242,58 +244,15 @@ globalThis.listScripts = (mPtr: NativePointer): PackArray | undefined => {
         return list_Components_GameObject(local_mPtr)
     } else if (typeName == "RectTransform") {
         return list_Components_Component(local_mPtr)
-    }
-    // todo check extends Component ?
-    else if (checkExtends(local_mPtr)) {
+    } else if (checkExtends(local_mPtr)) {
+        // todo check extends Component ?
 
     } else {
         throw new Error("listScripts: unsport type")
     }
-
     function checkExtends(local_mPtr: NativePointer): boolean {
 
         return false
-    }
-
-    function getFunction() {
-
-        let ret = find_method("UnityEngine.CoreModule", "GameObject", "GetComponentsInChildren", 2)
-
-        if (ret.isNull()) ret = find_method("UnityEngine.CoreModule", "GameObject", "GetComponents", 1)
-        return ret
-
-        let InnerFunc = () => {
-            const candidates = [
-                {
-                    moduleName: "UnityEngine.CoreModule",
-                    className: "GameObject",
-                    methodName: "GetComponents",
-                    numArgs: 1
-                },
-                {
-                    moduleName: "UnityEngine.CoreModule",
-                    className: "GameObject",
-                    methodName: "GetComponentsInChildren",
-                    numArgs: 2
-                },
-                {
-                    moduleName: "UnityEngine.CoreModule",
-                    className: "GameObject",
-                    methodName: "GetComponentsInternal",
-                    numArgs: 6
-                }
-            ]
-
-            for (const candidate of candidates) {
-                const method = find_method(candidate.moduleName, candidate.className, candidate.methodName, candidate.numArgs)
-                if (!method.isNull()) return method
-            }
-
-            // 这个目前看起来好像是比较通用，GameObject 最底层获取 components array<T> 的方法 
-            // 等价于 private Array GetComponentsInternal(Type type,Boolean useSearchTypeAsArrayReturnType,Boolean recursive,Boolean includeInactive,Boolean reverse,Object resultList)
-            return Il2Cpp.Api._resolveInternalCall(allocCStr("UnityEngine.GameObject::GetComponentsInternal(System.Type,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Object)"))
-        }
-        return InnerFunc()
     }
 }
 
@@ -302,20 +261,6 @@ globalThis.showScripts = (mPtr: NativePointer) => listScripts(mPtr)?.show()
 
 // alias for globalThis.showScripts
 globalThis.s = globalThis.showScripts
-
-var resultObj = alloc(0x1000)
-globalThis.testCompInter = (gameObject: NativePointer) => {
-
-    // private Array GetComponentsInternal(Type type,Boolean useSearchTypeAsArrayReturnType,Boolean recursive,Boolean includeInactive,Boolean reverse,Object resultList)
-    let method: Il2Cpp.Method = Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.GameObject").method("GetComponentsInternal", 6)
-    let runtimeType = GetComponentRuntimeType(new Il2Cpp.GameObject(gameObject).transform)
-
-    LOGW(`var resultObj = Memory.alloc(0x1000)`)
-    LOGW(`var tmpFunction = new NativeFunction(ptr(${method.virtualAddress}), "pointer", ["pointer", "pointer", "int", "int", "int", "int", "pointer"])`)
-    LOGW(`var ret = tmpFunction(ptr(${gameObject}), ptr(${runtimeType}), 1, 1, 1, 0, resultObj)`)
-    LOGW(`console.log(hexdump(resultObj))`)
-}
-
 
 declare global {
     var HookSetActive: (defaltActive?: boolean, PrintStackTrace?: boolean, filterString?: string | Array<string>) => void
@@ -329,8 +274,6 @@ declare global {
     var listScripts: (mPtr: NativePointer) => PackArray | undefined
     var showScripts: (mPtr: NativePointer) => void
     var s: (mPtr: NativePointer) => void
-
-    var testCompInter: (gameObject: NativePointer) => void
 }
 
 export { showGameObject, HookSetActive, getTransform, HookSendMessage }
