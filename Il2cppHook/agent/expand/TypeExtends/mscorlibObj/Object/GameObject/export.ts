@@ -6,13 +6,14 @@ import { allocP } from "../../../../../utils/alloc"
 
 globalThis.HookSetActive = (defaltActive: boolean = true, PrintStackTrace: boolean = false, filterString: Array<string> | string = "") => {
 
+    let setActiveAddress = find_method("UnityEngine.CoreModule", "GameObject", "SetActive", 1)
     try {
-        A(Il2Cpp.Api.GameObject._SetActive, (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
+        A(setActiveAddress, (args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
             innerSetActive(args[0], ctx)
         })
-    } catch (error) {
+    } catch {
         // 优化一下当dobby inlinehook生效时，hook不上报错的情况
-        A(Il2Cpp.Api.GameObject._SetActive.add(p_size * 3), (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => {
+        A(setActiveAddress.add(p_size * 3), (args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
             innerSetActive(getPlatformCtxWithArgV(ctx, 0)!, ctx)
         })
     }
@@ -65,15 +66,28 @@ globalThis.showGameObject = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Tr
     let gameObject: Il2Cpp.GameObject
     if (mPtr instanceof Il2Cpp.GameObject) {
         gameObject = mPtr
-    } else if (typeof mPtr == "number" || mPtr instanceof NativePointer) {
-        gameObject = new Il2Cpp.GameObject(ptr(mPtr as unknown as number))
-    } else if (mPtr instanceof Il2Cpp.Transform) {
+    }
+    else if (typeof mPtr == "number" || mPtr instanceof NativePointer) {
+        mPtr = checkCmdInput(mPtr)
+        let typeName = getTypeName(checkCmdInput(mPtr))
+        if (typeName == "RectTransform") {
+            gameObject = new Il2Cpp.Transform(mPtr).get_gameObject()
+        } else if (typeName == "GameObject") {
+            gameObject = new Il2Cpp.GameObject(mPtr)
+        } else {
+            throw new Error("showGameObject: mPtr is not GameObject or Transform")
+        }
+    }
+    else if (mPtr instanceof Il2Cpp.Transform) {
         gameObject = new Il2Cpp.GameObject(mPtr.get_transform().handle)
-    } else if (getTypeName(mPtr) == "GameObject") {
+    }
+    else if (getTypeName(mPtr) == "GameObject") {
         gameObject = new Il2Cpp.GameObject(mPtr)
-    } else if (getTypeName(mPtr) == "RectTransform") {
+    }
+    else if (getTypeName(mPtr) == "RectTransform") {
         gameObject = new Il2Cpp.Transform(mPtr).get_gameObject()
-    } else {
+    }
+    else {
         throw new Error("showGameObject: mPtr is not GameObject or Transform")
     }
     LOGO("--------- GameObject ---------")

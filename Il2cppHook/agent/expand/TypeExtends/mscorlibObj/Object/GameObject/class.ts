@@ -68,7 +68,7 @@ class GameObjectImpl extends UnityEngine_Object {
     }
 
     get_transform(): Il2Cpp.Transform {
-        if (this.handle == ptr(0)) throw new Error("get_transform : GameObject is null")
+        if (this.handle.isNull()) throw new Error("get_transform : GameObject is null")
         return new Il2Cpp.Transform(Il2Cpp.Api.GameObject._get_transform(this.handle))
     }
 

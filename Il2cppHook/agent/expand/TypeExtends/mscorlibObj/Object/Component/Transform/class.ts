@@ -191,6 +191,10 @@ class UnityEngine_Transform_Impl extends UnityEngine_Component_Impl {
         return Il2Cpp.Api.Transform._get_childCount(this.handle)
     }
 
+    get childCount(): number {
+        return this.get_childCount()
+    }
+
     SetAsFirstSibling(): void {
         return Il2Cpp.Api.Transform._SetAsFirstSibling(this.handle)
     }
@@ -309,6 +313,17 @@ class UnityEngine_Transform_Impl extends UnityEngine_Component_Impl {
 
     get_lossyScale_Injected(ret: Vector3): void {
         return Il2Cpp.Api.Transform._get_lossyScale_Injected(this.handle, ret.handle)
+    }
+
+    forEach(callback: (item: Il2Cpp.Transform, index: number) => void): void {
+        if (this.childCount == 0) LOGE(`Transform.forEach: childCount = ${this.childCount}`)
+        for (let i = 0; i < this.childCount; i++) {
+            try {
+                callback(this.GetChild(i), i)
+            } catch (error) {
+                LOGE(error)
+            }
+        }
     }
 }
 

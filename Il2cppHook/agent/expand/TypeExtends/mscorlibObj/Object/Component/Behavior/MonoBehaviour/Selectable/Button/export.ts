@@ -3,6 +3,7 @@ import { UnityEngine_UI_Button_ButtonClickedEvent_Impl as ButtonClickedEvent } f
 import { UnityEngine_Events_UnityAction_Impl as UnityAction } from "../../../../../../Delegate/MulticastDelegate/UnityAction/class"
 import { PackList } from "../../../../../../../../../bridge/fix/packer/packList"
 import { GameObjectImpl as GameObject } from "../../../../../GameObject/class"
+import { formartClass as FM } from "../../../../../../../../../utils/formart"
 import { ButtonImpl as Button } from "./class"
 
 /**
@@ -191,11 +192,21 @@ export const OnClickScript = (mPtr: NativePointer = ptr(0)) => {
     }
 
     function innerFunction(arg0: NativePointer, _arg1: NativePointer) {
+        let index: number = 0
         listScripts(getGameObjectPack(arg0).handle)?.forEach((item: Il2Cpp.Object) => {
-            LOGW(`\t\t[+] ${item.handle} ${item}`)
-            // todo 格式有点丑陋 有空再做修改
+            if (index == 0) newLine()
+            let itemStr: string = item.toString()
+            LOGW(`${FM.alignStr(`[${++index}]`, 6)} ${item.handle} ${itemStr}`)
+
         })
     }
+}
+
+export const PrintScriptHierarchy = (mPtr: NativePointer) => {
+    let local_mPtr = checkCmdInput(mPtr)
+    new Il2Cpp.GameObject(local_mPtr).transform.forEach((item: Il2Cpp.Transform) => {
+        LOGW(`${FM.alignStr(`[${item.get_gameObject().get_name()}]`, 20)} ${item.get_gameObject().handle} ${item.handle}`)
+    })
 }
 
 /**
@@ -233,6 +244,7 @@ declare global {
     var B_Button_Custom: (mPtr: NativePointer) => void // Customize the function address of OnPointerClick
     var B_Click_Script: (mPtr: NativePointer) => void
     var B_Click_Script_Custom: (mPtr: NativePointer) => void
+    var PrintScriptHierarchy: (mPtr: NativePointer) => void
 
     // test ↓
     var B_ButtonTest: () => void
@@ -241,9 +253,10 @@ declare global {
 
 globalThis.HookOnPointerClick = OnPointerClick
 globalThis.HookOnPointerClick_Custom = (mPtr: NativePointer) => HookOnPointerClick(-1, checkCmdInput(mPtr))
+globalThis.HideClickedObj = HideClickedObj
+globalThis.PrintScriptHierarchy = PrintScriptHierarchy
 globalThis.B_Button = OnButtonClick
 globalThis.B_Button_Custom = (mPtr: NativePointer) => OnButtonClick(checkCmdInput(mPtr))
-globalThis.HideClickedObj = HideClickedObj
 globalThis.B_Click_Script = OnClickScript
 globalThis.B_Click_Script_Custom = (mPtr: NativePointer) => OnClickScript(checkCmdInput(mPtr))
 
