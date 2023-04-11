@@ -4,7 +4,7 @@ import { FieldAccess, LogColor } from "./enum"
 import { cache } from "decorator-cache-getter"
 import { allocCStr } from "../utils/alloc"
 
-class HookerBase {
+export class HookerBase {
     constructor() { }
 
     @cache
@@ -570,6 +570,12 @@ class HookerBase {
     }
 }
 
+/**
+ * 这个方法可以参考用在查找文本上
+ * 其次除了这样找还有一个 GetComponents 也有同样的效果，还能找到更全文本，不过麻烦点
+ * @param inputClass 查找的class
+ * @returns 
+ */
 export const get_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Class = "GameObject"): Array<Il2Cpp.Object> => {
     let localClass: Il2Cpp.Class
     if (inputClass instanceof NativePointer) {
@@ -585,13 +591,12 @@ export const get_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Clas
     }
     return Il2Cpp.GC.choose(localClass)
 }
-export const show_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Class = "GameObject"): void => get_gc_instance(inputClass).forEach(LOGD)
 
-globalThis.getGCInstance = get_gc_instance
-globalThis.showGCInstance = show_gc_instance
+export const show_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Class = "GameObject"): void => get_gc_instance(inputClass).forEach((item: Il2Cpp.Object) => {
+    LOGD(`[*] ${item.handle}\t${item}`)
+})
 
-const find_method = HookerBase.findMethodSync as find_MethodType
-export { HookerBase, find_method }
+export const find_method = HookerBase.findMethodSync as find_MethodType
 
 type find_MethodType = (imageName: string, className: string, functionName: string, argsCount?: number, isRealAddr?: boolean, cmdCall?: boolean) => NativePointer
 type findMethodType = (assemblyName: string, className: string, methodName: string, argsCount?: number, overload?: string[], cmdCall?: boolean) => Il2Cpp.Method | undefined
@@ -610,6 +615,8 @@ globalThis.find_method = HookerBase.findMethodSync as find_MethodType
 globalThis.MethodToShow = HookerBase.MethodToShow
 globalThis.af = (className: string) => B(findClass(className))
 globalThis.aui = () => B("AUI")
+globalThis.getGCInstance = get_gc_instance
+globalThis.showGCInstance = show_gc_instance
 
 Il2Cpp.perform(() => globalThis.soAddr = Il2Cpp.module.base)
 
