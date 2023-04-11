@@ -4,10 +4,15 @@
  
 #### Features 
 
-- 解析 `Unity` 的方法 / 类 / 字段
-- 解析 `运行时` 方法参数
-- 常用函数的 `（批量）断点`（参数值 / 返回值 查看）
-- 更方便的查看以及调用函数
+- 解析 `Unity` 的方法(m) / 类(c) / 字段(f) / 实例(lfs)
+- 解析 `运行时` 方法参数(b)
+- 常用函数的 `（批量）断点`(B/BF),修改函数返回值(setFunctionRet...)
+- 更方便的查找函数(findMethods)以及调用函数(callFunction)
+- 对象层级关系(PrintHierarchy)/类型层级关系(showTypeParent)
+- 结合frida以及方法信息反汇编(showAsm)
+- 常用Hook封装(HookOnPointerClick/HookSetActive/B_Button...)
+- 解析 挂载脚本(s)   <- testing
+...
 
 #### Usage
 ```sh
@@ -278,12 +283,12 @@ $ frida -FU -l ../_Ufunc.js
 - 建议使用真机,尽量不在x86模拟器中使用,x86中找不到对应so,其次frida对于模拟器的兼容性也并不好
 
 todo：
-    从游戏对象获取对象下挂载的脚本
-    qbdi 调用栈
-    代码不是很规范，很多地方没有tryClass 容易导致崩溃(来自于frida-il2cpp-bridge)
-    从任意一个游戏对象无法遍历到当前场景所有游戏对象(顶层对象不同)
-    不能跨场景找游戏对象
-    ...
+- 从游戏对象获取对象下挂载的脚本
+- qbdi 调用栈
+- 代码不是很规范，很多地方没有tryClass 容易导致崩溃(来自于frida-il2cpp-bridge)
+- 从任意一个游戏对象无法遍历到当前场景所有游戏对象(顶层对象不同)
+- 不能跨场景找游戏对象
+...
 
 ---
     
