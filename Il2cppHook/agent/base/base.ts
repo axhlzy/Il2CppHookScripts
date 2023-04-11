@@ -570,6 +570,26 @@ class HookerBase {
     }
 }
 
+export const get_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Class = "GameObject"): Array<Il2Cpp.Object> => {
+    let localClass: Il2Cpp.Class
+    if (inputClass instanceof NativePointer) {
+        if (inputClass.isNull()) throw new Error("inputClass can not be null")
+        localClass = new Il2Cpp.Class(inputClass)
+    } else if (inputClass instanceof Il2Cpp.Class) {
+        if (inputClass.isNull()) throw new Error("inputClass can not be null")
+        localClass = inputClass
+    } else if (typeof inputClass == "string") {
+        localClass = new Il2Cpp.Class(findClass(inputClass))
+    } else {
+        throw new Error("inputClass type error")
+    }
+    return Il2Cpp.GC.choose(localClass)
+}
+export const show_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Class = "GameObject"): void => get_gc_instance(inputClass).forEach(LOGD)
+
+globalThis.getGCInstance = get_gc_instance
+globalThis.showGCInstance = show_gc_instance
+
 const find_method = HookerBase.findMethodSync as find_MethodType
 export { HookerBase, find_method }
 
@@ -609,5 +629,8 @@ declare global {
     var findMethod: findMethodType
     var find_method: find_MethodType
     var MethodToShow: (methodInfo: Il2Cpp.Method) => void
+    var getGCInstance: (inputClass?: string | NativePointer | Il2Cpp.Class) => Array<Il2Cpp.Object>
+    var showGCInstance: () => void
+
     var soAddr: NativePointerValue
 }
