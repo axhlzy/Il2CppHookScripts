@@ -1,0 +1,32 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "watch",
+			"path": "Il2cppHook",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: watch - Il2cppHook",
+			"detail": "frida-compile agent/index.ts -o _Ufunc.js -w"
+		},
+		{
+			"type": "npm",
+			"script": "install",
+			"path": "Il2cppHook",
+			"group": "clean",
+			"problemMatcher": [],
+			"label": "npm: install - Il2cppHook",
+			"detail": "install dependencies from package"
+		},
+		{
+			"type": "npm",
+			"script": "build",
+			"path": "Il2cppHook",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: build - Il2cppHook",
+			"detail": "frida-compile agent/index.ts -o _Ufunc.js -c"
+		}
+	]
+}

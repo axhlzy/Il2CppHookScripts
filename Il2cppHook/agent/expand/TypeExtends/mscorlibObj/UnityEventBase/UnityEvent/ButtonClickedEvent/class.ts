@@ -6,9 +6,9 @@ class UnityEngine_UI_Button_ButtonClickedEvent_Impl extends UnityEngine_Events_U
         super(handleOrWrapper)
     }
 
-    _ctor(): void {
-        return Il2Cpp.Api.ButtonClickedEvent.__ctor(alloc())
-    }
+    // _ctor(): void {
+    //     return Il2Cpp.Api.ButtonClickedEvent.__ctor(alloc())
+    // }
 
 }
 
