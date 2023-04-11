@@ -169,7 +169,7 @@ var runOnMain = (UpDatePtr: NativePointer, Callback: Function) => {
     if (Callback == undefined) return
     if (typeof (UpDatePtr) == "function") {
         Callback = UpDatePtr
-        UpDatePtr = find_method("UnityEngine.UI", "CanvasUpdateRegistry", "PerformUpdate", 0)
+        UpDatePtr = getEventUpdate<NativePointer>(false)
     }
     A(UpDatePtr, () => {
         if (Callback != undefined && Callback != null) {

@@ -1,6 +1,7 @@
+import { UnityEngine_Behaviour_Impl } from "../../../class"
 import { cache } from "decorator-cache-getter"
 
-class UnityEngine_EventSystems_EventSystem_API {
+class UnityEngine_EventSystems_EventSystem_API extends UnityEngine_Behaviour_Impl {
     // public static EventSystem get_current()
     @cache
     static get _get_current() {

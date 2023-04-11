@@ -29,12 +29,12 @@ class UnityEngine_EventSystems_EventSystem_Impl extends UnityEngine_EventSystems
         super(handleOrWrapper)
     }
 
-    static get_current(): UnityEngine_EventSystems_EventSystem_Impl {
+    static get get_current(): UnityEngine_EventSystems_EventSystem_Impl {
         return new UnityEngine_EventSystems_EventSystem_Impl(Il2Cpp.Api.EventSystem._get_current())
     }
 
-    static set_current(value: UnityEngine_EventSystems_EventSystem_Impl): System_Void {
-        return Il2Cpp.Api.EventSystem._set_current(value.handle)
+    static set set_current(value: UnityEngine_EventSystems_EventSystem_Impl) {
+        Il2Cpp.Api.EventSystem._set_current(value.handle)
     }
 
     get_sendNavigationEvents(): System_Boolean {
@@ -65,8 +65,10 @@ class UnityEngine_EventSystems_EventSystem_Impl extends UnityEngine_EventSystems
         return Il2Cpp.Api.EventSystem._set_firstSelectedGameObject(this.handle, value.handle)
     }
 
-    get_currentSelectedGameObject(): GameObject {
-        return new GameObject(Il2Cpp.Api.EventSystem._get_currentSelectedGameObject(this.handle))
+    get_currentSelectedGameObject(): GameObject | null {
+        let local: NativePointer = Il2Cpp.Api.EventSystem._get_currentSelectedGameObject(this.handle)
+        if (local.isNull()) return null
+        return new GameObject(local)
     }
 
     get_lastSelectedGameObject(): GameObject {

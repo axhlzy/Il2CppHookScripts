@@ -1,5 +1,5 @@
-import "./include"
 import { PassType } from "./utils/common"
+import "./include"
 
 setImmediate(() => main())
 
@@ -62,7 +62,7 @@ class PauseHelper {
 }
 
 // 参考：https://bbs.kanxue.com/thread-276495.htm
-// 使用异常处理函数来实现断点的示例，只需要修改一条指令
+// 使用异常处理函数来实现断点的示例，只需要修改一条指令(移植一下c版本的可以用来处理短指令hook问题)
 class ExceptionTraceClass {
 
     // save ptr and ptr.readPointer()

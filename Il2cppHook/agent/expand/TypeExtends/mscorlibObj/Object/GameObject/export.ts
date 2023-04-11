@@ -60,10 +60,15 @@ globalThis.HookSendMessage = () => {
     })
 }
 
-globalThis.showGameObject = (mPtr: NativePointer) => {
+globalThis.showGameObject = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform) => {
+    if (mPtr == undefined || mPtr.isNull()) return
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     let gameObject: Il2Cpp.GameObject
-    if (getTypeName(mPtr) == "GameObject") {
+    if (mPtr instanceof Il2Cpp.GameObject) {
+        gameObject = mPtr
+    } else if (mPtr instanceof Il2Cpp.Transform) {
+        gameObject = new Il2Cpp.GameObject(mPtr.get_transform().handle)
+    } else if (getTypeName(mPtr) == "GameObject") {
         gameObject = new Il2Cpp.GameObject(mPtr)
     } else if (getTypeName(mPtr) == "RectTransform") {
         gameObject = new Il2Cpp.Transform(mPtr).get_gameObject()
@@ -314,7 +319,7 @@ globalThis.testCompInter = (gameObject: NativePointer) => {
 
 declare global {
     var HookSetActive: (defaltActive?: boolean, PrintStackTrace?: boolean, filterString?: string | Array<string>) => void
-    var showGameObject: (gameObjOrTransform: NativePointer) => void
+    var showGameObject: (gameObjOrTransform: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform) => void
     var getTransform: (gameObjOrComponent: NativePointer) => NativePointer
     var setActive: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void
     var setActiveC: (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active?: boolean) => void

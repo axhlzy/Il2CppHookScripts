@@ -1,4 +1,4 @@
-export const hook_callstatic = () => {
+export const HookCallstatic = () => {
     Il2Cpp.perform(() => {
         let _CallStatic = Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJavaObject").method("_CallStatic").virtualAddress
         if (_CallStatic.isNull()) throw new Error("CallStatic is null")
@@ -39,7 +39,7 @@ export const hook_callstatic = () => {
 }
 
 declare global {
-    var hook_callstatic: () => void
+    var HookCallstatic: () => void
 }
 
-globalThis.hook_callstatic = hook_callstatic
+globalThis.HookCallstatic = HookCallstatic
