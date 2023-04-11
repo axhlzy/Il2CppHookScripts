@@ -4,15 +4,15 @@
  
 #### Features 
 
-- 解析 `Unity` 的方法(m) / 类(c) / 字段(f) / 实例(lfs)
-- 解析 `运行时` 方法参数(b)
-- 常用函数的 `（批量）断点`(B/BF),修改函数返回值(setFunctionRet...)
-- 更方便的查找函数(findMethods)以及调用函数(callFunction)
-- 对象层级关系(PrintHierarchy)/类型层级关系(showTypeParent)
-- 结合frida以及方法信息反汇编(showAsm)
-- 常用Hook封装(HookOnPointerClick/HookSetActive/B_Button...)
-- 解析 挂载脚本(s)   <- testing
-...
+- 解析 Unity 的方法 `m` / 类 `c` / 字段 `f` / 实例 `lfs`
+- 解析 运行时方法参数 `b`
+- 常用函数的（批量）Hook `B/BF`,修改函数返回值 `setFunctionRet...`
+- 更方便的查找函数 `findMethods` 以及调用函数 `callFunction`
+- 对象层级关系 `PrintHierarchy` / 类型层级关系 `showTypeParent`
+- 结合frida以及方法信息反汇编 `showAsm`
+- 常用Hook封装 `HookOnPointerClick/HookSetActive/B_Button...`
+- 解析 挂载脚本 `showScripts alias s / B_Click_Script`   <- testing
+- ...
 
 #### Usage
 ```sh
