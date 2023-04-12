@@ -65,7 +65,12 @@ globalThis.PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boo
         let retStrings: Array<string> = new Array<string>()
         if (scripts && scripts.length > 0) {
             scripts.forEach((script: Il2Cpp.Object) => {
-                let str = script.toString()
+                let str: string = ''
+                try {
+                    str = script.toString()
+                } catch (error) {
+                    // LOGE(error)
+                }
                 if (str.includes(filterName)) {
                     try {
                         retStrings.push(`${spaceText}    ${script.handle} -> ${str}`)

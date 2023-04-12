@@ -12,6 +12,7 @@ export const getEventSystem = (): Il2Cpp.EventSystem => Il2Cpp.EventSystem.get_c
 
 export const event_getcurrent_select_gameobj = () => {
     let gObj: Il2Cpp.GameObject | null = getEventSystem().get_currentSelectedGameObject()
+    if (gObj == null) LOGE(`Noting to show ...`)
     if (gObj != null) showGameObject(gObj)
 }
 

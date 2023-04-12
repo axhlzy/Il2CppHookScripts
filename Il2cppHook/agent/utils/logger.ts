@@ -27,7 +27,7 @@ export const LOG = (str: any, type: LogColor = LogColor.WHITE): void => {
     }
 }
 
-export const LOGJSON = (obj: any, type: LogColor = LogColor.C36, lines: number = 1): void => LOG(JSON.stringify(obj, null, lines), type)
+export const LOGJSON = (obj: any, type: LogColor = LogColor.C36, space: number = 1): void => LOG(JSON.stringify(obj, null, space), type)
 
 const colorEndDes: string = "\x1b[0m"
 const colorStartDes = (color: LogColor): string => `\x1b[${color as number}m`
@@ -91,7 +91,6 @@ export const getLine = (length: number, fillStr: string = "-") => {
 
 declare global {
     var LOG: (str: any, type?: LogColor) => void
-    var LOGJSON: (obj: any, type?: LogColor, lines?: number) => void
     // var LOGS: (str: string, colorDescription: [number, number, LogColor][]) => void
     var LOGW: (msg: any) => void // LogColor.YELLOW
     var LOGE: (msg: any) => void // LogColor.RED
@@ -102,6 +101,7 @@ declare global {
     var LOGH: (msg: any) => void // LogColor.C96
     var LOGM: (msg: any) => void // LogColor.C96
     var LOGZ: (msg: any) => void // LogColor.C90
+    var LOGJSON: (obj: any, type?: LogColor, lines?: number) => void
     var callOnce: (func: Function) => Function
     var newLine: (lines?: number) => void
     var getLine: (length: number, fillStr?: string) => string
@@ -111,7 +111,6 @@ declare global {
 }
 
 globalThis.LOG = LOG
-globalThis.LOGJSON = LOGJSON
 globalThis.LOGW = LOGW
 globalThis.LOGE = LOGE
 globalThis.LOGG = LOGG
@@ -121,6 +120,7 @@ globalThis.LOGP = LOGP
 globalThis.LOGH = LOGH
 globalThis.LOGM = LOGM
 globalThis.LOGZ = LOGZ
+globalThis.LOGJSON = LOGJSON
 globalThis.getLine = getLine
 globalThis.printLogColors = printLogColors
 globalThis.newLine = (lines: number = 1) => LOG(getLine(lines, "\n"))
