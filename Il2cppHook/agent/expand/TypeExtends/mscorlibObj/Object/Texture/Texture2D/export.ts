@@ -9,6 +9,7 @@ globalThis.B_Texture2D = () => {
             let il2cpp_resolve_icall: NativePointer = Module.findExportByName("libil2cpp.so", "il2cpp_resolve_icall")!
 
             let get_isReadable = callNp(il2cpp_resolve_icall, allocCStr("UnityEngine.Texture::get_isReadable()"))
+            // setFunctionBool(get_isReadable, true)
             if (get_isReadable.isNull()) throw new Error("get_isReadable is null")
             let get_isReadable_ab = get_isReadable.sub(libunity)
             LOGD("get_isReadable ->" + get_isReadable + " | " + get_isReadable_ab)
@@ -30,7 +31,7 @@ globalThis.B_Texture2D = () => {
                 let height = text2d.get_width()
                 let width = text2d.get_height()
                 // public static RenderTexture GetTemporaryShadowTexture(Int32 width,Int32 height,Int32 bits)
-                LOGD("height " + height + " width " + width)
+                LOGD("\nheight " + height + " width " + width)
                 // let ins_descripter = alloc(20)
                 // ins_descripter = callFunction(0x4BEE58, ins_descripter, width, height)
                 // let ins_RenderTexture = callFunction(0x4BE988, ins_descripter)
@@ -72,6 +73,14 @@ globalThis.B_Texture2D = () => {
                     if (!EncodeToJPGPtr.isNull()) LOG(hexdump(EncodeToJPGPtr, { length: 0x30, ansi: true }))
                 })
             })
+
+            // todo 
+            // hook LoadImage(Texture2D, Byte[]) : Boolean
+
+
+            // todo 
+            // hook LoadImage(Texture2D, Byte[], Boolean) : Boolean
+
         })
     }, 200)
 }
