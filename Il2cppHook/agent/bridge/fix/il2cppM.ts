@@ -126,12 +126,12 @@ export const methodToArray = (method: Il2Cpp.Method | NativePointer | number): A
 }
 
 //Il2Cpp.Method toString impl
-export const methodToString = (method: Il2Cpp.Method, simple: boolean = false): string => {
+export const methodToString = (method: Il2Cpp.Method, simple: boolean = false, startText: string = '[*]'): string => {
     let arr = methodToArray(method)
     if (arr == undefined) throw new Error("methodToString: methodToArray return undefined")
     // ctor cctor
     if (simple) return `${arr[3]} ${(method.name.includes("ctor")) ? `   { class => ${arr[5]}( ${arr[4]} ) }` : ""}`
-    let displayStr = `[*] `
+    let displayStr = `${startText} `
     displayStr += `${arr[0]} ---> `
     displayStr += `${arr[1]} (${arr[2]})`
     displayStr += `${(arr[1] as NativePointer).isNull() ? `\t\t\t` : `\t`}|  `

@@ -1,6 +1,6 @@
 import {
     getMethodDesFromMethodInfo as getMethodDes,
-    getMethodMaxArgNameLength as getMethodArgLen,
+    getMethodMaxArgNameLength as getMethodArgsLength,
     getMethodModifier, methodToString
 } from "../bridge/fix/il2cppM"
 import { closest } from "fastest-levenshtein"
@@ -141,7 +141,7 @@ class Breaker {
     static callTimesInline: number = 0
     public static attachMethodInfo(method: Il2Cpp.Method, detailLog: boolean = false): void {
         if (method.virtualAddress.isNull()) {
-            LOGE(methodToString(method))
+            LOGE(methodToString(method, false, '[-]'))
             return
         }
         if (Breaker.map_attachedMethodInfos.has(method)) return
@@ -158,7 +158,7 @@ class Breaker {
                     } else {
                         // 详细版 b() 针对单个函数
                         let tmp_content: Array<string> = new Array<string>()
-                        let parameterNameMax: number = getMethodArgLen(method) + 1
+                        let parameterNameMax: number = getMethodArgsLength(method) + 1
                         this.passParameterNameMaxStr = getLine(parameterNameMax, " ")
                         if (!method.isStatic) {
                             // 非static方法
@@ -213,12 +213,12 @@ class Breaker {
                     LOGO(getLine(lenMax))                       // 长线 ------------------
                 }
             })
-            LOGD(methodToString(method))
+            LOGD(methodToString(method, false, '[+]'))
             Breaker.map_attachedMethodInfos.set(method, handleFunc)
         } catch { catchError(method) }
 
         function catchError(method: Il2Cpp.Method): void {
-            LOGE(methodToString(method))
+            LOGE(methodToString(method, false, '[-]'))
             if (Process.arch == "arm") {
                 let ins = method.virtualAddress.readPointer()
                 if (ins != null && ins.equals(0xE12FFF1E)) showErrorLog(ins)

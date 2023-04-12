@@ -8,7 +8,7 @@ export function showMethodInfo(mPtr: NativePointer | Il2Cpp.Method): void {
     let packMethod: Il2Cpp.Method
     if (typeof mPtr == "number") {
         if (Process.arch == "arm64" && (String(mPtr).toString().length > 15))
-            throw new Error("\nNot support parameter typed number at arm64\n\n\tUse b('0x...') instead\n")
+            throw new Error("\nNot support parameter typed number at arm64\n\n\tUse showMethodInfo('0x...') instead\n")
         mPtr = ptr(mPtr)
     } else if (typeof mPtr == "string") {
         if (String(mPtr).startsWith("0x")) {

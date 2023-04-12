@@ -39,7 +39,7 @@ const listMaxCallBack = (showSendMsg: boolean = false) => {
         try {
             if (showSendMsg) {
                 LOGE(`\n[*] ${key} ↓`)
-                LOGD(`SendUnityMessage("MaxSdkCallbacks", "ForwardEvent", "${recordSrcInfo.get(key)!.replace(/"/g, '\\"')})")`)
+                LOGD(`SendUnityMessage("MaxSdkCallbacks", "ForwardEvent", "${recordSrcInfo.get(key)!.replace(/"/g, '\\"')})");`)
             } else {
                 infoModify = "{ " + src.waterfallInfo.networkResponses.length + " -> 1" + " }"
                 LOGE(`\n[*] ${key} ${infoModify} ↓`)

@@ -245,7 +245,7 @@ export class HookerBase {
             klass = HookerBase.checkType(input.trim())
         } else if (typeof input == "number") {
             if (Process.arch == "arm64" && (input.toString().length > 15))
-                throw new Error("\nNot support parameter typed number at arm64\n\n\tUse b('0x...') instead\n")
+                throw new Error("\nNot support parameter typed number at arm64\n\n\tUse _FunctionName('0x...') instead\n")
             // arm32 使用 number
             klass = HookerBase.checkType(ptr(input))
         } else {
