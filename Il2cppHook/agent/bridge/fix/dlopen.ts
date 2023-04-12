@@ -29,8 +29,9 @@ setImmediate(() => {
 
 const onSoLoad = (soPath: string) => {
     // LOGD(soPath)
-    if (soPath.indexOf(soName) != -1) onIl2cppInit()
-
+    try {
+        if (soPath.indexOf(soName) != -1) onIl2cppInit()
+    } catch { }
 }
 
 // @ Editor\Data\il2cpp\libil2cpp\il2cpp-api.cpp
