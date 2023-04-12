@@ -1,4 +1,3 @@
-import { PassType } from "./utils/common"
 import "./include"
 
 setImmediate(() => main())
@@ -219,10 +218,14 @@ function fixMoreVerison() {
 
     Il2Cpp.perform(() => {
         if (Il2Cpp.Api._resolveInternalCall(allocCStr('UnityEngine.Application::get_unityVersion')).isNull()) {
-            Reflect.deleteProperty(Il2Cpp, "unityVersion")
-            Reflect.defineProperty(Il2Cpp, "unityVersion", { value: UnityVersion })
-            Reflect.deleteProperty(Il2Cpp, "unityVersionIsBelow201830")
-            Reflect.defineProperty(Il2Cpp, "unityVersionIsBelow201830", { value: false })
+            if (Reflect.has(Il2Cpp, "unityVersion")) {
+                Reflect.deleteProperty(Il2Cpp, "unityVersion")
+                Reflect.defineProperty(Il2Cpp, "unityVersion", { value: UnityVersion })
+            }
+            if (Reflect.has(Il2Cpp, "unityVersionIsBelow201830")) {
+                Reflect.deleteProperty(Il2Cpp, "unityVersionIsBelow201830")
+                Reflect.defineProperty(Il2Cpp, "unityVersionIsBelow201830", { value: false })
+            }
         }
     })
 

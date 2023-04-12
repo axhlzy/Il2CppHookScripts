@@ -9,6 +9,8 @@ const getTypeNameInner = (mPtr: NativePointer): string => {
     return getTypeInner(mPtr).name;
 }
 
+export { getTypeNameInner as getTypeName }
+
 const showTypeModuleByIns = (mPtr: NativePointer): void => {
     mPtr = checkCmdInput(mPtr)
     const RuntimeType: mscorlib.RuntimeType = getType(mPtr).caseToRuntimeType
@@ -21,7 +23,7 @@ const showTypeModuleByType = (mPtr: NativePointer): void => {
     LOGJSON(RuntimeType.get_Module())
 }
 
-const getTypeParent = (mPtr: NativePointer, needRetArr: boolean = false): void | Array<mscorlib.Type> => {
+const getTypeParentList = (mPtr: NativePointer, needRetArr: boolean = false): Array<mscorlib.Type> | undefined => {
     const MAX_PARENT_INDEX = 20
     let retArr: Array<mscorlib.Type> = []
     let current: mscorlib.Type = getType(mPtr).caseToRuntimeType
@@ -29,12 +31,12 @@ const getTypeParent = (mPtr: NativePointer, needRetArr: boolean = false): void |
         let type: mscorlib.Type = getBaseType(current, i)
         if (type.handle.isNull()) break
         retArr.push(type)
-        // LOGE(JSON.stringify(type))
     }
     if (needRetArr) return retArr
     newLine()
-    LOGD(retArr.map((type: mscorlib.Type) => `${type.name}(${type.handle})`).join(" <--- "))
+    LOGD(retArr.map((type: mscorlib.Type) => `${type.name}(${type.handle})`).join(` <--- `))
     newLine()
+
     function getBaseType(current: mscorlib.Type, parentIndex: number = 0): mscorlib.Type {
         if (mPtr == undefined || mPtr == null) throw new Error("current mPtr can't be null")
         for (let i = 0; i < parentIndex; ++i) current = current.caseToRuntimeType.get_BaseType()
@@ -42,12 +44,14 @@ const getTypeParent = (mPtr: NativePointer, needRetArr: boolean = false): void |
     }
 }
 
-export { getTypeNameInner as getTypeName }
+export function checkExtends(local_mPtr: NativePointer, typeName: string = "Component"): boolean {
+    return getTypeParent(local_mPtr).map((type: mscorlib.Type) => type.name).some((name: string) => name == typeName)
+}
 
 declare global {
     var getType: (mPtr: NativePointer) => mscorlib.Type
     var getTypeName: (mPtr: NativePointer) => string
-    var getTypeParent: (mPtr: NativePointer) => Array<mscorlib.Type> | void
+    var getTypeParent: (mPtr: NativePointer) => Array<mscorlib.Type>
     // 展示父级type信息
     var showTypeParent: (mPtr: NativePointer) => void
     // 展示type成员变量module信息
@@ -57,7 +61,7 @@ declare global {
 
 globalThis.getType = getTypeInner
 globalThis.getTypeName = getTypeNameInner
-globalThis.showTypeParent = getTypeParent
-globalThis.getTypeParent = (mPtr: NativePointer) => getTypeParent(mPtr, true)
+globalThis.showTypeParent = (mPtr: NativePointer) => getTypeParentList(mPtr, false)
+globalThis.getTypeParent = (mPtr: NativePointer): Array<mscorlib.Type> => getTypeParentList(mPtr, true)!
 globalThis.showTypeModuleByType = showTypeModuleByType
 globalThis.showTypeModuleByIns = showTypeModuleByIns

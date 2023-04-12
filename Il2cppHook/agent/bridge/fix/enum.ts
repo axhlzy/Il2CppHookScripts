@@ -1,27 +1,32 @@
-export const enumNumToName = (enumValue: number, classInfo: string) => {
+export const enumNumToName = (enumValue: number, classInfo: string, classPtr?: NativePointer) => {
     let retValue: string = "Unknown"
     enumForEach(classInfo, (_field: NativePointer, fieldName: string, value: number) => {
         if (!fieldName.includes("value__"))
             if (Number(enumValue) === Number(value)) retValue = `${fieldName} ( ${value} ) `
-    })
+    }, classPtr)
     return retValue
 }
 
-export const enumForEach = (className: string, callback: (field: NativePointer, fieldName: string, value: number) => void) => {
-    let clsPtr = findClass(className)
-    if (clsPtr.isNull()) throw new Error("Don't find class " + className)
-    let localCls = new Il2Cpp.Class(findClass(className))
-    if (!localCls.isEnum) throw new Error("Not enum class")
-    let iter = alloc()
-    let field
-    while (field = Il2Cpp.Api._classGetFields(clsPtr, iter)) {
-        if (field.isNull()) break
-        let fieldName: string = field.readPointer().readCString()!
-        let value = alloc()
+export const enumForEach = (className: string, callback: (field: NativePointer, fieldName: string, value: number) => void, clazzPtr?: NativePointer) => {
+    let local_clazzPtr: NativePointer = ptr(0)
+    if (clazzPtr == undefined || clazzPtr == null || (clazzPtr instanceof NativePointer && clazzPtr.isNull())) {
+        local_clazzPtr = findClass(className)
+    } else {
+        local_clazzPtr = clazzPtr
+    }
+    if (local_clazzPtr.isNull()) throw new Error("Don't find class " + className)
+    let local_clazz: Il2Cpp.Class = new Il2Cpp.Class(local_clazzPtr)
+    if (!local_clazz.isEnum) throw new Error("Not enum class")
+    let iter_ptr = alloc()
+    let field_ptr: NativePointer = ptr(0)
+    while (field_ptr = Il2Cpp.Api._classGetFields(local_clazzPtr, iter_ptr)) {
+        if (field_ptr.isNull()) break
+        let fieldName: string = field_ptr.readPointer().readCString()!
+        let value: NativePointer = alloc()
         try {
-            Il2Cpp.Api._fieldGetStaticValue(field, value)
-        } catch (error) { }
-        callback(field, fieldName, value.readPointer().toInt32())
+            Il2Cpp.Api._fieldGetStaticValue(field_ptr, value)
+        } catch { }
+        callback(field_ptr, fieldName, value.readPointer().toInt32())
     }
 }
 

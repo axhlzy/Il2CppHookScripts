@@ -1,7 +1,8 @@
 import { FakeCommonType } from "../../base/valueResolve"
 import { formartClass as FM } from "../../utils/formart"
-import { enumNumToName } from "./enum"
+import { HookerBase } from "../../base/base"
 import { getModifier } from "./il2cppM"
+import { enumNumToName } from "./enum"
 
 export class FieldsParser {
 
@@ -112,13 +113,12 @@ const dealWithSpecialType = (field: Il2Cpp.Field, thisValueP: NativePointer): st
     if (field.handle.isNull()) return ""
 
     // 即对静态变量进行值解析
-    if (field.isStatic) {
+    if (field.isStatic)
         return fakeStaticField(field).toString()
-    }
     // 对枚举的解析
     else if (field.type.class.isEnum) {
         let value = thisValueP.add(field.offset)
-        return `Enum : ${enumNumToName(value.readPointer().toInt32(), field.type.class.name)}`
+        return `Enum : ${enumNumToName(value.readPointer().toInt32(), field.type.class.name, field.type.class.handle)}`
     }
 
     if (thisValueP.isNull()) return ""
@@ -152,6 +152,8 @@ declare global {
     var lfvt: (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => NativePointer
     // list filedoffset to return
     var lfo: (mPtr: NativePointer, fieldName: string, classHandle?: NativePointer) => number
+    // list methods from instance
+    var lms: (mPtr: NativePointer) => void
 }
 
 
@@ -193,3 +195,5 @@ globalThis.lfvt = (mPtr: NativePointer, fieldName: string, classHandle?: NativeP
         return new NativePointer(0)
     }
 }
+
+globalThis.lms = (mPtr: NativePointer) => HookerBase.showMethods(new Il2Cpp.Object(checkCmdInput(mPtr)).class.handle)

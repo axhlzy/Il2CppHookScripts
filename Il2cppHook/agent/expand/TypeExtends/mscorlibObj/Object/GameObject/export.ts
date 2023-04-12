@@ -2,6 +2,7 @@ import { filterDuplicateOBJ, PassType } from "../../../../../utils/common"
 import { PackArray } from "../../../../../bridge/fix/packer/packArray"
 import { PackList } from "../../../../../bridge/fix/packer/packList"
 import { setActiveT, setActiveTChange } from "../Component/export"
+import { checkExtends } from "../../ValueType/exports"
 import { allocP } from "../../../../../utils/alloc"
 
 globalThis.HookSetActive = (defaltActive: boolean = true, PrintStackTrace: boolean = false, filterString: Array<string> | string = "") => {
@@ -63,6 +64,7 @@ globalThis.HookSendMessage = () => {
 
 globalThis.showGameObject = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform) => {
     if (mPtr == undefined) return
+    if (mPtr instanceof NativePointer && mPtr.isNull()) return
     let gameObject: Il2Cpp.GameObject
     if (mPtr instanceof Il2Cpp.GameObject) {
         gameObject = mPtr
@@ -250,7 +252,15 @@ function list_Components_Component(component: NativePointer | Il2Cpp.Component):
     throw new Error("list_Components_Component: not found method")
 }
 
-globalThis.listScripts = (mPtr: NativePointer): PackArray | undefined => {
+globalThis.listScripts = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform | Il2Cpp.Component): PackArray | undefined => {
+
+    if (mPtr instanceof Il2Cpp.GameObject) {
+        return list_Components_GameObject(mPtr.handle)
+    } else if (mPtr instanceof Il2Cpp.Transform) {
+        return list_Components_GameObject(mPtr.get_gameObject())
+    } else if (mPtr instanceof Il2Cpp.Component) {
+        return list_Components_Component(mPtr.handle)
+    }
 
     let local_mPtr = checkCmdInput(mPtr)
     let typeName = getTypeName(local_mPtr)
@@ -259,22 +269,34 @@ globalThis.listScripts = (mPtr: NativePointer): PackArray | undefined => {
     } else if (typeName == "RectTransform") {
         return list_Components_Component(local_mPtr)
     } else if (checkExtends(local_mPtr)) {
-        // todo check extends Component ?
-
+        return list_Components_Component(local_mPtr)
     } else {
         throw new Error("listScripts: unsport type")
     }
-    function checkExtends(local_mPtr: NativePointer): boolean {
+}
 
-        return false
+// 解析挂载在 gameObject/transform ... 下的componnet脚本
+globalThis.showComponents = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform | Il2Cpp.Component) => {
+    let scripts: PackArray | undefined = listScripts(mPtr)
+    if (scripts && scripts.length > 0) {
+        LOGO("--------- Components ---------")
+        scripts.forEach((script: Il2Cpp.Object) => {
+            try {
+                LOGD(`${script.handle} -> ${script.toString()}`)
+            } catch {
+                LOGE(`${script.handle} -> (→_→) ErrorToCase `)
+            }
+        })
     }
 }
 
-// 解析挂载在gameObject下的脚本 (todo 未完成)
-globalThis.showScripts = (mPtr: NativePointer) => listScripts(mPtr)?.show()
-
 // alias for globalThis.showScripts
-globalThis.s = globalThis.showScripts
+globalThis.s = globalThis.showComponents
+
+globalThis.PrintScriptHierarchy = (mPtr: NativePointer) => {
+    let local_mPtr = checkCmdInput(mPtr)
+
+}
 
 declare global {
     var HookSetActive: (defaltActive?: boolean, PrintStackTrace?: boolean, filterString?: string | Array<string>) => void
@@ -285,8 +307,9 @@ declare global {
     var findGameObject: (path: string, transform?: NativePointer) => void
     var HookSendMessage: () => void
 
-    var listScripts: (mPtr: NativePointer) => PackArray | undefined
-    var showScripts: (mPtr: NativePointer) => void
+    var listScripts: (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform | Il2Cpp.Component) => PackArray | undefined
+    var showComponents: (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform | Il2Cpp.Component) => void
+    var PrintScriptHierarchy: (mPtr: NativePointer) => void
     var s: (mPtr: NativePointer) => void
 }
 

@@ -9,7 +9,7 @@ const HookAddListener = () => {
             let acttionToString: string = new Il2Cpp.Object(BaseInvokableCall).toString()
             LOGD(`\n[*] AddListener : ${getObjName(instance.handle)} @ ${instance.handle}`)
             // todo 这里现在写的很简单，但是此处可以后续做更多的参数解析
-            LOGZ(`\BaseInvokableCall\t->  ${acttionToString} @ ${BaseInvokableCall}`)
+            LOGZ(`\nBaseInvokableCall\t->  ${acttionToString} @ ${BaseInvokableCall}`)
         })
     }
 }

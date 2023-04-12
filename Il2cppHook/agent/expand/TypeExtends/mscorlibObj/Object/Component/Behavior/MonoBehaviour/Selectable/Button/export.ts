@@ -121,8 +121,8 @@ export function OnPointerClick(arg0: number = -1, self_addr: NativePointer = ptr
         if (eventData.isNull()) return
         let pointerEventData = new PointerEventData(eventData)
         let gameObj: Il2Cpp.GameObject = pointerEventData.get_pointerEnter()
-        // LOGD(pointerEventData.toString())
-        if (!gameObj.handle.isNull()) showGameObject(gameObj.handle)
+        showGameObject(gameObj)
+        showComponents(gameObj)
         // showTransform(f_getTransform(gameObj))
         // showEventData(pointerEventData)
     }
@@ -202,13 +202,6 @@ export const OnClickScript = (mPtr: NativePointer = ptr(0)) => {
     }
 }
 
-export const PrintScriptHierarchy = (mPtr: NativePointer) => {
-    let local_mPtr = checkCmdInput(mPtr)
-    new Il2Cpp.GameObject(local_mPtr).transform.forEach((item: Il2Cpp.Transform) => {
-        LOGW(`${FM.alignStr(`[${item.get_gameObject().get_name()}]`, 20)} ${item.get_gameObject().handle} ${item.handle}`)
-    })
-}
-
 /**
  * 隐藏模拟点击位置的gameobj
  * 这里find_method()在移植的时候写具体的地址就是，不用移植整个js代码
@@ -244,20 +237,18 @@ declare global {
     var B_Button_Custom: (mPtr: NativePointer) => void // Customize the function address of OnPointerClick
     var B_Click_Script: (mPtr: NativePointer) => void
     var B_Click_Script_Custom: (mPtr: NativePointer) => void
-    var PrintScriptHierarchy: (mPtr: NativePointer) => void
 
     // test ↓
     var B_ButtonTest: () => void
     var HideClickedObj: (x: number, y: number) => void
 }
 
-globalThis.HookOnPointerClick = OnPointerClick
-globalThis.HookOnPointerClick_Custom = (mPtr: NativePointer) => HookOnPointerClick(-1, checkCmdInput(mPtr))
-globalThis.HideClickedObj = HideClickedObj
-globalThis.PrintScriptHierarchy = PrintScriptHierarchy
 globalThis.B_Button = OnButtonClick
-globalThis.B_Button_Custom = (mPtr: NativePointer) => OnButtonClick(checkCmdInput(mPtr))
 globalThis.B_Click_Script = OnClickScript
+globalThis.HideClickedObj = HideClickedObj
+globalThis.HookOnPointerClick = OnPointerClick
+globalThis.B_Button_Custom = (mPtr: NativePointer) => OnButtonClick(checkCmdInput(mPtr))
+globalThis.HookOnPointerClick_Custom = (mPtr: NativePointer) => HookOnPointerClick(-1, checkCmdInput(mPtr))
 globalThis.B_Click_Script_Custom = (mPtr: NativePointer) => OnClickScript(checkCmdInput(mPtr))
 
 // globalThis.B_ButtonTest = () => {
