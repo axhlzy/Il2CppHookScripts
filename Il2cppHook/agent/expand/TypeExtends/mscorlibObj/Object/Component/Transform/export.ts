@@ -23,7 +23,9 @@ globalThis.PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boo
     let local_mPtr: NativePointer = checkCmdInput(mPtr)
     if (local_mPtr.isNull()) throw new Error("PrintHierarchy: mPtr is null")
     let trsIns: Il2Cpp.Transform = GetGameObjectFromPtr(local_mPtr)!.transform
-
+    let ThisGBJName: string = trsIns.get_name()
+    let ThisChildcount = trsIns.get_childCount()
+        LOGD(`${ThisGBJName} childCount :${ThisChildcount}`)
     if (level == 10) LOGO(`${getLine(75)}\n`)
     // 当前level作为第一级
     let baseLevel = getLevel(trsIns)
