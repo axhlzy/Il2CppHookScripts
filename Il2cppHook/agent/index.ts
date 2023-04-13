@@ -212,7 +212,7 @@ const HookExit = () => {
         // UnityEngine.CoreModule UnityEngine.Application Quit() : Void
         R(Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Application").method("Quit").virtualAddress, (_srcCall: Function) => {
             // srcCall(arg0, arg1, arg2, arg3)
-            LOGE("called UnityEngine.Application.Quit()")
+            LOGE("called UnityEngine.Application.Quit()") 
             return ptr(0)
         })
     })
