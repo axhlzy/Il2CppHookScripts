@@ -5,10 +5,6 @@ class il2cppObjAPI_impl extends Il2Cpp.Object implements CoreModule_Object {
     // m_CachedPtr : IntPtr
     // m_CachedPtr: NativePointer = lfv(this.handle, "m_CachedPtr")
 
-    constructor(handleOrWrapper: NativePointerValue) {
-        super(checkCmdInput(handleOrWrapper))
-    }
-
     ctor(): CoreModule_Object {
         return Il2Cpp.Api.il2cppObj._ctor_0(allocP(1))
     }

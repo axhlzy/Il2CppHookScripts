@@ -16,6 +16,14 @@ const main = () => {
     // })
 
     // B_NETWORK()
+
+    TODO_OTHERS()
+}
+
+const TODO_OTHERS = () => {
+    Il2Cpp.perform(() => {
+        // HookSendMessage()
+    })
 }
 
 const B_NETWORK = () => {

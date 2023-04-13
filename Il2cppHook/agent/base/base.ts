@@ -640,9 +640,12 @@ declare global {
     var fc: (name: string, fromAssebly?: string[]) => NativePointer
     var af: (className: string) => void
     var aui: () => void
+
     var findMethod: findMethodType
     var find_method: find_MethodType
+
     var MethodToShow: (methodInfo: Il2Cpp.Method) => void
+
     var getGCInstance: (inputClass?: string | NativePointer | Il2Cpp.Class) => Array<Il2Cpp.Object>
     var showGCInstance: () => void
 
