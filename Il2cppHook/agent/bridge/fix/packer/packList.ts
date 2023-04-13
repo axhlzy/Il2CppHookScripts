@@ -158,6 +158,7 @@ export class PackList implements list_impl {
 
 declare global {
     var showList: (mPtr: NativePointer) => void
+    var packList: (mPtr: NativePointer) => PackList
 }
 
 /**
@@ -175,3 +176,5 @@ declare global {
  *  [81]  0xaf049018 -> NameDef -> "Hildagarde"
  */
 globalThis.showList = (mPtr: NativePointer, transformer?: (item: Il2Cpp.Object) => string) => { new PackList(checkCmdInput(mPtr)).showList(transformer) }
+
+globalThis.packList = (mPtr: NativePointer) => new PackList(checkCmdInput(mPtr))

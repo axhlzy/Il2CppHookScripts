@@ -86,3 +86,9 @@ export class PackDictionary {
     // }
 
 }
+
+declare global {
+    var PackDictionary: (mPtr: NativePointer) => PackDictionary
+}
+
+globalThis.PackDictionary = (mPtr: NativePointer) => new PackDictionary(checkCmdInput(mPtr))
