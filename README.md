@@ -11,7 +11,7 @@
 - 对象层级关系 `PrintHierarchy` / 类型层级关系 `showTypeParent`
 - 结合frida以及方法信息反汇编 `showAsm`
 - 常用Hook封装 `HookOnPointerClick/HookSetActive/B_Button...`
-- 解析 挂载脚本 `showScripts alias s / B_Click_Script`   <- testing
+- 解析 挂载脚本 `showComponents alias s` `HookOnPointerClick/PrintHierarchyWithComponents`也有引入  <--- testing
 - ...
 
 #### Usage

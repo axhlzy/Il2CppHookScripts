@@ -150,7 +150,10 @@ export class HookerBase {
      * @param detailed show detail info (default false)
      * @returns 
      * @example
-     * [Pixel 4::XXX ]->  m(findClass("GameObject"),1)
+     * 
+     * m("GameObject") 这种写法少数重名类可能会出问题
+     * 
+     * [Pixel 4::XXX ]->  m(findClass("GameObject"),1) === m("GameObject")
 
             -----------------------------------------------------
             | Found 46 Methods  in class: GameObject @ 0xe9792c10 |
@@ -407,7 +410,7 @@ export class HookerBase {
         LOG("Il2CppImage\t---->\t" + currentlib + (ShowMore ? " (" + currentlib.add(p_size).readPointer().readCString() + ")" : ""))
         LOG("Il2CppClass\t---->\t" + klass + (ShowMore ? " (" + Il2Cpp.Api._classGetName(klass) + ")" : ""))
         LOG("MethodInfo\t---->\t" + method + (ShowMore ? " (" + Il2Cpp.Api._classGetName(method) + ")" : ""))
-        LOGD("methodPointer\t---->\t" + method.readPointer() + "\t===>\t" + method.readPointer().sub(soAddr))
+        LOGD("MethodPointer\t---->\t" + method.readPointer() + "\t===>\t" + method.readPointer().sub(soAddr))
         LOGO(getLine(85))
     }
 
@@ -427,7 +430,7 @@ export class HookerBase {
         LOGZ("Il2CppImage\t---->\t" + method.class.image.handle)
         LOGZ("Il2CppClass\t---->\t" + method.class.handle)
         LOGZ("MethodInfo\t---->\t" + method.handle)
-        LOGD("methodPointer\t---->\t" + method.virtualAddress + "\t===>\t" + (method.virtualAddress.isNull() ? ptr(0) : method.relativeVirtualAddress))
+        LOGD("MethodPointer\t---->\t" + method.virtualAddress + "\t===>\t" + (method.virtualAddress.isNull() ? ptr(0) : method.relativeVirtualAddress))
         LOGW(getLine(lineLen, "-"))
     }
 

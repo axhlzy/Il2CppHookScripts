@@ -143,7 +143,7 @@ export const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
 
     function innerFunction(arg0: NativePointer, arg1: NativePointer) {
         let button: Button = new Button(arg0)
-        let currentGameobj: GameObject = getGameObjectPack(arg0)
+        let currentGameobj: GameObject = new Il2Cpp.GameObject(arg0)
         let pointerEventData: PointerEventData = new PointerEventData(arg1)
         let buttonOnclickEvent: ButtonClickedEvent = button.get_onClick()
         LOGD(`\n[*] ${pointerEventData.handle} ---> ${currentGameobj.get_name()} { G:${currentGameobj.handle} | T:${currentGameobj.get_transform().handle} }`)
@@ -178,7 +178,7 @@ export const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
     }
 }
 
-export const OnClickScript = (mPtr: NativePointer = ptr(0)) => {
+const OnClickScript = (mPtr: NativePointer = ptr(0)) => {
     if (!mPtr.isNull()) {
         A(checkCmdInput(mPtr), (args) => innerFunction(args[0], args[1]))
         return
@@ -193,7 +193,7 @@ export const OnClickScript = (mPtr: NativePointer = ptr(0)) => {
 
     function innerFunction(arg0: NativePointer, _arg1: NativePointer) {
         let index: number = 0
-        listScripts(getGameObjectPack(arg0).handle)?.forEach((item: Il2Cpp.Object) => {
+        listScripts(arg0)?.forEach((item: Il2Cpp.Object) => {
             if (index == 0) newLine()
             let itemStr: string = item.toString()
             LOGW(`${FM.alignStr(`[${++index}]`, 6)} ${item.handle} ${itemStr}`)
@@ -235,8 +235,6 @@ declare global {
     var HookOnPointerClick_Custom: (mPtr: NativePointer) => void // Customize the function address of OnPointerClick
     var B_Button: () => void
     var B_Button_Custom: (mPtr: NativePointer) => void // Customize the function address of OnPointerClick
-    var B_Click_Script: (mPtr: NativePointer) => void
-    var B_Click_Script_Custom: (mPtr: NativePointer) => void
 
     // test ↓
     var B_ButtonTest: () => void
@@ -244,12 +242,10 @@ declare global {
 }
 
 globalThis.B_Button = OnButtonClick
-globalThis.B_Click_Script = OnClickScript
 globalThis.HideClickedObj = HideClickedObj
 globalThis.HookOnPointerClick = OnPointerClick
 globalThis.B_Button_Custom = (mPtr: NativePointer) => OnButtonClick(checkCmdInput(mPtr))
 globalThis.HookOnPointerClick_Custom = (mPtr: NativePointer) => HookOnPointerClick(-1, checkCmdInput(mPtr))
-globalThis.B_Click_Script_Custom = (mPtr: NativePointer) => OnClickScript(checkCmdInput(mPtr))
 
 // globalThis.B_ButtonTest = () => {
 //     // OnPointerClick(instance, PointerEventData) : Void

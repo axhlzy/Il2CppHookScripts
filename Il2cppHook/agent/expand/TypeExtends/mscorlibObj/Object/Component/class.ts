@@ -46,6 +46,22 @@ class UnityEngine_Component_Impl extends UnityEngine_Object {
     get_transform(): Il2Cpp.Transform {
         return new Il2Cpp.Transform(Il2Cpp.Api.Component._get_transform(this.handle))
     }
+
+    get gameobject(): GameObject {
+        return this.get_gameObject()
+    }
+
+    get gameobject_handle(): NativePointer {
+        return this.gameobject.handle
+    }
+
+    get transform(): Il2Cpp.Transform {
+        return this.get_transform()
+    }
+
+    get transform_handle(): NativePointer {
+        return this.transform.handle
+    }
 }
 
 declare global {

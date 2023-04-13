@@ -78,21 +78,21 @@ export class PackList implements list_impl {
         return JSON.stringify(this)
     }
 
-    showList(simpleCallback?: (item: Il2Cpp.Object) => string): void {
+    showList(transformer?: (item: Il2Cpp.Object) => string): void {
         if (this.get_Count() == 0) throw new Error('List is empty')
         LOGZ(`\nList<${this.get_Item().class.name}> ( Count: ${this.get_Count()} / Capacity: ${this.get_Capacity()} )\n`)
         let count: number = 0
         let arrayResult: Array<string> = new Array<string>()
         this.forEach((item: Il2Cpp.Object) => {
             let simpleStr: string = '-> '
-            if (simpleCallback != undefined) {
-                let res = simpleCallback(item)
+            if (transformer != undefined) {
+                let res = transformer(item)
                 simpleStr += res
                 arrayResult.push(res.toString().replace('"', '').replace('"', ''))
             }
             let detail = lfss(item.handle).toString()
             detail.length > 200 ? detail = " " : detail = " " + detail + " "
-            LOGD(`[${++count}]  ${item.handle} -> ${item.toString()}${detail}${simpleCallback == undefined ? '' : simpleStr}`)
+            LOGD(`[${++count}]  ${item.handle} -> ${item.toString()}${detail}${transformer == undefined ? '' : simpleStr}`)
         })
         if (arrayResult.length != 0) {
             newLine()
@@ -163,7 +163,7 @@ declare global {
 /**
  * 用来简单解析 unity 的 List<T> 类型
  * @param mPtr 指定一个指向 list 的指针
- * @param simpleCallback simpleCallback 用来解析 item 内部的指定数据，返回一个字符串
+ * @param transformer 值变换函数：用来解析item内部的指定数据，返回一个字符串
  * 
  * @example
  *  showList(0xbf71efa0,(item)=>{return item.field('name').value})
@@ -174,4 +174,4 @@ declare global {
  *  [80]  0xaf049030 -> NameDef -> "Helena"
  *  [81]  0xaf049018 -> NameDef -> "Hildagarde"
  */
-globalThis.showList = (mPtr: NativePointer, simpleCallback?: (item: Il2Cpp.Object) => string) => { new PackList(checkCmdInput(mPtr)).showList(simpleCallback) }
+globalThis.showList = (mPtr: NativePointer, transformer?: (item: Il2Cpp.Object) => string) => { new PackList(checkCmdInput(mPtr)).showList(transformer) }

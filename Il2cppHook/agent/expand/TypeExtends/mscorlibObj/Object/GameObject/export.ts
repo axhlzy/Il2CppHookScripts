@@ -62,36 +62,26 @@ globalThis.HookSendMessage = () => {
     })
 }
 
-globalThis.showGameObject = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform) => {
-    if (mPtr == undefined) return
-    if (mPtr instanceof NativePointer && mPtr.isNull()) return
-    let gameObject: Il2Cpp.GameObject
+export function GetGameObjectFromPtr(mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Component | Il2Cpp.Transform): Il2Cpp.GameObject | undefined {
+    if (mPtr == undefined) throw new Error("mPtr is undefined")
     if (mPtr instanceof Il2Cpp.GameObject) {
-        gameObject = mPtr
-    }
-    else if (typeof mPtr == "number" || mPtr instanceof NativePointer) {
-        mPtr = checkCmdInput(mPtr)
-        let typeName = getTypeName(checkCmdInput(mPtr))
-        if (typeName == "RectTransform") {
-            gameObject = new Il2Cpp.Transform(mPtr).get_gameObject()
+        return mPtr
+    } else if (mPtr instanceof Il2Cpp.Transform || mPtr instanceof Il2Cpp.Component) {
+        return mPtr.gameobject
+    } else if (mPtr instanceof NativePointer || typeof mPtr == "number") {
+        const ptr = checkCmdInput(mPtr)
+        const typeName = getTypeName(ptr)
+        if (checkExtends(ptr, "Component")) {
+            return new Il2Cpp.Component(ptr).gameobject
         } else if (typeName == "GameObject") {
-            gameObject = new Il2Cpp.GameObject(mPtr)
-        } else {
-            throw new Error("showGameObject: mPtr is not GameObject or Transform")
+            return new Il2Cpp.GameObject(ptr)
         }
-    }
-    else if (mPtr instanceof Il2Cpp.Transform) {
-        gameObject = new Il2Cpp.GameObject(mPtr.get_transform().handle)
-    }
-    else if (getTypeName(mPtr) == "GameObject") {
-        gameObject = new Il2Cpp.GameObject(mPtr)
-    }
-    else if (getTypeName(mPtr) == "RectTransform") {
-        gameObject = new Il2Cpp.Transform(mPtr).get_gameObject()
-    }
-    else {
-        throw new Error("showGameObject: mPtr is not GameObject or Transform")
-    }
+    } else throw new Error("mPtr is not a valid instance of the specified type")
+}
+
+globalThis.showGameObject = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform) => {
+    if (mPtr == undefined || (mPtr instanceof NativePointer && mPtr.isNull())) return
+    let gameObject: Il2Cpp.GameObject = GetGameObjectFromPtr(mPtr)!
     LOGO("--------- GameObject ---------")
     LOGD("gameObj\t\t--->\t" + gameObject.handle)
     LOGD("getName\t\t--->\t" + gameObject.get_name())
@@ -111,18 +101,7 @@ globalThis.showGameObject = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Tr
 }
 
 globalThis.getTransform = (mPtr: NativePointer) => {
-    if (typeof mPtr == "number") mPtr = ptr(mPtr)
-    let gameObject: Il2Cpp.GameObject
-    try {
-        if (getTypeName(mPtr) == "GameObject") {
-            gameObject = new Il2Cpp.GameObject(mPtr)
-        } else {
-            gameObject = new Il2Cpp.Component(mPtr).get_gameObject()
-        }
-    } catch {
-        throw new Error("getTransform: mPtr is not GameObject or Transform")
-    }
-    return gameObject.get_transform().handle
+    return GetGameObjectFromPtr(mPtr)!.transform.handle
 }
 
 globalThis.setActive = (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active: boolean = false) => {
@@ -151,9 +130,9 @@ const checkGT = (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | 
     return mPtr
 }
 
-export const setActiveG = (gameObject: Il2Cpp.GameObject, active: boolean = false) => gameObject.SetActive(active)
+const setActiveG = (gameObject: Il2Cpp.GameObject, active: boolean = false) => gameObject.SetActive(active)
 
-export const setActiveGChange = (gameObject: Il2Cpp.GameObject) => gameObject.SetActive(!gameObject.get_activeSelf())
+const setActiveGChange = (gameObject: Il2Cpp.GameObject) => gameObject.SetActive(!gameObject.get_activeSelf())
 
 globalThis.findGameObject = findGameObject
 
@@ -194,16 +173,13 @@ export function findGameObject(path: string, transform?: NativePointer) {
 }
 
 function GetComponentRuntimeType(transform: Il2Cpp.Transform): NativePointer {
-    let retType: Array<mscorlib.Type> = getTypeParent(transform.handle) as Array<mscorlib.Type>
-    let retRuntimeType: NativePointer = ptr(0)
-    retType.forEach((type: mscorlib.Type) => {
-        if (type.name == "Component") retRuntimeType = type.handle
-    })
+    const retType: Array<mscorlib.Type> = getTypeParent(transform.handle) as Array<mscorlib.Type>
+    const retRuntimeType = retType.find(type => type.name === "Component")?.handle ?? ptr(0)
     return retRuntimeType
 }
 
 var allocTmp = ptr(0)
-function list_Components_GameObject(gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp.Object): PackArray | undefined {
+function list_Components_from_GameObject(gameObject: NativePointer | Il2Cpp.GameObject | Il2Cpp.Object): PackArray | undefined {
     if (gameObject instanceof Il2Cpp.GameObject || gameObject instanceof Il2Cpp.Object) gameObject = gameObject.handle
     let localGobj = new Il2Cpp.GameObject(checkCmdInput(gameObject))
     let comp_addr: NativePointer = ptr(0)
@@ -230,7 +206,7 @@ function list_Components_GameObject(gameObject: NativePointer | Il2Cpp.GameObjec
 }
 
 const ALLOC_SIZE = 0x1000
-function list_Components_Component(component: NativePointer | Il2Cpp.Component): PackArray | undefined {
+function list_Components_from_Component(component: NativePointer | Il2Cpp.Component): PackArray | undefined {
     if (component instanceof Il2Cpp.Component) component = component.handle
     let localComp = new Il2Cpp.Component(checkCmdInput(component))
     let comp_addr: NativePointer = ptr(0)
@@ -255,21 +231,21 @@ function list_Components_Component(component: NativePointer | Il2Cpp.Component):
 globalThis.listScripts = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform | Il2Cpp.Component): PackArray | undefined => {
 
     if (mPtr instanceof Il2Cpp.GameObject) {
-        return list_Components_GameObject(mPtr.handle)
+        return list_Components_from_GameObject(mPtr.handle)
     } else if (mPtr instanceof Il2Cpp.Transform) {
-        return list_Components_GameObject(mPtr.get_gameObject())
+        return list_Components_from_GameObject(mPtr.get_gameObject())
     } else if (mPtr instanceof Il2Cpp.Component) {
-        return list_Components_Component(mPtr.handle)
+        return list_Components_from_Component(mPtr.handle)
     }
 
     let local_mPtr = checkCmdInput(mPtr)
     let typeName = getTypeName(local_mPtr)
     if (typeName == "GameObject") {
-        return list_Components_GameObject(local_mPtr)
+        return list_Components_from_GameObject(local_mPtr)
     } else if (typeName == "RectTransform") {
-        return list_Components_Component(local_mPtr)
+        return list_Components_from_Component(local_mPtr)
     } else if (checkExtends(local_mPtr)) {
-        return list_Components_Component(local_mPtr)
+        return list_Components_from_Component(local_mPtr)
     } else {
         throw new Error("listScripts: unsport type")
     }
@@ -290,13 +266,8 @@ globalThis.showComponents = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Tr
     }
 }
 
-// alias for globalThis.showScripts
+// alias for globalThis.showComponents
 globalThis.s = globalThis.showComponents
-
-globalThis.PrintScriptHierarchy = (mPtr: NativePointer) => {
-    let local_mPtr = checkCmdInput(mPtr)
-
-}
 
 declare global {
     var HookSetActive: (defaltActive?: boolean, PrintStackTrace?: boolean, filterString?: string | Array<string>) => void
@@ -309,7 +280,6 @@ declare global {
 
     var listScripts: (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform | Il2Cpp.Component) => PackArray | undefined
     var showComponents: (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform | Il2Cpp.Component) => void
-    var PrintScriptHierarchy: (mPtr: NativePointer) => void
     var s: (mPtr: NativePointer) => void
 }
 

@@ -1,7 +1,5 @@
 import { PackArray } from "../../../../../../bridge/fix/packer/packArray"
-import { GameObjectImpl as GameObject } from "../../GameObject/class"
-import { UnityEngine_Transform_Impl as Transform } from "./class"
-import { checkExtends } from "../../../ValueType/exports"
+import { GetGameObjectFromPtr } from "../../GameObject/export"
 
 globalThis.showTransform = (transform: NativePointer) => {
     if (typeof transform == "number") transform = ptr(transform)
@@ -21,18 +19,10 @@ globalThis.showTransform = (transform: NativePointer) => {
  * @param {Boolean} inCall 内部调用，去掉LOG的相关判断
  */
 globalThis.PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boolean = false, needComponent: boolean = false) => {
+    if (mPtr == undefined) throw new Error("PrintHierarchy: mPtr is undefined")
     let local_mPtr: NativePointer = checkCmdInput(mPtr)
-    if (local_mPtr.isNull()) return
-    let trsIns: Il2Cpp.Transform
-    let typeName: string = getTypeName(local_mPtr)
-    if (typeName == "GameObject") {
-        local_mPtr = new Il2Cpp.GameObject(local_mPtr).get_transform().handle
-        trsIns = new Il2Cpp.Transform(local_mPtr)
-    } else if (checkExtends(local_mPtr, "Transform")) {
-        trsIns = new Il2Cpp.Transform(local_mPtr)
-    } else {
-        throw new Error("PrintHierarchy: mPtr must be Transform or GameObject")
-    }
+    if (local_mPtr.isNull()) throw new Error("PrintHierarchy: mPtr is null")
+    let trsIns: Il2Cpp.Transform = GetGameObjectFromPtr(local_mPtr)!.transform
 
     if (level == 10) LOGO(`${getLine(75)}\n`)
     // 当前level作为第一级
@@ -99,20 +89,13 @@ globalThis.PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boo
 
 /**
  * 获取/打印GameObject信息（从transform）
- * @param {Number} transform Transform Pointer
+ * @param {NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform | Il2Cpp.Component} mPtr Transform Pointer
  * @param {Boolean} inCall true：不返回pointer而是直接showGameObject
  **/
-globalThis.getGameObject = (transform: NativePointer, inCall: boolean = false): undefined | NativePointer => {
-    transform = checkCmdInput(transform)
-    if (inCall) {
-        showGameObject(transform)
-    } else {
-        return new Transform(transform).get_gameObject().handle
-    }
-}
-
-globalThis.getGameObjectPack = (mPtr: NativePointer): GameObject => {
-    return new GameObject(getGameObject(mPtr) as NativePointer)
+globalThis.getGameObject = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform | Il2Cpp.Component, inCall: boolean = false): undefined | NativePointer => {
+    let localGObj: Il2Cpp.GameObject = GetGameObjectFromPtr(mPtr)!
+    if (inCall) showGameObject(localGObj)
+    else return localGObj.handle
 }
 
 // alias for PrintHierarchy
@@ -127,7 +110,6 @@ declare global {
     var PrintHierarchy: (mPtr: NativePointer, level?: number, inCall?: boolean, needComponent?: boolean) => void
     var PrintHierarchyWithComponents: (mPtr: NativePointer, level: number) => void
     var getGameObject: (transform: NativePointer) => undefined | NativePointer
-    var getGameObjectPack: (mPtr: NativePointer) => GameObject
 }
 
 export { } 
