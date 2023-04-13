@@ -3,6 +3,7 @@ import "./class"
 import "./interface"
 
 import "./AssetBundle/include"
+import "./AudioClip/include"
 import "./Avatar/include"
 import "./Component/include"
 import "./GameObject/include"
