@@ -1,18 +1,30 @@
 export class DownloadHandlerAudioClipHooker {
 
     static hook() {
-        let local_GetText = Il2Cpp.Api.DownloadHandlerAudioClip._GetText
-        if (local_GetText) {
-            A(local_GetText, undefined, (ret) => {
-                LOGD(`[*] DownloadHandlerAudioClipHooker.GetText() | ret = '${readU16(ret)}'`)
-            })
+        try {
+            let local_GetText = Il2Cpp.Api.DownloadHandlerAudioClip._GetText
+            if (local_GetText != null) {
+                A(local_GetText, undefined, (ret) => {
+                    LOGD(`[*] DownloadHandlerAudioClipHooker.GetText() | ret = '${readU16(ret)}'`)
+                })
+            }
+            LOGD(`Hook DownloadHandlerAudioClipHooker.GetText()`)
+        } catch (error) {
+            LOGE(error)
         }
-        let local_GetData = Il2Cpp.Api.DownloadHandlerAudioClip._GetData
-        if (local_GetData) {
-            A(local_GetData, undefined, (ret) => {
-                LOGD(`[*] DownloadHandlerAudioClipHooker.GetData() | ret = '${ret}'`)
-            })
+
+        try {
+            let local_GetData = Il2Cpp.Api.DownloadHandlerAudioClip._GetData
+            if (local_GetData != null) {
+                A(local_GetData, undefined, (ret) => {
+                    LOGD(`[*] DownloadHandlerAudioClipHooker.GetData() | ret = '${ret}'`)
+                })
+            }
+            LOGD(`Hook DownloadHandlerAudioClipHooker.GetData()`)
+        } catch (error) {
+            LOGE(error)
         }
+
     }
 
 }
