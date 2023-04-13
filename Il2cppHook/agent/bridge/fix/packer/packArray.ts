@@ -74,5 +74,10 @@ export class PackArray {
     show(): void {
         showArray(this.handle)
     }
-
 }
+
+declare global {
+    var packArray: (mPtr: NativePointer) => PackArray
+}
+
+globalThis.packArray = (mPtr: NativePointer) => new PackArray(checkCmdInput(mPtr))

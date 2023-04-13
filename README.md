@@ -285,7 +285,7 @@ $ frida -FU -l ../_Ufunc.js
 todo：
 - 从游戏对象获取对象下挂载的脚本
 - qbdi 调用栈
-- 代码不是很规范，很多地方没有tryClass 容易导致崩溃(来自于frida-il2cpp-bridge)
+- 协程hook webrequests hook
 - 从任意一个游戏对象无法遍历到当前场景所有游戏对象(顶层对象不同)
 - 不能跨场景找游戏对象
 ...

@@ -103,6 +103,8 @@ globalThis.getGameObject = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Tra
 // alias for PrintHierarchy
 globalThis.p = globalThis.PrintHierarchy
 
+globalThis.packTransform = (transform: NativePointer) => new Il2Cpp.Transform(transform)
+
 globalThis.PrintHierarchyWithComponents = (mPtr: NativePointer, level: number) => PrintHierarchy(mPtr, level, false, true)
 
 declare global {
@@ -112,6 +114,7 @@ declare global {
     var PrintHierarchy: (mPtr: NativePointer, level?: number, inCall?: boolean, needComponent?: boolean) => void
     var PrintHierarchyWithComponents: (mPtr: NativePointer, level: number) => void
     var getGameObject: (transform: NativePointer) => undefined | NativePointer
+    var packTransform: (transform: NativePointer) => Il2Cpp.Transform
 }
 
 export { } 

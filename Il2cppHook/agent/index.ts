@@ -14,6 +14,16 @@ const main = () => {
     //         callFunction(0x1ba49d8,0x7b148b2200,0x79f6d07080,1)
     //     })
     // })
+
+    // B_NETWORK()
+}
+
+const B_NETWORK = () => {
+    Il2Cpp.perform(() => {
+        B("HttpWebRequest")
+        B("UnityWebRequest")
+        B("WWW")
+    })
 }
 
 class PauseHelper {
