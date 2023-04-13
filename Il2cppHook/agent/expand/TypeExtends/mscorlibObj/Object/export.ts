@@ -23,5 +23,5 @@ declare global {
     var getObjClass: (mPtr: NativePointer) => NativePointer
 }
 
-globalThis.getObjName = getObjName
+globalThis.getObjName = getObjName 
 globalThis.getObjClass = getObjClass
