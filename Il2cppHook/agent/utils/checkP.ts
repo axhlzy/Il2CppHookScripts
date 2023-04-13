@@ -94,7 +94,7 @@ export const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = fals
 
 globalThis.checkPointer = checkPointer as any
 
-export const checkCmdInput = (mPtr: NativePointer | number | string | Function): NativePointer => {
+export const checkCmdInput = (mPtr: NativePointer | NativePointerValue | number | string | Function): NativePointer => {
     if (mPtr instanceof NativePointer) return mPtr
     switch (typeof mPtr) {
         case "number":
@@ -146,7 +146,7 @@ globalThis.getBaseAddress = (): NativePointer => baseAddress
 
 declare global {
     var checkPointer: (args: NativePointer | number) => NativePointer
-    var checkCmdInput: (mPtr: NativePointer | number | string | Function) => NativePointer
+    var checkCmdInput: (mPtr: NativePointer | NativePointerValue | number | string | Function) => NativePointer
     var getSubBasePtr: (mPtr: NativePointer, mdName?: string) => NativePointer
     var getSubBaseDes: (mPtr: NativePointer, mdName?: string) => string
     var setBaseAddress: (mPtr: NativePointer) => void

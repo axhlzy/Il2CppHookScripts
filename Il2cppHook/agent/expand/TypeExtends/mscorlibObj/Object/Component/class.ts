@@ -4,6 +4,10 @@ import { GameObjectImpl as GameObject } from "../GameObject/class"
 
 class UnityEngine_Component_Impl extends UnityEngine_Object {
 
+    constructor(handle: NativePointerValue) {
+        super(handle)
+    }
+
     __ctor__(): UnityEngine_Component_Impl {
         return new UnityEngine_Component_Impl(Il2Cpp.Api.Component._ctor_0(allocP()))
     }
