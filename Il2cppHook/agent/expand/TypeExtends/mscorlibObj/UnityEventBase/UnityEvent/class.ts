@@ -1,10 +1,11 @@
-import { mscorlib_System_Object_impl as System_Object, UnityEventBase_impl as UnityEngine_Events_UnityEventBase_Impl } from "../class"
+import { mscorlib_System_Object_impl as System_Object } from "../../class"
+import { UnityEngine_Events_UnityEventBase_Impl as UnityEventBase } from "../class"
 
 type UnityEngine_Events_UnityAction = NativePointer
 type System_Reflection_MethodInfo = NativePointer
 type UnityEngine_Events_BaseInvokableCall = NativePointer
 
-class UnityEngine_Events_UnityEvent_Impl extends UnityEngine_Events_UnityEventBase_Impl {
+class UnityEngine_Events_UnityEvent_Impl extends UnityEventBase {
 
     m_InvokeArray: System_Object[] = lfv(this.handle, "m_InvokeArray") as unknown as System_Object[]
 
@@ -12,7 +13,7 @@ class UnityEngine_Events_UnityEvent_Impl extends UnityEngine_Events_UnityEventBa
         super(handleOrWrapper)
     }
 
-    _ctor(): void {
+    _ctor_UnityEvent(): void {
         return Il2Cpp.Api.UnityEvent.__ctor(this.handle)
     }
 

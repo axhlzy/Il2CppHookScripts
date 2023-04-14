@@ -1,6 +1,7 @@
 import "./api"
 import "./class"
 import "./export"
+import "./interface"
 
 import "./Application/include"
 import "./AndroidJavaObject/include"

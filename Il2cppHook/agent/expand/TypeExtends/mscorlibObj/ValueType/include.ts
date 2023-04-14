@@ -19,7 +19,7 @@ import "./Vector4/include"
 import "./Ray/include"
 import "./RaycastHit/include"
 import "./RaycastResult/include"
-
 import "./Int32/include"
 import "./IntPtr/include"
 import "./DateTime/include"
+import "./DictionaryEntry/include"

@@ -50,9 +50,9 @@ export class PackArray {
         return this.Obj.method("System.Collections.Generic.IList`1.RemoveAt").invoke(index) as number
     }
 
-    forEach(callback: (item: Il2Cpp.Object, index: number) => void): void {
+    forEach(callback: (item: Il2Cpp.Object, index: number, name: string) => void): void {
         if (this.length == 0) return
-        for (let i = 0; i < this.get_Count(); i++) callback(this.get_Item(i), i)
+        for (let i = 0; i < this.get_Count(); i++) callback(this.get_Item(i), i, this.get_Item(i).toString())
     }
 
     toArray(): Il2Cpp.Object[] {

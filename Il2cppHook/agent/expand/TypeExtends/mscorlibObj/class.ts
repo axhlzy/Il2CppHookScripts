@@ -7,7 +7,7 @@ class mscorlib_System_Object_impl {
         this.handle = handleOrWrapper
     }
 
-    ctor(): mscorlib_System_Object_impl {
+    ctor_mscorlib_System_Object(): mscorlib_System_Object_impl {
         return mscorlib.Api.mscorlibObj._ctor_0(allocP(1))
     }
 

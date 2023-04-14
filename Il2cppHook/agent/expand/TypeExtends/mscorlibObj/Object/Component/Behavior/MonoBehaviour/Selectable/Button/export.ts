@@ -4,7 +4,7 @@ import { UnityEngine_Events_UnityAction_Impl as UnityAction } from "../../../../
 import { PackList } from "../../../../../../../../../bridge/fix/packer/packList"
 import { GameObjectImpl as GameObject } from "../../../../../GameObject/class"
 import { formartClass as FM } from "../../../../../../../../../utils/formart"
-import { ButtonImpl as Button } from "./class"
+import { Button } from "./class"
 
 /**
  * 打印点击事件GameObject层级
@@ -141,10 +141,10 @@ export const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
         })
     }
 
-    function innerFunction(arg0: NativePointer, arg1: NativePointer) {
-        let button: Button = new Button(arg0)
-        let currentGameobj: GameObject = new Il2Cpp.GameObject(arg0)
-        let pointerEventData: PointerEventData = new PointerEventData(arg1)
+    function innerFunction(buttonInstance: NativePointer, eventData: NativePointer) {
+        let button: Button = new Button(buttonInstance)
+        let currentGameobj: GameObject = new Il2Cpp.Component(buttonInstance).gameobject
+        let pointerEventData: PointerEventData = new PointerEventData(eventData)
         let buttonOnclickEvent: ButtonClickedEvent = button.get_onClick()
         LOGD(`\n[*] ${pointerEventData.handle} ---> ${currentGameobj.get_name()} { G:${currentGameobj.handle} | T:${currentGameobj.get_transform().handle} }`)
 

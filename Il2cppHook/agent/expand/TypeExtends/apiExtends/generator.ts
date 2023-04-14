@@ -26,19 +26,20 @@ const generateClass = (className: string, classPtr: NativePointer = ptr(0)) => {
     // constructor(handleOrWrapper: NativePointer) {
     //     super(handleOrWrapper)
     // }
-    LOGD('\tconstructor(handleOrWrapper: NativePointer) {')
+    LOGD('\n\tconstructor(handleOrWrapper: NativePointer) {')
     LOGD('\t\t super(handleOrWrapper)')
-    LOGD('\t}')
+    LOGD('\t}\n')
 
     // gen methods
     let methods = clsInstance.methods
     let names = new Array<string>()
+    let usingTypes = new Set<string>()
     methods.forEach((method: Il2Cpp.Method) => {
         // CancelInvoke_methodName(methodName: string): void {
         //     return Il2Cpp.Api.MonoBehaviour._CancelInvoke_String(this.handle, allocCStr(methodName));
         // }
         let params = method.parameters.map((param: Il2Cpp.Parameter) => {
-            return param.name + ':' + param.type.name.replace('.', '_')
+            return param.name + ':' + param.type.name.replace('.', '_').replace("&", "").replace("[]", "_Array")
         }).join(', ')
         let paramNames = method.parameters.map((param: Il2Cpp.Parameter) => {
             return param.name
@@ -46,7 +47,11 @@ const generateClass = (className: string, classPtr: NativePointer = ptr(0)) => {
 
         let staticStr = method.isStatic ? "static " : ""
         let sameNameFix = names.includes(method.name) ? `_${method.parameterCount}` : ""
-        let line1 = `\t${staticStr}${method.name.replace('.', '_')}${sameNameFix}(${params}): ${repStr(method.returnType.name.replace('.', '_'))} {`
+        let firstName = method.name.includes('ctor') ? method.name.concat(`_${method.class.name}`) : method.name
+        let localTypeStr = method.returnType.name.replace('.', '_')
+        let line1 = `\t${staticStr}${firstName.replace('.', '_')}${sameNameFix}(${params}): ${repStr(localTypeStr)} {`
+
+        usingTypes.add(localTypeStr)
         line1 = repStr(line1)
 
         let firstParam = method.isStatic ? '' : (method.parameters.length == 0 ? 'this.handle' : 'this.handle , ')
@@ -60,9 +65,14 @@ const generateClass = (className: string, classPtr: NativePointer = ptr(0)) => {
         let line2 = `\t\treturn ${retValue}`
         let line3 = '\t}'
         LOGD(`${line1} \n ${line2} \n ${line3} \n`)
+        usingTypes.add(method.returnType.name.replace('.', '_'))
         names.push(method.name)
     })
     LOGD('}\n')
+
+    usingTypes.forEach((type: string) => {
+        LOGD(`type ${type} = NativePointer`)
+    })
 
     newLine()
 
@@ -100,7 +110,7 @@ const repStr = (str: string): string => {
     // .replace('System_Boolean', 'boolean')
 }
 
-globalThis.incorLib = (name: string) => {
+const incorLib = (name: string) => {
     let corLib: boolean = false
     Il2Cpp.Domain.assembly('mscorlib').image.classes.forEach((cls: Il2Cpp.Class) => {
         if (cls.name == name) corLib = true
@@ -225,17 +235,49 @@ const generateFieldEnum = (className: string, classPtr: NativePointer = ptr(0)) 
     LOGO(`}\n`)
 }
 
+/**
+    interface System_Collections_ICollection {
+        CopyTo: (instance: NativePointer, array: System_Array, index: System_Int32) => System_Void
+        get_Count: (instance: NativePointer) => System_Int32
+        get_SyncRoot: (instance: NativePointer) => System_Object
+    }
+ */
+const generateInterface = (className: string, classPtr: NativePointer = ptr(0)) => {
+    if (className == undefined) return
+    LOGW(getLine(80))
+
+    let clsInstance: Il2Cpp.Class
+
+    // gen class title
+    if (classPtr.isNull()) {
+        clsInstance = new Il2Cpp.Class(findClass(className))
+    } else {
+        clsInstance = new Il2Cpp.Class(classPtr)
+    }
+    let clsName = clsInstance.namespace.replace('.', '_') + "_" + clsInstance.name
+    LOGD(`interface ${clsName} {`)
+    clsInstance.methods.forEach((method: Il2Cpp.Method) => {
+        let param = ''
+        for (let i = 0; i < method.parameters.length; i++) {
+            param += `,${method.parameters[i].name}: ${method.parameters[i].type.name.replace('.', '_')}`
+        }
+        if (param.startsWith(',')) param = param.substring(1)
+        LOGD(`\t${method.name}: (instance: NativePointer, ${param}) => ${method.returnType.name.replace('.', '_')}`)
+    })
+    LOGD('}\n')
+}
+
 declare global {
     var generateClass: (className: string, classPtr?: NativePointer) => void
     var generateApi: (className: string, classPtr?: NativePointer) => void
     var generateFieldEnum: (className: string, classPtr?: NativePointer) => void
-    var incorLib: (name: string) => boolean
+    var generateInterface: (className: string, classPtr?: NativePointer) => void
 }
 
 globalThis.generateClass = generateClass
 globalThis.generateApi = generateApi
 globalThis.generateFieldEnum = generateFieldEnum
-globalThis.incorLib = incorLib
+globalThis.generateInterface = generateInterface
 
 export { }
 

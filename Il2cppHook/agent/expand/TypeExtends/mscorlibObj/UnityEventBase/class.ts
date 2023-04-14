@@ -1,25 +1,25 @@
 import { mscorlib_System_Object_impl } from "../class";
-import { InvokableCallList_impl } from "../InvokableCallList/class";
+import { InvokableCallList_impl as InvokableCallList } from "../InvokableCallList/class";
 
 type PersistentCallGroup = NativePointer
 type BaseInvokableCall = NativePointer
 type mscorlib_System_Reflection_MethodInfo = NativePointer
 
-export class UnityEventBase_impl extends mscorlib_System_Object_impl {
+export class UnityEngine_Events_UnityEventBase_Impl extends mscorlib_System_Object_impl {
 
     // m_Calls : InvokableCallList
-    m_Calls: InvokableCallList_impl = new InvokableCallList_impl(lfv(this.handle, "m_Calls", findClass("UnityEventBase", ['UnityEngine.CoreModule'])))
+    m_Calls: InvokableCallList = new InvokableCallList(lfv(this.handle, "m_Calls", findClass("UnityEventBase", ['UnityEngine.CoreModule'])))
     // m_CallsDirty : Boolean
     m_CallsDirty: boolean = lfv(this.handle, "m_CallsDirty", findClass("UnityEventBase", ['UnityEngine.CoreModule'])) as unknown as boolean
     // m_PersistentCalls : PersistentCallGroup
     m_PersistentCalls: PersistentCallGroup = lfv(this.handle, "m_PersistentCalls", findClass("UnityEventBase", ['UnityEngine.CoreModule']))
 
     constructor(handleOrWrapper: NativePointer) {
-        super(handleOrWrapper);
+        super(handleOrWrapper)
     }
 
-    ctor_0(): mscorlib.UnityEventBase {
-        return new UnityEventBase_impl(mscorlib.Api.UnityEventBase._ctor_0(alloc()))
+    ctor_UnityEventBase(): mscorlib.UnityEventBase {
+        return new UnityEngine_Events_UnityEventBase_Impl(mscorlib.Api.UnityEventBase._ctor_0(alloc()))
     }
 
     AddListener(call: BaseInvokableCall): void {
@@ -38,7 +38,7 @@ export class UnityEventBase_impl extends mscorlib_System_Object_impl {
         return mscorlib.Api.UnityEventBase._FindMethod_2(this.handle, target, method)
     }
 
-    get_Calls(): InvokableCallList_impl {
+    get_Calls(): InvokableCallList {
         return this.m_Calls
     }
 
@@ -54,10 +54,10 @@ export class UnityEventBase_impl extends mscorlib_System_Object_impl {
 
 declare global {
     namespace mscorlib {
-        class UnityEventBase extends UnityEventBase_impl { }
+        class UnityEventBase extends UnityEngine_Events_UnityEventBase_Impl { }
     }
 }
 
-mscorlib.UnityEventBase = UnityEventBase_impl
+mscorlib.UnityEventBase = UnityEngine_Events_UnityEventBase_Impl
 
-export { mscorlib_System_Object_impl }
+export { UnityEngine_Events_UnityEventBase_Impl as UnityEventBase }
