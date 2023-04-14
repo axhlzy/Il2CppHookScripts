@@ -257,8 +257,9 @@ globalThis.showComponents = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Tr
     if (scripts && scripts.length > 0) {
         LOGO("--------- Components ---------")
         scripts.forEach((script: Il2Cpp.Object) => {
+            // LOGE(getTypeName(script.handle))
             try {
-                LOGD(`${script.handle} -> ${script.toString()}`)
+                LOGD(`${script.handle} -> ${script}`)
             } catch {
                 LOGE(`${script.handle} -> (→_→) ErrorToCase `)
             }
