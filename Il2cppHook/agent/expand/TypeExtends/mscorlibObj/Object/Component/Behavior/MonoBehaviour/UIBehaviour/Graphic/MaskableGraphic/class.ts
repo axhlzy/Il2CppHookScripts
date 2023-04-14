@@ -1,25 +1,24 @@
-import { UnityEngine_Rect_Impl as UnityEngine_Rect } from "../../../../../../../ValueType/Rect/class"
+import { UnityEngine_Rect as UnityEngine_Rect } from "../../../../../../../ValueType/Rect/class"
 import { UnityEngine_Material_Impl as UnityEngine_Material } from "../../../../../../Material/class"
 import { UnityEngine_UI_Graphic_Impl } from "../class"
 
 type UnityEngine_UI_RectMask2D = NativePointer
 type UnityEngine_UI_MaskableGraphic_CullStateChangedEvent = NativePointer
-type UnityEngine_Vector3 = NativePointer
 type UnityEngine_Vector2 = NativePointer
 
 class UnityEngine_UI_MaskableGraphic_Impl extends UnityEngine_UI_Graphic_Impl {
 
-    m_ShouldRecalculateStencil: boolean = lfv(this.handle, "m_ShouldRecalculateStencil") as unknown as boolean
-    m_MaskMaterial: UnityEngine_Material = lfv(this.handle, "m_MaskMaterial") as unknown as UnityEngine_Material
+    m_ShouldRecalculateStencil: boolean = readBoolean(lfv(this.handle, "m_ShouldRecalculateStencil"))
+    m_MaskMaterial: UnityEngine_Material = new UnityEngine_Material(lfv(this.handle, "m_MaskMaterial"))
     m_ParentMask: UnityEngine_UI_RectMask2D = lfv(this.handle, "m_ParentMask")
-    m_Maskable: boolean = lfv(this.handle, "m_Maskable") as unknown as boolean
-    m_IsMaskingGraphic: boolean = lfv(this.handle, "m_IsMaskingGraphic") as unknown as boolean
-    m_IncludeForMasking: boolean = lfv(this.handle, "m_IncludeForMasking") as unknown as boolean
+    m_Maskable: boolean = readBoolean(lfv(this.handle, "m_Maskable"))
+    m_IsMaskingGraphic: boolean = readBoolean(lfv(this.handle, "m_IsMaskingGraphic"))
+    m_IncludeForMasking: boolean = readBoolean(lfv(this.handle, "m_IncludeForMasking"))
     m_OnCullStateChanged: UnityEngine_UI_MaskableGraphic_CullStateChangedEvent = lfv(this.handle, "m_OnCullStateChanged")
-    m_ShouldRecalculate: boolean = lfv(this.handle, "m_ShouldRecalculate") as unknown as boolean
-    m_StencilValue: number = lfv(this.handle, "m_StencilValue") as unknown as number
-    m_Corners: UnityEngine_Vector3[] = lfv(this.handle, "m_Corners") as unknown as UnityEngine_Vector3[]
-
+    m_ShouldRecalculate: boolean = readBoolean(lfv(this.handle, "m_ShouldRecalculate"))
+    m_StencilValue: number = lfv(this.handle, "m_StencilValue").toInt32()
+    // m_Corners: UnityEngine_Vector3[] = lfv(this.handle, "m_Corners") as unknown as UnityEngine_Vector3[]
+    m_Corners: NativePointer = lfv(this.handle, "m_Corners")
 
     get_onCullStateChanged(): UnityEngine_UI_MaskableGraphic_CullStateChangedEvent {
         return Il2Cpp.Api.MaskableGraphic._get_onCullStateChanged(this.handle)

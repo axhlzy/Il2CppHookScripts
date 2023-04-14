@@ -89,6 +89,26 @@ export const getLine = (length: number, fillStr: string = "-") => {
     return tmpRet
 }
 
+// build a text with color (use LOG to print)
+export const getTextFormart = (text: string, color: LogColor = LogColor.WHITE, fillStr: string = " ", length: number = -1, center: boolean = false): string => {
+    if (text == undefined) text = ""
+    if (length == -1) length = text.length
+    let ret = colorStartDes(color)
+    let fillLength = length - text.length
+    if (fillLength > 0) {
+        let left = Math.floor(fillLength / 2)
+        let right = fillLength - left
+        if (center) {
+            left = right
+        }
+        ret += getLine(left, fillStr) + text + getLine(right, fillStr)
+    } else {
+        ret += text
+    }
+    ret += colorEndDes
+    return ret
+}
+
 declare global {
     var LOG: (str: any, type?: LogColor) => void
     // var LOGS: (str: string, colorDescription: [number, number, LogColor][]) => void

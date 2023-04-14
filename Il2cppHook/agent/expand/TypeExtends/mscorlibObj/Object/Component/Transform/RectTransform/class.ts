@@ -1,4 +1,4 @@
-import { UnityEngine_Rect_Impl as Rect } from "../../../../ValueType/Rect/class"
+import { UnityEngine_Rect as Rect } from "../../../../ValueType/Rect/class"
 import { UnityEngine_Vector2_Impl as Vector2 } from "../../../../ValueType/Vector2/class"
 import { UnityEngine_Vector3_Impl as Vector3 } from "../../../../ValueType/Vector3/class"
 import { UnityEngine_Transform_Impl } from "../class"
@@ -168,4 +168,4 @@ declare global {
     }
 }
 
-export { UnityEngine_RectTransform_Impl }
+export { UnityEngine_RectTransform_Impl as UnityEngine_RectTransform }

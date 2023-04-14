@@ -27,7 +27,12 @@ class UnityEngine_Color_Impl extends System_ValueType_Impl {
     }
 
     ToString(): string {
-        return readU16(Il2Cpp.Api.Color._ToString(this.handle))
+        // return readU16(Il2Cpp.Api.Color._ToString(this.handle))
+        return "TODO..."
+    }
+
+    toString(): string {
+        return "TODO..."
     }
 
     ToString_2(format: string, formatProvider: System_IFormatProvider): string {

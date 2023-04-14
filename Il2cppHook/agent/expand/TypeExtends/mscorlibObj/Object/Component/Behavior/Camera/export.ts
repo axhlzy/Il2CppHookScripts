@@ -1,8 +1,7 @@
 import { UnityEngine_Physics_Impl as Physics } from "../../../../Physics/class"
-import { UnityEngine_Ray_Impl as Ray } from "../../../../ValueType/Ray/class"
 import { UnityEngine_RaycastHit_Impl as RaycastHit } from "../../../../ValueType/RaycastHit/class"
 import { UnityEngine_Vector3_Impl as Vector3 } from "../../../../ValueType/Vector3/class"
-import { UnityEngine_Camera_Impl as Camera } from "./class"
+import { UnityEngine_Camera as Camera } from "./class"
 
 export { }
 

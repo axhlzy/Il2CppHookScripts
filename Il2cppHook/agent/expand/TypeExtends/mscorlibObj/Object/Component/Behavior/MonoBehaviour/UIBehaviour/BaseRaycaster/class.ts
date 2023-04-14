@@ -1,6 +1,6 @@
-import { PackList } from "../../../../../../../../../bridge/fix/packer/packList"
 import { UnityEngine_EventSystems_PointerEventData_Impl as PointerEventData } from "../../../../../../AbstractEventData/BaseEventData/PointerEventData/class"
-import { UnityEngine_Camera_Impl as Camera } from "../../../Camera/class"
+import { PackList } from "../../../../../../../../../bridge/fix/packer/packList"
+import { UnityEngine_Camera as Camera } from "../../../Camera/class"
 import { UnityEngine_EventSystems_UIBehaviour_Impl } from "../class"
 
 type System_Void = void

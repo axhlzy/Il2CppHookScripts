@@ -78,6 +78,10 @@ export class PackList implements list_impl {
         return JSON.stringify(this)
     }
 
+    itemsToString(): string {
+        return this.toArray().map(item => item.toString()).join(getLine(4, " "))
+    }
+
     showList(transformer?: (item: Il2Cpp.Object) => string): void {
         if (this.get_Count() == 0) throw new Error('List is empty')
         LOGZ(`\nList<${this.get_Item().class.name}> ( Count: ${this.get_Count()} / Capacity: ${this.get_Capacity()} )\n`)

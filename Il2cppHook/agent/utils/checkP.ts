@@ -63,6 +63,7 @@ export const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = fals
         try {
             let tmpValue: Module | null = Process.findModuleByAddress(mPtr)
             if (tmpValue === null) {
+                soAddr
                 let addValue = Il2Cpp.module.base.add(mPtr)
                 let tmpModule = Process.findModuleByAddress(addValue)
                 if (tmpModule === null) {

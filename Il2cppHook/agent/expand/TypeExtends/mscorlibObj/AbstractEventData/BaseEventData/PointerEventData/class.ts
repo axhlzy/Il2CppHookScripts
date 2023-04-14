@@ -1,4 +1,4 @@
-import { UnityEngine_Camera_Impl as Camera } from "../../../Object/Component/Behavior/Camera/class"
+import { UnityEngine_Camera as Camera } from "../../../Object/Component/Behavior/Camera/class"
 import { GameObjectImpl as GameObject } from "../../../Object/GameObject/class"
 import { UnityEngine_Vector2_Impl as Vector2 } from "../../../ValueType/Vector2/class"
 import { UnityEngine_Vector3_Impl as Vector3 } from "../../../ValueType/Vector3/class"

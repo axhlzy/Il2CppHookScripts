@@ -1,44 +1,48 @@
+import { UnityEngine_Events_UnityAction_Impl as UnityAction } from "../../../../../../Delegate/MulticastDelegate/UnityAction/class"
 import { UnityEngine_Color_Impl as Color } from "../../../../../../ValueType/Color/class"
 import { UnityEngine_Vector2_Impl as Vector2 } from "../../../../../../ValueType/Vector2/class"
 import { UnityEngine_Vector4_Impl as Vector4 } from "../../../../../../ValueType/Vector4/class"
 import { UnityEngine_Material_Impl as Material } from "../../../../../Material/class"
-import { UnityEngine_RectTransform_Impl as RectTransform } from "../../../../Transform/RectTransform/class"
-import { UnityEngine_Camera_Impl as Camera } from "../../../Camera/class"
+import { UnityEngine_Texture2D_Impl as Texture2D } from "../../../../../Texture/Texture2D/class"
+import { UnityEngine_Texture_Impl as Texture } from "../../../../../Texture/class"
+import { UnityEngine_RectTransform as RectTransform } from "../../../../Transform/RectTransform/class"
+import { UnityEngine_Camera as Camera } from "../../../Camera/class"
 import { UnityEngine_Canvas_Impl as Canvas } from "../../../Canvas/class"
 import { UnityEngine_EventSystems_UIBehaviour_Impl } from "../class"
 
 type UnityEngine_UI_VertexHelper = NativePointer
 type UnityEngine_CanvasRenderer = NativePointer
-type UnityEngine_Events_UnityAction = NativePointer
-type UnityEngine_Texture = NativePointer
-type UnityEngine_UI_CanvasUpdate = NativePointer
 type UnityEngine_Rect = NativePointer
-
-type UnityEngine_Texture2D = NativePointer
 type UnityEngine_Mesh = NativePointer
+
+type UnityEngine_Texture = Texture
+type UnityEngine_Events_UnityAction = UnityAction
+type UnityEngine_UI_CanvasUpdate = NativePointer
+type UnityEngine_Texture2D = Texture2D
 
 class UnityEngine_UI_Graphic_Impl extends UnityEngine_EventSystems_UIBehaviour_Impl {
 
     s_DefaultUI: Material = new Material(lfv(this.handle, "s_DefaultUI"))
-    s_WhiteTexture: UnityEngine_Texture2D = lfv(this.handle, "s_WhiteTexture") as unknown as UnityEngine_Texture2D
+    s_WhiteTexture: UnityEngine_Texture2D = new Texture2D(lfv(this.handle, "s_WhiteTexture"))
     m_Material: Material = new Material(lfv(this.handle, "m_Material"))
     m_Color: Color = new Color(lfv(this.handle, "m_Color"))
-    m_SkipLayoutUpdate: boolean = !lfv(this.handle, "m_SkipLayoutUpdate").isNull()
-    m_SkipMaterialUpdate: boolean = !lfv(this.handle, "m_SkipMaterialUpdate").isNull()
-    m_RaycastTarget: boolean = !lfv(this.handle, "m_RaycastTarget").isNull()
+    m_SkipLayoutUpdate: boolean = readBoolean(lfv(this.handle, "m_SkipLayoutUpdate"))
+    m_SkipMaterialUpdate: boolean = readBoolean(lfv(this.handle, "m_SkipMaterialUpdate"))
+    m_RaycastTarget: boolean = readBoolean(lfv(this.handle, "m_RaycastTarget"))
     m_RaycastPadding: Vector4 = lfv(this.handle, "m_RaycastPadding") as unknown as Vector4
     m_RectTransform: RectTransform = new RectTransform(lfv(this.handle, "m_RectTransform"))
     m_CanvasRenderer: UnityEngine_CanvasRenderer = lfv(this.handle, "m_CanvasRenderer") as unknown as UnityEngine_CanvasRenderer
     m_Canvas: Canvas = new Canvas(lfv(this.handle, "m_Canvas"))
-    m_VertsDirty: boolean = !lfv(this.handle, "m_VertsDirty").isNull()
-    m_MaterialDirty: boolean = !lfv(this.handle, "m_MaterialDirty").isNull()
-    m_OnDirtyLayoutCallback: UnityEngine_Events_UnityAction = lfv(this.handle, "m_OnDirtyLayoutCallback") as unknown as UnityEngine_Events_UnityAction
-    m_OnDirtyVertsCallback: UnityEngine_Events_UnityAction = lfv(this.handle, "m_OnDirtyVertsCallback") as unknown as UnityEngine_Events_UnityAction
-    m_OnDirtyMaterialCallback: UnityEngine_Events_UnityAction = lfv(this.handle, "m_OnDirtyMaterialCallback") as unknown as UnityEngine_Events_UnityAction
+    m_VertsDirty: boolean = readBoolean(lfv(this.handle, "m_VertsDirty"))
+    m_MaterialDirty: boolean = readBoolean(lfv(this.handle, "m_MaterialDirty"))
+    m_OnDirtyLayoutCallback: UnityEngine_Events_UnityAction = new UnityAction(lfv(this.handle, "m_OnDirtyLayoutCallback"))
+    m_OnDirtyVertsCallback: UnityEngine_Events_UnityAction = new UnityAction(lfv(this.handle, "m_OnDirtyVertsCallback"))
+    m_OnDirtyMaterialCallback: UnityEngine_Events_UnityAction = new UnityAction(lfv(this.handle, "m_OnDirtyMaterialCallback"))
     s_Mesh: UnityEngine_Mesh = lfv(this.handle, "s_Mesh") as unknown as UnityEngine_Mesh
     s_VertexHelper: UnityEngine_UI_VertexHelper = lfv(this.handle, "s_VertexHelper") as unknown as UnityEngine_UI_VertexHelper
     m_CachedMesh: UnityEngine_Mesh = lfv(this.handle, "m_CachedMesh") as unknown as UnityEngine_Mesh
-    m_CachedUvs: Vector2[] = lfv(this.handle, "m_CachedUvs") as unknown as Vector2[]
+    // m_CachedUvs: Vector2[] = lfv(this.handle, "m_CachedUvs") as unknown as Vector2[]
+    m_CachedUvs: NativePointer = lfv(this.handle, "m_CachedUvs")
 
     get_defaultGraphicMaterial(): Material {
         return Il2Cpp.Api.Graphic._get_defaultGraphicMaterial()

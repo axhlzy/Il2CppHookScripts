@@ -43,6 +43,7 @@ $ frida -FU -l ../_Ufunc.js
      * [showAsm : 基于frida.Instruction结合unity函数信息的反汇编](#showAsm)
      * [showMethodInfo / MethodToShow : 查看MethodInfo信息（后者多用在findMethod）](#MethodInfo)
      * [showTypeParent : 查看上级类型，参数为实例指针](#showTypeParent)
+     * [showComponents : 查看挂载的脚本](#showComponents)
   2. 断点函数
      * [B : breakPoint 断点函数类 / b : 断点指定的一个函数](#bp)
      * [n/nn : nop 指定的一个函数](#np)
@@ -137,6 +138,10 @@ $ frida -FU -l ../_Ufunc.js
 - **showTypeParent 查看父级类型** <a id="showTypeParent"></a>
     
     ![showTypeParent](img/showTypeParent.png)
+
+- **showComponents 查看挂载在对象上的脚本，建议配合使用lfs，OnPointerClick、printh也有调用** <a id="showComponents"></a>
+    
+    ![showComponents](img/showComponents.png)
 
 - **B breakPoint 断点函数类** <a id="bp"></a>
   - B ('ClassName') === B(findClass('ClassName')),不会重复添加已添加的Method,不带参数即断点所有常用的方法
@@ -282,6 +287,7 @@ $ frida -FU -l ../_Ufunc.js
     4. il2cpp: couldn't determine the Unity version, please specify it manually 参见 [这里](https://github.com/axhlzy/Il2CppHookScripts/blob/232659d71455d213ee8b0db6a91699ae5b057638/Il2cppHook/agent/index.ts#L188)
 - 建议使用真机,尽量不在x86模拟器中使用,x86中找不到对应so,其次frida对于模拟器的兼容性也并不好
 - 文档写的不够详细，所以大伙想看那些导出函数建议直接搜索 `globalThis.` 即可
+- 数据类型这一块还是很混 `ValueType` ，后续会慢慢优化
 
 todo：
 - 从游戏对象获取对象下挂载的脚本

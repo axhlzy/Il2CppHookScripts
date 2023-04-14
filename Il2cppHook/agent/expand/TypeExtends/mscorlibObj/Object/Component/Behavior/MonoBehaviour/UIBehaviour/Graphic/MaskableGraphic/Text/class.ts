@@ -1,11 +1,13 @@
 import { UnityEngine_UI_FontData_Impl } from "../../../../../../../../FontData/class"
 import { UnityEngine_Vector2_Impl as Vector2 } from "../../../../../../../../ValueType/Vector2/class"
+import { UnityEngine_Material_Impl } from "../../../../../../../Material/class"
+import { UnityEngine_Texture_Impl } from "../../../../../../../Texture/class"
 import { UnityEngine_UI_MaskableGraphic_Impl as MaskableGraphic } from "../class"
 
 type UnityEngine_TextGenerator = NativePointer
-type UnityEngine_Material = NativePointer
+type UnityEngine_Material = UnityEngine_Material_Impl
 type UnityEngine_UIVertex = NativePointer
-type UnityEngine_Texture = NativePointer
+type UnityEngine_Texture = UnityEngine_Texture_Impl
 type UnityEngine_Font = NativePointer
 type UnityEngine_TextAnchor = NativePointer
 type UnityEngine_HorizontalWrapMode = NativePointer
@@ -16,7 +18,7 @@ type UnityEngine_UI_VertexHelper = NativePointer
 
 class UnityEngine_UI_Text_Impl extends MaskableGraphic {
 
-    m_FontData: UnityEngine_UI_FontData_Impl = lfv(this.handle, "m_FontData") as unknown as UnityEngine_UI_FontData_Impl
+    m_FontData: UnityEngine_UI_FontData_Impl = new UnityEngine_UI_FontData_Impl(lfv(this.handle, "m_FontData"))
     m_Text: string = readU16(lfv(this.handle, "m_Text"))
     m_TextCache: UnityEngine_TextGenerator = lfv(this.handle, "m_TextCache") as unknown as UnityEngine_TextGenerator
     m_TextCacheForLayout: UnityEngine_TextGenerator = lfv(this.handle, "m_TextCacheForLayout") as unknown as UnityEngine_TextGenerator
@@ -24,7 +26,7 @@ class UnityEngine_UI_Text_Impl extends MaskableGraphic {
     m_DisableFontTextureRebuiltCallback: boolean = lfv(this.handle, "m_DisableFontTextureRebuiltCallback") as unknown as boolean
     m_TempVerts: UnityEngine_UIVertex[] = lfv(this.handle, "m_TempVerts") as unknown as UnityEngine_UIVertex[]
 
-    _ctor(): void {
+    _ctor_UnityEngine_UI_Text(): void {
         return Il2Cpp.Api.Text.__ctor(this.handle)
     }
 
@@ -228,4 +230,4 @@ declare global {
     }
 }
 
-export { UnityEngine_UI_Text_Impl }
+export { UnityEngine_UI_Text_Impl as Text }

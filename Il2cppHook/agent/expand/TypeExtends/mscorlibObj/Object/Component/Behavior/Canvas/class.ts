@@ -1,6 +1,6 @@
 import { UnityEngine_Material_Impl as Material } from "../../../Material/class"
-import { UnityEngine_Camera_Impl as Camera } from "../Camera/class"
 import { UnityEngine_Behaviour_Impl as Behaviour } from "../class"
+import { UnityEngine_Camera as Camera } from "../Camera/class"
 
 type UnityEngine_Canvas_WillRenderCanvases = NativePointer
 type UnityEngine_RenderMode = NativePointer
@@ -8,10 +8,12 @@ type UnityEngine_AdditionalCanvasShaderChannels = NativePointer
 
 class UnityEngine_Canvas_Impl extends Behaviour {
 
-    willRenderCanvases: UnityEngine_Canvas_WillRenderCanvases = lfv(this.handle, "willRenderCanvases") as unknown as UnityEngine_Canvas_WillRenderCanvases
+    willRenderCanvases: UnityEngine_Canvas_WillRenderCanvases = lfv(this.handle, "willRenderCanvases")
+
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
     }
+
     static add_willRenderCanvases(value: UnityEngine_Canvas_WillRenderCanvases): void {
         return Il2Cpp.Api.Canvas._add_willRenderCanvases(value)
     }

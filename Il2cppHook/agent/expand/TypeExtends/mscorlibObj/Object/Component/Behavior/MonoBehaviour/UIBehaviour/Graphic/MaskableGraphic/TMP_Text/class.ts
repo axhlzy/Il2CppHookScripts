@@ -1,13 +1,13 @@
-import { UnityEngine_Color_Impl as Color } from "../../../../../../../../ValueType/Color/class"
-import { UnityEngine_Color32_Impl as Color32 } from "../../../../../../../../ValueType/Color32/class"
+import { UnityEngine_MeshRenderer_Impl as UnityEngine_MeshRenderer } from "../../../../../../Renderer/MeshRenderer/class"
+import { UnityEngine_RectTransform as RectTransform } from "../../../../../../Transform/RectTransform/class"
 import { UnityEngine_Matrix4x4_Impl as Matrix4x4 } from "../../../../../../../../ValueType/Matrix4x4/class"
+import { UnityEngine_Color32_Impl as Color32 } from "../../../../../../../../ValueType/Color32/class"
 import { UnityEngine_Vector2_Impl as Vector2 } from "../../../../../../../../ValueType/Vector2/class"
 import { UnityEngine_Vector3_Impl as Vector3 } from "../../../../../../../../ValueType/Vector3/class"
 import { UnityEngine_Vector4_Impl as Vector4 } from "../../../../../../../../ValueType/Vector4/class"
+import { UnityEngine_Color_Impl as Color } from "../../../../../../../../ValueType/Color/class"
 import { UnityEngine_Material_Impl as Material } from "../../../../../../../Material/class"
-import { UnityEngine_MeshRenderer_Impl as UnityEngine_MeshRenderer } from "../../../../../../Renderer/MeshRenderer/class"
 import { UnityEngine_Transform_Impl as Transform } from "../../../../../../Transform/class"
-import { UnityEngine_RectTransform_Impl as RectTransform } from "../../../../../../Transform/RectTransform/class"
 import { UnityEngine_UI_MaskableGraphic_Impl as MaskableGraphic } from "../class"
 
 type TMPro_TMP_FontAsset = NativePointer

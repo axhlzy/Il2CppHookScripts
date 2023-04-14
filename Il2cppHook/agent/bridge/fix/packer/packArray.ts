@@ -1,3 +1,5 @@
+import { Text } from "../../../expand/TypeExtends/mscorlibObj/Object/Component/Behavior/MonoBehaviour/UIBehaviour/Graphic/MaskableGraphic/Text/class"
+
 /**
  * PackArray 用于打包一个 array, 解析 array 的值
  */
@@ -50,9 +52,20 @@ export class PackArray {
         return this.Obj.method("System.Collections.Generic.IList`1.RemoveAt").invoke(index) as number
     }
 
-    forEach(callback: (item: Il2Cpp.Object, index: number, name: string) => void): void {
+    forEach(callback: (item: Il2Cpp.Object, index: number) => void): void {
         if (this.length == 0) return
-        for (let i = 0; i < this.get_Count(); i++) callback(this.get_Item(i), i, this.get_Item(i).toString())
+        for (let i = 0; i < this.get_Count(); i++) callback(this.get_Item(i), i)
+    }
+
+    // 这个函数零时这么用着  后续应该学习C#的泛型写法 往下层的调用函数也不能在使用 getComponents，应该是指定某一种类型的脚本来获取
+    // 应该存在一个 ts 类型到 il2cpp.runtimetype 的类型转换函数
+    // 这里的转换函数可以考虑使用GC.Choose拿到一堆实例，然后遍历实例父类runtimeType放进set，这样大概率需要的runtimeType都能拿到了
+    getComponent<T extends Il2Cpp.Object>(value: NativePointer | Il2Cpp.GameObject | Il2Cpp.Component): T | undefined {
+        let result: T | undefined
+        listScripts(value)?.forEach((item: Il2Cpp.Object) => {
+            if (item.class.name == "Text") result = new Text(item.handle) as unknown as T
+        })
+        return result
     }
 
     toArray(): Il2Cpp.Object[] {

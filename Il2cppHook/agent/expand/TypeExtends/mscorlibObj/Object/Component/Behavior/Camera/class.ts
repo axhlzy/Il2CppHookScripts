@@ -1,7 +1,7 @@
 import { UnityEngine_Color_Impl as Color } from "../../../../ValueType/Color/class"
 import { UnityEngine_Matrix4x4_Impl as Matrix4x4 } from "../../../../ValueType/Matrix4x4/class"
 import { UnityEngine_Ray_Impl as Ray } from "../../../../ValueType/Ray/class"
-import { UnityEngine_Rect_Impl as Rect } from "../../../../ValueType/Rect/class"
+import { UnityEngine_Rect as Rect } from "../../../../ValueType/Rect/class"
 import { UnityEngine_Vector2_Impl as Vector2 } from "../../../../ValueType/Vector2/class"
 import { UnityEngine_Vector3_Impl as Vector3 } from "../../../../ValueType/Vector3/class"
 import { UnityEngine_Behaviour_Impl as Behaviour } from "../class"
@@ -326,4 +326,4 @@ declare global {
     }
 }
 
-export { UnityEngine_Camera_Impl }
+export { UnityEngine_Camera_Impl as UnityEngine_Camera }
