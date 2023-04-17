@@ -4,6 +4,7 @@ import { UnityEngine_Events_UnityAction_Impl as UnityAction } from "../../../../
 import { PackList } from "../../../../../../../../../bridge/fix/packer/packList"
 import { GameObjectImpl as GameObject } from "../../../../../GameObject/class"
 import { formartClass as FM } from "../../../../../../../../../utils/formart"
+import { checkExtends } from "../../../../../../ValueType/exports"
 import { Button } from "./class"
 
 /**
@@ -143,9 +144,16 @@ export const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
 
     function innerFunction(buttonInstance: NativePointer, eventData: NativePointer) {
         let button: Button = new Button(buttonInstance)
-        let currentGameobj: GameObject = new Il2Cpp.Component(buttonInstance).gameobject
         let pointerEventData: PointerEventData = new PointerEventData(eventData)
-        let buttonOnclickEvent: ButtonClickedEvent = button.get_onClick()
+        let currentGameobj: GameObject = button.gameobject
+        let buttonOnclickEvent: ButtonClickedEvent
+        try {
+            buttonOnclickEvent = button.get_onClick()
+        } catch (error) {
+            // Custom 函数可能导致实例并不是 Button (ps：Selectable 基本等价于Button)
+            if (!checkExtends(button, "Button")) throw new Error("Instance is not a subclass of Il2cpp.Button")
+            throw error
+        }
         LOGD(`\n[*] ${pointerEventData.handle} ---> ${currentGameobj.get_name()} { G:${currentGameobj.handle} | T:${currentGameobj.get_transform().handle} }`)
 
         // m_ExecutingCalls : List<BaseInvokableCall>
@@ -197,7 +205,6 @@ const OnClickScript = (mPtr: NativePointer = ptr(0)) => {
             if (index == 0) newLine()
             let itemStr: string = item.toString()
             LOGW(`${FM.alignStr(`[${++index}]`, 6)} ${item.handle} ${itemStr}`)
-
         })
     }
 }

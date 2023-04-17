@@ -1,25 +1,18 @@
 import { mscorlib_System_Object_impl } from "../class"
 
-const getTypeInner = (mPtr: NativePointer): mscorlib.Type => {
-    if (typeof mPtr == "number") mPtr = ptr(mPtr)
-    return new mscorlib_System_Object_impl(mPtr).getType()
-}
+const getTypeInner = (mPtr: NativePointer): mscorlib.Type => new mscorlib_System_Object_impl(checkCmdInput(mPtr)).getType()
 
-const getTypeNameInner = (mPtr: NativePointer): string => {
-    return getTypeInner(mPtr).name;
-}
+const getTypeNameInner = (mPtr: NativePointer): string => getTypeInner(mPtr).name
 
 export { getTypeNameInner as getTypeName }
 
 const showTypeModuleByIns = (mPtr: NativePointer): void => {
-    mPtr = checkCmdInput(mPtr)
-    const RuntimeType: mscorlib.RuntimeType = getType(mPtr).caseToRuntimeType
+    const RuntimeType: mscorlib.RuntimeType = getType(checkCmdInput(mPtr)).caseToRuntimeType
     lfs(RuntimeType.get_Module().handle, findClass("Module"))
 }
 
 const showTypeModuleByType = (mPtr: NativePointer): void => {
-    mPtr = checkCmdInput(mPtr)
-    const RuntimeType: mscorlib.RuntimeType = new mscorlib.Type(mPtr).caseToRuntimeType
+    const RuntimeType: mscorlib.RuntimeType = new mscorlib.Type(checkCmdInput(mPtr)).caseToRuntimeType
     LOGJSON(RuntimeType.get_Module())
 }
 
@@ -44,8 +37,9 @@ const getTypeParentList = (mPtr: NativePointer, needRetArr: boolean = false): Ar
     }
 }
 
-export function checkExtends(local_mPtr: NativePointer, typeName: string = "Component"): boolean {
-    return getTypeParent(local_mPtr).map((type: mscorlib.Type) => type.name).some((name: string) => name == typeName)
+export function checkExtends(mPtr: NativePointer | Il2Cpp.Object, typeName: string = "Component"): boolean {
+    if (mPtr instanceof Il2Cpp.Object) mPtr = mPtr.handle
+    return getTypeParent(mPtr).map((type: mscorlib.Type) => type.name).some((name: string) => name == typeName)
 }
 
 declare global {
