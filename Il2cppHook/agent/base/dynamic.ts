@@ -55,7 +55,7 @@ const paskMethod = (method: Il2Cpp.Method) => {
 }
 
 export const showParentClass = (handle: NativePointer | Il2Cpp.Class) => {
-    let clazz: Il2Cpp.Class | null = handle instanceof Il2Cpp.Class ? handle : new Il2Cpp.Class(handle)
+    let clazz: Il2Cpp.Class | null = handle instanceof Il2Cpp.Class ? handle : new Il2Cpp.Class(checkCmdInput(handle))
     let display: string = ""
     while (clazz != null && !clazz.isNull()) {
         display += `${clazz.name} (${clazz.handle}) -> `

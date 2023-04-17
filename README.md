@@ -270,6 +270,7 @@ $ frida -FU -l ../_Ufunc.js
     - NativePointer转换为Class的实现 (把ptr当成class来解析)
     - 包含一些（静态）字段，（静态）方法，以及方便调用的一些函数封装
     - this.handle 存贮当前 ptr，可以是 实例指针也可以是类指针 （多数情况使用实例指针）
+    - 每一个class.ts都可以写上自己的toString方法以便于直接解析该类
   - export.ts
     - 主要用作拓展类的一些导出方法
 - TODO 按照这个文件结构可以拓展到整个UnityAPI
