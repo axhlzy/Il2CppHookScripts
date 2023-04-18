@@ -129,11 +129,11 @@ const cacheMethods = (withLog: boolean = true) => {
 
 const findClasses = (filterClassName: string): void => {
     let index: number = 0
-    let maxNameLen = HookerBase._list_classes
+    let localClasses: Il2Cpp.Class[] = HookerBase._list_classes
         .filter((item: Il2Cpp.Class) => item.name.toLocaleLowerCase().indexOf(filterClassName.toLocaleLowerCase()) != -1)
+    let maxNameLen: number = localClasses
         .reduce((a: number, b: Il2Cpp.Class) => a > b.name.length ? a : b.name.length, 0) + 1
-    HookerBase._list_classes
-        .filter((item: Il2Cpp.Class) => item.name.toLocaleLowerCase().indexOf(filterClassName.toLocaleLowerCase()) != -1)
+    localClasses
         .sort((a: Il2Cpp.Class, b: Il2Cpp.Class) => (b.isAbstract ? -1 : 1) - (a.isAbstract ? -1 : 1))
         .sort((a: Il2Cpp.Class, b: Il2Cpp.Class) => (b.isEnum ? 1 : -1) - (a.isEnum ? 1 : -1))
         .forEach((item: Il2Cpp.Class) => {
