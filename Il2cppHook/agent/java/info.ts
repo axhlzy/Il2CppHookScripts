@@ -134,16 +134,12 @@ const findClasses = (filterClassName: string): void => {
         .sort((a: Il2Cpp.Class, b: Il2Cpp.Class) => (b.isEnum ? 1 : -1) - (a.isEnum ? 1 : -1))
         .forEach((item: Il2Cpp.Class) => {
             if (index == 0) newLine(1)
-            // M:${item.methods.length}
             let M = FM.alignStr(`M:${item.methods.length}`, 6)
             let F = FM.alignStr(`F:${item.fields.length}`, 6)
             let E = FM.alignStr(`E:${item.isEnum}`, 8)
             let A = FM.alignStr(`A:${item.isAbstract}`, 8)
-            if (item.isAbstract || item.isEnum) {
-                LOGZ(`${FM.alignStr(`[${++index}]`, 6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${item.name} <${item.namespace}>`)
-            } else {
-                LOGD(`${FM.alignStr(`[${++index}]`, 6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${item.name} <${item.namespace}>`)
-            }
+            let N = `${item.name} <${item.namespace}>`
+            LOG(`${FM.alignStr(`[${++index}]`, 6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${N}`, (item.isAbstract || item.isEnum) ? LogColor.C90 : LogColor.C36)
         })
     newLine(1)
 }
