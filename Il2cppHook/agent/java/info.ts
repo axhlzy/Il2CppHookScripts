@@ -1,12 +1,13 @@
-import { Breaker } from "../base/breaker"
-import { HookerBase } from "../base/base"
-import { distance } from "fastest-levenshtein"
-import { formartClass as FM } from "../utils/formart"
-import { Time } from "../expand/TypeExtends/mscorlibObj/Times/export"
-import { getMethodDesFromMethodInfo as DesMethodStr } from "../bridge/fix/il2cppM"
 import { Application } from "../expand/TypeExtends/mscorlibObj/Application/export"
 import { Environment } from "../expand/TypeExtends/mscorlibObj/Environment/export"
 import { SystemInfo } from "../expand/TypeExtends/mscorlibObj/SystemInfo/export"
+import { getMethodDesFromMethodInfo as DM } from "../bridge/fix/il2cppM"
+import { Time } from "../expand/TypeExtends/mscorlibObj/Times/export"
+import { getTextFormart as TF } from "../utils/logger"
+import { formartClass as FM } from "../utils/formart"
+import { distance } from "fastest-levenshtein"
+import { HookerBase } from "../base/base"
+import { Breaker } from "../base/breaker"
 
 /**
  * 获取APK的一些基本信息
@@ -128,6 +129,9 @@ const cacheMethods = (withLog: boolean = true) => {
 
 const findClasses = (filterClassName: string): void => {
     let index: number = 0
+    let maxNameLen = HookerBase._list_classes
+        .filter((item: Il2Cpp.Class) => item.name.toLocaleLowerCase().indexOf(filterClassName.toLocaleLowerCase()) != -1)
+        .reduce((a: number, b: Il2Cpp.Class) => a > b.name.length ? a : b.name.length, 0) + 1
     HookerBase._list_classes
         .filter((item: Il2Cpp.Class) => item.name.toLocaleLowerCase().indexOf(filterClassName.toLocaleLowerCase()) != -1)
         .sort((a: Il2Cpp.Class, b: Il2Cpp.Class) => (b.isAbstract ? -1 : 1) - (a.isAbstract ? -1 : 1))
@@ -138,7 +142,7 @@ const findClasses = (filterClassName: string): void => {
             let F = FM.alignStr(`F:${item.fields.length}`, 6)
             let E = FM.alignStr(`E:${item.isEnum}`, 8)
             let A = FM.alignStr(`A:${item.isAbstract}`, 8)
-            let N = `${item.name} <${item.namespace}>`
+            let N = `${TF(FM.alignStr(item.name, maxNameLen), LogColor.C93)} ${TF(`<${item.namespace}>`, LogColor.C33)}`
             LOG(`${FM.alignStr(`[${++index}]`, 6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${N}`, (item.isAbstract || item.isEnum) ? LogColor.C90 : LogColor.C36)
         })
     newLine(1)
@@ -236,7 +240,7 @@ const printExp = (filter: string = "", findAll: boolean = true, formartMaxLine: 
         let index = FM.alignStr(`[${++countIndex}]`, 6)
         let virAddr = FM.alignStr(item.handle, p_size * 3) + (item.virtualAddress.isNull() ? "" : ` --->  ${FM.alignStr(item.relativeVirtualAddress, 12)}`)
         let className = FM.alignStr(item.class.name, 20)
-        let result = `${index} ${virAddr}  |  ${className} @ ${item.class.handle} |  ${DesMethodStr(item)}`
+        let result = `${index} ${virAddr}  |  ${className} @ ${item.class.handle} |  ${DM(item)}`
         if (formartMaxLine != -1 && formartMaxLine > 10) result = FM.alignStr(result, formartMaxLine)
         if (!item.virtualAddress.isNull()) {
             arrStrResult.push(result)
@@ -275,7 +279,7 @@ const AddressToMethodToString = (mPtr: NativePointer, simple: boolean = true): v
     let line2 = `namespace\t${NameSpace.trim().length == 0 ? FM.centerStr("---", maxLen) : NameSpace} @ ${method.class.handle}`
     let line3 = `class\t\t${MethodName} @ ${method.class.handle}`
     let line4 = `methodInfo\t${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress}`
-    let line5 = `methodName\t${DesMethodStr(method)}`
+    let line5 = `methodName\t${DM(method)}`
     let maxDispLen = Math.max(line1.length, line2.length, line3.length, line4.length, line5.length) + 4
     LOGW(getLine(maxDispLen))
     LOGD(`${line1}\n${line2}\n${line3}\n${line4}\n${line5}`)
