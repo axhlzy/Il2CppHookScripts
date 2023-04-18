@@ -140,9 +140,9 @@ const findClasses = (filterClassName: string): void => {
             let E = FM.alignStr(`E:${item.isEnum}`, 8)
             let A = FM.alignStr(`A:${item.isAbstract}`, 8)
             if (item.isAbstract || item.isEnum) {
-                LOGZ(`${FM.alignStr(`[${++index}]`, 6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${item.name}`)
+                LOGZ(`${FM.alignStr(`[${++index}]`, 6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${item.name} <${item.namespace}>`)
             } else {
-                LOGD(`${FM.alignStr(`[${++index}]`, 6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${item.name}`)
+                LOGD(`${FM.alignStr(`[${++index}]`, 6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${item.name} <${item.namespace}>`)
             }
         })
     newLine(1)
