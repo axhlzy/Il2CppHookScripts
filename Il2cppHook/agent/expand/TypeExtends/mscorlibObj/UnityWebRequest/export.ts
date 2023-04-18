@@ -1,13 +1,12 @@
 export { }
 
-const UnityWebRequest = (): void => BM("UnityWebRequest")
-
 const B_network = () => {
     Il2Cpp.perform(() => {
+        D()
         B("HttpWebRequest")
         B("UnityWebRequest")
         B("WWW")
-        UnityWebRequest()
+        BM("UnityWebRequest")
     })
 }
 
