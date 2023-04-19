@@ -145,6 +145,6 @@ globalThis.getLine = Logger.getLine
 globalThis.printLogColors = Logger.printLogColors
 globalThis.newLine = (lines: number = 1) => Logger.LOG(getLine(lines, "\n"))
 globalThis.callOnce = Logger.callOnce
-globalThis.TFM = Logger.getTextFormart
+globalThis.TFM = Logger.getTextFormart // 这个本不应该导出的，但是为了代码写的简短一些
 globalThis.LogColor = LogColor
 // globalThis.log = logFormart // alias log <= logFormart

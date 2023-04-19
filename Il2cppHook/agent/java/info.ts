@@ -141,7 +141,8 @@ const findClasses = (filterClassName: string): void => {
             let F = FM.alignStr(`F:${item.fields.length}`, 6)
             let E = FM.alignStr(`E:${item.isEnum}`, 8)
             let A = FM.alignStr(`A:${item.isAbstract}`, 8)
-            let N = `${TFM(FM.alignStr(item.name, maxNameLen), LogColor.C93)} ${TFM(`<${item.namespace}>`, LogColor.C33)}`
+            // AssemblyName ${class.assemblyName} / NameSpace ${item.namespace}.${class.name}
+            let N = `${TFM(FM.alignStr(item.name, maxNameLen), LogColor.C93)} ${TFM(`< ${item.namespace} @ ${item.assemblyName} >`, LogColor.C33)}`
             LOG(`${FM.alignStr(`[${++index}]`, 6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${N}`, (item.isAbstract || item.isEnum) ? LogColor.C90 : LogColor.C36)
         })
     newLine(1)
