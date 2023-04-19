@@ -285,7 +285,7 @@ $ frida -FU -l ../_Ufunc.js
     1. 确认手机端server与电脑端frida版本一致，如果你的版本不一致概率性出问题
     2. 已确认高版本的 frida-tools 在使用老版 Ufunc.js （ts版不受影响）会出问题，所以建议直接使用 10.5.4 版本
     3. 由于ts分支版本的 Ufunc.js 是基于frida-il2cpp-bridge 的，所以有一些新版Unity它本身不支持的，自然也会影响脚本的使用，也可以尝试使用老版本（master分支）下的[Ufunc.js](https://github.com/axhlzy/Il2CppHookScripts/blob/master/Il2cppHook/Ufun.js)
-    4. il2cpp: couldn't determine the Unity version, please specify it manually 参见 [这里](https://github.com/axhlzy/Il2CppHookScripts/blob/232659d71455d213ee8b0db6a91699ae5b057638/Il2cppHook/agent/index.ts#L188)
+    4. il2cpp: couldn't determine the Unity version, please specify it manually 参见 [这里](https://github.com/axhlzy/Il2CppHookScripts/blob/ts/Il2cppHook/agent/index.ts#L217)
 - 建议使用真机,尽量不在x86模拟器中使用,x86中找不到对应so,其次frida对于模拟器的兼容性也并不好
 - 文档写的不够详细，所以大伙想看那些导出函数建议直接搜索 `globalThis.` 即可
 - 数据类型这一块还是很混 `ValueType` ，后续会慢慢优化
