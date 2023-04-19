@@ -327,7 +327,7 @@ globalThis.breakWithArgs = Breaker.breakWithArgs
 globalThis.breakWithStack = Breaker.breakWithStack
 globalThis.breakInline = Breaker.breakInline
 globalThis.printDesertedMethods = Breaker.printDesertedMethods // 展示 已经被取消hook 或者 不显示的部分函数
-globalThis.bt = (mPtr: NativePointer) => b(AddressToMethod(mPtr))
+globalThis.bt = (mPtr: NativePointer | number) => b(AddressToMethod(mPtr))
 globalThis.BN = (namespace: string) => Breaker.addBreakPoint("", namespace) // <- alias B(`NameSpace`)
 globalThis.getPlatform = (): string => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
 globalThis.getPlatformCtx = (ctx: CpuContext): ArmCpuContext | Arm64CpuContext => getPlatform() == "arm" ? ctx as ArmCpuContext : ctx as Arm64CpuContext
@@ -468,7 +468,7 @@ globalThis.getPlatformCtxWithArgV = <T extends CpuContext>(ctx: T, argIndex: num
 
 declare global {
     var b: (mPtr: NativePointer | string | number | Il2Cpp.Method) => void
-    var bt: (mPtr: NativePointer) => void
+    var bt: (mPtr: NativePointer | number) => void
     var h: (filterStr?: string, countLogs?: number, reverse?: boolean, detachAll?: boolean) => void
     var hn: (start?: number, end?: number) => void
     var B: (mPtr: NativePointer | number | string | SpecialClass | Il2Cpp.Class) => void

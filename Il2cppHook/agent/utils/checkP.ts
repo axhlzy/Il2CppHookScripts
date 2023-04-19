@@ -20,7 +20,8 @@ setImmediate(() => {
 })
 
 export const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, _showLog: boolean = false): NativePointer => {
-    if (baseAddress.isNull()) throw new Error("checkPointer: libil2cpp.so not found ! \n please call setBaseAddress first")
+    if (baseAddress.isNull()) baseAddress = Il2Cpp.module.base
+    if (baseAddress) throw new Error("checkPointer: libil2cpp.so not found ! \n please call setBaseAddress first")
     // if (String(value).startsWith("0x") || String(value).startsWith("0X") && String(value).length >= 15)  // 0xb400007096672af0
     //     throw new Error("checkPointer: Error type")
     if (Process.arch == 'arm64' && typeof value === "string" && value.trim().startsWith('0x')) value = Number(value)

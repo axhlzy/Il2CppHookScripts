@@ -1,6 +1,6 @@
+import { UnityEngine_FullScreenMode as FullScreenMode, UnityEngine_ScreenOrientation as ScreenOrientation } from "./enum"
 import { enumNumToName } from "../../../../bridge/fix/enum"
 import { mscorlib_System_Object_impl } from "../class"
-import { UnityEngine_FullScreenMode as FullScreenMode, UnityEngine_ScreenOrientation as ScreenOrientation } from "./enum"
 
 type System_Int32 = number
 type System_Single = number
@@ -11,6 +11,7 @@ class UnityEngine_Screen_Impl extends mscorlib_System_Object_impl {
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
     }
+
     static get_width(): System_Int32 {
         return Il2Cpp.Api.Screen._get_width().toInt32()
     }

@@ -9,22 +9,28 @@ enum breakPointsType {
 export { }
 
 setImmediate(() => {
-    const dlopen = Module.findExportByName(null, "dlopen")
-    const android_dlopen_ext = Module.findExportByName(null, "android_dlopen_ext")
-    const callback: InvocationListenerCallbacks = {
-        onEnter: function (args) {
-            this.path = args[0].readCString()!
-        },
-        onLeave: function () {
-            if (filterDuplicateOBJ(this.path, 1) != -1) {
-                globalThis.soAddr = Module.findBaseAddress(soName)!
-                // Il2Cpp.perform(() => onLoad(this.path))
-                onSoLoad(this.path)
+
+    let localFunction = () => {
+        const dlopen = Module.findExportByName(null, "dlopen")
+        const android_dlopen_ext = Module.findExportByName(null, "android_dlopen_ext")
+        const callback: InvocationListenerCallbacks = {
+            onEnter: function (args) {
+                this.path = args[0].readCString()!
+            },
+            onLeave: function () {
+                if (filterDuplicateOBJ(this.path, 1) != -1) {
+                    globalThis.soAddr = Module.findBaseAddress(soName)!
+                    // Il2Cpp.perform(() => onLoad(this.path))
+                    onSoLoad(this.path)
+                }
             }
         }
+        if (dlopen != null) Interceptor.attach(dlopen, callback)
+        if (android_dlopen_ext != null) Interceptor.attach(android_dlopen_ext, callback)
     }
-    if (dlopen != null) Interceptor.attach(dlopen, callback)
-    if (android_dlopen_ext != null) Interceptor.attach(android_dlopen_ext, callback)
+
+    // localFunction() // frida -U -f xxx -l ../_U_func.js 可能导致崩溃，故不使用
+
 })
 
 const onSoLoad = (soPath: string) => {

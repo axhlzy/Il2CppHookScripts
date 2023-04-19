@@ -127,11 +127,13 @@ const cacheMethods = (withLog: boolean = true) => {
 }
 
 const findClasses = (filterClassName: string): void => {
-    let index: number = 0
-    let localClasses: Il2Cpp.Class[] = HookerBase._list_classes
-        .filter((item: Il2Cpp.Class) => item.name.toLocaleLowerCase().indexOf(filterClassName.toLocaleLowerCase()) != -1)
+    let index: number = 0 // 行计数
+    const maxClassLen: number = 30 // className 最大长度,保持格式，多出部分省略 (new Il2Cpp.Class(ptr(...)).name 获取)
+    const localClasses: Il2Cpp.Class[] = HookerBase._list_classes
+        .filter((item: Il2Cpp.Class) => item.name.toLocaleLowerCase().includes(filterClassName.toLocaleLowerCase()))
     let maxNameLen: number = localClasses
         .reduce((a: number, b: Il2Cpp.Class) => a > b.name.length ? a : b.name.length, 0) + 1
+    maxNameLen = (maxNameLen > maxClassLen ? maxClassLen : maxNameLen) - 1
     localClasses
         .sort((a: Il2Cpp.Class, b: Il2Cpp.Class) => (b.isAbstract ? -1 : 1) - (a.isAbstract ? -1 : 1))
         .sort((a: Il2Cpp.Class, b: Il2Cpp.Class) => (b.isEnum ? 1 : -1) - (a.isEnum ? 1 : -1))
@@ -142,7 +144,7 @@ const findClasses = (filterClassName: string): void => {
             let E = FM.alignStr(`E:${item.isEnum}`, 8)
             let A = FM.alignStr(`A:${item.isAbstract}`, 8)
             // AssemblyName ${class.assemblyName} / NameSpace ${item.namespace}.${class.name}
-            let N = `${TFM(FM.alignStr(item.name, maxNameLen), LogColor.C93)} ${TFM(`< ${item.namespace} @ ${item.assemblyName} >`, LogColor.C33)}`
+            let N = `${TFM(FM.alignStr(item.name, maxNameLen), LogColor.C93)} ${TFM(`< ${item.assemblyName} -> ${item.namespace.length == 0 ? 'NULL' : item.namespace} >`, LogColor.C33)}`
             LOG(`${FM.alignStr(`[${++index}]`, 6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${N}`, (item.isAbstract || item.isEnum) ? LogColor.C90 : LogColor.C36)
         })
     newLine(1)
@@ -250,7 +252,7 @@ const printExp = (filter: string = "", findAll: boolean = true, formartMaxLine: 
     }
 }
 
-const AddressToMethod = (mPtr: NativePointer, withLog: boolean = true): Il2Cpp.Method => {
+const AddressToMethod = (mPtr: NativePointer | number, withLog: boolean = true): Il2Cpp.Method => {
     allMethodsCacheArray.length == 0 ? cacheMethods(withLog) : null
     if (typeof mPtr == "string" && String(mPtr).startsWith("0x")) mPtr = ptr(mPtr)
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
@@ -324,7 +326,7 @@ declare global {
     var showAddressInfo: (mPtr: NativePointer) => void
     var AddressToMethodToString: (mPtr: NativePointer) => void
     var bp: (filterName: string, breakMethodInfo?: boolean) => void
-    var AddressToMethod: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method
+    var AddressToMethod: (mPtr: NativePointer | number, withLog?: boolean) => Il2Cpp.Method
     var AddressToMethodNoException: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method | null
     var findMethods: (filter: string, findAll?: boolean, formartMaxLine?: number, retArr?: boolean) => void | Array<Il2Cpp.Method>
     var findClasses: (filterClassName: string) => void

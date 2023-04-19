@@ -1,4 +1,4 @@
-import { formartClass as FM} from "../utils/formart"
+import { formartClass as FM } from "../utils/formart"
 
 export { }
 
@@ -331,7 +331,7 @@ globalThis.listModule = (moduleName: string, printItems: number = 5) => {
             .forEach((item: RangeDetails) => {
                 LOGZ(`\t\t${item.protection}\t${item.base} - ${item.base.add(item.size)} | ${FM.alignStr(String(ptr(item.size)), p_size + 8)} <- ${item.size}`)
             })
-        LOG("")
+        newLine()
     }
 
     let imp = md.enumerateImports()
@@ -441,7 +441,7 @@ globalThis.findImport = (moduleName: string = "libc.so", importName: string = ""
         let impMdBase = Process.findModuleByName(imp!.module!)?.base
         LOGZ(`\t${imp.module == undefined ? "" : (imp.module + " ( " + impMdBase + " ) ")} \t ${imp.slot == undefined ? "" : imp.slot}`)
     })
-    LOG("")
+    newLine()
 }
 
 const getFileLenth = (filePath: string): number => {
@@ -468,7 +468,7 @@ globalThis.StalkerTraceEvent = (mPtr: NativePointer, range: NativePointer[] | un
         }
     }
     A(mPtr, (args, ctx, passValue) => {
-        LOG("")
+        newLine()
         passValue.set("len", FM.printTitileA(`Enter ---> arg0:${args[0]}  arg1:${args[1]}  arg2:${args[2]}  arg3:${args[3]} | ${Process.getCurrentThreadId()}`, LogColor.YELLOW))
         stalkerEnter(Process.getCurrentThreadId())
     }, (ret, ctx, passValue) => {
@@ -523,7 +523,7 @@ globalThis.StalkerTracePath = (mPtr: NativePointer, range: NativePointer[] | und
         }
     }
     A(mPtr, (args, ctx, passValue) => {
-        LOG("")
+        newLine()
         passValue.set("len", FM.printTitileA(`Enter ---> arg0:${args[0]}  arg1:${args[1]}  arg2:${args[2]}  arg3:${args[3]} | ${Process.getCurrentThreadId()}`, LogColor.YELLOW))
         stalkerEnter(Process.getCurrentThreadId())
     }, (ret, ctx, passValue) => {

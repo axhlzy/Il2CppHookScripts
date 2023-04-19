@@ -1,4 +1,5 @@
 import { checkCmdInput } from "../../utils/checkP"
+import { PassType } from "../../utils/common"
 
 /**
  * 参数值的修改
@@ -7,20 +8,16 @@ import { checkCmdInput } from "../../utils/checkP"
  * @param index 修改第 ${index} 个,默认 -1 ： 修改返回值
  */
 export let setFunctionValue = (mPtr: NativePointer, retValue: NativePointer = ptr(0), index: number = -1) => {
-    let srcPtr = mPtr
-    retValue = checkCmdInput(retValue)
-    Interceptor.attach(checkPointer(checkCmdInput(mPtr)), {
-        onEnter: function (args) {
-            if (index != -1) {
-                args[index] = retValue
-                LOGW(`setFunctionValue: Modify index: ${index} value: ${retValue}`)
-            }
-        },
-        onLeave: (retval) => {
-            if (index == -1) {
-                LOGW(`setFunctionValue | ${ptr(srcPtr as unknown as number)} | ret => { ${retval} -> ${retValue} } `)
-                retval.replace(retValue)
-            }
+    let srcPtr: NativePointer = ptr(mPtr as unknown as number)
+    A(checkCmdInput(mPtr), (args: InvocationArguments, _ctx: CpuContext, _passValue: Map<PassType, any>) => {
+        if (index != -1) {
+            args[index] = retValue
+            LOGW(`setFunctionValue: Modify index: ${index} value: ${retValue}`)
+        }
+    }, (retval: InvocationReturnValue) => {
+        if (index == -1) {
+            LOGW(`setFunctionValue | ${srcPtr} | ret => { ${retval} -> ${retValue} } `)
+            retval.replace(retValue)
         }
     })
 }

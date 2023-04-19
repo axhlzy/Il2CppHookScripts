@@ -129,7 +129,7 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
         try {
             return <SystemLanguage>Il2Cpp.Api.Application._get_platform()
         } catch (error) {
-            return -1
+            return SystemLanguage.Unknown
         }
     }
 
@@ -138,7 +138,7 @@ class UnityEngine_Application_impl extends mscorlib_System_Type_impl {
             return enumNumToName(UnityEngine_Application_impl.systemLanguage, 'SystemLanguage')
         } catch (error) {
             return "Function : systemLanguage not found"
-        }        
+        }
     }
 
     static CallLowMemory(): void {
