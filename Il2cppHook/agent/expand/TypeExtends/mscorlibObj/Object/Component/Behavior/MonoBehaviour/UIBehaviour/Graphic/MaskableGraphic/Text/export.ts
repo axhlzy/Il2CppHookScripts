@@ -189,11 +189,12 @@ const B_Text = (): void => {
             try {
                 let startPtr = textPtr.add(p_size * 2)
                 let endPtr = Memory.scanSync(startPtr, (startPtr.readInt() * 0.5 + 3) * p_size, "00 00 00 00")[0]["address"]
-                LOGO("\t" + hexdump(startPtr.add(p_size), {
+                // 每一行第一个位置加上一个 /t
+                hexdump(startPtr.add(p_size), {
                     length: endPtr.sub(startPtr).sub(p_size).toInt32(),
                     header: false
-                }))
-            } catch (e) { }
+                }).split('\n').forEach((line: string) => LOGO(`\t${line}`))
+            } catch { }
         }
     }
 
