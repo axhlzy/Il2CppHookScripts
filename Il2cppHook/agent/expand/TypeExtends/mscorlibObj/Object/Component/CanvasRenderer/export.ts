@@ -3,7 +3,6 @@ import { Text } from "../Behavior/MonoBehaviour/UIBehaviour/Graphic/MaskableGrap
 import { Button } from "../Behavior/MonoBehaviour/Selectable/Button/class"
 import { PackArray } from "../../../../../../bridge/fix/packer/packArray"
 import { UnityEngine_Rect as Rect } from "../../../ValueType/Rect/class"
-import { getTextFormart as FMT } from "../../../../../../utils/logger"
 import { GetGameObjectFromPtr } from "../../GameObject/export"
 
 globalThis.showTransform = (transform: NativePointer) => {
@@ -31,7 +30,7 @@ globalThis.PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boo
     let thisTopChildName: string = trsIns.get_name()
     let thisTopChildCount = trsIns.get_childCount()
     let levelDes = level == 2 ? `default 2 level` : `${level} level`
-    LOG(FMT(`${thisTopChildName}`, LogColor.C36) + FMT(`  [ ${thisTopChildCount} childs / ${levelDes}]`, LogColor.C90))
+    LOG(TFM(`${thisTopChildName}`, LogColor.C36) + TFM(`  [ ${thisTopChildCount} childs / ${levelDes}]`, LogColor.C90))
     if (level == 10) LOGO(`${getLine(75)}\n`)
     // 当前level作为第一级
     let baseLevel = getLevel(trsIns)
@@ -51,7 +50,7 @@ globalThis.PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boo
                 let childHandle: string = child_transform.handle + " : "
                 let childName: string = child_transform.get_name()
                 let infoMore = needComponent ? '' : '  ' + getMoreInfo(child_transform)
-                LOG(FMT(`${spaceText}${childHandle}${childName}`, LogColor.C36) + "  " + FMT(infoMore, LogColor.C90))
+                LOG(TFM(`${spaceText}${childHandle}${childName}`, LogColor.C36) + "  " + TFM(infoMore, LogColor.C90))
                 if (needComponent) LOGZ(`${GetComponentsText(child_transform, childName, spaceText, levelC)}`)
             }
             getChild(child_transform)

@@ -71,6 +71,7 @@ export class formartClass {
 }
 
 globalThis.insertStr = formartClass.insertStr
+
 declare global {
     var insertStr: (str1: string, n: number, str2: string) => string
 }

@@ -3,7 +3,6 @@ import { Environment } from "../expand/TypeExtends/mscorlibObj/Environment/expor
 import { SystemInfo } from "../expand/TypeExtends/mscorlibObj/SystemInfo/export"
 import { getMethodDesFromMethodInfo as DM } from "../bridge/fix/il2cppM"
 import { Time } from "../expand/TypeExtends/mscorlibObj/Times/export"
-import { getTextFormart as TF } from "../utils/logger"
 import { formartClass as FM } from "../utils/formart"
 import { distance } from "fastest-levenshtein"
 import { HookerBase } from "../base/base"
@@ -142,7 +141,7 @@ const findClasses = (filterClassName: string): void => {
             let F = FM.alignStr(`F:${item.fields.length}`, 6)
             let E = FM.alignStr(`E:${item.isEnum}`, 8)
             let A = FM.alignStr(`A:${item.isAbstract}`, 8)
-            let N = `${TF(FM.alignStr(item.name, maxNameLen), LogColor.C93)} ${TF(`<${item.namespace}>`, LogColor.C33)}`
+            let N = `${TFM(FM.alignStr(item.name, maxNameLen), LogColor.C93)} ${TFM(`<${item.namespace}>`, LogColor.C33)}`
             LOG(`${FM.alignStr(`[${++index}]`, 6)}${item.handle}  ===>  { ${M}| ${F}| ${E}| ${A} } ${N}`, (item.isAbstract || item.isEnum) ? LogColor.C90 : LogColor.C36)
         })
     newLine(1)

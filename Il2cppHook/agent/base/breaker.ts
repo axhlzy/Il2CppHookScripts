@@ -3,42 +3,19 @@ import {
     getMethodMaxArgNameLength as getMethodArgsLength,
     getMethodModifier, methodToString
 } from "../bridge/fix/il2cppM"
-import { closest } from "fastest-levenshtein"
+import { PassType, TIME_SIMPLE } from "../utils/common"
 import { formartClass as FC } from "../utils/formart"
-import { HookerBase } from "./base"
-import { TIME_SIMPLE } from "../utils/common"
+import { closest } from "fastest-levenshtein"
 import ValueResolve from "./valueResolve"
-
-export { Breaker }
-declare global {
-    var b: (mPtr: NativePointer | string | number | Il2Cpp.Method) => void
-    var bt: (mPtr: NativePointer) => void
-    var h: (filterStr?: string, countLogs?: number, reverse?: boolean, detachAll?: boolean) => void
-    var hn: (start?: number, end?: number) => void
-    var B: (mPtr: NativePointer | number | string | SpecialClass | Il2Cpp.Class) => void
-    var D: () => void
-    var DD: () => void
-    var BF: (filterStr: string) => void
-    var BM: (className: string) => void
-    var breakWithArgs: (mPtr: NativePointer, argCount?: number) => void
-    var breakInline: (mPtr: NativePointer, callback?: (value: InvocationContext) => void) => void
-    var breakWithStack: (mPtr: NativePointer) => void
-    var getPlatform: () => string
-    var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
-    // getPlatformCtxWithArgV 用于获取参数, argIndex 从 0 开始 (arm32 r0 / arm64 x0)
-    var getPlatformCtxWithArgV: <T extends CpuContext>(ctx: T, argIndex: number) => NativePointer | undefined
-    var maxCallTimes: number
-    var attathing: boolean
-    var printDesertedMethods: (filterName?: string) => void
-    var printCurrentMethods: () => void
-}
+import { HookerBase } from "./base"
 
 type SpecialClass = "CommonClass" | "JNI" | "AUI" | "Soon"
-var CommonClass = ["Assembly-CSharp", "MaxSdk.Scripts", "Game", "Zenject", "UniRx", "Purchasing.Common", "UnityEngine.Purchasing"]
-class Breaker {
+const CommonClass = ["Assembly-CSharp", "MaxSdk.Scripts", "Game", "Zenject", "UniRx", "Purchasing.Common", "UnityEngine.Purchasing"]
+export class Breaker {
 
     public static maxCallTimes: number = 10     // 出现 ${maxCallTimes} 次后不再显示
     public static detachTimes: number = 500     // 出现 ${detachTimes}  次后取消 hook
+    private static callTimesInline: number = 0  // log行间暂时的编号
     public static map_attachedMethodInfos: Map<Il2Cpp.Method, InvocationListener> = new Map()
     private static map_methodInfo_callTimes: Map<Il2Cpp.Method, number> = new Map()
     private static array_methodInfo_detached: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
@@ -138,7 +115,6 @@ class Breaker {
         }
     }
 
-    static callTimesInline: number = 0
     public static attachMethodInfo(method: Il2Cpp.Method, detailLog: boolean = false): void {
         if (method.virtualAddress.isNull()) {
             LOGE(methodToString(method, false, '[-]'))
@@ -256,41 +232,32 @@ class Breaker {
 
     static breakWithArgs = (mPtr: NativePointer, argCount: number = 4) => {
         mPtr = checkPointer(mPtr)
-        Interceptor.attach(mPtr, {
-            onEnter(this: InvocationContext, args: InvocationArguments) {
-                LOGO(`\n${getLine(85)}`)
-                LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(this.context))}`)
-                let tStr = String(args[0])
-                for (let t = 1; t < argCount; ++t) tStr += "\t" + args[t]
-                LOGD(`Args\t---> ${tStr}`)
-            },
-            onLeave(this: InvocationContext, retval: InvocationReturnValue) {
-                LOGD(`Retval\t---> ${retval}`)
-            },
-        })
+        A(mPtr, (args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
+            LOGO(`\n${getLine(85)}`)
+            LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(ctx))}`)
+            let tStr = String(args[0])
+            for (let t = 1; t < argCount; ++t) tStr += "\t" + args[t]
+            LOGD(`Args\t---> ${tStr}`)
+        }, (retval: InvocationReturnValue) => LOGD(`Retval\t---> ${retval}`))
     }
 
     static breakWithStack = (mPtr: NativePointer) => {
         mPtr = checkPointer(mPtr)
-        Interceptor.attach(mPtr, {
-            onEnter(this: InvocationContext, args: InvocationArguments) {
-                LOGO(`\n${getLine(65)}`)
-                LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(this.context))}\n`)
-                PrintStackTraceN(this.context)
-                LOGO(`\n${getLine(65)}`)
-            }
+        A(mPtr, (_args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
+            LOGO(`\n${getLine(65)}`)
+            LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(ctx))}\n`)
+            PrintStackTraceN(ctx)
+            LOGO(`\n${getLine(65)}`)
         })
     }
 
-    static breakInline = (mPtr: NativePointer, callback: (value: InvocationContext) => void) => {
+    // arm32 example : breakInline(0x12345678,(ctx)=>{LOGD(ctx.r0)})
+    static breakInline = (mPtr: NativePointer, callback?: (value: CpuContext) => void) => {
         mPtr = checkPointer(mPtr)
-        Interceptor.attach(mPtr, {
-            onEnter(this: InvocationContext, args: InvocationArguments) {
-                LOGO(`\n${getLine(65)}`)
-                LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(this.context))}\n`)
-                LOGD(JSON.stringify(this.context))
-                if (callback != undefined) callback(this)
-            }
+        A(mPtr, (_args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
+            LOGO(`\n${getLine(65)}`)
+            LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(ctx))}\n`)
+            callback == undefined ? LOGD(JSON.stringify(ctx)) : callback(ctx)
         })
     }
 
@@ -358,9 +325,10 @@ globalThis.h = Breaker.printHistoryLog
 globalThis.hn = Breaker.printHistoryNum
 globalThis.breakWithArgs = Breaker.breakWithArgs
 globalThis.breakWithStack = Breaker.breakWithStack
-globalThis.breakInline = Breaker.breakInline as any
-globalThis.printDesertedMethods = Breaker.printDesertedMethods
+globalThis.breakInline = Breaker.breakInline
+globalThis.printDesertedMethods = Breaker.printDesertedMethods // 展示 已经被取消hook 或者 不显示的部分函数
 globalThis.bt = (mPtr: NativePointer) => b(AddressToMethod(mPtr))
+globalThis.BN = (namespace: string) => Breaker.addBreakPoint("", namespace) // <- alias B(`NameSpace`)
 globalThis.getPlatform = (): string => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
 globalThis.getPlatformCtx = (ctx: CpuContext): ArmCpuContext | Arm64CpuContext => getPlatform() == "arm" ? ctx as ArmCpuContext : ctx as Arm64CpuContext
 
@@ -419,9 +387,7 @@ globalThis.BM = (className: string): void => {
     if (typeof className != "string") throw new Error("\n\tclassName must be a string\n")
     let classPtr = findClass(className)
     if (classPtr.isNull()) throw new Error(`\n\tCan't find class ${className}\n`)
-    new Il2Cpp.Class(classPtr).methods.forEach((methodInfo: Il2Cpp.Method) => {
-        Breaker.attachMethodInfo(methodInfo, true)
-    })
+    new Il2Cpp.Class(classPtr).methods.forEach((methodInfo: Il2Cpp.Method) => Breaker.attachMethodInfo(methodInfo, true))
 }
 
 // 查找所有包含filterStr的方法并断点
@@ -498,4 +464,28 @@ globalThis.getPlatformCtxWithArgV = <T extends CpuContext>(ctx: T, argIndex: num
             default: throw new Error(`ARM64 -> argIndex ${argIndex} is out of range`)
         }
     }
+}
+
+declare global {
+    var b: (mPtr: NativePointer | string | number | Il2Cpp.Method) => void
+    var bt: (mPtr: NativePointer) => void
+    var h: (filterStr?: string, countLogs?: number, reverse?: boolean, detachAll?: boolean) => void
+    var hn: (start?: number, end?: number) => void
+    var B: (mPtr: NativePointer | number | string | SpecialClass | Il2Cpp.Class) => void
+    var BN: (nameSpace: string) => void
+    var D: () => void
+    var DD: () => void
+    var BF: (filterStr: string) => void
+    var BM: (className: string) => void
+    var breakWithArgs: (mPtr: NativePointer, argCount?: number) => void
+    var breakInline: (mPtr: NativePointer, callback?: (value: CpuContext) => void) => void
+    var breakWithStack: (mPtr: NativePointer) => void
+    var getPlatform: () => string
+    var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
+    // getPlatformCtxWithArgV 用于获取参数, argIndex 从 0 开始 (arm32 r0 / arm64 x0)
+    var getPlatformCtxWithArgV: <T extends CpuContext>(ctx: T, argIndex: number) => NativePointer | undefined
+    var maxCallTimes: number
+    var attathing: boolean
+    var printDesertedMethods: (filterName?: string) => void
+    var printCurrentMethods: () => void
 }
