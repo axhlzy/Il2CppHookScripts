@@ -7,56 +7,62 @@ import { TYPE_CHECK_POINTER } from "../base/globle"
  * @returns {NativePointer}
  */
 var baseAddress: NativePointer = ptr(0)
+
 setImmediate(() => {
-    let errorTimes: number = 0
-    let task = setInterval(() => {
-        try {
-            baseAddress = Process.findModuleByName("libil2cpp.so")!.base
-        } catch {
-            ++errorTimes
-        }
-        if (!baseAddress.isNull() || errorTimes > 10) clearInterval(task)
-    }, 200)
+    Il2Cpp.perform(() => {
+        let errorTimes: number = 0
+        let task = setInterval(() => {
+            try {
+                baseAddress = Process.findModuleByName("libil2cpp.so")!.base
+            } catch {
+                ++errorTimes
+            }
+            if (!baseAddress.isNull() || errorTimes > 10) clearInterval(task)
+        }, 200)
+    })
 })
 
-export const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, _showLog: boolean = false): NativePointer => {
+export let checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, _showLog: boolean = false): NativePointer => {
     if (baseAddress.isNull()) baseAddress = Il2Cpp.module.base
-    if (baseAddress) throw new Error("checkPointer: libil2cpp.so not found ! \n please call setBaseAddress first")
-    // if (String(value).startsWith("0x") || String(value).startsWith("0X") && String(value).length >= 15)  // 0xb400007096672af0
-    //     throw new Error("checkPointer: Error type")
-    if (Process.arch == 'arm64' && typeof value === "string" && value.trim().startsWith('0x')) value = Number(value)
-    switch (typeof value) {
-        case 'number':
-            return calPointer(ptr(value))
-        case 'string':
-            return Module.findExportByName(null, value) as NativePointer
-        case 'function':
-            return value as NativePointer
-        case 'object':
-            if (value instanceof NativePointer) {
-                return calPointer(value)
-            } else if (value instanceof Array<string | number>) {
-                if (!checkValue(value as Array<string | number>)) {
-                    if (throwErr) throw new Error("checkPointer: checkValue Error")
+    if (baseAddress.isNull()) throw new Error("checkPointer: libil2cpp.so not found ! \n please call setBaseAddress first")
+
+    function innerCall(value: TYPE_CHECK_POINTER, throwErr?: boolean, _showLog?: boolean): NativePointer {
+        // if (String(value).startsWith("0x") || String(value).startsWith("0X") && String(value).length >= 15)  // 0xb400007096672af0
+        //     throw new Error("checkPointer: Error type")
+        if (Process.arch == 'arm64' && typeof value === "string" && value.trim().startsWith('0x')) value = Number(value)
+        switch (typeof value) {
+            case 'number':
+                return calPointer(ptr(value))
+            case 'string':
+                return Module.findExportByName(null, value) as NativePointer
+            case 'function':
+                return value as NativePointer
+            case 'object':
+                if (value instanceof NativePointer) {
+                    return calPointer(value)
+                } else if (value instanceof Array<string | number>) {
+                    if (!checkValue(value as Array<string | number>)) {
+                        if (throwErr) throw new Error("checkPointer: checkValue Error")
+                        else return ptr(0)
+                    }
+                    switch (value.length) {
+                        case 1:
+                            return Module.findExportByName(null, value[0] as string) as NativePointer
+                        case 2:
+                            return Module.findExportByName(value[0] as string, value[1] as string) as NativePointer
+                        case 3:
+                            return find_method(value[0] as string, value[1] as string, value[2] as string, value[3] as number)
+                        default:
+                            if (throwErr) throw new Error("checkPointer:UnKnow value length \nArray<> length must be 1,2,3")
+                            else return ptr(0)
+                    }
+                } else {
+                    if (throwErr) throw new Error("checkPointer: Error type")
                     else return ptr(0)
                 }
-                switch (value.length) {
-                    case 1:
-                        return Module.findExportByName(null, value[0] as string) as NativePointer
-                    case 2:
-                        return Module.findExportByName(value[0] as string, value[1] as string) as NativePointer
-                    case 3:
-                        return find_method(value[0] as string, value[1] as string, value[2] as string, value[3] as number)
-                    default:
-                        if (throwErr) throw new Error("checkPointer:UnKnow value length \nArray<> length must be 1,2,3")
-                        else return ptr(0)
-                }
-            } else {
-                if (throwErr) throw new Error("checkPointer: Error type")
-                else return ptr(0)
-            }
-        default:
-            throw new Error("checkPointer: Error type")
+            default:
+                throw new Error("checkPointer: Error type")
+        }
     }
 
     function calPointer(mPtr: NativePointer): NativePointer {
@@ -92,6 +98,10 @@ export const checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = fals
         }
         return true
     }
+
+    const ret = innerCall(value, throwErr, _showLog)
+    checkPointer = innerCall
+    return ret
 }
 
 globalThis.checkPointer = checkPointer as any
