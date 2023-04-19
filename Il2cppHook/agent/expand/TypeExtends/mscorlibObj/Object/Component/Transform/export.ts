@@ -46,11 +46,12 @@ globalThis.PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boo
             let levelC: number = getLevel(child_transform) - baseLevel
             // 这里可能出现 -1 -2 的情况，打出来一大片和当前transform无关的transform
             if (levelC > 0 && levelC <= level) {
-                let spaceText: string = inCall ? "" : "\t" + getLine(levelC - 1, "\t")
-                let childHandle: string = child_transform.handle + " : "
+                let spaceText: string = inCall ? '' : '\t' + getLine(levelC - 1, '\t')
+                let activeself: boolean = child_transform.gameobject.get_activeSelf()
+                let childHandle: string = `${child_transform.handle} : ${activeself ? '+' : '-'} `
                 let childName: string = child_transform.get_name()
                 let infoMore = needComponent ? '' : '  ' + getMoreInfo(child_transform)
-                LOG(TFM(`${spaceText}${childHandle}${childName}`, LogColor.C36) + "  " + TFM(infoMore, LogColor.C90))
+                LOG(TFM(`${spaceText}${childHandle}${childName}`, activeself ? LogColor.C36 : LogColor.C94) + `  ` + TFM(infoMore, LogColor.C90))
                 if (needComponent) LOGZ(`${GetComponentsText(child_transform, childName, spaceText, levelC)}`)
             }
             getChild(child_transform)

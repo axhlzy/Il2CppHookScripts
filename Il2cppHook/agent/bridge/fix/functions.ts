@@ -9,6 +9,7 @@ import { PassType } from "../../utils/common"
  */
 export let setFunctionValue = (mPtr: NativePointer, retValue: NativePointer = ptr(0), index: number = -1) => {
     let srcPtr: NativePointer = ptr(mPtr as unknown as number)
+    retValue = ptr(retValue as unknown as number)
     A(checkCmdInput(mPtr), (args: InvocationArguments, _ctx: CpuContext, _passValue: Map<PassType, any>) => {
         if (index != -1) {
             args[index] = retValue
