@@ -359,8 +359,8 @@ export {
 declare global {
     var d: (mPtr?: ARGM) => void
     var A: (mPtr: NativePointer | number, mOnEnter?: OnEnterType, mOnLeave?: OnExitType, needRecord?: boolean) => void
-    var n: (mPtr: NativePointer) => void
-    var nn: (mPtr: NativePointer) => void
+    var n: (mPtr: NativePointer | number) => void
+    var nn: (mPtr: NativePointer | number) => void
     var nnn: () => void
     var R: (mPtr: NativePointer, callBack: ReplaceFuncType, TYPENOP?: boolean) => void
     var getJclassName: (jclsName: NativePointer, ShouldRet: boolean) => string | undefined
