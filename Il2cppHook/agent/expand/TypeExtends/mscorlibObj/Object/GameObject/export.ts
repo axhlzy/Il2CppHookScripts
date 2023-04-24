@@ -194,14 +194,19 @@ function list_Components_from_GameObject(gameObject: NativePointer | Il2Cpp.Game
     // 获取当前对象的所有组件
     // public Component[] GetComponents(Type type)
     comp_addr = find_method("UnityEngine.CoreModule", "GameObject", "GetComponents", 1)
-    if (!comp_addr.isNull())
-        return new PackArray(callFunction(comp_addr, localGobj.handle, comp_type))
+    if (!comp_addr.isNull()) {
+        let local_array = callFunction(comp_addr, localGobj.handle, comp_type)
+        if (local_array.isNull()) return undefined
+        return new PackArray(local_array)
+    }
 
     // private Array GetComponentsInternal(Type type, Boolean useSearchTypeAsArrayReturnType, Boolean recursive, Boolean includeInactive, Boolean reverse, Object resultList)
     comp_addr = find_method("UnityEngine.CoreModule", "GameObject", "GetComponentsInternal", 6)
-    if (!comp_addr.isNull())
-        return new PackArray(callFunctionLong(comp_addr, localGobj.handle, comp_type, 1, 1, 0, allocTmp))  // not test
-
+    if (!comp_addr.isNull()) {  // not test
+        let local_array = callFunctionLong(comp_addr, localGobj.handle, comp_type, 1, 1, 0, allocTmp)
+        if (local_array.isNull()) return undefined
+        return new PackArray(local_array)
+    }
     throw new Error("list_Components_GameObject: not found method")
 }
 
@@ -223,7 +228,9 @@ function list_Components_from_Component(component: NativePointer | Il2Cpp.Compon
         callFunction(comp_addr, localComp.handle, comp_type, allocTmp)
         // 这里因为我们直接alloc的一块地址来存放list返回值，故list头并不带类型指针，所以不可使用new PackList来解析
         // 反之直接直接使用静态方法（PackList.localArray）去读取指定位置即可
-        return new PackArray(PackList.localArray(allocTmp))
+        let local_array = PackList.localArray(allocTmp)
+        if (local_array.isNull()) return undefined
+        return new PackArray(local_array)
     }
     throw new Error("list_Components_Component: not found method")
 }
@@ -254,7 +261,7 @@ globalThis.listScripts = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Trans
 // 解析挂载在 gameObject/transform ... 下的componnet脚本
 globalThis.showComponents = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform | Il2Cpp.Component) => {
     let scripts: PackArray | undefined = listScripts(mPtr)
-    if (scripts && scripts.length > 0) {
+    if (!scripts?.handle.isNull() && scripts != undefined && scripts.length > 0) {
         LOGO("--------- Components ---------")
         scripts.forEach((script: Il2Cpp.Object) => {
             // LOGE(getTypeName(script.handle))

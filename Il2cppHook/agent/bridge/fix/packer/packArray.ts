@@ -10,6 +10,7 @@ export class PackArray {
 
     constructor(handle: NativePointer) {
         this.handle = handle
+        if (this.handle.isNull()) throw new Error("PackArray handle is null")
 
         try {
             this.Obj = new Il2Cpp.Object(handle)

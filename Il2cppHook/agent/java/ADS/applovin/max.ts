@@ -1,3 +1,5 @@
+import { HookerBase } from "../../../base/base"
+
 export { }
 
 let recordCallStr: Map<string, AdEvent> = new Map()
@@ -54,10 +56,37 @@ const listMaxCallBack = (showSendMsg: boolean = false) => {
 declare global {
     var HookMaxCallBack: () => void
     var listMaxCallBack: (showSendMsg?: boolean) => void
+    var onMaxInit: () => void
+    var onMaxReward: () => void
 }
 
 globalThis.HookMaxCallBack = HookMaxCallBack
 globalThis.listMaxCallBack = listMaxCallBack
+
+globalThis.onMaxInit = () => {
+    if (!HookerBase._list_assemblies_names.includes("MaxSdk.Scripts")) throw new Error("MaxSdk.Scripts not found")
+    // MaxSdkCallbacks ForwardEvent {"name":"OnSdkInitializedEvent","consentDialogState":"1","countryCode":"GB","isSuccessfullyInitialized":"true"}
+    SendMessage("MaxSdkCallbacks", "ForwardEvent", '{"name":"OnSdkInitializedEvent","consentDialogState":"1","countryCode":"GB","isSuccessfullyInitialized":"true"}')
+    setFunctionBool(find_method("MaxSdk.Scripts", "MaxSdkAndroid", "IsRewardedAdReady"), true)
+    n(find_method("MaxSdk.Scripts", "MaxSdkAndroid", "ShowRewardedAd"))
+}
+
+globalThis.onMaxReward = () => {
+    if (!HookerBase._list_assemblies_names.includes("MaxSdk.Scripts")) throw new Error("MaxSdk.Scripts not found")
+
+    // MaxSdkCallbacks.MaxSdkAndroid ↓
+
+    SendMessage("MaxSdkCallbacks", "ForwardEvent", `{"adUnitId":"889d134d7f3d3d7d","adFormat":"REWARDED","networkName":"AppLovin","networkPlacement":"inter_videoa","creativeId":"20945973","placement":"","revenue":"0.002465956926345825","revenuePrecision":"exact","waterfallInfo":{},"dspName":"","name":"OnRewardedAdReceivedRewardEvent","rewardLabel":"","rewardAmount":"0"}`)
+    SendMessage("MaxSdkCallbacks", "ForwardEvent", `{"adUnitId":"889d134d7f3d3d7d","adFormat":"REWARDED","networkName":"AppLovin","networkPlacement":"inter_videoa","creativeId":"20945973","placement":"","revenue":"0.002465956926345825","revenuePrecision":"exact","waterfallInfo":{},"dspName":"","name":"OnRewardedAdHiddenEvent"}`)
+
+    SendMessage("MaxSdkCallbacks", "ForwardEvent", `{"adUnitId":"22c7da7816de341e","adFormat":"REWARDED","networkName":"Google AdMob","networkPlacement":"ca-app-pub-3032511519363854\/5658671116","creativeId":"rl5GZLaCJpaOrATD4bGYBA","placement":"","revenue":"0.002943064","revenuePrecision":"exact","waterfallInfo":{},"dspName":"","name":"OnRewardedAdReceivedRewardEvent","rewardLabel":"","rewardAmount":"0"}`)
+    SendMessage("MaxSdkCallbacks", "ForwardEvent", `{"adUnitId":"22c7da7816de341e","adFormat":"REWARDED","networkName":"Google AdMob","networkPlacement":"ca-app-pub-3032511519363854\/5658671116","creativeId":"rl5GZLaCJpaOrATD4bGYBA","placement":"","revenue":"0.002943064","revenuePrecision":"exact","waterfallInfo":{},"dspName":"","name":"OnRewardedAdHiddenEvent"}`)
+
+    // Assembly-CSharp.IronSourceRewardedVideoAndroid ↓ 
+    // todo: Ultimate Car Driving Simulator @ https://apkcombo.com/zh/ultimate-car-driving-simulator/com.sir.racing.ultimatecardrivingsimulator/
+
+
+}
 
 interface AdEvent {
     adUnitId: string
