@@ -4,6 +4,7 @@ import { Button } from "../Behavior/MonoBehaviour/Selectable/Button/class"
 import { PackArray } from "../../../../../../bridge/fix/packer/packArray"
 import { UnityEngine_Rect as Rect } from "../../../ValueType/Rect/class"
 import { GetGameObjectFromPtr } from "../../GameObject/export"
+import { TMPro_TextMeshProUGUI_Impl as TextMeshProUGUI } from "../Behavior/MonoBehaviour/UIBehaviour/Graphic/MaskableGraphic/TMP_Text/TextMeshProUGUI/class"
 
 globalThis.showTransform = (transform: NativePointer) => {
     if (typeof transform == "number") transform = ptr(transform)
@@ -95,20 +96,35 @@ globalThis.PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boo
     }
 
     function getMoreInfo(mPtr: Il2Cpp.Transform): string {
+        const DEBUG_FLAG = false
+        const REPLACE_N = true // 是否替换直接显示/n，而不是被log转义
         let scripts: PackArray | undefined = listScripts(mPtr)
         let retStr: string = ''
         if (scripts && scripts.length > 0) {
             scripts.forEach((item: Il2Cpp.Object) => {
                 try {
-                    // LOGW(item.class.name)
-                    if (item.class.name == "Text") retStr = new Text(item.handle).m_Text
-                    if (item.class.name == "Button") retStr = new Button(item.handle).get_onClick().m_Calls.m_PersistentCalls.itemsToString()
-                    if (item.class.name == "Image") {
-                        const local_image: UI_Image = new UI_Image(item.handle)
-                        const local_rect: Rect = local_image.m_RectTransform.get_rect()
-                        retStr = `m_width:${local_rect.m_Width} | m_height:${local_rect.m_Height}`
+                    let local_name: string = item.toString()
+                    if (local_name.includes("UnityEngine.UI.Text")) {
+                        let local_text = new Text(item.handle).m_Text
+                        retStr += `'${REPLACE_N ? local_text.replace(/\n/g, "\\n") : local_text}'`
                     }
-                } catch { }
+                    if (local_name.includes("TMPro.TextMeshProUGUI")) {
+                        let local_TMPU = new TextMeshProUGUI(item.handle)
+                        retStr += `'${REPLACE_N ? local_TMPU.m_text.replace(/\n/g, "\\n") : local_TMPU.m_text}'`
+                        retStr += ` @ ${local_TMPU.m_fontAsset}`
+                    }
+                    if (local_name.includes("UnityEngine.UI.Button"))
+                        retStr += new Button(item.handle).get_onClick().m_Calls.m_PersistentCalls.itemsToString()
+                    if (local_name.includes("UnityEngine.UI.Image")) {
+                        // const local_image: UI_Image = new UI_Image(item.handle)
+                        // retStr += `${local_image.m_Canvas.toString()}`
+                        // const local_rect: Rect = local_image.m_RectTransform.get_rect()
+                        // retStr += `m_width:${local_rect.m_Width} | m_height:${local_rect.m_Height}`
+                    }
+                    if (DEBUG_FLAG) LOGZ(item.handle + " | " + local_name)
+                } catch (error) {
+                    if (DEBUG_FLAG) LOGE(error)
+                }
             })
         }
         return retStr
@@ -131,7 +147,7 @@ globalThis.p = globalThis.PrintHierarchy
 
 globalThis.packTransform = (transform: NativePointer) => new Il2Cpp.Transform(transform)
 
-globalThis.PrintHierarchyWithComponents = (mPtr: NativePointer, level: number) => PrintHierarchy(mPtr, level, false, true)
+globalThis.PrintHierarchyWithComponents = (mPtr: NativePointer, level: number) => globalThis.PrintHierarchy(mPtr, level, false, true)
 
 declare global {
     var showTransform: (transform: NativePointer) => void

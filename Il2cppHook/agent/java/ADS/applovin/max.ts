@@ -84,8 +84,6 @@ globalThis.onMaxReward = () => {
 
     // Assembly-CSharp.IronSourceRewardedVideoAndroid ↓ 
     // todo: Ultimate Car Driving Simulator @ https://apkcombo.com/zh/ultimate-car-driving-simulator/com.sir.racing.ultimatecardrivingsimulator/
-
-
 }
 
 interface AdEvent {

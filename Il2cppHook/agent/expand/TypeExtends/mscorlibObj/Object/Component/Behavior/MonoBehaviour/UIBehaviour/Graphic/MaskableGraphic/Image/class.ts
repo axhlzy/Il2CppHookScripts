@@ -58,13 +58,13 @@ class UnityEngine_UI_Image_Impl extends UnityEngine_UI_MaskableGraphic_Impl {
         // 这里想尝试一下动态静态结合一下
         // 静态的方法和属性：方便脚本的编写，多数时候UnityApi变化不大不会有啥问题，但是确实也有不同版本不准确的问题
         // 动态的方法和属性：方便CMD直接使用，保管准确 var s = new Il2Cpp.UI_Image(ptr(0x911e5790))；s._fields；
-        let thisClass = Il2Cpp.Domain.assembly('UnityEngine.UI').image.class('UnityEngine.UI.Image')
-        thisClass.methods.forEach((method: Il2Cpp.Method) => {
-            Reflect.set(this._methods, method.name, method.invoke.apply(this.handle))
-        })
-        thisClass.fields.forEach((field: Il2Cpp.Field) => {
-            Reflect.set(this._fields, field.name, field.value)
-        })
+        // let thisClass = Il2Cpp.Domain.assembly('UnityEngine.UI').image.class('UnityEngine.UI.Image')
+        // thisClass.methods.forEach((method: Il2Cpp.Method) => {
+        //     Reflect.set(this._methods, method.name, method.invoke.apply(this.handle))
+        // })
+        // thisClass.fields.forEach((field: Il2Cpp.Field) => {
+        //     Reflect.set(this._fields, field.name, field.value)
+        // })
     }
 
     get_sprite(): UnityEngine_Sprite {
