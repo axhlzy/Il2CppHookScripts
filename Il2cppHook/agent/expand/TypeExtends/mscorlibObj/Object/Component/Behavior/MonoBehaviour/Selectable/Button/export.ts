@@ -117,16 +117,17 @@ export function OnPointerClick(arg0: number = -1, self_addr: NativePointer = ptr
             })
             break
     }
+}
 
-    function FakePointerEventData(eventData: NativePointer): void {
-        if (eventData.isNull()) return
-        let pointerEventData = new PointerEventData(eventData)
-        let gameObj: Il2Cpp.GameObject = pointerEventData.get_pointerEnter()
-        showGameObject(gameObj)
-        showComponents(gameObj)
-        // showTransform(f_getTransform(gameObj))
-        // showEventData(pointerEventData)
-    }
+export function FakePointerEventData(eventData: NativePointer): void {
+    if (eventData.isNull()) return
+    let pointerEventData = new PointerEventData(eventData)
+    let gameObj: Il2Cpp.GameObject = pointerEventData.get_pointerEnter()
+    if (gameObj.isNull()) return
+    showGameObject(gameObj)
+    showComponents(gameObj)
+    // showTransform(f_getTransform(gameObj))
+    // showEventData(pointerEventData)
 }
 
 export const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
