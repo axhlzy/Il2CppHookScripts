@@ -224,10 +224,12 @@ class UnityEngine_UI_Text_Impl extends MaskableGraphic {
 
 }
 
+Il2Cpp.UI_Text = UnityEngine_UI_Text_Impl
+
 declare global {
     namespace Il2Cpp {
-        class Text extends UnityEngine_UI_Text_Impl { }
+        class UI_Text extends UnityEngine_UI_Text_Impl { }
     }
 }
 
-export { UnityEngine_UI_Text_Impl as Text }
+export { UnityEngine_UI_Text_Impl }

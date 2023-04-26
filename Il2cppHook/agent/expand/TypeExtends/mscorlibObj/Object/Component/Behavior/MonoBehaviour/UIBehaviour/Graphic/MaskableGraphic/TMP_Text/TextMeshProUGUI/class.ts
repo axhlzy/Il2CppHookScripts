@@ -365,11 +365,11 @@ class TMPro_TextMeshProUGUI_Impl extends TMPro_TMP_Text_Impl {
 
 }
 
-Il2Cpp.TextMeshProUGUI = TMPro_TextMeshProUGUI_Impl
+Il2Cpp.UI_TextMeshProUGUI = TMPro_TextMeshProUGUI_Impl
 
 declare global {
     namespace Il2Cpp {
-        class TextMeshProUGUI extends TMPro_TextMeshProUGUI_Impl { }
+        class UI_TextMeshProUGUI extends TMPro_TextMeshProUGUI_Impl { }
     }
 }
 

@@ -1,4 +1,5 @@
 import { filterDuplicateOBJ } from "../../../../../../../../../../../utils/common"
+import { TMPro_TMP_Text_Impl as TMPro_TMP_Text } from "../TMP_Text/class"
 
 // public static Void TrackText (Text t)
 // a(findClass("TextMesh"))
@@ -77,7 +78,7 @@ const B_Text = (): void => {
     function TextMeshPro() {
         // A(find_method("Unity.TextMeshPro", "TextMeshPro", "get_transform", 0), (args) => {
         A(Il2Cpp.Api.TextMeshPro._get_transform, (args) => {
-            let aimStr = "|" + new Il2Cpp.TMP_Text(args[0]).get_text() + "|"
+            let aimStr = "|" + new TMPro_TMP_Text(args[0]).get_text() + "|"
             if (filterDuplicateOBJ(String(args[0])) == -1) return
             worksWithText(args[0], "TextMeshPro")
             LOG("\n[TextMeshPro]  " + args[0] + "\t" + aimStr, LogColor.C35)

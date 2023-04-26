@@ -374,11 +374,11 @@ class TMPro_TextMeshPro_Impl extends TMPro_TMP_Text_Impl {
 
 }
 
-Il2Cpp.TextMeshPro = TMPro_TextMeshPro_Impl
+Il2Cpp.UI_TextMeshPro = TMPro_TextMeshPro_Impl
 
 declare global {
     namespace Il2Cpp {
-        class TextMeshPro extends TMPro_TextMeshPro_Impl { }
+        class UI_TextMeshPro extends TMPro_TextMeshPro_Impl { }
     }
 }
 

@@ -1,4 +1,3 @@
-import { Text } from "../../../expand/TypeExtends/mscorlibObj/Object/Component/Behavior/MonoBehaviour/UIBehaviour/Graphic/MaskableGraphic/Text/class"
 
 /**
  * PackArray 用于打包一个 array, 解析 array 的值
@@ -64,7 +63,7 @@ export class PackArray {
     getComponent<T extends Il2Cpp.Object>(value: NativePointer | Il2Cpp.GameObject | Il2Cpp.Component): T | undefined {
         let result: T | undefined
         listScripts(value)?.forEach((item: Il2Cpp.Object) => {
-            if (item.class.name == "Text") result = new Text(item.handle) as unknown as T
+            if (item.class.name == "Text") result = new Il2Cpp.UI_Text(item.handle) as unknown as T
         })
         return result
     }

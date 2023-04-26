@@ -1,10 +1,8 @@
-import { UI_Image } from "../Behavior/MonoBehaviour/UIBehaviour/Graphic/MaskableGraphic/Image/class"
-import { Text } from "../Behavior/MonoBehaviour/UIBehaviour/Graphic/MaskableGraphic/Text/class"
+import { TMPro_TextMeshProUGUI_Impl as TextMeshProUGUI } from "../Behavior/MonoBehaviour/UIBehaviour/Graphic/MaskableGraphic/TMP_Text/TextMeshProUGUI/class"
+import { UnityEngine_UI_Text_Impl as Text } from "../Behavior/MonoBehaviour/UIBehaviour/Graphic/MaskableGraphic/Text/class"
 import { Button } from "../Behavior/MonoBehaviour/Selectable/Button/class"
 import { PackArray } from "../../../../../../bridge/fix/packer/packArray"
-import { UnityEngine_Rect as Rect } from "../../../ValueType/Rect/class"
 import { GetGameObjectFromPtr } from "../../GameObject/export"
-import { TMPro_TextMeshProUGUI_Impl as TextMeshProUGUI } from "../Behavior/MonoBehaviour/UIBehaviour/Graphic/MaskableGraphic/TMP_Text/TextMeshProUGUI/class"
 
 globalThis.showTransform = (transform: NativePointer) => {
     if (typeof transform == "number") transform = ptr(transform)

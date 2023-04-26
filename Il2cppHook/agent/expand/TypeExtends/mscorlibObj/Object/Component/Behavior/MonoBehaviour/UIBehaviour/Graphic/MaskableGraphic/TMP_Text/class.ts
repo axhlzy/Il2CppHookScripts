@@ -1337,11 +1337,11 @@ class TMPro_TMP_Text_Impl extends MaskableGraphic {
     }
 }
 
-Il2Cpp.TMP_Text = TMPro_TMP_Text_Impl
+Il2Cpp.UI_TMP_Text = TMPro_TMP_Text_Impl
 
 declare global {
     namespace Il2Cpp {
-        class TMP_Text extends TMPro_TMP_Text_Impl { }
+        class UI_TMP_Text extends TMPro_TMP_Text_Impl { }
     }
 }
 

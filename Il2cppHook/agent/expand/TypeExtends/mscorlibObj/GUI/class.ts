@@ -24,7 +24,6 @@ class UnityEngine_GUI_Impl extends System_Object_Impl {
     s_Skin: UnityEngine_GUISkin = lfv(this.handle, "s_Skin") as unknown as UnityEngine_GUISkin
     // < scrollViewStates > k__BackingField: UnityEngineInternal_GenericStack = lfv(this.handle, "<scrollViewStates>k__BackingField") as unknown as UnityEngineInternal_GenericStack
 
-
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
     }

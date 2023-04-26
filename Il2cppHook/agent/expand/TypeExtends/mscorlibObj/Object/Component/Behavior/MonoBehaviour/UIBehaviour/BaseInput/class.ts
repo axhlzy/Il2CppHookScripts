@@ -13,6 +13,7 @@ class UnityEngine_EventSystems_BaseInput_Impl extends UnityEngine_EventSystems_U
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
     }
+
     _ctor(): System_Void {
         return Il2Cpp.Api.BaseInput.__ctor(this.handle)
     }
