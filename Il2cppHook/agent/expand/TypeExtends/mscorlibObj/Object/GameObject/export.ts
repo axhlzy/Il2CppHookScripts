@@ -88,12 +88,12 @@ globalThis.showGameObject = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Tr
     LOGD("getLayer\t--->\t" + gameObject.get_layer())
     let m_transform = gameObject.get_transform()
     LOGD("getTransform\t--->\t" + m_transform.handle)
-    let layerNames = ""
+    let layerNames = ''
     for (var i = 0; i < 10; i++) {
         if (m_transform.handle.isNull()) break
         let getName = m_transform.get_gameObject().get_name()
         let handle = m_transform.handle
-        let spl = layerNames == "" ? "" : " <--- "
+        let spl = layerNames == `` ? `` : ` <--- `
         layerNames = layerNames + spl + getName + "(" + handle + ")"
         m_transform = m_transform.get_parent()
     }

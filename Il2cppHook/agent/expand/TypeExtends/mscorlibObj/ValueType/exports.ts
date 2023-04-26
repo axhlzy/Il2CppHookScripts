@@ -16,16 +16,35 @@ const showTypeModuleByType = (mPtr: NativePointer): void => {
     LOGJSON(RuntimeType.get_Module())
 }
 
-const getTypeParentList = (mPtr: NativePointer, needRetArr: boolean = false): Array<mscorlib.Type> | undefined => {
+const CACHE_TYPE_PARENT: Map<string, Array<mscorlib.Type>> = new Map()
+const getTypeParentList = (mPtr: NativePointer, retArray: boolean = false): Array<mscorlib.Type> | undefined => {
+
     const MAX_PARENT_INDEX = 20
     let retArr: Array<mscorlib.Type> = []
     let current: mscorlib.Type = getType(mPtr).caseToRuntimeType
-    for (let i = 0; i < MAX_PARENT_INDEX; ++i) {
-        let type: mscorlib.Type = getBaseType(current, i)
-        if (type.handle.isNull()) break
-        retArr.push(type)
+    let typeName: string = current.name
+
+    if (CACHE_TYPE_PARENT.has(typeName)) {
+        retArr = CACHE_TYPE_PARENT.get(typeName)!
+    } else {
+        for (let [_key, value] of CACHE_TYPE_PARENT) {
+            let index = value.findIndex((type: mscorlib.Type) => type.name == typeName)
+            if (index != -1) {
+                retArr = value.slice(index)
+                break
+            }
+        }
     }
-    if (needRetArr) return retArr
+    if (retArr.length == 0) {
+        for (let i = 0; i < MAX_PARENT_INDEX; ++i) {
+            let type: mscorlib.Type = getBaseType(current, i)
+            if (type.handle.isNull()) break
+            retArr.push(type)
+        }
+        CACHE_TYPE_PARENT.set(typeName, retArr)
+    }
+
+    if (retArray) return retArr
     newLine()
     LOGD(retArr.map((type: mscorlib.Type) => `${type.name}(${type.handle})`).join(` <--- `))
     newLine()
