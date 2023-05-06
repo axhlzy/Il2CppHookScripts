@@ -2,7 +2,17 @@
   "name": "il2cpp-hooker",
   "version": "1.0.0",
   "description": "UnityApi Hook tools based on frida-il2cpp-bridge",
+  "author": "axhlzy <axhlzy@live.cn> (https://github.com/axhlzy/Il2CppHookScripts/)",
+  "license": "MIT",
   "main": "agent/index.ts",
+  "bin": {
+    "fnp": "bin/fnp.js"
+  },
+  "files": [
+    "bin",
+    "agent",
+    "_Ufunc.js"
+  ],
   "scripts": {
     "prepare": "npm run build",
     "build": "frida-compile agent/index.ts -c -o _Ufunc.js",
@@ -26,5 +36,15 @@
     "prettier": "^2.6.2",
     "uglify-js": "^3.17.4",
     "versioning": "^1.1.2"
-  }
+  },
+  "keywords": [
+    "frida",
+    "il2cpp",
+    "unity",
+    "compress",
+    "javascript",
+    "js",
+    "ts",
+    "uglify"
+  ]
 }
