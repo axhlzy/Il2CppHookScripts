@@ -20,14 +20,16 @@ jobs:
       with:
         node-version: 14
 
-    - name: Change directory
-      run: cd Il2cppHook
-
     - name: Install dependencies
+      working-directory: Il2cppHook
       run: npm install
 
     - name: Build
-      run: npm run build
+      run: |
+        cd Il2cppHook
+        npm run build
 
     - name: Compress
-      run: npm run compress
+      run: |
+        cd Il2cppHook
+        npm run compress
