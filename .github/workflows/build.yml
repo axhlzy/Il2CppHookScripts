@@ -43,4 +43,5 @@ jobs:
         cd Il2cppHook
         git add _Ufunc.js
         git diff-index --quiet HEAD || git commit -m "auto generated"
+        git config advice.addIgnoredFile false
         git push --force-with-lease
