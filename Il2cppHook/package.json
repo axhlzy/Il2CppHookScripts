@@ -1,12 +1,13 @@
 {
   "name": "il2cpp-hooker",
   "version": "1.0.0",
-  "description": "Restructure Ufunc.js based on frida-il2cpp-bridge",
+  "description": "UnityApi Hook tools based on frida-il2cpp-bridge",
   "main": "agent/index.ts",
   "scripts": {
     "prepare": "npm run build",
-    "build": "frida-compile agent/index.ts -o _Ufunc.js -c",
-    "watch": "frida-compile agent/index.ts -o _Ufunc.js -w"
+    "build": "frida-compile agent/index.ts -c -o _Ufunc.js",
+    "watch": "frida-compile agent/index.ts -w -o _Ufunc.js",
+    "compress": "uglifyjs _Ufunc.js -m -c -o _Ufunc.js"
   },
   "devDependencies": {
     "@types/frida-gum": "^18.2.0",
@@ -23,6 +24,7 @@
     "frida-il2cpp-bridge": "0.7.13",
     "numbro": "^2.3.6",
     "prettier": "^2.6.2",
+    "uglifyjs": "^2.4.11",
     "versioning": "^1.1.2"
   }
 }

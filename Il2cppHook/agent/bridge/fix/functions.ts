@@ -32,7 +32,7 @@ export const setFunctionBool = (mPtr: NativePointer, retval: boolean = false) =>
 
 declare global {
     var setFunctionBool: (mPtr: NativePointer, retval: boolean) => void
-    var setFunctionValue: (mPtr: NativePointer, retval: NativePointer) => void
+    var setFunctionValue: (mPtr: NativePointer, retval: NativePointer, index?: number) => void
 }
 
 globalThis.setFunctionBool = setFunctionBool
