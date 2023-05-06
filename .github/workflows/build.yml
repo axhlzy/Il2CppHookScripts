@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ ts ]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,11 +28,19 @@ jobs:
       run: npm install
 
     - name: Build
-      run: |
-        cd Il2cppHook
-        npm run build
+      working-directory: Il2cppHook
+      run: npm run build
 
     - name: Compress
       run: |
         cd Il2cppHook
         npm run compress
+
+    - name: Commit and push _Ufunc.js
+      run: |
+        git config user.name "axhlzy"
+        git config user.email "axhlzy@live.cn"
+        cd Il2cppHook
+        git add _Ufunc.js
+        git diff-index --quiet HEAD || git commit -m "Add generated _Ufunc.js"
+        git push
