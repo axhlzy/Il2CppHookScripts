@@ -32,7 +32,6 @@ if (args.help) {
   console.log('  -l, --log [path]            Specify the path to save the log.');
   console.log('  -v, --version               Print version information.');
   console.log('');
-  // 联系提交bug https://github.com/axhlzy/Il2CppHookScripts
   console.log(`Report bugs to: \n   ${require('../package.json').author}`)
   process.exit(0);
 }
@@ -42,9 +41,8 @@ const functionName = args.function || args._[1];
 const runtime = args.runtime === 'qjs' ? 'qjs' : 'v8';
 const timeout = args.timeout ? Number(args.timeout) : 0;
 const logPath = args.log;
-const version = args.version ? true : true;
 
-if (version) {
+if (args.hasOwnProperty('v')) {
   console.log(`v${require('../package.json').version}`);
   process.exit(0);
 }

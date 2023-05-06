@@ -1,6 +1,6 @@
 {
   "name": "il2cpp-hooker",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "frida-based libil2cpp.so runtime parsing script",
   "author": "axhlzy <axhlzy@live.cn> (https://github.com/axhlzy/Il2CppHookScripts/)",
   "license": "MIT",
