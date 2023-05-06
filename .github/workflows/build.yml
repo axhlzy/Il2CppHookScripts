@@ -42,5 +42,5 @@ jobs:
         git config user.email "axhlzy@live.cn"
         cd Il2cppHook
         git add _Ufunc.js
-        git diff-index --quiet HEAD || git commit -m "Add generated _Ufunc.js"
-        git push
+        git diff-index --quiet HEAD || git commit -m "auto generated"
+        git push --force-with-lease
