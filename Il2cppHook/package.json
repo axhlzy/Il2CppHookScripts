@@ -1,7 +1,7 @@
 {
   "name": "il2cpp-hooker",
-  "version": "1.0.0",
-  "description": "UnityApi Hook tools based on frida-il2cpp-bridge",
+  "version": "1.0.1",
+  "description": "frida-based libil2cpp.so runtime parsing script",
   "author": "axhlzy <axhlzy@live.cn> (https://github.com/axhlzy/Il2CppHookScripts/)",
   "license": "MIT",
   "main": "agent/index.ts",
@@ -20,10 +20,10 @@
     "compress": "uglifyjs _Ufunc.js -m -c -o _Ufunc.js"
   },
   "devDependencies": {
-    "@types/frida-gum": "^18.2.0",
-    "@types/node": "^17.0.45",
     "@frida/http": "^4.0.2",
-    "@frida/https": "^1.0.0"
+    "@frida/https": "^1.0.0",
+    "@types/frida-gum": "^18.2.0",
+    "@types/node": "^17.0.45"
   },
   "dependencies": {
     "babelify": "^10.0.0",
@@ -32,6 +32,7 @@
     "fastest-levenshtein": "^1.0.12",
     "frida-compile": "^10.2.5",
     "frida-il2cpp-bridge": "0.7.13",
+    "minimist": "^1.2.8",
     "numbro": "^2.3.6",
     "prettier": "^2.6.2",
     "uglify-js": "^3.17.4",
