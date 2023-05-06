@@ -8,15 +8,25 @@ const main = () => {
     // pause()
     // setException()
     // HookExit()
-
-    // B_network()
     TODO_OTHERS()
 }
 
 const TODO_OTHERS = () => {
-    Il2Cpp.perform(() => {
-        // HookSendMessage()
-    })
+
+    function TODO() {
+        Il2Cpp.perform(() => {
+            // todo ...
+        })
+    }
+
+    const taskID = setInterval(() => {
+        let md: Module | null = Process.findModuleByName("libil2cpp.so")
+        if (md != null) {
+            // Toast(`libil2cpp.so loaded @ ${md.base} | ${md.size}`)
+            TODO()
+            clearInterval(taskID)
+        }
+    }, 1000)
 }
 
 class PauseHelper {
@@ -220,16 +230,18 @@ function fixMoreVerison() {
     const UnityVersion = "2020.3.0f1c1"
 
     Il2Cpp.perform(() => {
-        Il2Cpp.unityVersion
         if (Il2Cpp.Api._resolveInternalCall(allocCStr('UnityEngine.Application::get_unityVersion')).isNull()) {
-            if (Reflect.has(Il2Cpp, "unityVersion")) {
-                Reflect.deleteProperty(Il2Cpp, "unityVersion")
-                Reflect.defineProperty(Il2Cpp, "unityVersion", { value: UnityVersion })
-            }
-            if (Reflect.has(Il2Cpp, "unityVersionIsBelow201830")) {
-                Reflect.deleteProperty(Il2Cpp, "unityVersionIsBelow201830")
-                Reflect.defineProperty(Il2Cpp, "unityVersionIsBelow201830", { value: false })
-            }
+            LOGW(`Couldn't determine the Unity version,Schedule set to ${UnityVersion}`)
+            setTimeout(() => {
+                if (Reflect.has(Il2Cpp, "unityVersion")) {
+                    Reflect.deleteProperty(Il2Cpp, "unityVersion")
+                    Reflect.defineProperty(Il2Cpp, "unityVersion", { value: UnityVersion })
+                }
+                if (Reflect.has(Il2Cpp, "unityVersionIsBelow201830")) {
+                    Reflect.deleteProperty(Il2Cpp, "unityVersionIsBelow201830")
+                    Reflect.defineProperty(Il2Cpp, "unityVersionIsBelow201830", { value: false })
+                }
+            }, 1000)
         }
     })
 
