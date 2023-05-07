@@ -1,12 +1,12 @@
 {
   "name": "il2cpp-hooker",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "frida-based libil2cpp.so runtime parsing script",
   "author": "axhlzy <axhlzy@live.cn> (https://github.com/axhlzy/Il2CppHookScripts/)",
   "license": "MIT",
   "main": "agent/index.ts",
   "bin": {
-    "fnp": "bin/fat.js"
+    "fat": "bin/fat.js"
   },
   "files": [
     "bin",
