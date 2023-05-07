@@ -32,7 +32,7 @@ $ fat
 $ fat ${PackageName}
 ```
 
-3. show help
+3. Command line options
 ```sh
 $ fat -h
 
