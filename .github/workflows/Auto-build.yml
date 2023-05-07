@@ -2,11 +2,11 @@ name: Auto-build
 
 on:
   push:
-    branches: [ ts ]
+    branches: [ master ]
     paths:
       - 'Il2cppHook/**'
   pull_request:
-    branches: [ ts ]
+    branches: [ master ]
     paths:
       - 'Il2cppHook/**'
 
