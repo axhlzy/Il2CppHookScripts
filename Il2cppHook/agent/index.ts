@@ -38,11 +38,7 @@ class PauseHelper {
             Memory.patchCode(PauseHelper.getPauseAddress(), 0x4, (code: NativePointer) => {
                 PauseHelper.savedPauseCode = code.readPointer()
                 var writer: ArmWriter | Arm64Writer
-                if (Process.arch == "arm64") {
-                    writer = new Arm64Writer(code)
-                } else {
-                    writer = new ArmWriter(code)
-                }
+                writer = Process.arch == "arm64" ? new Arm64Writer(code) : new ArmWriter(code)
                 writer.putLabel("loop")
                 writer.putBLabel("loop")
                 writer.flush()
