@@ -1,7 +1,8 @@
 {
   "name": "il2cpp-hooker",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "frida-based libil2cpp.so runtime parsing script",
+  "homepage": "https://github.com/axhlzy/Il2CppHookScripts#readme",
   "author": "axhlzy <axhlzy@live.cn> (https://github.com/axhlzy/Il2CppHookScripts/)",
   "license": "MIT",
   "main": "agent/index.ts",
@@ -47,5 +48,15 @@
     "js",
     "ts",
     "uglify"
-  ]
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/axhlzy"
+  },  
+  "bugs": {
+    "url": "https://github.com/axhlzy/Il2CppHookScripts/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/axhlzy/Il2CppHookScripts.git"
+  }
 }
