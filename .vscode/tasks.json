@@ -1,7 +1,6 @@
 {
 	"version": "2.0.0",
-	"tasks": [
-		{
+	"tasks": [{
 			"type": "npm",
 			"script": "watch",
 			"path": "Il2cppHook",
@@ -14,7 +13,7 @@
 			"type": "npm",
 			"script": "install",
 			"path": "Il2cppHook",
-			"group": "clean",
+			"group": "build",
 			"problemMatcher": [],
 			"label": "npm: install - Il2cppHook",
 			"detail": "install dependencies from package"
