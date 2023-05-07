@@ -1,0 +1,44 @@
+name: npm-publish
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'package.json'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          registry-url: https://npm.pkg.github.com/
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Check for version change
+        id: check_version
+        run: |
+          git fetch --unshallow
+          VERSION_CHANGED=$(git diff HEAD^ HEAD -- package.json | grep '"version"')
+          if [ -n "$VERSION_CHANGED" ]; then
+            echo "::set-output name=version_changed::true"
+          else
+            echo "::set-output name=version_changed::false"
+          fi
+
+      - name: Publish to npm
+        if: steps.check_version.outputs.version_changed == 'true'
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
+          npm publish
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          npm publish --registry https://registry.npmjs.org/
+
