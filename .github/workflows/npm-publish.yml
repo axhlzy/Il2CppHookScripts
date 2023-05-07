@@ -3,7 +3,7 @@ name: npm-publish
 on:
   push:
     branches:
-      - ts
+      - master
     paths:
       - 'package.json'
 
