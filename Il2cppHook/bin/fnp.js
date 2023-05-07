@@ -23,7 +23,7 @@ if (args.help) {
 
   showLOGO()
 
-  console.log('\nUsage: fnp [options] <package-name?>\n');
+  console.log('\nUsage: fat [options] <package-name?>\n');
   console.log('Options:');
   console.log('  -h, --help                  Print usage information.');
   console.log('  -r, --runtime [engine]      Specify the JS engine (qjs, v8). Default: v8');

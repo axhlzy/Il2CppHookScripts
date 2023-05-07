@@ -24,11 +24,39 @@ then you can use like this ↓
 
 1. frida attch current app
 ```sh
-$ fnp
+$ fat
+
 ```
 2. frida spawn app of ${PackageName}
 ```sh
-$ fnp ${PackageName}
+$ fat ${PackageName}
+```
+
+3. show help
+```sh
+$ fat -h
+
+        _ _  ______                        _                 _
+        | | |(_____ \                      | |               | |
+        | | |  ____) )____ ____  ____ _____| |__   ___   ___ | |  _ _____  ____
+        | | | / ____// ___)  _ \|  _ (_____)  _ \ / _ \ / _ \| |_/ ) ___ |/ ___)
+        | | || (____( (___| |_| | |_| |    | | | | |_| | |_| |  _ (| ____| |
+        |_|_|\______)____)  __/|  __/     |_| |_|\___/ \___/|_| \_)_____)_|
+                        |_|   |_|
+
+
+Usage: fat [options] <package-name?>
+
+Options:
+  -h, --help                  Print usage information.
+  -r, --runtime [engine]      Specify the JS engine (qjs, v8). Default: v8
+  -t, --timeout [ms]          Specify the time in milliseconds before calling the function.
+  -f, --functions [name]      Specify the function to call on startup. example: -f i();getApkInfo();
+  -l, --log [path]            Specify the path to save the log.
+  -v, --version               Print version information.
+
+Report bugs to:
+   axhlzy <axhlzy@live.cn> (https://github.com/axhlzy/Il2CppHookScripts/)
 ```
 
 -------

@@ -6,7 +6,7 @@
   "license": "MIT",
   "main": "agent/index.ts",
   "bin": {
-    "fnp": "bin/fnp.js"
+    "fnp": "bin/fat.js"
   },
   "files": [
     "bin",
