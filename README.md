@@ -67,6 +67,7 @@ $ git clone https://github.com/axhlzy/Il2CppHookScripts.git
 $ cd Il2cppHook/
 $ npm install
 $ npm run watch
+$ npm run compress
 
 $ frida -U -f com.xxx.xxx -l ../_Ufunc.js
 OR
