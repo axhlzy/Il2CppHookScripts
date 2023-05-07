@@ -1,4 +1,4 @@
-name: Build
+name: Auto Build 
 
 on:
   push:
