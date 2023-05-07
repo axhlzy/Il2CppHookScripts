@@ -38,8 +38,10 @@ jobs:
           git config user.email "axhlzy@live.cn"
           cd Il2cppHook
           git add -f _Ufunc.js
-          git diff-index --quiet HEAD || git commit -m "auto generated"
-          git push --force-with-lease
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "auto generated"
+            git push --force-with-lease
+          fi
 
   check_version_and_publish:
     needs: auto_build
