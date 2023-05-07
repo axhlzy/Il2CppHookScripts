@@ -3,8 +3,12 @@ name: Build
 on:
   push:
     branches: [ ts ]
+    paths:
+      - 'Il2cppHook/**'
   pull_request:
     branches: [ ts ]
+    paths:
+      - 'Il2cppHook/**'
 
 permissions:
   contents: write
