@@ -1,8 +1,9 @@
+import { UnityEngine_Material_Impl } from "../../Material/class"
 import { UnityEngine_Component_Impl } from "../class"
 import { UnityEngine_Rendering_ShadowCastingMode as ShadowCastingMode } from "./enum"
 
 type UnityEngine_Bounds = NativePointer
-type UnityEngine_Material = NativePointer
+type UnityEngine_Material = UnityEngine_Material_Impl
 
 class UnityEngine_Renderer_Impl extends UnityEngine_Component_Impl {
 
@@ -15,31 +16,31 @@ class UnityEngine_Renderer_Impl extends UnityEngine_Component_Impl {
     }
 
     GetMaterial(): UnityEngine_Material {
-        return Il2Cpp.Api.Renderer._GetMaterial(this.handle)
+        return new UnityEngine_Material_Impl(Il2Cpp.Api.Renderer._GetMaterial(this.handle))
     }
 
     GetSharedMaterial(): UnityEngine_Material {
-        return Il2Cpp.Api.Renderer._GetSharedMaterial(this.handle)
+        return new UnityEngine_Material_Impl(Il2Cpp.Api.Renderer._GetSharedMaterial(this.handle))
     }
 
     SetMaterial(m: UnityEngine_Material): void {
-        return Il2Cpp.Api.Renderer._SetMaterial(this.handle, m)
+        return Il2Cpp.Api.Renderer._SetMaterial(this.handle, m.handle)
     }
 
-    GetMaterialArray(): UnityEngine_Material[] {
-        return Il2Cpp.Api.Renderer._GetMaterialArray(this.handle)
-    }
+    // GetMaterialArray(): UnityEngine_Material[] {
+    //     return Il2Cpp.Api.Renderer._GetMaterialArray(this.handle)
+    // }
 
-    SetMaterialArray(m: UnityEngine_Material[]): void {
-        return Il2Cpp.Api.Renderer._SetMaterialArray(this.handle, m)
-    }
+    // SetMaterialArray(m: UnityEngine_Material[]): void {
+    //     return Il2Cpp.Api.Renderer._SetMaterialArray(this.handle, m)
+    // }
 
     get_enabled(): boolean {
         return Il2Cpp.Api.Renderer._get_enabled(this.handle)
     }
 
     set_enabled(value: boolean): void {
-        return Il2Cpp.Api.Renderer._set_enabled(this.handle, value)
+        return Il2Cpp.Api.Renderer._set_enabled(this.handle, value ? ptr(1) : ptr(0))
     }
 
     get_isVisible(): boolean {
@@ -70,41 +71,41 @@ class UnityEngine_Renderer_Impl extends UnityEngine_Component_Impl {
         return Il2Cpp.Api.Renderer._set_sortingOrder(this.handle, value)
     }
 
-    GetSharedMaterialArray(): UnityEngine_Material[] {
-        return Il2Cpp.Api.Renderer._GetSharedMaterialArray(this.handle)
-    }
+    // GetSharedMaterialArray(): UnityEngine_Material[] {
+    //     return Il2Cpp.Api.Renderer._GetSharedMaterialArray(this.handle)
+    // }
 
-    get_materials(): UnityEngine_Material[] {
-        return Il2Cpp.Api.Renderer._get_materials(this.handle)
-    }
+    // get_materials(): UnityEngine_Material[] {
+    //     return Il2Cpp.Api.Renderer._get_materials(this.handle)
+    // }
 
-    set_materials(value: UnityEngine_Material[]): void {
-        return Il2Cpp.Api.Renderer._set_materials(this.handle, value)
-    }
+    // set_materials(value: UnityEngine_Material[]): void {
+    //     return Il2Cpp.Api.Renderer._set_materials(this.handle, value)
+    // }
 
     get_material(): UnityEngine_Material {
-        return Il2Cpp.Api.Renderer._get_material(this.handle)
+        return new UnityEngine_Material_Impl(Il2Cpp.Api.Renderer._get_material(this.handle))
     }
 
     set_material(value: UnityEngine_Material): void {
-        return Il2Cpp.Api.Renderer._set_material(this.handle, value)
+        return Il2Cpp.Api.Renderer._set_material(this.handle, value.handle)
     }
 
     get_sharedMaterial(): UnityEngine_Material {
-        return Il2Cpp.Api.Renderer._get_sharedMaterial(this.handle)
+        return new UnityEngine_Material_Impl(Il2Cpp.Api.Renderer._get_sharedMaterial(this.handle))
     }
 
     set_sharedMaterial(value: UnityEngine_Material): void {
-        return Il2Cpp.Api.Renderer._set_sharedMaterial(this.handle, value)
+        return Il2Cpp.Api.Renderer._set_sharedMaterial(this.handle, value.handle)
     }
 
-    get_sharedMaterials(): UnityEngine_Material[] {
-        return Il2Cpp.Api.Renderer._get_sharedMaterials(this.handle)
-    }
+    // get_sharedMaterials(): UnityEngine_Material[] {
+    //     return Il2Cpp.Api.Renderer._get_sharedMaterials(this.handle)
+    // }
 
-    set_sharedMaterials(value: UnityEngine_Material[]): void {
-        return Il2Cpp.Api.Renderer._set_sharedMaterials(this.handle, value)
-    }
+    // set_sharedMaterials(value: UnityEngine_Material[]): void {
+    //     return Il2Cpp.Api.Renderer._set_sharedMaterials(this.handle, value)
+    // }
 
     get_bounds_Injected(ret: UnityEngine_Bounds): void {
         return Il2Cpp.Api.Renderer._get_bounds_Injected(this.handle, ret)

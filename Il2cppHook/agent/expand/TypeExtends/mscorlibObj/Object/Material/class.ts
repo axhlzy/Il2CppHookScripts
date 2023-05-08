@@ -45,6 +45,10 @@ class UnityEngine_Material_Impl extends UnityEngine_Object {
         return new Color(Il2Cpp.Api.Material._get_color(this.handle))
     }
 
+    get_color_ptr(): NativePointer {
+        return Il2Cpp.Api.Material._get_color(this.handle)
+    }
+
     set_color(value: Color): void {
         return Il2Cpp.Api.Material._set_color(this.handle, value.handle)
     }

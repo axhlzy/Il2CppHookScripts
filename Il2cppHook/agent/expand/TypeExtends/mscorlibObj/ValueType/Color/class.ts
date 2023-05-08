@@ -13,7 +13,6 @@ class UnityEngine_Color_Impl extends System_ValueType_Impl {
     b: number = lfv(this.handle, "b") as unknown as number
     a: number = lfv(this.handle, "a") as unknown as number
 
-
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
     }
