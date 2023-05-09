@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const {
-  spawn
+  spawn, execSync
 } = require('child_process');
 const path = require('path');
 const minimist = require('minimist');
@@ -30,9 +30,10 @@ if (args.help) {
   console.log('  -t, --timeout [ms]          Specify the time in milliseconds before calling the function.');
   console.log('  -f, --functions [name]      Specify the function to call on startup. example: -f i();getApkInfo();');
   console.log('  -l, --log [path]            Specify the path to save the log.');
+  console.log('  -c, --vscode                Open project with vscode.');
   console.log('  -v, --version               Print version information.');
   console.log('');
-  console.log(`Report bugs to: \n   ${require('../package.json').author}`)
+  console.log(`Report bugs to: \n   ${require('../package.json').author}\n`)
   process.exit(0);
 }
 
@@ -44,6 +45,15 @@ const logPath = args.log;
 
 if (args.hasOwnProperty('v')) {
   console.log(`v${require('../package.json').version}`);
+  process.exit(0);
+}
+
+if (args.hasOwnProperty('c')) {
+  try {
+    execSync(`code ${path.join(__dirname, '../')}`);
+  } catch (error) {
+    console.error(`exec error: ${error}`);
+  }
   process.exit(0);
 }
 

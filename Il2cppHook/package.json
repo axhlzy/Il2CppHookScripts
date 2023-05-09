@@ -10,9 +10,10 @@
     "fat": "bin/fat.js"
   },
   "files": [
-    "bin",
     "agent",
-    "_Ufunc.js"
+    "_Ufunc.js",
+    "jsconfig.json",
+    "tsconfig.json"
   ],
   "scripts": {
     "prepare": "npm run build",
@@ -51,7 +52,7 @@
   ],
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/axhlzy"
-  },  
+  },
   "bugs": {
     "url": "https://github.com/axhlzy/Il2CppHookScripts/issues"
   },
