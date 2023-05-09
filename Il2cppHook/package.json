@@ -1,5 +1,5 @@
 {
-  "name": "il2cpp-hooker",
+  "name": "@axhlzy/il2cpp-hooker",
   "version": "1.0.5",
   "description": "frida-based libil2cpp.so runtime parsing script",
   "homepage": "https://github.com/axhlzy/Il2CppHookScripts#readme",

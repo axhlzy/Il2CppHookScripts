@@ -4,7 +4,6 @@ setImmediate(() => main())
 
 const main = () => {
     fixMoreVerison() // issue # 22
-    fixFieldOffset()
     // pause()
     // setException()
     // HookExit()
@@ -227,7 +226,7 @@ function fixMoreVerison() {
 
     Il2Cpp.perform(() => {
         if (Il2Cpp.Api._resolveInternalCall(allocCStr('UnityEngine.Application::get_unityVersion')).isNull()) {
-            LOGW(`Couldn't determine the Unity version,Schedule set to ${UnityVersion}`)
+            LOGW(`Couldn't determine the Unity version, Schedule set to ${UnityVersion}`)
             setTimeout(() => {
                 if (Reflect.has(Il2Cpp, "unityVersion")) {
                     Reflect.deleteProperty(Il2Cpp, "unityVersion")
@@ -267,25 +266,28 @@ function fixMoreVerison() {
     // }
 }
 
-function fixFieldOffset() {
-    // Reflect.deleteProperty(Il2Cpp.Field, "offset")
-    // Reflect.set(Il2Cpp.Field, "offset", {
-    //     value: function (field: Il2Cpp.Field) {
-    //         let local_offset = field.offset
-    //         if (local_offset < 0) return -1
-    //         if (Process.arch == "arm") local_offset = field.offset - 8
-    //         if (Process.arch == "arm64") local_offset = field.offset - 16
-    //         return local_offset
-    //     }
-    // })
-    // A(Il2Cpp.Api._fieldGetOffset, undefined, (ret) => {
-    //     let local_offset: number = ret.toInt32()
-    //     if (local_offset < 0) return -1
-    //     if (Process.arch == "arm") local_offset = local_offset - 8
-    //     if (Process.arch == "arm64") local_offset = local_offset - 16
-    //     ret.replace(ptr(local_offset))
-    // })
-}
+/**
+ * class 能正确解析， 结构体解析参数的时候需要去掉他前面的两个 pointer size
+ */
+// function fixFieldOffset() {
+//     Reflect.deleteProperty(Il2Cpp.Field, "offset")
+//     Reflect.set(Il2Cpp.Field, "offset", {
+//         value: function (field: Il2Cpp.Field) {
+//             let local_offset = field.offset
+//             if (local_offset < 0) return -1
+//             if (Process.arch == "arm") local_offset = field.offset - 8
+//             if (Process.arch == "arm64") local_offset = field.offset - 16
+//             return local_offset
+//         }
+//     })
+//     A(Il2Cpp.Api._fieldGetOffset, undefined, (ret) => {
+//         let local_offset: number = ret.toInt32()
+//         if (local_offset < 0) return -1
+//         if (Process.arch == "arm") local_offset = local_offset - 8
+//         if (Process.arch == "arm64") local_offset = local_offset - 16
+//         ret.replace(ptr(local_offset))
+//     })
+// }
 
 declare global {
     // you can use pause() to pause the game and resume() to resume the game

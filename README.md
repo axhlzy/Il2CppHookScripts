@@ -51,12 +51,14 @@ Options:
   -h, --help                  Print usage information.
   -r, --runtime [engine]      Specify the JS engine (qjs, v8). Default: v8
   -t, --timeout [ms]          Specify the time in milliseconds before calling the function.
-  -f, --functions [name]      Specify the function to call on startup. example: -f i();getApkInfo();
+  -f, --functions [name]      Specify the functions to call on startup. example: -f getApkInfo();
   -l, --log [path]            Specify the path to save the log.
+  -c, --vscode                Open project with vscode.
   -v, --version               Print version information.
 
 Report bugs to:
    axhlzy <axhlzy@live.cn> (https://github.com/axhlzy/Il2CppHookScripts/)
+
 ```
 
 -------
@@ -65,6 +67,9 @@ Report bugs to:
 ```sh
 $ git clone https://github.com/axhlzy/Il2CppHookScripts.git
 $ cd Il2cppHook/
+OR
+$ fat -c    <--- After install il2cpp-hooker. It is a more convenient way to construct and use.
+
 $ npm install
 
 $ npm run build & npm run compress

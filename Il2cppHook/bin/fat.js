@@ -33,7 +33,7 @@ if (args.help) {
   console.log('  -c, --vscode                Open project with vscode.');
   console.log('  -v, --version               Print version information.');
   console.log('');
-  console.log(`Report bugs to: \n   ${require('../package.json').author}\n`)
+  console.log(`Report bugs to: \n   ${require('../package.json').author} \n`)
   process.exit(0);
 }
 
