@@ -113,7 +113,7 @@ function getUnityInfo() {
     Time()
 }
 
-let allMethodsCacheArray: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>() // all methods cache
+export var allMethodsCacheArray: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>() // all methods cache
 const cacheMethods = (withLog: boolean = true) => {
     if (allMethodsCacheArray.length > 0) return
     if (withLog) LOGZ("Caching methods ...")
@@ -123,6 +123,7 @@ const cacheMethods = (withLog: boolean = true) => {
             klass.methods.forEach((item: Il2Cpp.Method) => allMethodsCacheArray.push(item))
         })
     })
+    allMethodsCacheArray = allMethodsCacheArray.sort((a: Il2Cpp.Method, b: Il2Cpp.Method) => a.virtualAddress.compare(b.virtualAddress))
     if (withLog) LOGZ(`Caching methods done. ${allMethodsCacheArray.length} Methods . cost ${Date.now() - timeCurrent} ms\n`)
 }
 
@@ -310,7 +311,73 @@ globalThis.bp = (filterName: string, breakMethodInfo: boolean = false) => {
         })
 }
 
-export { getApkInfo, launchApp, cacheMethods, findClasses }
+/**
+ * 根据一个地址猜测它的上下${num}个函数
+ * @param address 函数地址或者是行间地址  < 后续用作解析堆栈函数 >
+ */
+
+const functionProbe = (address: NativePointer | number | string, num: number = 5) => {
+    const local_ptr: NativePointer = checkCmdInput(address)
+    if (local_ptr.isNull()) throw new Error("Address is null")
+    let inRange: boolean = Process.findModuleByName("libil2cpp.so")!
+        .enumerateRanges("--x")
+        .some((item: RangeDetails) => item.base.compare(local_ptr) <= 0 && item.base.add(item.size).compare(local_ptr) >= 0)
+    if (!inRange) throw new Error("Address is not in libil2cpp.so (--x)")
+
+    let methodInfo: Il2Cpp.Method | null = tryParseToMethodInfo(local_ptr)
+
+    // methodInfo : startAddress 
+    let retArray: Map<string, NativePointer> = new Map()
+
+    if (methodInfo != null) {
+        retArray = tryToParse(methodInfo.class.methods.sort((a: Il2Cpp.Method, b: Il2Cpp.Method) => a.virtualAddress.compare(b.virtualAddress)))
+    } else {
+        if (allMethodsCacheArray.length == 0) cacheMethods()
+        retArray = tryToParse(allMethodsCacheArray)
+    }
+
+    retArray.set("inputAddress", local_ptr)
+    retArray = new Map([...retArray.entries()].sort((a: [string, NativePointer], b: [string, NativePointer]) => a[1].compare(b[1])))
+
+    showResult(retArray)
+
+    function tryParseToMethodInfo(address: NativePointer): Il2Cpp.Method | null {
+        try {
+            return AddressToMethod(address)
+        } catch { return null }
+    }
+
+    function tryToParse(methodInfos: Il2Cpp.Method[]): Map<string, NativePointer> {
+        let local_ret = new Map<string, NativePointer>()
+        methodInfos.some((item: Il2Cpp.Method, index: number, array: Il2Cpp.Method[]) => {
+            if (item.virtualAddress.compare(local_ptr) <= 0 && array[index + 1].virtualAddress.compare(local_ptr) >= 0) {
+                if (index + num >= array.length) {
+                    array.slice(index).forEach((item: Il2Cpp.Method) => local_ret.set(item.name, item.virtualAddress))
+                } else {
+                    array.slice(index, index + num).forEach((item: Il2Cpp.Method) => local_ret.set(item.name, item.virtualAddress))
+                }
+                return true
+            }
+        })
+        return local_ret
+    }
+
+    function showResult(retArray: Map<string, NativePointer>) {
+        let maxLen = 0
+        retArray.forEach((_value: NativePointer, key: string) => {
+            maxLen = Math.max(maxLen, key.length)
+        })
+        const line = getLine(maxLen += 0x12)
+        LOGW(line)
+        retArray.forEach((value: NativePointer, key: string) => {
+            let content = `${FM.alignStr(key, maxLen)}${value}`
+            key == 'inputAddress' ? LOGE(content) : LOGD(content)
+        })
+        LOGW(line)
+    }
+}
+
+export { getApkInfo, launchApp, cacheMethods, findClasses, functionProbe }
 
 globalThis.getApkInfo = getApkInfo
 
@@ -318,6 +385,7 @@ Reflect.set(globalThis, "launchApp", launchApp)
 Reflect.set(globalThis, "findMethods", printExp)
 Reflect.set(globalThis, "findClasses", findClasses)
 Reflect.set(globalThis, "getUnityInfo", getUnityInfo)
+Reflect.set(globalThis, "functionProbe", functionProbe)
 Reflect.set(globalThis, "AddressToMethod", AddressToMethod)
 Reflect.set(globalThis, "AddressToMethodToString", AddressToMethodToShow)
 Reflect.set(globalThis, "AddressToMethodNoException", AddressToMethodNoException)
