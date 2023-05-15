@@ -13,6 +13,9 @@ declare global {
 
     var listModules: (filterName?: string) => void
     var listModule: (moduleName: string, printItems?: number) => void
+
+    var b_export: (moduleName: string, exportName?: string) => void
+
     /**
      * findExport 侧重点在定位一些我们只知道函数名不知道他在那个模块里面（用于定位导出函数）
      * 故exportName作为第一个参数，第二个参数用作筛选
@@ -35,6 +38,38 @@ declare global {
 
     var cmdouleTest: () => void
     var sqliteTest: () => void
+}
+
+/**
+ *  b_export("Load", "libcocos2djs.so")
+ */
+let cacheMethods = new Map<string, number>()
+globalThis.b_export = (moduleName: string, exportName?: string, passAddress?: number[]) => {
+    findExport(moduleName, exportName, (exp: ModuleExportDetails) => {
+        if (exp.type != "function") return
+        if (passAddress == undefined) {
+            innerAttach(exp)
+        } else {
+            if (!passAddress!.includes(exp.address.toInt32())) {
+                innerAttach(exp)
+            }
+        }
+    })
+
+    function innerAttach(exp: ModuleExportDetails) {
+        try {
+            let lis: InvocationListener = Interceptor.attach(exp.address, {
+                onEnter: function (args) {
+                    cacheMethods.get(exp.name) ? cacheMethods.set(exp.name, cacheMethods.get(exp.name)! + 1) : cacheMethods.set(exp.name, 1)
+                    if (cacheMethods.get(exp.name)! > 10) lis.detach()
+                    LOGD(`Called : ${exp.name} @ ${exp.address} \nargs : ${args[0]} ${args[1]} ${args[2]} ${args[3]}`)
+                }
+            })
+            LOGD(`Hooked : ${exp.name} @ ${exp.address} | ${exp.address.sub(Process.findModuleByAddress(exp.address)!.base)}`)
+        } catch (e) {
+            LOGE(`Hooked : ${exp.name} @ ${exp.address} | ${exp.address.sub(Process.findModuleByAddress(exp.address)!.base)}\n${e}`)
+        }
+    }
 }
 
 globalThis.protect = (mPtr: NativePointer, size: number = 0x1000, protection: PageProtection = "rwx") => {

@@ -13,16 +13,18 @@ const main = () => {
 const TODO_OTHERS = () => {
 
     function TODO() {
-        Il2Cpp.perform(() => {
-            // todo ... 
-        })
+        // todo your onwn code
+
     }
 
     const taskID = setInterval(() => {
-        let md: Module | null = Process.findModuleByName("libil2cpp.so")
+        let md: Module | null
+        md = Process.findModuleByName("libil2cpp.so")
+        if (md == null)
+            md = Process.findModuleByName("libcocos2djs.so")
         if (md != null) {
-            // Toast(`libil2cpp.so loaded @ ${md.base} | ${md.size}`)
-            TODO()
+            // Toast(`${md.name} loaded @ ${md.base} | ${md.size}`)
+            md.name == "libil2cpp.so" ? Il2Cpp.perform(() => { TODO() }) : TODO()
             clearInterval(taskID)
         }
     }, 1000)
