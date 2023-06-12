@@ -267,17 +267,190 @@ const generateInterface = (className: string, classPtr: NativePointer = ptr(0)) 
     LOGD('}\n')
 }
 
+function generateClassCxxH(className: string): void {
+    let klass = new Il2Cpp.Class(findClass(className))
+    if (klass.methods.length == 0) return
+    newLine()
+
+    let localMethods = klass.methods.filter((method: Il2Cpp.Method) => !method.name.includes("ctor"))
+
+    var Group_Public = `public:`
+    var Group_Private = `private:`
+    var Group_Protected = `protected:`
+
+    localMethods.filter((method: Il2Cpp.Method) => !method.virtualAddress.isNull()).forEach((method: Il2Cpp.Method) => {
+        let mdes: string = getMethodDesFromMethodInfo(method)
+        let line_0 = `// ${mdes}`
+        let line_1 = ``
+
+        line_1 += mdes.includes("virtual") ? "virtual " : ""
+        line_1 += `${method.returnType.name.includes(">") ? `${TransformType(method.returnType.name)}` : `${TransformType(method.returnType.name.split(".").pop() as string)}`} `
+        line_1 += method.name
+        line_1 += "("
+        if (method.parameterCount != 0) {
+            for (let i = 0; i < method.parameterCount; i++) {
+                let param = method.parameters[i].type
+                let paramType = param.name.includes(">") ? `${TransformType(param.name)}` : `${TransformType(param.name.split(".").pop() as string)}`;
+                line_1 += `${paramType == 'std::string' ? 'const std::string&' : paramType}`
+                line_1 += ` ${method.parameters[i].name}`
+                if (i != method.parameterCount - 1) line_1 += ", "
+                if (i == method.parameterCount - 1) line_1 += ")"
+            }
+        } else {
+            line_1 += ")"
+        }
+
+        if (mdes.indexOf("public") != -1) {
+            Group_Public += `\n\t`
+            Group_Public += `\n\t${line_0}`
+            Group_Public += `\n\t${line_1};`
+        }
+
+        if (mdes.indexOf("private") != -1) {
+            Group_Private += `\n\t`
+            Group_Private += `\n\t${line_0}`
+            Group_Private += `\n\t${line_1};`
+        }
+
+        if (mdes.indexOf("protected") != -1 || mdes.indexOf("internal") != -1) {
+            Group_Protected += `\n\t`
+            Group_Protected += `\n\t${line_0}`
+            Group_Protected += `\n\t${line_1};`
+        }
+    })
+
+    LOGD(`${Group_Public}\n\n${Group_Private}\n\n${Group_Protected}`)
+
+    newLine()
+}
+
+
+function generateClassCxxCPP(className: string): void {
+    let klass = new Il2Cpp.Class(findClass(className))
+    if (klass.methods.length == 0) return
+    newLine()
+
+    let localMethods = klass.methods.filter((method: Il2Cpp.Method) => !method.name.includes("ctor"))
+
+    let assemblyName = klass.image.assembly.name
+    let declarationType = klass.namespace == "" ? klass.name : klass.namespace + "." + klass.name
+
+    let line_result: string = ``
+
+    localMethods.filter((method: Il2Cpp.Method) => !method.virtualAddress.isNull()).forEach((method: Il2Cpp.Method) => {
+        let mdes: string = getMethodDesFromMethodInfo(method)
+        let line_0 = `// ${mdes}`
+        let line_1 = ``
+
+        line_1 += `${method.returnType.name.includes(">") ? `${TransformType(method.returnType.name)}` : `${TransformType(method.returnType.name.split(".").pop() as string)}`} `
+        line_1 += className + '::'
+        line_1 += method.name
+        line_1 += "("
+
+        if (method.parameterCount != 0) {
+            for (let i = 0; i < method.parameterCount; i++) {
+                let param = method.parameters[i].type
+                let paramType = param.name.includes(">") ? `${TransformType(param.name)}` : `${TransformType(param.name.split(".").pop() as string)}`;
+                line_1 += `${paramType == 'std::string' ? 'const std::string&' : paramType}`
+                line_1 += ` ${method.parameters[i].name}`
+                if (i != method.parameterCount - 1) line_1 += ", "
+            }
+        }
+
+        line_1 += ")"
+        line_1 += `{`
+        line_1 += `\n\t`
+
+        let returnType = method.returnType.name.includes(">") ? `${TransformType(method.returnType.name)}` : `${TransformType(method.returnType.name.split(".").pop() as string)}`;
+
+        if (returnType == 'std::string') returnType = 'MonoString*';
+
+        line_1 += `return execute_il2cpp_method<${returnType} `;
+
+        if (!method.isStatic) {
+            line_1 += `(*)(${className}*`
+            if (method.parameterCount != 0) line_1 += ", ";
+        } else {
+            line_1 += `(*)(`;
+        }
+
+        if (method.parameterCount != 0) {
+            for (let i = 0; i < method.parameterCount; i++) {
+                let param = method.parameters[i].type
+                let paramType = param.name.includes(">") ? `${TransformType(param.name)}` : `${TransformType(param.name.split(".").pop() as string)}`;
+                if (paramType == 'std::string') paramType = 'MonoString*';
+                line_1 += paramType
+                if (i != method.parameterCount - 1) line_1 += ", "
+            }
+        }
+
+        line_1 += `)>`
+        line_1 += `("${assemblyName}", "${declarationType}", "${method.name}", ${method.parameterCount}, `
+
+        if (!method.isStatic) {
+            line_1 += "this"
+            if (method.parameterCount != 0) line_1 += ", ";
+        }
+
+        if (method.parameterCount != 0) {
+            for (let i = 0; i < method.parameterCount; i++) {
+                let param = method.parameters[i].type
+                let paramType = param.name.includes(">") ? `${TransformType(param.name)}` : `${TransformType(param.name.split(".").pop() as string)}`;
+                line_1 += paramType == 'std::string' ? `IL2CPP::new_string(${method.parameters[i].name})` : `${method.parameters[i].name}`
+                if (i != method.parameterCount - 1) line_1 += ", "
+            }
+        }
+
+        line_1 += ")"
+
+        if (returnType == 'MonoString*') {
+            line_1 += `->toString();`
+        } else {
+            line_1 += `;`
+        }
+
+        line_1 += `\n}`
+
+        line_result += line_0
+        line_result += "\n"
+        line_result += line_1
+        line_result += "\n\n"
+    })
+
+    LOGD(`${line_result}`)
+
+    newLine()
+}
+
+function TransformType(inputType: string) {
+    if (inputType == "Void") return "void"
+    if (inputType.includes("&")) inputType = inputType.replace("&", "*")
+    if (inputType.includes("[]")) return inputType.replace("[]", "*")
+    if (inputType == "Boolean") return "bool"
+    if (inputType == "Int32") return "int"
+    if (inputType == "UInt32") return "int"
+    if (inputType == "Int64") return "long"
+    if (inputType == "UInt64") return "long"
+    if (inputType == "Single") return "float"
+    if (inputType == "Double") return "double"
+    if (inputType == "String") return "std::string"
+    return `${inputType}*`
+}
+
 declare global {
     var generateClass: (className: string, classPtr?: NativePointer) => void
     var generateApi: (className: string, classPtr?: NativePointer) => void
     var generateFieldEnum: (className: string, classPtr?: NativePointer) => void
     var generateInterface: (className: string, classPtr?: NativePointer) => void
+    var generateClassCxxH: (mPtr: string) => void
+    var generateClassCxxCPP: (mPtr: string) => void
 }
 
 globalThis.generateClass = generateClass
 globalThis.generateApi = generateApi
 globalThis.generateFieldEnum = generateFieldEnum
 globalThis.generateInterface = generateInterface
+globalThis.generateClassCxxH = generateClassCxxH
+globalThis.generateClassCxxCPP = generateClassCxxCPP
 
 export { }
-

@@ -2,7 +2,6 @@ import { LogColor, PTR } from "../base/enum"
 import { ARGM } from "../base/globle"
 import { PTR2NativePtr } from "./common"
 
-// 读取浮点数 ptr().readFloat() === readSingle(ptr().readPointer())
 const readSingle = (value: NativePointer): number => allocP().writePointer(value).readFloat()
 
 const readBoolean = (value: NativePointer): boolean => alloc(1).writePointer(value).readU8() == 0x1

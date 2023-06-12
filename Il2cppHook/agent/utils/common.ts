@@ -185,9 +185,8 @@ var runOnMain = (UpDatePtr: NativePointer, Callback: Function) => {
 
 const runOnNewThread = (Callback: Function): NativePointer => {
     if (Callback == undefined) return ptr(0)
-    let callback = new NativeCallback(function (arg0, arg1, arg2, arg3) {
-        Callback.apply(null, arguments)
-        return ptr(0x0)
+    let callback = new NativeCallback(function (_arg0, _arg1, _arg2, _arg3) {
+        return Callback.apply(null, arguments)
     }, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
     let ntid = Memory.alloc(p_size)
     new NativeFunction(Module.findExportByName(null, "pthread_create")!, 'pointer', ['pointer', 'int', 'pointer', 'int'])(ntid, 0, callback, 0)
