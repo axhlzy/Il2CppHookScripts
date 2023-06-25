@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "lib": [
-      "es2020"
-    ],
+    "lib": ["es2020"],
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "module": "commonjs",

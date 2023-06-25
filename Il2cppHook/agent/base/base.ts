@@ -598,10 +598,30 @@ export const get_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Clas
     return Il2Cpp.GC.choose(localClass)
 }
 
-export const show_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Class = "GameObject"): void => get_gc_instance(inputClass).forEach((item: Il2Cpp.Object) => {
+export const show_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Class): void => get_gc_instance(inputClass).forEach((item: Il2Cpp.Object) => {
     let localDes = FakeCommonType(item.class.type, item.handle)
     LOGD(`[*] ${item.handle}\t${localDes}`)
 })
+
+/**
+ * @example fakeGCInstance('TMP_Text', (instance)=>{return callFunctionRUS(findMethod('Unity.TextMeshPro',"TMPro.TMP_Text","get_text",0,[],false).virtualAddress,instance.handle)})
+ */
+export const fake_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Class, mapFunction?: (item: Il2Cpp.Object) => string): void => {
+    if (typeof inputClass == "string") {
+        if (inputClass == "TMP_Text" && !mapFunction) {
+            mapFunction = (instance) => { return callFunctionRUS(find_method('Unity.TextMeshPro', "TMP_Text", "get_text", 0), instance.handle) }
+        }
+    }
+    get_gc_instance(inputClass)
+        .map((item: Il2Cpp.Object) => mapFunction ? mapFunction(item) : item)
+        .forEach((item: string | Il2Cpp.Object) => {
+            if (typeof item == "string") {
+                LOGD(`[*] ${item}`)
+            } else if (item instanceof Il2Cpp.Object) {
+                LOGD(`[*] ${item.handle}\t${item}`)
+            }
+        })
+}
 
 export const find_method = HookerBase.findMethodSync as find_MethodType
 
@@ -624,6 +644,7 @@ globalThis.af = (className: string) => B(findClass(className))
 globalThis.aui = () => B("AUI")
 globalThis.getGCInstance = get_gc_instance
 globalThis.showGCInstance = show_gc_instance
+globalThis.fakeGCInstance = fake_gc_instance
 
 Il2Cpp.perform(() => globalThis.soAddr = Il2Cpp.module.base)
 
@@ -647,7 +668,8 @@ declare global {
     var MethodToShow: (methodInfo: Il2Cpp.Method) => void
 
     var getGCInstance: (inputClass?: string | NativePointer | Il2Cpp.Class) => Array<Il2Cpp.Object>
-    var showGCInstance: () => void
+    var showGCInstance: (inputClass: string | NativePointer | Il2Cpp.Class) => void
+    var fakeGCInstance: (inputClass: string | NativePointer | Il2Cpp.Class, mapFunction?: (item: Il2Cpp.Object) => string) => void
 
     var soAddr: NativePointerValue
 }
