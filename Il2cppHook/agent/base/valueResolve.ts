@@ -161,6 +161,8 @@ export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
             return new UnityEngine_Object(mPtr).get_name()
         case "UnityEngine.Color":
             return new UnityEngine_Color_Impl(mPtr).toString()
+        case "UnityEngine.SceneManagement.Scene":
+            return getSceneName(mPtr)
         case "Vector2":
             return `${mPtr.readFloat()} ${mPtr.add(4).readFloat()}`
         default:

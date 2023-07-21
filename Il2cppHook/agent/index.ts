@@ -15,6 +15,20 @@ const TODO_OTHERS = () => {
     function TODO() {
         // todo your onwn code
 
+        // var SystemBoolean = Il2Cpp.Domain.assembly("mscorlib").image.class("System.Boolean")
+        // var UnityAction = Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Events.UnityAction`1")
+        // var cls = UnityAction.inflate(SystemBoolean)
+        // cls.methods.forEach((method) => {
+        //     LOGO(method.name + " " + method.relativeVirtualAddress)
+        // })
+
+        // var Vector2 = Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Vector2")
+        // var UnityAction = Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Events.UnityAction`1")
+        // var cls = UnityAction.inflate(Vector2)
+        // cls.methods.forEach((method) => {
+        //     LOGO(method.name + " " + method.relativeVirtualAddress)
+        // })
+
     }
 
     const taskID = setInterval(() => {

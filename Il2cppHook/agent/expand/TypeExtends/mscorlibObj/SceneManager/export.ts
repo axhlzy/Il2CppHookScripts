@@ -1,6 +1,7 @@
 export { }
 declare global {
     var HookLoadScene: () => void
+    var getSceneName: (mPtr: NativePointer) => string
     // var HookLoadSceneLisener: () => void
     // var SceneInfo: () => void
 }
@@ -19,6 +20,24 @@ globalThis.HookLoadScene = (): void => {
     A(Il2Cpp.Api.SceneManager._LoadScene_sceneName_parameters, (args: InvocationArguments, ctx: CpuContext) => {
         LOGZ(`\t[*] LoadScene( sceneName = '${readU16(args[0])}', LoadSceneParameters = '${args[1]}' )`)
     })
+
+    // UnityEngine.SceneManagement.SceneManager | private static AsyncOperation LoadSceneAsyncNameIndexInternal(String sceneName, Int32 sceneBuildIndex, LoadSceneParameters parameters, Boolean mustCompleteNextFrame)
+    A(Il2Cpp.Api.SceneManager._LoadSceneAsyncNameIndexInternal, (args: InvocationArguments, ctx: CpuContext) => {
+        LOGD(`[*] LoadSceneAsyncNameIndexInternal( sceneName = '${readU16(args[0])}', sceneBuildIndex = ${args[1]}, LoadSceneParameters = '${args[2]}', mustCompleteNextFrame = ${args[3]} )`)
+    })
+
+    // UnityEngine.SceneManagement.SceneManager | private static Void Internal_ActiveSceneChanged(Scene previousActiveScene, Scene newActiveScene)
+    A(Il2Cpp.Api.SceneManager._Internal_ActiveSceneChanged, (args: InvocationArguments, ctx: CpuContext) => {
+        LOGD(`[*] Internal_ActiveSceneChanged( previousActiveScene = '${args[0]}' <- '${getSceneName(args[0])}', newActiveScene = '${args[1]}' <- '${getSceneName(args[1])}' )`)
+    })
+
+}
+
+globalThis.getSceneName = (mPtr: NativePointer): string => {
+    let tmpMem = alloc(0x4)
+    tmpMem.writePointer(mPtr)
+    let sceneName = Il2Cpp.Api.Scene._get_name(tmpMem)
+    return readU16(sceneName)
 }
 
 // globalThis.HookLoadSceneLisener = (): void => {
