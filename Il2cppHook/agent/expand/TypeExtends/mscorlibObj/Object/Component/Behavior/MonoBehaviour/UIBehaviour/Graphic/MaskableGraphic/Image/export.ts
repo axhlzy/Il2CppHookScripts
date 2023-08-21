@@ -65,7 +65,7 @@ const B_Text = (): void => {
             if (strMap.size != 0) {
                 let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
-                    callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "set_text", 1), args[0], allocCStr(repStr))
+                    callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "set_text", 1), args[0], allocUStr(repStr))
                     LOGH(" \n\t {REP} " + aimStr + " ---> " + repStr)
                 }
                 if (showGobj != undefined && showGobj == true) {
@@ -85,7 +85,7 @@ const B_Text = (): void => {
             if (strMap.size != 0) {
                 let repStr = strMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
-                    callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "set_text", 1), args[0], allocCStr(repStr))
+                    callFunction(find_method("Unity.TextMeshPro", "TextMeshPro", "set_text", 1), args[0], allocUStr(repStr))
                     LOGH(" \n\t {REP} " + aimStr + " ---> " + repStr)
                 }
             }

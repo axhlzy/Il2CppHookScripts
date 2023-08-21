@@ -422,17 +422,14 @@ function printModule(md: Module, needIndex: boolean = false) {
 }
 
 globalThis.findExport = (exportName: string, moduleName: string | undefined, callback?: (exp: ModuleExportDetails) => void) => {
-    // 未填写回调函数就直接用默认回调函数来展示导出函数的详细信息
     if (callback == undefined) callback = showDetails
     if (moduleName == undefined) {
-        // 遍历所有Module的导出函数
         Process.enumerateModules().forEach((md: Module) => {
             md.enumerateExports().forEach((exp: ModuleExportDetails) => {
                 if (exp.name.indexOf(exportName) != -1) callback!(exp)
             })
         })
     } else {
-        // 遍历指定Module下的导出函数
         let md: Module | null = Process.findModuleByName(moduleName)
         if (md == null) throw new Error("NOT FOUND Module : " + moduleName)
         md.enumerateExports().forEach((exp: ModuleExportDetails) => {
@@ -445,20 +442,42 @@ globalThis.findExport = (exportName: string, moduleName: string | undefined, cal
         try {
             let md: Module = Process.findModuleByAddress(exp.address)!
             if (md == null) {
-                // Process 找不到和linker相关的导出函数，这里单独处理一下 { exp: findExport("dlopen") }
                 let mdt = Process.findModuleByName("linker")!
                 mdt.enumerateExports().forEach((linkerExp: ModuleExportDetails) => {
                     if (linkerExp.address.equals(exp.address) && linkerExp.name == exp.name) md = mdt
                 })
             }
             let rg: RangeDetails = Process.findRangeByAddress(exp.address)!
-            LOGD(`\n[*] ${exp.type} -> address: ${exp.address} ( ${exp.address.sub(md.base)} ) | name: ${exp.name}`)
-            LOGZ(`\t[-] base: ${md.base} | size: 0x${md.size.toString(16).padEnd(p_size * 2, " ")} <- module:  ${md.name}`)
-            LOGZ(`\t[-] base: ${rg.base} | size: 0x${rg.size.toString(16).padEnd(p_size * 2, " ")} <- range:   ${rg.protection}`)
+            let dmn = `${demangleName(exp.name)}`
+            let desp_first_line = `\n[*] ${exp.type} -> address: ${exp.address} ( ${exp.address.sub(md.base)} )  ${exp.name}`
+            let desp_first_line_len = desp_first_line.length
+            LOGD(desp_first_line)
+            let paddedDmn = dmn.padStart(desp_first_line_len - exp.name.length + dmn.length - 1, " ")
+            if (dmn.length != 0) LOGO(`${paddedDmn}`)
+            LOGZ(`\t[-] MD_Base: ${md.base} | size: ${ptr(md.size).toString().padEnd(p_size * 2, " ")} <-  module:  ${md.name}`)
+            LOGZ(`\t[-] RG_Base: ${rg.base} | size: ${ptr(rg.size).toString().padEnd(p_size * 2, " ")} <-  range:   ${rg.protection}`)
         } catch (error) {
             if (Process.findModuleByAddress(exp.address) == null) LOGE("Module not found")
             if (Process.findRangeByAddress(exp.address) == null) LOGE("Range not found")
             LOGD(JSON.stringify(exp))
+        }
+
+        function demangleName(expName: string) {
+            let demangleAddress = Module.findExportByName("libc++.so", '__cxa_demangle')!
+            let demangle = new NativeFunction(
+                demangleAddress,
+                'pointer', ['pointer', 'pointer', 'pointer', 'pointer']
+            )
+            let mangledName = Memory.allocUtf8String(expName)
+            let outputBuffer = ptr(0)
+            let length = ptr(0)
+            let status = Memory.alloc(4)
+            let result = demangle(mangledName, outputBuffer, length, status)
+            if (status.readInt() === 0) {
+                return result.readUtf8String()
+            } else {
+                return ""
+            }
         }
     }
 }
