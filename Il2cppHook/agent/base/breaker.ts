@@ -56,7 +56,7 @@ export class Breaker {
                 }
                 if (classArray.length == 1 && clsPtr.equals(classArray[0].handle)) innerImage(clsPtr)
                 if (classArray.length > 1) {
-                    LOGD(`\nFound multiple classmates, please select one to attach { using B(0x123...) }`)
+                    LOGD(`\nFound multiple classmates, please select one to attach { using ${Process.arch == "arm64" ? 'B("0x123...")' : 'B(0x123...)'} }`)
                     findClasses(classNameStr, true, false)
                 }
             }
