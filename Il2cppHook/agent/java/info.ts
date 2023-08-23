@@ -127,14 +127,15 @@ const cacheMethods = (withLog: boolean = true) => {
     if (withLog) LOGZ(`Caching methods done. ${allMethodsCacheArray.length} Methods . cost ${Date.now() - timeCurrent} ms\n`)
 }
 
-const findClasses = (filterClassName: string): void => {
+const findClasses = (filterClassName: string, completeMatch: boolean = false, retArray: boolean = false): void | Il2Cpp.Class[] => {
     let index: number = 0 // 行计数
     const maxClassLen: number = 30 // className 最大长度,保持格式，多出部分省略 (new Il2Cpp.Class(ptr(...)).name 获取)
     const localClasses: Il2Cpp.Class[] = HookerBase._list_classes
-        .filter((item: Il2Cpp.Class) => item.name.toLocaleLowerCase().includes(filterClassName.toLocaleLowerCase()))
+        .filter((item: Il2Cpp.Class) => completeMatch ? item.name == filterClassName : item.name.toLocaleLowerCase().includes(filterClassName.toLocaleLowerCase()))
     let maxNameLen: number = localClasses
         .reduce((a: number, b: Il2Cpp.Class) => a > b.name.length ? a : b.name.length, 0) + 1
     maxNameLen = (maxNameLen > maxClassLen ? maxClassLen : maxNameLen) - 1
+    if (retArray) return localClasses
     localClasses
         .sort((a: Il2Cpp.Class, b: Il2Cpp.Class) => (b.isAbstract ? -1 : 1) - (a.isAbstract ? -1 : 1))
         .sort((a: Il2Cpp.Class, b: Il2Cpp.Class) => (b.isEnum ? 1 : -1) - (a.isEnum ? 1 : -1))
@@ -401,5 +402,5 @@ declare global {
     var AddressToMethod: (mPtr: NativePointer | number, withLog?: boolean) => Il2Cpp.Method
     var AddressToMethodNoException: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method | null
     var findMethods: (filter: string, findAll?: boolean, formartMaxLine?: number, retArr?: boolean) => void | Array<Il2Cpp.Method>
-    var findClasses: (filterClassName: string) => void
+    var findClasses: (filterClassName: string, completeMatch?: boolean, retArray?: boolean) => void | Il2Cpp.Class[]
 }

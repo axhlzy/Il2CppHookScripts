@@ -40,20 +40,24 @@ export class Breaker {
                 // ---> ImageName case to Pointer
                 HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
                     if (image.name.includes(imgOrClsPtr)) {
-                        FC.printTitile("Found : ImageName: " + imgOrClsPtr + " at " + image.handle)
+                        FC.printTitile(`Found : ClassName: ${image.name} @ ${image.handle}`)
                         innerImage(image.handle)
                     }
                 })
             } else {
                 // ---> className case to Pointer
+                let classNameStr: string = imgOrClsPtr
+                let classArray: Il2Cpp.Class[] = findClasses(classNameStr, true, true)!
                 let clsPtr: NativePointer = findClass(imgOrClsPtr)
-                if (!clsPtr.isNull()) {
-                    FC.printTitile("Found : ClassName: " + imgOrClsPtr + " at " + clsPtr)
-                    innerImage(clsPtr)
-                } else {
-                    // Do not found className
+                if (clsPtr.isNull()) {
                     let imageName = closest(imgOrClsPtr, HookerBase._list_images_names)
                     LOGE(`You mean this ? ${imageName} @ ${Il2Cpp.Domain.assemblies.filter(item => item.name.includes)[0].handle}`)
+                    throw new Error(`\n\tCan't find class ${classNameStr}\n`)
+                }
+                if (classArray.length == 1 && clsPtr.equals(classArray[0].handle)) innerImage(clsPtr)
+                if (classArray.length > 1) {
+                    LOGD(`\nFound multiple classmates, please select one to attach { using B(0x123...) }`)
+                    findClasses(classNameStr, true, false)
                 }
             }
         }
@@ -69,9 +73,13 @@ export class Breaker {
                     .flatMap(cls => cls.methods)
                     .forEach(Breaker.attachMethod)
             } else {
-                // string status
+                // string status or classPtr
                 let classHandle = imgOrClsPtr
-                new Il2Cpp.Class(classHandle).methods.forEach(Breaker.attachMethod)
+                let currentCls: Il2Cpp.Class = new Il2Cpp.Class(classHandle)
+                if (currentCls.isEnum) throw new Error("can't attach enum class")
+                if (currentCls.isAbstract) throw new Error("can't attach abstract class")
+                FC.printTitile(`Found : ClassName: ${currentCls.name} @ ${classHandle}`)
+                currentCls.methods.forEach(Breaker.attachMethod)
             }
             LOGO(`${getLine(40, "-")}\n Attached ${Breaker.map_attachedMethodInfos.size - lastSize} methods / All ${Breaker.map_attachedMethodInfos.size} methods\n${getLine(85, "-")}`)
         }
@@ -80,14 +88,14 @@ export class Breaker {
             if (type == "CommonClass") {
                 HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
                     if (CommonClass.includes(image.assembly.name)) {
-                        FC.printTitile("Found : ImageName: " + image.name + " at " + image.handle)
+                        FC.printTitile(`Found : ImageName: ${image.name} @ ${image.handle}`)
                         innerImage(image.handle)
                     }
                 })
             } else if (type == "JNI") {
                 let clsTmp = Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNI")
                 if (clsTmp.isNull()) throw new Error("can't find class UnityEngine.AndroidJNI")
-                FC.printTitile("Found : ClassName: " + clsTmp.name + " at " + clsTmp.handle)
+                FC.printTitile(`Found : ClassName: ${clsTmp.name} @ ${clsTmp.handle}`)
                 innerImage(clsTmp.handle)
                 // innerImage(Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNIHelper").handle)
             } else if ("AUI") {
@@ -231,7 +239,9 @@ export class Breaker {
     }
 
     static breakWithArgs = (mPtr: NativePointer, argCount: number = 4) => {
-        mPtr = checkPointer(mPtr)
+        if (Process.findModuleByName("libil2cpp.so") != null) {
+            mPtr = checkPointer(mPtr)
+        }
         A(mPtr, (args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
             LOGO(`\n${getLine(85)}`)
             LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(ctx))}`)

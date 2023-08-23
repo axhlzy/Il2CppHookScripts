@@ -23,6 +23,7 @@ setImmediate(() => {
 })
 
 export let checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false, _showLog: boolean = false): NativePointer => {
+    if (Process.findModuleByName("libil2cpp.so") == null) return value as NativePointer
     if (baseAddress.isNull()) baseAddress = Il2Cpp.module.base
     if (baseAddress.isNull()) throw new Error("checkPointer: libil2cpp.so not found ! \n please call setBaseAddress first")
 

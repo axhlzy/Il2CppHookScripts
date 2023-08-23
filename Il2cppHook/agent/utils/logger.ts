@@ -16,6 +16,7 @@ export class Logger {
     static LOGE = (msg: any): void => LOG(msg, LogColor.RED)
     static LOGG = (msg: any): void => LOG(msg, LogColor.C32)
     static LOGD = (msg: any): void => LOG(msg, LogColor.C36)
+    static LOGN = (msg: any): void => LOG(msg, LogColor.C35)
     static LOGO = (msg: any): void => LOG(msg, LogColor.C33)
     static LOGP = (msg: any): void => LOG(msg, LogColor.C34)
     static LOGM = (msg: any): void => LOG(msg, LogColor.C92)
@@ -114,6 +115,7 @@ declare global {
     var LOGW: (msg: any) => void // LogColor.YELLOW
     var LOGE: (msg: any) => void // LogColor.RED
     var LOGD: (msg: any) => void // LogColor.C36
+    var LOGN: (msg: any) => void // LogColor.C35
     var LOGG: (msg: any) => void // LogColor.C32
     var LOGO: (msg: any) => void // LogColor.C33
     var LOGP: (msg: any) => void // LogColor.C33
@@ -135,6 +137,7 @@ globalThis.LOGW = Logger.LOGW
 globalThis.LOGE = Logger.LOGE
 globalThis.LOGG = Logger.LOGG
 globalThis.LOGD = Logger.LOGD
+globalThis.LOGN = Logger.LOGN
 globalThis.LOGO = Logger.LOGO
 globalThis.LOGP = Logger.LOGP
 globalThis.LOGH = Logger.LOGH

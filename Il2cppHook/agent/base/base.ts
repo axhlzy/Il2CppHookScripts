@@ -262,6 +262,8 @@ export class HookerBase {
     */
     private static map_cache_class = new Map<string, Il2Cpp.Class>()
     static findClass(searchClassName: string, fromAssebly: string[] = ["Assembly-CSharp", "MaxSdk.Scripts", "mscorlib"], fromCache: boolean = true): NativePointer {
+        if (searchClassName as any instanceof NativePointer) return ptr(0)
+        if (searchClassName as any instanceof Number) return ptr(0)
         if (searchClassName == undefined) throw ("Search name can not be null or undefined")
         if (typeof searchClassName != "string") throw ("findClass need a string value")
         if (fromCache) {

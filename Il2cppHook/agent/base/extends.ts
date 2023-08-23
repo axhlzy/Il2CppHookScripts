@@ -421,24 +421,39 @@ function printModule(md: Module, needIndex: boolean = false) {
     LOGZ(`\t${md.path}\n`)
 }
 
-globalThis.findExport = (exportName: string, moduleName: string | undefined, callback?: (exp: ModuleExportDetails) => void) => {
+globalThis.findExport = (exportName: string, moduleName?: string, callback?: (exp: ModuleExportDetails, demangleName?: string) => void, checkDemangleName: boolean = false) => {
     if (callback == undefined) callback = showDetails
+    var count = 0
     if (moduleName == undefined) {
         Process.enumerateModules().forEach((md: Module) => {
-            md.enumerateExports().forEach((exp: ModuleExportDetails) => {
-                if (exp.name.indexOf(exportName) != -1) callback!(exp)
-            })
+            md.enumerateExports().forEach((exp: ModuleExportDetails) => checkAndShow(exp, callback))
         })
     } else {
         let md: Module | null = Process.findModuleByName(moduleName)
         if (md == null) throw new Error("NOT FOUND Module : " + moduleName)
-        md.enumerateExports().forEach((exp: ModuleExportDetails) => {
-            if (exp.name.indexOf(exportName) != -1) callback!(exp)
-        })
+        md.enumerateExports().forEach((exp: ModuleExportDetails) => checkAndShow(exp, callback))
     }
-    if (callback == showDetails) newLine()
 
-    function showDetails(exp: ModuleExportDetails) {
+    if (callback == showDetails) LOGN(`\n[=] ${count} result(s)\n`)
+    else return
+
+    function checkAndShow(exp: ModuleExportDetails, callback?: (exp: ModuleExportDetails, demangleName?: string) => void) {
+        let name = exp.name
+        if (checkDemangleName) {
+            // 这会遍历太多的函数名 并且调用 demangle 会消耗大量时间，不建议使用
+            let demangledName = demangleName(name)
+            demangledName = (demangledName == "" ? name : demangledName)!
+            if (name.indexOf(exportName) != -1 || demangledName.indexOf(exportName) != -1) callback!(exp, demangledName)
+        } else {
+            if (name.indexOf(exportName) != -1) {
+                let demangledName = demangleName(name)
+                demangledName = (demangledName == "" ? name : demangledName)!
+                callback!(exp, demangledName)
+            }
+        }
+    }
+
+    function showDetails(exp: ModuleExportDetails, demangleName?: string) {
         try {
             let md: Module = Process.findModuleByAddress(exp.address)!
             if (md == null) {
@@ -448,7 +463,7 @@ globalThis.findExport = (exportName: string, moduleName: string | undefined, cal
                 })
             }
             let rg: RangeDetails = Process.findRangeByAddress(exp.address)!
-            let dmn = `${demangleName(exp.name)}`
+            let dmn = demangleName!
             let desp_first_line = `\n[*] ${exp.type} -> address: ${exp.address} ( ${exp.address.sub(md.base)} )  ${exp.name}`
             let desp_first_line_len = desp_first_line.length
             LOGD(desp_first_line)
@@ -456,28 +471,29 @@ globalThis.findExport = (exportName: string, moduleName: string | undefined, cal
             if (dmn.length != 0) LOGO(`${paddedDmn}`)
             LOGZ(`\t[-] MD_Base: ${md.base} | size: ${ptr(md.size).toString().padEnd(p_size * 2, " ")} <-  module:  ${md.name}`)
             LOGZ(`\t[-] RG_Base: ${rg.base} | size: ${ptr(rg.size).toString().padEnd(p_size * 2, " ")} <-  range:   ${rg.protection}`)
+            ++count
         } catch (error) {
             if (Process.findModuleByAddress(exp.address) == null) LOGE("Module not found")
             if (Process.findRangeByAddress(exp.address) == null) LOGE("Range not found")
             LOGD(JSON.stringify(exp))
         }
+    }
 
-        function demangleName(expName: string) {
-            let demangleAddress = Module.findExportByName("libc++.so", '__cxa_demangle')!
-            let demangle = new NativeFunction(
-                demangleAddress,
-                'pointer', ['pointer', 'pointer', 'pointer', 'pointer']
-            )
-            let mangledName = Memory.allocUtf8String(expName)
-            let outputBuffer = ptr(0)
-            let length = ptr(0)
-            let status = Memory.alloc(4)
-            let result = demangle(mangledName, outputBuffer, length, status)
-            if (status.readInt() === 0) {
-                return result.readUtf8String()
-            } else {
-                return ""
-            }
+    function demangleName(expName: string) {
+        let demangleAddress = Module.findExportByName("libc++.so", '__cxa_demangle')!
+        let demangle = new NativeFunction(
+            demangleAddress,
+            'pointer', ['pointer', 'pointer', 'pointer', 'pointer']
+        )
+        let mangledName = Memory.allocUtf8String(expName)
+        let outputBuffer = ptr(0)
+        let length = ptr(0)
+        let status = Memory.alloc(4)
+        let result = demangle(mangledName, outputBuffer, length, status)
+        if (status.readInt() === 0) {
+            return result.readUtf8String()
+        } else {
+            return ""
         }
     }
 }
