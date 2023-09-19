@@ -6,9 +6,9 @@
 
 - Parse Unity's method `m` / class `c` / field `f` / instance `lfs`
 - parse runtime method argument `b`
-- (Batch) Hook `B/BF` for commonly used functions, modify function return value `setFunction...`
+- (Batch) Hook `B/BF` for commonly used functions, modify function return value `setFunctionXXX`
 - More convenient to find function `findMethods` and call function `callFunction`
-- object hierarchy `PrintHierarchy` / type hierarchy `showTypeParent`
+- Object hierarchy `PrintHierarchy` / type hierarchy `showTypeParent`
 - Disassemble `showAsm` with frida and method information
 - Commonly used Hook package `HookOnPointerClick/HookSetActive/B_Button...`
 - Parse mount script `showComponents alias s` `HookOnPointerClick/PrintHierarchyWithComponents` is also introduced <--- testing
@@ -67,8 +67,6 @@ Report bugs to:
 ```sh
 $ git clone https://github.com/axhlzy/Il2CppHookScripts.git
 $ cd Il2cppHook/
-OR
-$ fat -c    <--- After install il2cpp-hooker. It is a more convenient way to construct and use.
 
 $ npm install
 
@@ -86,3 +84,7 @@ $ frida -FU -l ../_Ufunc.js
 #### API
 
 [More details](https://github.com/axhlzy/Il2CppHookScripts/wiki)
+
+OR
+
+open with vscode and search `globalthis.` to find more useage
