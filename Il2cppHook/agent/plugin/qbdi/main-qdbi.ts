@@ -1,13 +1,13 @@
-import { type } from 'os'
-import { soName } from '../../base/globle'
 import { VM, VMAction, GPRState, FPRState, CallbackPriority, VMError, InstPosition, SyncDirection } from './frida-qbdi'
+import { methodToString } from '../../bridge/fix/il2cppM'
+import { soName } from '../../base/globle'
 
 // https://qbdi.readthedocs.io/en/stable/api.html
 // https://qbdi.readthedocs.io/en/stable/get_started-frida.html#frida-qbdi-script
 // segment 1: Permission denied [SELinux] -> getenforce == Enforcing ? setenforce 0 : null
 
-const StackSize = 0x1000 * 50
-// const StackSize = 0x1000 * 0x1000 * 10
+const UINT64_SIZE = 0x8         // 定义存放数据基本块大小
+const StackSize = 0x1000 * 50   // 定义栈大小
 
 var QBDI_INIT = false
 var vm: VM
@@ -32,6 +32,22 @@ const initQBDI = (size: number = StackSize) => {
 globalThis.qbdi_test = () => {
 
     initQBDI()
+
+    var exampleModule = new CModule(`
+        #include <stdio.h> 
+        #include <android/log.h>
+        void my_callback(const char* message) { 
+            __android_log_print(6, "ZZZ", "%s", message);
+        }
+    `);
+
+    const myCallback = new NativeCallback((message) => {
+        exampleModule.my_callback(message.readCString());
+    }, 'void', ['pointer']);
+
+
+
+
 
     LOGD(JSON.stringify(vm.version))
     let exp_func_string_new = Module.findExportByName(soName, "il2cpp_string_new")!
@@ -66,54 +82,90 @@ type ICBK_CALL = (vm: VM, gpr: GPRState, fpr: FPRState, data: NativePointer) => 
 const default_icbk = function (vm: VM, gpr: GPRState, _fpr: FPRState, _data: NativePointer) {
     let inst = vm.getInstAnalysis()
     let lastAddress: NativePointer = _data.readPointer()
+    if (lastAddress == NULL) baseSP = gpr.getRegister("SP")!
+    let index: UInt64 = _data.add(UINT64_SIZE * 1).readU64()
+    let startTime_ICBK: UInt64 = _data.add(UINT64_SIZE * 2).readU64()
+    let run_inst_count: UInt64 = _data.add(UINT64_SIZE * 3).readU64()
     let currentAddress: NativePointer = ptr(inst.address)
-    LOGD(`${currentAddress}   ${baseSP.sub(gpr.getRegister("SP"))}  ${inst.disassembly}`)
-    // if (lastAddress != NULL && !currentAddress.sub(lastAddress).equals(4)) {
-    //     let methodInfo: Il2Cpp.Method = new Il2Cpp.Method(ptr(123))
-    //     try {
-    //         methodInfo = AddressToMethod(currentAddress)
-    //     } catch { }
-    //     LOGE(`branch to -> ${currentAddress} ${methodInfo.handle != ptr(123) ? methodInfo.name : ""}}`)
-    // }
+    let currentTime: UInt64 = new UInt64(Date.now())
+    let custTime = index.equals(0) ? 0 : currentTime.sub(startTime_ICBK)
+    let preText = `[ ${index.toString().padEnd(3, ' ')} | ${custTime} ms ]`.padEnd(18, ' ')
+    if (startTime_ICBK.equals(0)) _data.add(UINT64_SIZE * 2).writeU64(Date.now())
+
+    let forceInstLog = true
+    let asmOffset = baseSP.sub(gpr.getRegister("SP"))
+    if (lastAddress != NULL && (forceInstLog || !currentAddress.sub(lastAddress).equals(4))) {
+        let methodInfo: Il2Cpp.Method | null = AddressToMethodNoException(currentAddress)
+        if (methodInfo != null) {
+            _data.add(UINT64_SIZE * 1).writeU64(index.add(1))
+            LOGD(`${preText} ${asmOffset.toString().padEnd(8, ' ')} ${currentAddress} | ${methodInfo.handle} -> ${methodInfo.class.name}::${methodToString(methodInfo, true)}`)
+        }
+        if (!run_inst_count.equals(0) && (forceInstLog || run_inst_count.toNumber() % 1000 === 0)) {
+            let md: Module | null = Process.findModuleByAddress(currentAddress)
+            let extra = md == null ? "" : `${currentAddress.sub(md.base)} @ ${md.name}`.padEnd(30, ' ')
+            LOGZ(`${preText} ${asmOffset.toString().padEnd(8, ' ')} ${currentAddress} | ${extra} | INSC: ${run_inst_count.toString().padEnd(7, ' ')} | ${inst.disassembly}`)
+        }
+    }
+    _data.add(UINT64_SIZE * 3).writeU64(run_inst_count.add(1))
     _data.writePointer(currentAddress)
     return VMAction.CONTINUE
 }
 
-globalThis.traceFunction = (mPtr: NativePointer | string, icbk_function: ICBK_CALL | NativePointer = default_icbk, argsCount: number = 4, once: boolean = true) => {
+globalThis.traceFunction = (mPtr: NativePointer | string | number, icbk_function: ICBK_CALL | NativePointer = default_icbk, argsCount: number = 4, once: boolean = true) => {
     if (mPtr == null) throw new Error("traceFunction : mPtr is null")
-    if (typeof mPtr == "string") mPtr = ptr(mPtr)
+    let function_ptr: NativePointer = NULL
+    if (mPtr instanceof NativePointer) function_ptr = mPtr
+    if (typeof mPtr == "string" || typeof mPtr == "number") function_ptr = ptr(mPtr)
     if (icbk_function == NULL) icbk_function = default_icbk
 
     initQBDI()
 
-    let function_ptr = ptr(mPtr as any)
-    let srcFunc: NativeFunction<NativePointer, [NativePointer, NativePointer, NativePointer, NativePointer, NativePointer]> = new NativeFunction(function_ptr, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer', 'pointer'])
-    var callback = new NativeCallback(function () {
-        let args = []
+    type callBackType = NativeFunction<NativePointer, [NativePointer, NativePointer, NativePointer, NativePointer, NativePointer]>
+    let srcFunc: callBackType = new NativeFunction(function_ptr, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer', 'pointer'])
+    var callback = new NativeCallback(function (_arg0, _arg1, _arg2, _arg3, _arg4) {
+        let args: NativePointer[] = []
         for (let i = 0; i < argsCount; i++) args.push(arguments[i]);
-        LOGD(`called ${function_ptr} | args => ${args.join(' ')}`)
-        // let ret = srcFunc.apply(null, args)
+        LOGD(`\ncalled ${function_ptr} | args => ${args.join(' ')}`)
+        // let ret: NativePointer = srcFunc.apply(null, arguments as any)
         Interceptor.revert(function_ptr)
         Interceptor.flush()
         // state.synchronizeContext(this.context, SyncDirection.FRIDA_TO_QBDI)
         vm.addInstrumentedModuleFromAddr(function_ptr)
         let icbk = vm.newInstCallback(icbk_function)
-        var extraInfo: NativePointer = Memory.alloc(0x10)
-        extraInfo.writePointer(NULL)
+        var extraInfo: NativePointer = Memory.alloc(UINT64_SIZE * 4)
+        extraInfo.add(UINT64_SIZE * 0).writePointer(NULL) // int64_t 记录上一次的地址
+        extraInfo.add(UINT64_SIZE * 1).writePointer(NULL) // int64_t 记录 index
+        extraInfo.add(UINT64_SIZE * 2).writePointer(NULL) // int64_t 开始时间
+        extraInfo.add(UINT64_SIZE * 3).writePointer(NULL) // int64_t 记录 run inst count
         let status = vm.addCodeCB(InstPosition.PREINST, icbk, extraInfo, CallbackPriority.PRIORITY_DEFAULT)
         if (status == VMError.INVALID_EVENTID) throw new Error("addCodeCB failed")
-        LOGD(`VM START | CALL -> ${srcFunc}`)
+        var startTime = Date.now()
+        LOGD(`VM START | CALL -> ${srcFunc} | at ${startTime}`)
         let vm_retval = vm.call(srcFunc, args)
-        LOGD(`VM STOP | RET => ${vm_retval}`)
+        LOGD(`VM STOP | RET => ${vm_retval} | cust ${Date.now() - startTime}ms`)
         if (!once) Interceptor.replace(function_ptr, callback)
         return vm_retval
     }, 'pointer', Array(argsCount).fill('pointer'))
-    Interceptor.replace(function_ptr, callback)
+
+    try {
+        Interceptor.replace(function_ptr, callback)
+    } catch (error: any) {
+        if (error.message.includes("already replaced")) {
+            Interceptor.revert(function_ptr)
+            Interceptor.flush()
+            Interceptor.replace(function_ptr, callback)
+        } else throw error
+    }
 }
 
-globalThis.traceMethodInfo = (methodinfo: NativePointer, once?: boolean) => {
-    let method = new Il2Cpp.Method(methodinfo)
-    if (method == null || method.virtualAddress == null) throw new Error("method is null")
+globalThis.traceMethodInfo = (methodinfo: NativePointer | string | number, once?: boolean) => {
+    let localMethodPtr: NativePointer = NULL
+    if (methodinfo == null) throw new Error("traceMethodInfo : methodinfo is null")
+    if (typeof methodinfo == "string" && methodinfo.startsWith("0x")) localMethodPtr = ptr(methodinfo)
+    if (methodinfo instanceof NativePointer) localMethodPtr = methodinfo
+    if (typeof methodinfo == "number") localMethodPtr = ptr(methodinfo)
+    let method = new Il2Cpp.Method(localMethodPtr)
+    if (method.handle == null || method.virtualAddress == null) throw new Error("method is null")
     traceFunction(method.virtualAddress, NULL, method.isStatic ? method.parameterCount : method.parameterCount + 1, once)
 }
 

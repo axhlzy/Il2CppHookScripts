@@ -149,6 +149,8 @@ export const getMethodMaxArgNameLength = (method: Il2Cpp.Method): number => {
 }
 
 globalThis.methodToArray = methodToArray as any
+globalThis.getMethodSimple = methodToString
 declare global {
     var methodToArray: (method: Il2Cpp.Method | NativePointer | number) => Array<string | NativePointer>
+    var getMethodSimple: (method: Il2Cpp.Method, simple?: boolean, startText?: string) => string
 }

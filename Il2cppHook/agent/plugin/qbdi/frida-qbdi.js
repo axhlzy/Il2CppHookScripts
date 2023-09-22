@@ -193,7 +193,11 @@ var System = Object.freeze({
  * Fullpath of the QBDI library
  */
 // Load QBDI library
-// var QBDI_LIB_FULLPATH = _qbdibinder.load();
+
+var QBDI_LIB_FULLPATH
+try {
+    QBDI_LIB_FULLPATH = _qbdibinder.load();
+} catch (error) {}
 
 // Define rword type and interfaces
 
@@ -1001,8 +1005,6 @@ export class FPRState extends State {
          }
     }
 }
-
-var QBDI_LIB_FULLPATH
 
 export class VM {
     // private member

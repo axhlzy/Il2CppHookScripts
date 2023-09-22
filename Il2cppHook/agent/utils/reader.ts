@@ -83,6 +83,14 @@ var seeHexA = (addr: PTR, length: number = 0x40, header: boolean = true, color: 
     }), color == undefined ? LogColor.WHITE : color)
 }
 
+// test code 
+rpc.exports = {
+    find_base_address: function (muduleName, offset = 0, length = 0x60) {
+        console.log("findBase muduleName: " + Module.findBaseAddress(muduleName))
+        return muduleName
+    }
+}
+
 const getFloat = (intNum: number): NativePointer => alloc(1).writeFloat(intNum).readPointer()
 
 export { readSingle, readBoolean, readInt, readUInt, readUInt64, readInt64, readU16, showArray, seeHexR, seeHexA, getFloat }
