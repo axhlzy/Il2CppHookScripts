@@ -85,14 +85,15 @@ class Binder {
         var cpath = this.findLibrary(lib, paths);
         if (cpath === undefined) {
             var errmsg = lib + ' library not found...';
-            console.error(errmsg);
             throw new Error(errmsg);
         }
         // load library
         var handle = System.dlopen(cpath);
         if (handle.isNull()) {
-            var errmsg = 'Failed to load ' + cpath + ' (' + System.dlerror() + ')';
-            console.error(errmsg);
+            var errmsg = 'Failed to load ' + cpath + ' (' + System.dlerror() + ')\n';
+            errmsg += '\n=> 1. Please check if the library exists';
+            errmsg += '\n=> 2. You can download it at https://github.com/QBDI/QBDI/releases/tag/v0.10.0';
+            errmsg += '\n=> 3. Push it to /data/local/tmp/libQBDI.so\n';
             throw new Error(errmsg);
         }
         return cpath;
@@ -112,7 +113,7 @@ class QBDIBinder extends Binder {
      */
     get QBDI_LIB() {
         return {
-            'linux': 'libQBDI.so',
+            'linux': Process.arch == "arm" ? 'libQBDI_32.so' : 'libQBDI_64.so',
             'darwin': 'libQBDI.dylib',
             'windows': 'QBDI.dll',
         }[Process.platform];
@@ -192,7 +193,7 @@ var System = Object.freeze({
  * Fullpath of the QBDI library
  */
 // Load QBDI library
-var QBDI_LIB_FULLPATH = _qbdibinder.load();
+// var QBDI_LIB_FULLPATH = _qbdibinder.load();
 
 // Define rword type and interfaces
 
@@ -859,7 +860,7 @@ export class GPRState extends State  {
      *
      * @param {String|Number} rid Register (register name or ID can be used e.g : "RAX", "rax", 0)
      *
-     * @return GPR value (ex: 0x42)
+     * @return {NativePointer} GPR value (ex: 0x42)
      */
     getRegister(rid) {
         var rid = this._getGPRId(rid);
@@ -932,7 +933,7 @@ export class GPRState extends State  {
      * .. warning:: Currently QBDI_TO_FRIDA is not implemented (due to Frida limitations).
      *
      * @param                   FridaCtx   Frida context
-     * @param {SyncDirection}   direction  Synchronization direction. (:js:data:`FRIDA_TO_QBDI` or :js:data:`QBDI_TO_FRIDA`)
+     * @param {number}   direction  Synchronization direction. (:js:data:`FRIDA_TO_QBDI` or :js:data:`QBDI_TO_FRIDA`)
      */
     synchronizeContext(FridaCtx, direction) {
         for (var i in GPR_NAMES) {
@@ -1001,6 +1002,8 @@ export class FPRState extends State {
     }
 }
 
+var QBDI_LIB_FULLPATH
+
 export class VM {
     // private member
     #vm = null;
@@ -1016,9 +1019,12 @@ export class VM {
      * Create a new instrumentation virtual machine using "**new VM()**"
      */
     constructor() {
+
+        QBDI_LIB_FULLPATH = _qbdibinder.load();
+
         // Enforce a minimum QBDI version (API compatibility)
         if (!this.version || this.version.integer < QBDI_MINIMUM_VERSION) {
-            throw new Error('Invalid QBDI version !');
+            throw new Error(`Invalid QBDI version ! { JS_THIS:${this.version.integer} | QBDI_MINIMUM:${QBDI_MINIMUM_VERSION} }`);
         }
 
         // Create VM instance
@@ -1119,7 +1125,7 @@ export class VM {
     /**
      * Add the executable address ranges of a module to the set of instrumented address ranges. using an address belonging to the module.
      *
-     * @param  {String|Number} addr An address contained by module's range.
+     * @param  {String|Number|NativePointer} addr An address contained by module's range.
      *
      * @return {bool} True if at least one range was removed from the instrumented ranges.
      */
@@ -1365,7 +1371,7 @@ export class VM {
     /**
      * Register a callback event for a specific instruction event.
      *
-     * @param {InstPosition} pos       Relative position of the callback (PreInst / PostInst).
+     * @param {Int} pos       Relative position of the callback (PreInst / PostInst).
      * @param {InstCallback} cbk       A **native** InstCallback returned by :js:func:`VM.newInstCallback`.
      * @param {Object}       data      User defined data passed to the callback.
      * @param {Int}          priority  The priority of the callback.
@@ -1720,7 +1726,7 @@ export class VM {
      *       >>> vm.addInstrumentedModuleFromAddr(aFunction);
      *       >>> vm.call(aFunction, [42]);
      *
-     * @param {String|Number}           address function address (or Frida ``NativePointer``).
+     * @param {String|Number|NativePointer}           address function address (or Frida ``NativePointer``).
      * @param {StringArray|NumberArray} [args]  optional list of arguments
      */
     call(address, args) {

@@ -10,38 +10,27 @@ const main = () => {
     TODO_OTHERS()
 }
 
+function LOGCAT(msg: string) {
+    Java.perform(function () {
+        Java.use("android.util.Log").e("ZZZ", msg)
+    })
+}
+
 const TODO_OTHERS = () => {
 
     function TODO() {
-        // todo your onwn code
 
-        // var SystemBoolean = Il2Cpp.Domain.assembly("mscorlib").image.class("System.Boolean")
-        // var UnityAction = Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Events.UnityAction`1")
-        // var cls = UnityAction.inflate(SystemBoolean)
-        // cls.methods.forEach((method) => {
-        //     LOGO(method.name + " " + method.relativeVirtualAddress)
-        // })
+        return
 
-        // var Vector2 = Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Vector2")
-        // var UnityAction = Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Events.UnityAction`1")
-        // var cls = UnityAction.inflate(Vector2)
-        // cls.methods.forEach((method) => {
-        //     LOGO(method.name + " " + method.relativeVirtualAddress)
-        // })
+        Il2Cpp.perform(() => {
+
+            let soAddress = Process.findModuleByName("libil2cpp.so")?.base
+            LOGCAT(`soAddress -> ${soAddress}`)
+
+
+        })
 
     }
-
-    const taskID = setInterval(() => {
-        let md: Module | null
-        md = Process.findModuleByName("libil2cpp.so")
-        if (md == null)
-            md = Process.findModuleByName("libcocos2djs.so")
-        if (md != null) {
-            // Toast(`${md.name} loaded @ ${md.base} | ${md.size}`)
-            md.name == "libil2cpp.so" ? Il2Cpp.perform(() => { TODO() }) : TODO()
-            clearInterval(taskID)
-        }
-    }, 1000)
 }
 
 class PauseHelper {

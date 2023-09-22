@@ -2,8 +2,8 @@
 // import "./http"
 
 // https://github.com/QBDI/QBDI
-// import "./qbdi/frida-qbdi"
-// import "./qbdi/main-qdbi"
+import "./qbdi/frida-qbdi"
+import "./qbdi/main-qdbi"
 
 // https://github.com/AlexAltea/unicorn.js/releases/tag/v1.0
 // import "./unicorn/unicorn-arm.min"

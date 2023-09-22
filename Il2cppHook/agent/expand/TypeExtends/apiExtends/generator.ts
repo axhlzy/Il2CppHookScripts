@@ -283,6 +283,7 @@ function generateClassCxxH(className: string): void {
         let line_0 = `// ${mdes}`
         let line_1 = ``
 
+        line_1 += method.isStatic ? "static " : ""
         line_1 += mdes.includes("virtual") ? "virtual " : ""
         line_1 += `${method.returnType.name.includes(">") ? `${TransformType(method.returnType.name)}` : `${TransformType(method.returnType.name.split(".").pop() as string)}`} `
         line_1 += method.name

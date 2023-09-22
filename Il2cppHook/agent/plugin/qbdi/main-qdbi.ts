@@ -1,89 +1,129 @@
-import { soName } from '../../base/globle';
-import { VM, VMAction, GPRState, FPRState, CallbackPriority, VMError, SyncDirection } from './frida-qbdi'
+import { type } from 'os'
+import { soName } from '../../base/globle'
+import { VM, VMAction, GPRState, FPRState, CallbackPriority, VMError, InstPosition, SyncDirection } from './frida-qbdi'
 
 // https://qbdi.readthedocs.io/en/stable/api.html
 // https://qbdi.readthedocs.io/en/stable/get_started-frida.html#frida-qbdi-script
 // segment 1: Permission denied [SELinux] -> getenforce == Enforcing ? setenforce 0 : null
 
-const testCall = () => {
-    const vm = new VM()
+const StackSize = 0x1000 * 50
+// const StackSize = 0x1000 * 0x1000 * 10
+
+var QBDI_INIT = false
+var vm: VM
+var state: GPRState
+var stack: NativePointer = NULL
+var baseSP: NativePointer = NULL
+
+const initQBDI = (size: number = StackSize) => {
+    if (QBDI_INIT) {
+        vm.clearAllCache()
+        return
+    }
+    vm = new VM()
+    state = vm.getGPRState()
+    stack = vm.allocateVirtualStack(state, size)
+    baseSP = state.getRegister("SP")!
+    if (stack == NULL) throw new Error("allocateVirtualStack failed")
+    LOGD(`INIT QBDI VM -> Stack: ${stack} | SP: ${baseSP}`)
+    QBDI_INIT = true
+}
+
+globalThis.qbdi_test = () => {
+
+    initQBDI()
+
     LOGD(JSON.stringify(vm.version))
+    let exp_func_string_new = Module.findExportByName(soName, "il2cpp_string_new")!
+    vm.addInstrumentedModuleFromAddr(exp_func_string_new)
 
-    let state: GPRState = vm.getGPRState()
-    let stack: NativePointer = vm.allocateVirtualStack(state, 0x100000)
-    LOGD(stack.toString())
-
-    let funcPtr = Module.findExportByName(soName, "il2cpp_string_new")!
-    let res = vm.addInstrumentedModuleFromAddr(funcPtr.toString())
-    LOGD(`addInstrumentedModule => ${res}`)
-
-    // 前五条详细打 gpr
-    let data = Memory.alloc(p_size * 2).writeInt(5)
-    // 测试只显示前面20条指令，后面的就跳过了
-    data.add(p_size).writeInt(20)
+    let data = Memory.alloc(p_size * 2)
+    data.writeInt(2)
+    data.add(p_size).writeInt(999)
     let icbk = vm.newInstCallback(function (vm: VM, gpr: GPRState, _fpr: FPRState, data: NativePointer) {
         let inst = vm.getInstAnalysis()
-        let count_0 = data.readInt()
-        if (count_0 > 0) {
+        if (data.readInt() > 0) {
             gpr.dump()
-            data.writeInt(--count_0)
+            data.writeInt(data.readInt() - 1)
         }
-        let count_1 = data.add(p_size).readInt()
-        if (count_1 > 0) {
-            LOGD(`${ptr(inst.address).toString()} ${inst.disassembly} ${inst.mnemonic}`)
-            data.add(p_size).writeInt(--count_1)
+        if (data.add(p_size).readInt() > 0) {
+            LOGD(`${ptr(inst.address)} ${inst.disassembly}`)
+            data.add(p_size).writeInt(data.add(p_size).readInt() - 1)
         }
         return VMAction.CONTINUE
     })
 
-    let iid = vm.addCodeCB(0 as unknown as Readonly<{ PREINST: 0; POSTINST: 1; }>, icbk, data, CallbackPriority.PRIORITY_DEFAULT)
+    let iid = vm.addCodeCB(InstPosition.PREINST, icbk, data, CallbackPriority.PRIORITY_DEFAULT)
     if (iid == VMError.INVALID_EVENTID) throw new Error("addCodeCB failed")
-
-    let ret = vm.call(funcPtr.toString(), [allocCStr("Hello world !")])
-    LOGD(`U16 ret => ${ret} | '${readU16(ret)}'`)
+    LOGD(`start VM.CALL -> ${exp_func_string_new}`)
+    let ret = vm.call(exp_func_string_new, [allocCStr("test string | 测试文本 !")])
+    LOGD(`VM.CALL END | U16 ret => ${ret} | '${readU16(ret)}'`)
 }
 
-const qbdi_replace = (mPtr: NativePointer) => {
-    let functionAddr = checkPointer(mPtr)
-    const vm = new VM()
-    let srcFunc: NativeFunction<NativePointer, [NativePointer, NativePointer, NativePointer, NativePointer, NativePointer]> = new NativeFunction(functionAddr, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer', 'pointer'])
-    Interceptor.replace(functionAddr, new NativeCallback(function (arg0: NativePointer, arg1: NativePointer, arg2: NativePointer, arg3: NativePointer, arg4: NativePointer) {
-        LOGD(`called ${functionAddr}/${mPtr} | args => ${arg0} ${arg1} ${arg2} ${arg3} ${arg4}`)
-        // let ret = srcFunc(arg0, arg1, arg2, arg3, arg4)
-        Interceptor.revert(functionAddr)
+// type ICBK_CALL = (vm: VM, gpr: GPRState, fpr: FPRState, data: NativePointer) => VMAction
+type ICBK_CALL = (vm: VM, gpr: GPRState, fpr: FPRState, data: NativePointer) => number
+
+const default_icbk = function (vm: VM, gpr: GPRState, _fpr: FPRState, _data: NativePointer) {
+    let inst = vm.getInstAnalysis()
+    let lastAddress: NativePointer = _data.readPointer()
+    let currentAddress: NativePointer = ptr(inst.address)
+    LOGD(`${currentAddress}   ${baseSP.sub(gpr.getRegister("SP"))}  ${inst.disassembly}`)
+    // if (lastAddress != NULL && !currentAddress.sub(lastAddress).equals(4)) {
+    //     let methodInfo: Il2Cpp.Method = new Il2Cpp.Method(ptr(123))
+    //     try {
+    //         methodInfo = AddressToMethod(currentAddress)
+    //     } catch { }
+    //     LOGE(`branch to -> ${currentAddress} ${methodInfo.handle != ptr(123) ? methodInfo.name : ""}}`)
+    // }
+    _data.writePointer(currentAddress)
+    return VMAction.CONTINUE
+}
+
+globalThis.traceFunction = (mPtr: NativePointer | string, icbk_function: ICBK_CALL | NativePointer = default_icbk, argsCount: number = 4, once: boolean = true) => {
+    if (mPtr == null) throw new Error("traceFunction : mPtr is null")
+    if (typeof mPtr == "string") mPtr = ptr(mPtr)
+    if (icbk_function == NULL) icbk_function = default_icbk
+
+    initQBDI()
+
+    let function_ptr = ptr(mPtr as any)
+    let srcFunc: NativeFunction<NativePointer, [NativePointer, NativePointer, NativePointer, NativePointer, NativePointer]> = new NativeFunction(function_ptr, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer', 'pointer'])
+    var callback = new NativeCallback(function () {
+        let args = []
+        for (let i = 0; i < argsCount; i++) args.push(arguments[i]);
+        LOGD(`called ${function_ptr} | args => ${args.join(' ')}`)
+        // let ret = srcFunc.apply(null, args)
+        Interceptor.revert(function_ptr)
         Interceptor.flush()
-        let state: GPRState = vm.getGPRState()
-        let stack: NativePointer = vm.allocateVirtualStack(state, 0x10000)
-        // state.synchronizeContext(this.context, SyncDirection.FRIDA_TO_QBDI as any)
-        vm.addInstrumentedModuleFromAddr(functionAddr.toString())
-        LOGD("p call " + (srcFunc as unknown as NativePointer).toString())
-        let retval = vm.call((srcFunc as unknown as NativePointer).toString(), [arg0, arg1, arg2, arg3, arg4])
-        // state.synchronizeContext(this.context, SyncDirection.QBDI_TO_FRIDA as any)
-        LOGD(`replace => ${retval} ${retval}`)
-        return retval
-    }, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer', 'pointer', 'pointer']))
+        // state.synchronizeContext(this.context, SyncDirection.FRIDA_TO_QBDI)
+        vm.addInstrumentedModuleFromAddr(function_ptr)
+        let icbk = vm.newInstCallback(icbk_function)
+        var extraInfo: NativePointer = Memory.alloc(0x10)
+        extraInfo.writePointer(NULL)
+        let status = vm.addCodeCB(InstPosition.PREINST, icbk, extraInfo, CallbackPriority.PRIORITY_DEFAULT)
+        if (status == VMError.INVALID_EVENTID) throw new Error("addCodeCB failed")
+        LOGD(`VM START | CALL -> ${srcFunc}`)
+        let vm_retval = vm.call(srcFunc, args)
+        LOGD(`VM STOP | RET => ${vm_retval}`)
+        if (!once) Interceptor.replace(function_ptr, callback)
+        return vm_retval
+    }, 'pointer', Array(argsCount).fill('pointer'))
+    Interceptor.replace(function_ptr, callback)
 }
 
-/* qbdi test */
-globalThis.qbdi_test = () => {
-    // testCall()
-    //     test_replace(Module.findExportByName(soName, "il2cpp_string_new")!)
+globalThis.traceMethodInfo = (methodinfo: NativePointer, once?: boolean) => {
+    let method = new Il2Cpp.Method(methodinfo)
+    if (method == null || method.virtualAddress == null) throw new Error("method is null")
+    traceFunction(method.virtualAddress, NULL, method.isStatic ? method.parameterCount : method.parameterCount + 1, once)
 }
 
-/* qdbi attach */
-globalThis.qat = (mPtr: NativePointer) => qbdi_replace(mPtr)
-
-
-/* qdbi attach log level (stack) */
-globalThis.qal = () => {
-    // todo
-
-}
+globalThis.t = globalThis.traceMethodInfo
 
 declare global {
     var qbdi_test: () => void
-    var qat: (mPtr: NativePointer) => void
-    var qal: () => void
+    var traceFunction: (mPtr: NativePointer, icbk_function?: ICBK_CALL | NativePointer, argsCount?: number, once?: boolean) => void
+    var traceMethodInfo: (methodinfo: NativePointer, once?: boolean) => void
+    var t: (methodinfo: NativePointer, once?: boolean) => void // alies traceMethodInfo
 }
 
 export { }
