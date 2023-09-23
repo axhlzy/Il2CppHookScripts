@@ -29,25 +29,13 @@ const initQBDI = (size: number = StackSize) => {
     QBDI_INIT = true
 }
 
+const init_CMOUDLE = () => {
+
+}
+
 globalThis.qbdi_test = () => {
 
     initQBDI()
-
-    var exampleModule = new CModule(`
-        #include <stdio.h> 
-        #include <android/log.h>
-        void my_callback(const char* message) { 
-            __android_log_print(6, "ZZZ", "%s", message);
-        }
-    `);
-
-    const myCallback = new NativeCallback((message) => {
-        exampleModule.my_callback(message.readCString());
-    }, 'void', ['pointer']);
-
-
-
-
 
     LOGD(JSON.stringify(vm.version))
     let exp_func_string_new = Module.findExportByName(soName, "il2cpp_string_new")!
@@ -111,6 +99,7 @@ const default_icbk = function (vm: VM, gpr: GPRState, _fpr: FPRState, _data: Nat
     return VMAction.CONTINUE
 }
 
+// 竞品 StalkerTracePath @ Il2cppHook\agent\base\extends.ts
 globalThis.traceFunction = (mPtr: NativePointer | string | number, icbk_function: ICBK_CALL | NativePointer = default_icbk, argsCount: number = 4, once: boolean = true) => {
     if (mPtr == null) throw new Error("traceFunction : mPtr is null")
     let function_ptr: NativePointer = NULL
@@ -140,12 +129,12 @@ globalThis.traceFunction = (mPtr: NativePointer | string | number, icbk_function
         let status = vm.addCodeCB(InstPosition.PREINST, icbk, extraInfo, CallbackPriority.PRIORITY_DEFAULT)
         if (status == VMError.INVALID_EVENTID) throw new Error("addCodeCB failed")
         var startTime = Date.now()
-        LOGD(`VM START | CALL -> ${srcFunc} | at ${startTime}`)
+        LOGD(`VM START | CALL -> ${srcFunc} | at ${new Date().toLocaleTimeString()}`)
         let vm_retval = vm.call(srcFunc, args)
         LOGD(`VM STOP | RET => ${vm_retval} | cust ${Date.now() - startTime}ms`)
         if (!once) Interceptor.replace(function_ptr, callback)
         return vm_retval
-    }, 'pointer', Array(argsCount).fill('pointer'))
+    }, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer', 'pointer'])
 
     try {
         Interceptor.replace(function_ptr, callback)

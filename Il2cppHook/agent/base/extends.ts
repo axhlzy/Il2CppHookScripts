@@ -11,6 +11,8 @@ declare global {
     var fridaInfo: () => void
     var listThreads: (maxCountThreads?: number) => void
 
+    var currentThreadName: () => string
+
     var listModules: (filterName?: string) => void
     var listModule: (moduleName: string, printItems?: number) => void
 
@@ -323,6 +325,31 @@ globalThis.fridaInfo = () => {
     LOGD(`${getLine(40)}\n`)
 }
 
+function getThreadName(tid: number) {
+    let threadName: string = "unknown"
+    try {
+        var file = new File("/proc/self/task/" + tid + "/comm", "r")
+        threadName = file.readLine().toString().trimEnd()
+        file.close()
+    } catch (e) {
+        console.error("Error getting thread name:", e)
+        throw e
+    }
+
+    // var threadNamePtr: NativePointer = Memory.alloc(0x40)
+    // var tid_p: NativePointer = Memory.alloc(p_size).writePointer(ptr(tid))
+    // var pthread_getname_np = new NativeFunction(Module.findExportByName("libc.so", 'pthread_getname_np')!, 'int', ['pointer', 'pointer', 'int'])
+    // pthread_getname_np(ptr(tid), threadNamePtr, 0x40)
+    // threadName = threadNamePtr.readCString()!
+
+    return threadName
+}
+
+globalThis.currentThreadName = (): string => {
+    let tid = Process.getCurrentThreadId()
+    return getThreadName(tid).toString()
+}
+
 let index_threads: number
 globalThis.listThreads = (maxCountThreads: number = 20) => {
     index_threads = 0
@@ -332,7 +359,7 @@ globalThis.listThreads = (maxCountThreads: number = 20) => {
         .slice(0, maxCountThreads)
         .forEach((thread: ThreadDetails) => {
             let indexText = FM.alignStr(`[${++index_threads}]`, 6)
-            let text = `${indexText} ${thread.id} ${thread.state}`
+            let text = `${indexText} ${thread.id} ${thread.state} | ${getThreadName(thread.id)}`
             let ctx = thread.context
             current == thread.id ? LOGE(text) : LOGD(text)
             LOGZ(`\tPC : ${ctx.pc}  ${checkCtx(ctx, "PC")}`)
@@ -480,18 +507,20 @@ globalThis.findExport = (exportName: string, moduleName?: string, callback?: (ex
     }
 
     function demangleName(expName: string) {
-        let demangleAddress = Module.findExportByName("libc++.so", '__cxa_demangle')!
-        let demangle = new NativeFunction(
-            demangleAddress,
-            'pointer', ['pointer', 'pointer', 'pointer', 'pointer']
-        )
-        let mangledName = Memory.allocUtf8String(expName)
-        let outputBuffer = ptr(0)
-        let length = ptr(0)
-        let status = Memory.alloc(4)
-        let result = demangle(mangledName, outputBuffer, length, status)
+        let demangleAddress: NativePointer | null = Module.findExportByName("libc++.so", '__cxa_demangle')
+        demangleAddress = Module.findExportByName("libunwindstack.so", '__cxa_demangle')
+        demangleAddress = Module.findExportByName("libbacktrace.so", '__cxa_demangle')
+        demangleAddress = Module.findExportByName(null, '__cxa_demangle')
+        if (demangleAddress == null) return ""
+        let demangle = new NativeFunction(demangleAddress, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
+        let mangledName: NativePointer = Memory.allocUtf8String(expName)
+        let outputBuffer = NULL
+        let length = NULL
+        let status: NativePointer = Memory.alloc(p_size)
+        let result: NativePointer = demangle(mangledName, outputBuffer, length, status)
         if (status.readInt() === 0) {
-            return result.readUtf8String()
+            let resultStr: string | null = result.readUtf8String()
+            return (resultStr == null || resultStr == expName) ? "" : resultStr
         } else {
             return ""
         }
@@ -565,6 +594,10 @@ globalThis.StalkerTraceEvent = (mPtr: NativePointer, range: NativePointer[] | un
                 msg.forEach((event: StalkerCallEventFull) => {
                     let md1 = Process.findModuleByAddress(event[1] as NativePointer)
                     let md2 = Process.findModuleByAddress(event[2] as NativePointer)
+                    let method_1 = AddressToMethodNoException(event[1] as NativePointer)
+                    let method_2 = AddressToMethodNoException(event[2] as NativePointer)
+                    if (method_1 != null) LOGW(`${method_1.name}`)
+                    if (method_2 != null) LOGW(`${method_2.name}`)
                     LOGD(`${event[0]} Times:${event[3]} ${event[1]}@${md1?.name} ${event[2]}@${md2?.name} `)
                 })
             }
