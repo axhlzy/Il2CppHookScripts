@@ -508,9 +508,9 @@ globalThis.findExport = (exportName: string, moduleName?: string, callback?: (ex
 
     function demangleName(expName: string) {
         let demangleAddress: NativePointer | null = Module.findExportByName("libc++.so", '__cxa_demangle')
-        demangleAddress = Module.findExportByName("libunwindstack.so", '__cxa_demangle')
-        demangleAddress = Module.findExportByName("libbacktrace.so", '__cxa_demangle')
-        demangleAddress = Module.findExportByName(null, '__cxa_demangle')
+        if (demangleAddress == null) demangleAddress = Module.findExportByName("libunwindstack.so", '__cxa_demangle')
+        if (demangleAddress == null) demangleAddress = Module.findExportByName("libbacktrace.so", '__cxa_demangle')
+        if (demangleAddress == null) demangleAddress = Module.findExportByName(null, '__cxa_demangle')
         if (demangleAddress == null) return ""
         let demangle = new NativeFunction(demangleAddress, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
         let mangledName: NativePointer = Memory.allocUtf8String(expName)

@@ -65,8 +65,9 @@ class ValueResolve {
     }
 
     // `value` looks like a `NativePointer[]` type, but it may actually be a `never` type
-    public setArgs(value: InvocationArguments): ValueResolve {
-        if (value == undefined) return this
+    // NativePointer[] === InvocationArguments
+    public setArgs(value: InvocationArguments | NativePointer[]): ValueResolve {
+        if (value == undefined || value.length == 0) return this
         if (value instanceof Array && (value.length === 0 || value.length < this.method.parameterCount)) return this
         this.args = value
         return this
@@ -97,6 +98,31 @@ class ValueResolve {
         let args = index == -1 ? this.retval : this.args[index]
         let type = index == -1 ? this.method.returnType : this.method.parameters[index].type
         return ValueResolve.fakeValue(args, type, this.method)
+    }
+
+    public argsToArray(): Array<string> {
+        let argsArray: Array<string> = []
+        // LOGJSON(this.args)
+        if (!this.method.isStatic) {
+            try {
+                argsArray[0] = `instance = ${new Il2Cpp.Object(ptr(String(this.args[0]))).toString()} @ ${this.args[0]}`
+            } catch {
+                argsArray[0] = `instance = ${String(this.args[0])}`
+            }
+        }
+        for (let i = this.method.isStatic ? 0 : 1; i < this.method.parameterCount; i++) {
+            let argName = this.method.parameters[i].name
+            try {
+                argsArray[i] = `${argName} = '${this.resolve(i)}'`
+            } catch (error) {
+                argsArray[i] = `${argName} = 'NULL'`
+            }
+        }
+        return argsArray
+    }
+
+    public argsToString(): string {
+        return this.argsToArray().join(', ')
     }
 
     public static fakeValue = (insPtr: NativePointer, type: Il2Cpp.Type, method: Il2Cpp.Method): string => {

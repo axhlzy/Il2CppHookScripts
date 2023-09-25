@@ -1,6 +1,6 @@
 import { LogColor } from "../../base/enum"
 import { cacheMethods } from "../../java/info"
-import { formartClass as FM} from "../../utils/formart"
+import { formartClass as FM } from "../../utils/formart"
 import { getMethodDesFromMethodInfo } from "./il2cppM"
 
 class ItemInfo {
@@ -179,11 +179,37 @@ globalThis.showAsm = (mPtr: NativePointer, len: number = 0x40, needAsm: boolean 
 
 globalThis.showAsmSJ = (mPtr: NativePointer): void => LOGJSON(Instruction.parse(checkPointer(mPtr)))
 globalThis.showAsmSP = (mPtr: NativePointer): void => showAsm(mPtr, -1, false)
+globalThis.showAsmSL = (mPtr: NativePointer, insCount: number = 20, ignoreError = true): void => {
+    let current: NativePointer = checkPointer(mPtr)
+    newLine()
+    let index: number = 0
+    while (true) {
+        try {
+            let ins = Instruction.parse(current)
+            let indexStr = `[${String(++index)}]`.padEnd(6, ' ')
+            LOGD(`${indexStr} ${ins.address}\t${ins.toString()}`)
+            current = ins.next
+            if (index == insCount) break
+        } catch (error) {
+            if (!ignoreError) {
+                throw error
+            } else {
+                ++index
+                LOGE(error)
+                continue
+            }
+        }
+    }
+    newLine()
+}
 
 declare global {
+    // showAsm : with il2cpp MethodInfo Name and asm
     var showAsm: (mPtr: NativePointer, len?: number, needAsm?: boolean) => void
-    // showAsmSingleJson
+    // showAsm : alias LOGJSON(Instruction.parse(checkPointer(mPtr)))
     var showAsmSJ: (mPtr: NativePointer) => void
-    // showAsmSimple
+    // showAsm : with only il2cpp MethodInfo Name
     var showAsmSP: (mPtr: NativePointer) => void
+    // showAsm : with only asm
+    var showAsmSL: (mPtr: NativePointer, len?: number) => void
 }

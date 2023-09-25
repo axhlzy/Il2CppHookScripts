@@ -24,7 +24,7 @@
   "devDependencies": {
     "@frida/http": "^4.0.2",
     "@frida/https": "^1.0.0",
-    "@types/frida-gum": "^18.2.0",
+    "@types/frida-gum": "^18.4.3",
     "@types/node": "^17.0.45"
   },
   "dependencies": {
