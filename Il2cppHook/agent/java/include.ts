@@ -6,5 +6,6 @@ import "./classUtils"
 import "./classLoader"
 import "./unity"
 import "./registerNative"
+import "./artMethod"
 
 import "./ADS/include"
