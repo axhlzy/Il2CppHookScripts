@@ -6,8 +6,11 @@ import ValueResolve from '../../base/valueResolve'
 // https://qbdi.readthedocs.io/en/stable/get_started-frida.html#frida-qbdi-script
 // segment 1: Permission denied [SELinux] -> getenforce == Enforcing ? setenforce 0 : null
 
+// 已知问题 ：QBDI JNI模拟调用会出现栈检查错误 （CheckPossibleHeapValue）
+// ref : https://github.com/QBDI/QBDI/issues/243
+
 const UINT64_SIZE = 0x8         // 定义存放数据基本块大小
-const StackSize = 0x1000 * 50   // 定义栈大小
+const StackSize = 0x1000 * 10   // 定义栈大小
 
 var QBDI_INIT = false
 var vm: VM
@@ -20,7 +23,7 @@ const initQBDI = (size: number = StackSize) => {
         vm.clearAllCache()
         return
     }
-    fakeStackCheck()
+    // fakeStackCheck()
     vm = new VM()
     state = vm.getGPRState()
     stack = vm.allocateVirtualStack(state, size)
@@ -50,8 +53,8 @@ const default_icbk = function (vm: VM, gpr: GPRState, _fpr: FPRState, _data: Nat
     let preText = `[ ${index.toString().padEnd(3, ' ')} | ${custTime} ms ]`.padEnd(18, ' ')
     if (startTime_ICBK.equals(0)) _data.add(UINT64_SIZE * 2).writeU64(Date.now())
 
-    let forceInstLog = false
-    let needParseArgs = true
+    let forceInstLog = true
+    let needParseArgs = false
     let asmOffset = baseSP.sub(gpr.getRegister("SP"))
     if (lastAddress != NULL && (forceInstLog || !currentAddress.sub(lastAddress).equals(4))) {
         let methodInfo: Il2Cpp.Method | null = AddressToMethodNoException(currentAddress)
@@ -136,6 +139,7 @@ globalThis.traceMethodInfo = (methodinfo: NativePointer | string | number, once?
 
 globalThis.t = globalThis.traceMethodInfo
 
+// not stable
 globalThis.fakeStackCheck = () => {
     // bool CheckPossibleHeapValue(ScopedObjectAccess& soa, char fmt, JniValueType arg)
     // _ZN3art12_GLOBAL__N_111ScopedCheck22CheckPossibleHeapValueERNS_18ScopedObjectAccessEcNS0_12JniValueTypeE

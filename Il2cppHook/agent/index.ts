@@ -8,7 +8,7 @@ const main = () => {
     // setException()
     // HookExit()
     TODO_OTHERS()
-    JNIHelper.Init() // Hook JNI RegisterNatives
+    // JNIHelper.Init() // Hook JNI RegisterNatives
 }
 
 function LOGCAT(msg: string) {

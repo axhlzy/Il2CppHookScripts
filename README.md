@@ -12,6 +12,8 @@
 - Disassemble `showAsm` with frida and method information
 - Commonly used Hook package `HookOnPointerClick/HookSetActive/B_Button...`
 - Parse mount script `showComponents alias s` `HookOnPointerClick/PrintHierarchyWithComponents` is also introduced <--- testing
+- JNI RegisterNatives Hook (impl in JNIHelper, default off [not stable]), using JNIHelper.cacheRegisterNativeItem to get info
+- Using QBDI to simulate the execution of the function, using t(methoinfo) or traceFunction(mPtr) to enable replacement hook
 - ...
 
 -------
