@@ -92,8 +92,8 @@ class Binder {
         if (handle.isNull()) {
             var errmsg = 'Failed to load ' + cpath + ' (' + System.dlerror() + ')\n';
             errmsg += '\n=> 1. Please check if the library exists';
-            errmsg += '\n=> 2. You can download it at https://github.com/QBDI/QBDI/releases/tag/v0.10.0';
-            errmsg += '\n=> 3. Push it to /data/local/tmp/libQBDI.so\n';
+            errmsg += '\n=> 2. You can download it at https://github.com/QBDI/QBDI/releases/tag/v0.10.0 and modify name';
+            errmsg += '\n=>    Or using asset\lib\libQBDI_xx.so, then run asset\lib\push.cmd\n';
             throw new Error(errmsg);
         }
         return cpath;

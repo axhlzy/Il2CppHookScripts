@@ -1,6 +1,5 @@
 import { VM, VMAction, GPRState, FPRState, CallbackPriority, VMError, InstPosition, SyncDirection } from './frida-qbdi'
 import { methodToString } from '../../bridge/fix/il2cppM'
-import { soName } from '../../base/globle'
 import ValueResolve from '../../base/valueResolve'
 
 // https://qbdi.readthedocs.io/en/stable/api.html
@@ -21,6 +20,7 @@ const initQBDI = (size: number = StackSize) => {
         vm.clearAllCache()
         return
     }
+    fakeStackCheck()
     vm = new VM()
     state = vm.getGPRState()
     stack = vm.allocateVirtualStack(state, size)
@@ -83,7 +83,7 @@ globalThis.traceFunction = (mPtr: NativePointer | string | number, icbk_function
 
     initQBDI()
 
-    let syncRegs = false
+    let syncRegs = true
     type callBackType = NativeFunction<NativePointer, [NativePointer, NativePointer, NativePointer, NativePointer, NativePointer]>
     let srcFunc: callBackType = new NativeFunction(function_ptr, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer', 'pointer'])
     var callback = new NativeCallback(function (_arg0, _arg1, _arg2, _arg3, _arg4) {
@@ -136,10 +136,39 @@ globalThis.traceMethodInfo = (methodinfo: NativePointer | string | number, once?
 
 globalThis.t = globalThis.traceMethodInfo
 
+globalThis.fakeStackCheck = () => {
+    // bool CheckPossibleHeapValue(ScopedObjectAccess& soa, char fmt, JniValueType arg)
+    // _ZN3art12_GLOBAL__N_111ScopedCheck22CheckPossibleHeapValueERNS_18ScopedObjectAccessEcNS0_12JniValueTypeE
+    let CheckPossibleHeapValue = Module.findExportByName("libart.so", "_ZN3art12_GLOBAL__N_111ScopedCheck22CheckPossibleHeapValueERNS_18ScopedObjectAccessEcNS0_12JniValueTypeE")
+    if (CheckPossibleHeapValue) {
+        let src_CheckPossibleHeapValue = new NativeFunction(CheckPossibleHeapValue, 'bool', ['pointer', 'pointer', 'int'])
+        Interceptor.replace(CheckPossibleHeapValue, new NativeCallback((soa: NativePointer, fmt: NativePointer, arg: number) => {
+            // let ret = src_CheckPossibleHeapValue(soa, fmt, arg)
+            // LOGD(`CheckPossibleHeapValue -> ${fmt} | ${arg}`)
+            return 1
+        }, 'bool', ['pointer', 'pointer', 'int']))
+    }
+
+    // bool CheckNonHeapValue(char fmt, JniValueType arg)
+    // _ZN3art12_GLOBAL__N_111ScopedCheck17CheckNonHeapValueEcNS0_12JniValueTypeE
+    let CheckNonHeapValue = Module.findExportByName("libart.so", "_ZN3art12_GLOBAL__N_111ScopedCheck17CheckNonHeapValueEcNS0_12JniValueTypeE")
+    if (CheckNonHeapValue) {
+        let SRC_CheckNonHeapValue = new NativeFunction(CheckNonHeapValue, 'bool', ['pointer', 'int'])
+        Interceptor.replace(CheckNonHeapValue, new NativeCallback((fmt: NativePointer, arg: number) => {
+            // let ret = src_CheckNonHeapValue(fmt, arg)
+            // LOGD(`CheckNonHeapValue -> ${fmt} | ${arg}`)
+            return 1
+        }, 'bool', ['pointer', 'int']))
+    }
+
+}
+
 declare global {
     var traceFunction: (mPtr: NativePointer, icbk_function?: ICBK_CALL | NativePointer, argsCount?: number, once?: boolean) => void
     var traceMethodInfo: (methodinfo: NativePointer, once?: boolean) => void
     var t: (methodinfo: NativePointer, once?: boolean) => void // alies traceMethodInfo
+
+    var fakeStackCheck: () => void
 }
 
 export { }

@@ -104,18 +104,29 @@ class ValueResolve {
         let argsArray: Array<string> = []
         // LOGJSON(this.args)
         if (!this.method.isStatic) {
+            // not static method
             try {
                 argsArray[0] = `instance = ${new Il2Cpp.Object(ptr(String(this.args[0]))).toString()} @ ${this.args[0]}`
             } catch {
                 argsArray[0] = `instance = ${String(this.args[0])}`
             }
-        }
-        for (let i = this.method.isStatic ? 0 : 1; i < this.method.parameterCount; i++) {
-            let argName = this.method.parameters[i].name
-            try {
-                argsArray[i] = `${argName} = '${this.resolve(i)}'`
-            } catch (error) {
-                argsArray[i] = `${argName} = 'NULL'`
+            for (let i = 1; i <= this.method.parameterCount; i++) {
+                let argName = this.method.parameters[i - 1].name
+                try {
+                    argsArray[i] = `${argName} = '${this.resolve(i - 1)}'`
+                } catch (error) {
+                    argsArray[i] = `${argName} = 'NULL'`
+                }
+            }
+        } else {
+            // static method
+            for (let i = 0; i < this.method.parameterCount; i++) {
+                let argName = this.method.parameters[i].name
+                try {
+                    argsArray[i] = `${argName} = '${this.resolve(i)}'`
+                } catch (error) {
+                    argsArray[i] = `${argName} = 'NULL'`
+                }
             }
         }
         return argsArray
