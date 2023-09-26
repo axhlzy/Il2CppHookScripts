@@ -5,5 +5,6 @@ import "./logcat"
 import "./classUtils"
 import "./classLoader"
 import "./unity"
+import "./registerNative"
 
 import "./ADS/include"

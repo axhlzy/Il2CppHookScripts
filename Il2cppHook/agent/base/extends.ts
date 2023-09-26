@@ -505,25 +505,25 @@ globalThis.findExport = (exportName: string, moduleName?: string, callback?: (ex
             LOGD(JSON.stringify(exp))
         }
     }
+}
 
-    function demangleName(expName: string) {
-        let demangleAddress: NativePointer | null = Module.findExportByName("libc++.so", '__cxa_demangle')
-        if (demangleAddress == null) demangleAddress = Module.findExportByName("libunwindstack.so", '__cxa_demangle')
-        if (demangleAddress == null) demangleAddress = Module.findExportByName("libbacktrace.so", '__cxa_demangle')
-        if (demangleAddress == null) demangleAddress = Module.findExportByName(null, '__cxa_demangle')
-        if (demangleAddress == null) return ""
-        let demangle = new NativeFunction(demangleAddress, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
-        let mangledName: NativePointer = Memory.allocUtf8String(expName)
-        let outputBuffer = NULL
-        let length = NULL
-        let status: NativePointer = Memory.alloc(p_size)
-        let result: NativePointer = demangle(mangledName, outputBuffer, length, status)
-        if (status.readInt() === 0) {
-            let resultStr: string | null = result.readUtf8String()
-            return (resultStr == null || resultStr == expName) ? "" : resultStr
-        } else {
-            return ""
-        }
+export function demangleName(expName: string) {
+    let demangleAddress: NativePointer | null = Module.findExportByName("libc++.so", '__cxa_demangle')
+    if (demangleAddress == null) demangleAddress = Module.findExportByName("libunwindstack.so", '__cxa_demangle')
+    if (demangleAddress == null) demangleAddress = Module.findExportByName("libbacktrace.so", '__cxa_demangle')
+    if (demangleAddress == null) demangleAddress = Module.findExportByName(null, '__cxa_demangle')
+    if (demangleAddress == null) return ""
+    let demangle = new NativeFunction(demangleAddress, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
+    let mangledName: NativePointer = Memory.allocUtf8String(expName)
+    let outputBuffer = NULL
+    let length = NULL
+    let status: NativePointer = Memory.alloc(p_size)
+    let result: NativePointer = demangle(mangledName, outputBuffer, length, status)
+    if (status.readInt() === 0) {
+        let resultStr: string | null = result.readUtf8String()
+        return (resultStr == null || resultStr == expName) ? "" : resultStr
+    } else {
+        return ""
     }
 }
 
