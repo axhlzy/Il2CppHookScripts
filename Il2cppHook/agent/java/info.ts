@@ -124,7 +124,7 @@ const cacheMethods = (withLog: boolean = true) => {
         })
     })
     allMethodsCacheArray = allMethodsCacheArray.sort((a: Il2Cpp.Method, b: Il2Cpp.Method) => a.virtualAddress.compare(b.virtualAddress))
-    if (withLog) LOGZ(`Caching methods done. ${allMethodsCacheArray.length} Methods . cost ${Date.now() - timeCurrent} ms\n`)
+    if (withLog) LOGZ(`Caching methods done. ${allMethodsCacheArray.length} Methods . cost ${Date.now() - timeCurrent} ms`)
 }
 
 const findClasses = (filterClassName: string, completeMatch: boolean = false, retArray: boolean = false): void | Il2Cpp.Class[] => {
@@ -290,7 +290,7 @@ const AddressToMethodToShow = (mPtr: NativePointer, simple: boolean = true): voi
     LOGW(getLine(maxDispLen))
 }
 
-const showMethodInfoFromAddress = (mPtr: NativePointer | number = 0) => {
+export const showMethodInfoFromAddress = (mPtr: NativePointer | number = 0) => {
     if (typeof mPtr == "string" && mPtr == 0) return
     if (mPtr instanceof NativePointer && mPtr.isNull()) return
     showMethodInfo(AddressToMethod(checkCmdInput(mPtr)).handle)
@@ -390,14 +390,14 @@ Reflect.set(globalThis, "functionProbe", functionProbe)
 Reflect.set(globalThis, "AddressToMethod", AddressToMethod)
 Reflect.set(globalThis, "AddressToMethodToString", AddressToMethodToShow)
 Reflect.set(globalThis, "AddressToMethodNoException", AddressToMethodNoException)
-Reflect.set(globalThis, "showMethodInfoFromAddress", showMethodInfoFromAddress)
+// Reflect.set(globalThis, "showMethodInfoFromAddress", showMethodInfoFromAddress)
 
 declare global {
     var getApkInfo: () => void
     var getUnityInfo: () => void
     var launchApp: (pkgName: string) => void
     var showAddressInfo: (mPtr: NativePointer) => void
-    var showMethodInfoFromAddress: (mPtr: NativePointer) => void
+    // var showMethodInfoFromAddress: (mPtr: NativePointer) => void
     var bp: (filterName: string, breakMethodInfo?: boolean) => void
     var AddressToMethod: (mPtr: NativePointer | number, withLog?: boolean) => Il2Cpp.Method
     var AddressToMethodNoException: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method | null

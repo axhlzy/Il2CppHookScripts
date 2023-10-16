@@ -1,10 +1,10 @@
 import { getMethodDesFromMethodInfo as methodDes } from "../bridge/fix/il2cppM"
 import { inflaterMethodLocal } from "../bridge/fix/inflater"
+import { showMethodInfoFromAddress } from "../java/info"
 import { formartClass as FM } from "../utils/formart"
 
 // 侧重参数信息 还有一个 MethodToShow() 用在 findMethod / find_method 侧重基本信息
 export function showMethodInfo(mPtr: NativePointer | Il2Cpp.Method): void {
-    newLine()
     let packMethod: Il2Cpp.Method
     if (typeof mPtr == "number") {
         if (Process.arch == "arm64" && (String(mPtr).toString().length > 15))
@@ -20,6 +20,14 @@ export function showMethodInfo(mPtr: NativePointer | Il2Cpp.Method): void {
         mPtr = mPtr.handle
     }
     packMethod = new Il2Cpp.Method(mPtr)
+    try {
+        // 借助这个错误来调用 showMethodInfoFromAddress
+        packMethod.class.name
+        newLine()
+    } catch (e) {
+        showMethodInfoFromAddress(mPtr)
+        return
+    }
     let AppendRelativeVirtualAddress = packMethod.virtualAddress.isNull() ? '' : `& RP: ${packMethod.relativeVirtualAddress}`
     let params: string = packMethod.parameters.map((param: Il2Cpp.Parameter) => {
         return (`${getLine(8, ' ')}[-]${FM.alignStr(param.name)} | type: ${param.type.handle} | @ class:${param.type.class.handle} | ${param.type.name}`)
