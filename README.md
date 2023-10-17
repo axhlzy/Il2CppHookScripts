@@ -81,6 +81,8 @@ OR
 $ frida -FU -l ../_Ufunc.js
 ```
 
+find U_func.js in github action artifacts
+
 -------
 
 #### API
