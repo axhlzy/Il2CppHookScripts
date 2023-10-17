@@ -119,9 +119,7 @@ const cacheMethods = (withLog: boolean = true) => {
     if (withLog) LOGZ("Caching methods ...")
     let timeCurrent = Date.now()
     Il2Cpp.Domain.assemblies.forEach((assembly: Il2Cpp.Assembly) => {
-        assembly.image.classes.forEach((klass: Il2Cpp.Class) => {
-            klass.methods.forEach((item: Il2Cpp.Method) => allMethodsCacheArray.push(item))
-        })
+        assembly.image.classes.forEach((klass: Il2Cpp.Class) => allMethodsCacheArray = allMethodsCacheArray.concat(klass.methods))
     })
     allMethodsCacheArray = allMethodsCacheArray.sort((a: Il2Cpp.Method, b: Il2Cpp.Method) => a.virtualAddress.compare(b.virtualAddress))
     if (withLog) LOGZ(`Caching methods done. ${allMethodsCacheArray.length} Methods . cost ${Date.now() - timeCurrent} ms`)
@@ -152,8 +150,17 @@ const findClasses = (filterClassName: string, completeMatch: boolean = false, re
     newLine(1)
 }
 
-// filter and show useful address
-const printExp = (filter: string = "", findAll: boolean = true, formartMaxLine: number = -1, retArr: boolean = false): void | Array<Il2Cpp.Method> => {
+/**
+ * 过滤并展示一些常用好用的函数及其地址
+ * filter and show some useful methods
+ * @param filter            过滤字段
+ * @param findAll           查找所有方法还是常用方法
+ * @param formartMaxLine    格式化字符串 仅在retArr为false时生效
+ * @param retArr            返回一个数值还是直接打印结果
+ * @param accurate          是否准且匹配 仅在findAll为true时生效
+ * @returns 
+ */
+const printExp = (filter: string = "", findAll: boolean = true, formartMaxLine: number = -1, retArr: boolean = false, accurate: boolean = false): void | Array<Il2Cpp.Method> => {
 
     let countIndex: number = -1
     let arrStrResult: Array<string> = new Array<string>()
@@ -176,7 +183,7 @@ const printExp = (filter: string = "", findAll: boolean = true, formartMaxLine: 
     if (findAll) {
         if (allMethodsCacheArray.length == 0) cacheMethods()
         allMethodsCacheArray
-            .filter((item: Il2Cpp.Method) => item.name.toLocaleLowerCase().includes(filter.toLowerCase()))
+            .filter((item: Il2Cpp.Method) => accurate ? item.name == filter : item.name.toLocaleLowerCase().includes(filter.toLowerCase()))
             .forEach(formartAndSaveIl2cppMehods)
     }
     // 查找常用的一些函数
@@ -401,6 +408,6 @@ declare global {
     var bp: (filterName: string, breakMethodInfo?: boolean) => void
     var AddressToMethod: (mPtr: NativePointer | number, withLog?: boolean) => Il2Cpp.Method
     var AddressToMethodNoException: (mPtr: NativePointer, withLog?: boolean) => Il2Cpp.Method | null
-    var findMethods: (filter: string, findAll?: boolean, formartMaxLine?: number, retArr?: boolean) => void | Array<Il2Cpp.Method>
+    var findMethods: (filter: string, findAll?: boolean, formartMaxLine?: number, retArr?: boolean, accurate?: boolean) => void | Array<Il2Cpp.Method>
     var findClasses: (filterClassName: string, completeMatch?: boolean, retArray?: boolean) => void | Il2Cpp.Class[]
 }

@@ -198,11 +198,11 @@ const HookExit = () => {
     Java.perform(function () {
         Java.use("android.app.Activity").finish.overload().implementation = function () {
             console.log("called android.app.Activity.Finish")
-            PrintStackTrace()
+            PrintStackTraceJava()
         }
         Java.use("java.lang.System").exit.implementation = function (code: number) {
             console.log("called java.lang.System.exit(" + code + ")")
-            PrintStackTrace()
+            PrintStackTraceJava()
         }
     })
 

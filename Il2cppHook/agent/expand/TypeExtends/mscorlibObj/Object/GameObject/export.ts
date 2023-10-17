@@ -42,7 +42,7 @@ globalThis.HookSetActive = (defaltActive: boolean = true, PrintStackTrace: boole
             LOGO(getLine(strTmp.length / 2))
             showGameObject(mPtr)
         }
-        if (PrintStackTrace) PrintStackTraceN(ctx)
+        if (PrintStackTrace) PrintStackTraceNative(ctx)
     }
 }
 

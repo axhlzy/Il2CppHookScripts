@@ -239,9 +239,7 @@ export class Breaker {
     }
 
     static breakWithArgs = (mPtr: NativePointer, argCount: number = 4) => {
-        if (Process.findModuleByName("libil2cpp.so") != null) {
-            mPtr = checkPointer(mPtr)
-        }
+        if (Process.findModuleByName("libil2cpp.so") != null) mPtr = checkPointer(mPtr)
         A(mPtr, (args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
             LOGO(`\n${getLine(85)}`)
             LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(ctx))}`)
@@ -251,12 +249,12 @@ export class Breaker {
         }, (retval: InvocationReturnValue) => LOGD(`Retval\t---> ${retval}`))
     }
 
-    static breakWithStack = (mPtr: NativePointer) => {
+    static breakWithStack = (mPtr: NativePointer, accurate: boolean = true) => {
         mPtr = checkPointer(mPtr)
         A(mPtr, (_args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
-            LOGO(`\n${getLine(65)}`)
+            LOGO(`\n${getLine(65)}\n`)
             LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(ctx))}\n`)
-            PrintStackTraceN(ctx)
+            PrintStackTraceNative(ctx, accurate)
             LOGO(`\n${getLine(65)}`)
         })
     }
@@ -400,17 +398,22 @@ globalThis.BM = (className: string): void => {
     new Il2Cpp.Class(classPtr).methods.forEach((methodInfo: Il2Cpp.Method) => Breaker.attachMethodInfo(methodInfo, true))
 }
 
-// 查找所有包含filterStr的方法并断点
-globalThis.BF = (filterStr: string, allImg: boolean = true): void => {
+// 查找所有包含filterStr的方法并断点 (模糊查询/准确查询)
+globalThis.BF = (filterStr: string, allImg: boolean = true, accurate: boolean = false): void => {
     if (typeof filterStr != "string") throw new Error("\n\tfilterStr must be a string\n")
     DD()
     HookerBase._list_images.forEach((image: Il2Cpp.Image) => {
         if (allImg || CommonClass.includes(image.assembly.name)) {
             image.classes.flatMap((cls: Il2Cpp.Class) => cls.methods).forEach((mPtr: Il2Cpp.Method) => {
-                if (mPtr.name.indexOf(filterStr) != -1) Breaker.attachMethodInfo(mPtr, false)
+                if (accurate ? mPtr.name == filterStr : mPtr.name.indexOf(filterStr) != -1) Breaker.attachMethodInfo(mPtr, false)
             })
         }
     })
+}
+
+// alias BF with accurate = true
+globalThis.BFA = (filterStr: string, allImg: boolean = true): void => {
+    BF(filterStr, allImg, true)
 }
 
 globalThis.getPlatformCtxWithArgV = <T extends CpuContext>(ctx: T, argIndex: number): NativePointer | undefined => {
@@ -485,11 +488,12 @@ declare global {
     var BN: (nameSpace: string) => void
     var D: () => void
     var DD: () => void
-    var BF: (filterStr: string) => void
+    var BF: (filterStr: string, allImg?: boolean, accurate?: boolean) => void
+    var BFA: (filterStr: string, allImg?: boolean) => void
     var BM: (className: string) => void
     var breakWithArgs: (mPtr: NativePointer, argCount?: number) => void
     var breakInline: (mPtr: NativePointer, callback?: (value: CpuContext) => void) => void
-    var breakWithStack: (mPtr: NativePointer) => void
+    var breakWithStack: (mPtr: NativePointer, accurate?: boolean) => void
     var getPlatform: () => string
     var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
     // getPlatformCtxWithArgV 用于获取参数, argIndex 从 0 开始 (arm32 r0 / arm64 x0)

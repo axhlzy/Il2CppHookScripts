@@ -17,7 +17,7 @@ const HookPlayerPrefs = (isShowPrintStack: boolean = false, needLRInfo: boolean 
             if (FOBJ(disp, 10)) return
             LOGD(disp)
             if (needLRInfo) LOGZ("\t\t { LR:" + checkCtx(ctx) + " } | { PC:" + checkCtx(ctx, "PC") + " }")
-            if (isShowPrintStack) LOGZ((GetStackTraceN(ctx)))
+            if (isShowPrintStack) LOGZ((GetStackTraceNative(ctx)))
         })
 
         //public static extern int GetInt(string key, int defaultValue)
@@ -27,9 +27,9 @@ const HookPlayerPrefs = (isShowPrintStack: boolean = false, needLRInfo: boolean 
         }, (retval: InvocationReturnValue, ctx: CpuContext, pass: Map<PassType, any>) => {
             let disp = `\n[*] ${retval.toInt32()} = GetInt(${pass.get("arg0")},${pass.get("arg1")})`
             if (FOBJ(disp, 10)) return
-			LOGD(disp)
+            LOGD(disp)
             if (needLRInfo) LOGZ("\t\t { LR:" + checkCtx(ctx) + " } | { PC:" + checkCtx(ctx, "PC") + " }")
-            if (isShowPrintStack) LOGZ((GetStackTraceN(ctx)))
+            if (isShowPrintStack) LOGZ((GetStackTraceNative(ctx)))
             if (pass.get("arg0").indexOf("SaleBoughted") != -1) retval.replace(ptr(0x1))
         })
 
@@ -39,9 +39,9 @@ const HookPlayerPrefs = (isShowPrintStack: boolean = false, needLRInfo: boolean 
         }, (retval: InvocationReturnValue, ctx: CpuContext, pass: Map<PassType, any>) => {
             let disp = `\n[*] ${readU16(retval)} = GetString(${pass.get("arg0")})`
             if (FOBJ(disp, 10)) return
-			LOGD(disp)
+            LOGD(disp)
             if (needLRInfo) LOGZ("\t\t { LR:" + checkCtx(ctx) + " } | { PC:" + checkCtx(ctx, "PC") + " }")
-            if (isShowPrintStack) LOGZ((GetStackTraceN(ctx)))
+            if (isShowPrintStack) LOGZ((GetStackTraceNative(ctx)))
         })
     }
 
@@ -54,9 +54,9 @@ const HookPlayerPrefs = (isShowPrintStack: boolean = false, needLRInfo: boolean 
         }, (retval: InvocationReturnValue, ctx: CpuContext, pass: Map<PassType, any>) => {
             let disp = `\n[*] SetFloat(${pass.get("arg0")},${pass.get("arg1")})`
             if (FOBJ(disp, 10)) return
-			LOGD(disp)
+            LOGD(disp)
             if (needLRInfo) LOGZ("\t\t { LR:" + checkCtx(ctx) + " } | { PC:" + checkCtx(ctx, "PC") + " }")
-            if (isShowPrintStack) LOGZ((GetStackTraceN(ctx)))
+            if (isShowPrintStack) LOGZ((GetStackTraceNative(ctx)))
         })
 
         //public static extern int SetInt(string key, int value)
@@ -66,9 +66,9 @@ const HookPlayerPrefs = (isShowPrintStack: boolean = false, needLRInfo: boolean 
         }, (retval: InvocationReturnValue, ctx: CpuContext, pass: Map<PassType, any>) => {
             let disp = `\n[*] SetInt(${pass.get("arg0")},${pass.get("arg1")})`
             if (FOBJ(disp, 10)) return
-			LOGD(disp)
+            LOGD(disp)
             if (needLRInfo) LOGZ("\t\t { LR:" + checkCtx(ctx) + " } | { PC:" + checkCtx(ctx, "PC") + " }")
-            if (isShowPrintStack) LOGZ((GetStackTraceN(ctx)))
+            if (isShowPrintStack) LOGZ((GetStackTraceNative(ctx)))
         })
 
         //public static string SetString(string key, string value)
@@ -78,9 +78,9 @@ const HookPlayerPrefs = (isShowPrintStack: boolean = false, needLRInfo: boolean 
         }, (retval: InvocationReturnValue, ctx: CpuContext, pass: Map<PassType, any>) => {
             let disp = `\n[*] SetString(${pass.get("arg0")},${pass.get("arg1")})`
             if (FOBJ(disp, 10)) return
-			LOGD(disp)
+            LOGD(disp)
             if (needLRInfo) LOGZ("\t\t { LR:" + checkCtx(ctx) + " } | { PC:" + checkCtx(ctx, "PC") + " }")
-            if (isShowPrintStack) LOGZ((GetStackTraceN(ctx)))
+            if (isShowPrintStack) LOGZ((GetStackTraceNative(ctx)))
         })
     }
 }

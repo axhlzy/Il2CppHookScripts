@@ -132,6 +132,56 @@ pagesTotal:\t\t${this.pagesTotal}`
     })
 }
 
+function Arm64WriterUsingExample() {
+    // mycode.add(0x4).writeU32(0xD10943FF)//SUB SP ,SP ,#0x250
+    // mycode.add(0x8).writeU32(0xA90077E8)//STP X8,X29,[SP]
+    // mycode.add(0xc).writeU32(0xA90107E0)//STP X0 ,X1 ,[SP,#0x10]
+
+    let writer = new Arm64Writer(ptr(123))
+    writer.putSubRegRegImm('sp', 'sp', 0x250)
+    // type Arm64IndexMode = "post-adjust" | "signed-offset" | "pre-adjust";
+    writer.putStpRegRegRegOffset('x8', 'x29', 'sp', 0, "post-adjust")
+    writer.putStpRegRegRegOffset('x0', 'x1', 'sp', 0x10, "post-adjust")
+    // mycode.add(0x10).writeU32(0xA9020FE2)//STP X2,X3,[SP,#0x20]
+    // mycode.add(0x14).writeU32(0x58000760)//LDR X0 , [mycode,#0x100]
+    // mycode.add(0x18).writeU32(0x58000781)//LDR X1 , [mycode,#0x108]
+    writer.putStpRegRegRegOffset('x2', 'x3', 'sp', 0x20, "post-adjust")
+    writer.putLdrRegRegOffset('x0', 'x0', 0x100)
+    writer.putLdrRegRegOffset('x1', 'x0', 0x108)
+    // mycode.add(0x1C).writeU32(0x580007A2)//LDR X2 , [mycode,#0x110]
+    // mycode.add(0x20).writeU32(0x580007C3)//LDR X3 , [mycode,#0x118]
+    // mycode.add(0x24).writeU32(0xD63F0060)//BLR X3
+    writer.putLdrRegRegOffset('x2', 'x0', 0x110)
+    writer.putLdrRegRegOffset('x3', 'x0', 0x118)
+    writer.putBlrReg('x3')
+    // mycode.add(0x28).writeU32(0xA9420FE2)//LDP X2, X3,[SP,#0x20]
+    // mycode.add(0x2C).writeU32(0xA94107E0)//LDP X0, X1,[SP,#0x10]
+    // mycode.add(0x30).writeU32(0xA94077E8)//LDP X8, X29,[SP]
+    writer.putLdpRegRegRegOffset('x2', 'x3', 'sp', 0x20, "post-adjust")
+    writer.putLdpRegRegRegOffset('x0', 'x1', 'sp', 0x10, "post-adjust")
+    writer.putLdpRegRegRegOffset('x8', 'x29', 'sp', 0, "post-adjust")
+    // mycode.add(0x34).writeU32(0x910943FF)//ADD SP, SP, #0x250
+    // mycode.add(0x38).writeU32(0x5800075E)//LDR X30, [mycode,#0x120]
+    // mycode.add(0x3C).writeU32(0xD65F03C0)//RET
+    writer.putAddRegRegImm('sp', 'sp', 0x250)
+    writer.putLdrRegRegOffset('x30', 'x0', 0x120)
+    writer.putRet()
+
+    writer.flush()
+
+    Memory.patchCode(ptr(123), 0x40, (code: NativePointer) => {
+        LOGD(code)
+        let writer = new Arm64Writer(code)
+        writer.putLabel('start')
+        writer.putNop()
+        writer.putCallAddressWithArguments(Module.findExportByName("libil2cpp.so", "il2cpp_string_new")!, ['x0', 0x10])
+        LOGD(writer.base + " " + writer.pc + " " + writer.offset + " " + writer.code)
+        writer.putBlrReg('lr')
+        writer.putBCondLabel("eq", 'start')
+        writer.flush()
+    })
+}
+
 globalThis.watchDisabled = () => MemoryAccessMonitor.disable()
 
 globalThis.sqliteTest = () => {

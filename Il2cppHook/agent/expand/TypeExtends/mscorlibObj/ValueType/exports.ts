@@ -17,10 +17,17 @@ const showTypeModuleByType = (mPtr: NativePointer): void => {
 }
 
 const CACHE_TYPE_PARENT: Map<string, Array<mscorlib.Type>> = new Map()
-const getTypeParentList = (mPtr: NativePointer, retArray: boolean = false): Array<mscorlib.Type> | undefined => {
+const getTypeParentArray = (mPtr: NativePointer, retArray: boolean = false, isClassPtr: boolean = false): Array<mscorlib.Type> | undefined => {
 
     const MAX_PARENT_INDEX = 20
     let retArr: Array<mscorlib.Type> = []
+
+    // if (isClassPtr) { // 传入的如果是一个class
+    //     let tempMem = alloc(4)
+    //     tempMem.writePointer(mPtr)
+    //     mPtr = tempMem
+    // }
+
     let current: mscorlib.Type = getType(mPtr).caseToRuntimeType
     let typeName: string = current.name
 
@@ -64,9 +71,9 @@ export function checkExtends(mPtr: NativePointer | Il2Cpp.Object, typeName: stri
 declare global {
     var getType: (mPtr: NativePointer) => mscorlib.Type
     var getTypeName: (mPtr: NativePointer) => string
-    var getTypeParent: (mPtr: NativePointer) => Array<mscorlib.Type>
+    var getTypeParent: (mPtr: NativePointer, retArray?: boolean, isClassPtr?: boolean) => Array<mscorlib.Type>
     // 展示父级type信息
-    var showTypeParent: (mPtr: NativePointer) => void
+    var showTypeParent: (mPtr: NativePointer, retArray?: boolean) => void
     // 展示type成员变量module信息
     var showTypeModuleByType: (mPtr: NativePointer) => void
     var showTypeModuleByIns: (mPtr: NativePointer) => void
@@ -74,7 +81,7 @@ declare global {
 
 globalThis.getType = getTypeInner
 globalThis.getTypeName = getTypeNameInner
-globalThis.showTypeParent = (mPtr: NativePointer) => getTypeParentList(mPtr, false)
-globalThis.getTypeParent = (mPtr: NativePointer): Array<mscorlib.Type> => getTypeParentList(mPtr, true)!
+globalThis.showTypeParent = (mPtr: NativePointer, retArray: boolean = false) => getTypeParentArray(mPtr, retArray)
+globalThis.getTypeParent = (mPtr: NativePointer, retArray: boolean = true, isClassPtr: boolean = false): Array<mscorlib.Type> => getTypeParentArray(mPtr, retArray, isClassPtr)!
 globalThis.showTypeModuleByType = showTypeModuleByType
 globalThis.showTypeModuleByIns = showTypeModuleByIns
