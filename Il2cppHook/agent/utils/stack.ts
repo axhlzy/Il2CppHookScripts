@@ -1,4 +1,3 @@
-import { symlink } from "fs"
 import { getMethodDesFromMethodInfo } from "../bridge/fix/il2cppM"
 import { allMethodsCacheArray, cacheMethods } from "../java/info"
 
