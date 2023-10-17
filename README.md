@@ -24,8 +24,6 @@
 
 -------
 
-[<img src="https://github.com/codespaces/badge.svg" title="Open in Github Codespace">](https://codespaces.new/axhlzy/Il2CppHookScripts)
-
 #### Install
 ```sh
 $ npm install il2cpp-hooker -g
@@ -72,6 +70,8 @@ Report bugs to:
 ```
 
 -------
+
+[<img src="https://github.com/codespaces/badge.svg" title="Open in Github Codespace">](https://codespaces.new/axhlzy/Il2CppHookScripts)
 
 #### Compile
 ```sh
