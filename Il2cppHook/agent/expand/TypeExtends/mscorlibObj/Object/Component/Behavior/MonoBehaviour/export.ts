@@ -1,5 +1,5 @@
-import { FakeCommonType } from "../../../../../../../base/valueResolve"
 import { getMethodDesFromMethodInfo } from "../../../../../../../bridge/fix/il2cppM"
+import { FakeCommonType } from "../../../../../../../base/valueResolve"
 import { filterDuplicateOBJ } from "../../../../../../../utils/common"
 
 const HookMonoBehavior = (): void => {
