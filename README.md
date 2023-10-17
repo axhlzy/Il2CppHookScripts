@@ -8,10 +8,6 @@
 [![npm version](https://img.shields.io/npm/v/il2cpp-hooker.svg)](https://www.npmjs.com/package/il2cpp-hooker)
 [![npm downloads](https://img.shields.io/npm/dm/il2cpp-hooker.svg)](https://www.npmjs.com/package/il2cpp-hooker)
 
-
-
-[<img src="https://github.com/codespaces/badge.svg" title="Open in Github Codespace">](https://codespaces.new/axhlzy/Il2CppHookScripts)
-
 #### Features 
 
 - Parse Unity's method `m` / class `c` / field `f` / instance `lfs`
@@ -27,6 +23,8 @@
 - ...
 
 -------
+
+[<img src="https://github.com/codespaces/badge.svg" title="Open in Github Codespace">](https://codespaces.new/axhlzy/Il2CppHookScripts)
 
 #### Install
 ```sh
