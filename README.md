@@ -1,6 +1,8 @@
 ## Il2cppHook
 
 ### frida-based libil2cpp.so runtime parsing script
+
+![Build Status](https://github.com/axhlzy/Il2CppHookScripts/actions/workflows/Auto-build.yml/badge.svg)
  
 #### Features 
 
@@ -81,7 +83,7 @@ OR
 $ frida -FU -l ../_Ufunc.js
 ```
 
-find U_func.js in github action artifacts
+**Download _Ufunc.js move to github action [Artifacts](https://github.com/axhlzy/Il2CppHookScripts/actions)**
 
 -------
 
