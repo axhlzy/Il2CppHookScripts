@@ -19,8 +19,8 @@ enum passValueKey {
 export type PassType = passValueKey | string
 
 let map_attach_listener = GET_MAP<string, InvocationListener>(MapKAY.map_attach_listener)
-type OnEnterType = (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => void
-type OnExitType = (retval: InvocationReturnValue, ctx: CpuContext, passValue: Map<PassType, any>) => void
+export type OnEnterType = (args: InvocationArguments, ctx: CpuContext, passValue: Map<PassType, any>) => void
+export type OnExitType = (retval: InvocationReturnValue, ctx: CpuContext, passValue: Map<PassType, any>) => void
 const attachNative = (mPtr: ARGM, mOnEnter?: OnEnterType, mOnLeave?: OnExitType, needRecord: boolean = true): void => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     if (mPtr instanceof NativePointer && mPtr.isNull()) return
