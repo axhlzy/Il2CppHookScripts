@@ -31,15 +31,21 @@ jobs:
           cd Il2cppHook
           npm run compress
 
-      - name: Commit and push _Ufunc.js
-        run: |
-          git config user.name "axhlzy"
-          git config user.email "axhlzy@live.cn"
-          cd Il2cppHook
-          git add -f _Ufunc.js
-          git restore package.json
-          git commit -m "auto generated"
-          git push --force-with-lease
+      # - name: Commit and push _Ufunc.js
+      #   run: |
+      #     git config user.name "axhlzy"
+      #     git config user.email "axhlzy@live.cn"
+      #     cd Il2cppHook
+      #     git add -f _Ufunc.js
+      #     git restore package.json
+      #     git commit -m "auto generated"
+      #     git push --force-with-lease
+
+      - name: Upload _Ufunc.js as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Ufunc-artifact
+          path: Il2cppHook/_Ufunc.js
 
   # check_version_and_publish:
   #   needs: auto_build
