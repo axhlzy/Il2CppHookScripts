@@ -2,8 +2,16 @@
 
 ### frida-based libil2cpp.so runtime parsing script
 
+[![npm license](https://img.shields.io/npm/l/il2cpp-hooker.svg)](https://www.npmjs.com/package/il2cpp-hooker)
 ![Build Status](https://github.com/axhlzy/Il2CppHookScripts/actions/workflows/Auto-build.yml/badge.svg)
- 
+[![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/axhlzy/Il2CppHookScripts)
+[![npm version](https://img.shields.io/npm/v/il2cpp-hooker.svg)](https://www.npmjs.com/package/il2cpp-hooker)
+[![npm downloads](https://img.shields.io/npm/dm/il2cpp-hooker.svg)](https://www.npmjs.com/package/il2cpp-hooker)
+
+
+
+[<img src="https://github.com/codespaces/badge.svg" title="Open in Github Codespace">](https://codespaces.new/axhlzy/Il2CppHookScripts)
+
 #### Features 
 
 - Parse Unity's method `m` / class `c` / field `f` / instance `lfs`
