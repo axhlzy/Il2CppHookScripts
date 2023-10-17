@@ -27,7 +27,6 @@ const ptrMightBeMethod = (mPtr: NativePointer, withLog: boolean = true): Il2Cpp.
     return tmpMethod
 }
 
-
 // 打印native堆栈
 const PrintStackTraceNative = (ctx: CpuContext, fuzzy: boolean = false, retText: boolean = false, slice: number = 6): string | void => {
     let stacks: NativePointer[] = Thread.backtrace(ctx, fuzzy ? Backtracer.FUZZY : Backtracer.ACCURATE)
