@@ -28,8 +28,8 @@
 ```sh
 $ npm install il2cpp-hooker -g
 ```
-Tips: 
-The npm package may not be updated in time, so you may consider using `fat -c` to open the project and use the `github action` [Artifacts](https://github.com/axhlzy/Il2CppHookScripts/actions) to replace _Ufunc.js file.
+
+> The npm package may not be updated in time, so you may consider using `fat -c` to open the project and use the `github action` [Artifacts](https://github.com/axhlzy/Il2CppHookScripts/actions) to replace _Ufunc.js file.
 
 then you can use like this ↓
 
@@ -91,8 +91,6 @@ $ frida -U -f com.xxx.xxx -l ../_Ufunc.js
 OR
 $ frida -FU -l ../_Ufunc.js
 ```
-
-**Download _Ufunc.js move to github action [Artifacts](https://github.com/axhlzy/Il2CppHookScripts/actions)**
 
 -------
 
