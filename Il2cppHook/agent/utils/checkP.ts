@@ -41,7 +41,7 @@ export let checkPointer = (value: TYPE_CHECK_POINTER, throwErr: boolean = false,
             case 'object':
                 if (value instanceof NativePointer) {
                     return calPointer(value)
-                } else if (value instanceof Array<string | number>) {
+                } else if (value instanceof Array) {
                     if (!checkValue(value as Array<string | number>)) {
                         if (throwErr) throw new Error("checkPointer: checkValue Error")
                         else return ptr(0)

@@ -340,7 +340,11 @@ globalThis.BN = (namespace: string) => Breaker.addBreakPoint("", namespace) // <
 globalThis.getPlatform = (): string => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
 globalThis.getPlatformCtx = (ctx: CpuContext): ArmCpuContext | Arm64CpuContext => getPlatform() == "arm" ? ctx as ArmCpuContext : ctx as Arm64CpuContext
 
-// b(MethodInfo)带参数断点指定函数 == attachMethodInfo / b(ptr) 断点指定函数 == breakWithArgs
+/**
+ * b(MethodInfo)带参数断点指定函数 == attachMethodInfo / b(ptr) 断点指定函数 == breakWithArgs
+ * @param {NativePointer | string | number | Il2Cpp.Method} mPtr 
+ * @returns
+ */
 globalThis.b = (mPtr: NativePointer | string | number | Il2Cpp.Method) => {
     if (typeof mPtr == "number") {
         if (Process.arch == "arm") mPtr = ptr(mPtr)
@@ -362,7 +366,11 @@ globalThis.b = (mPtr: NativePointer | string | number | Il2Cpp.Method) => {
     }
 }
 
-// 原 print_list_result, 用来列出已经 attach 的方法
+/**
+ * 原 print_list_result, 用来列出已经 attach 的方法
+ * @param {string} filterName 过滤的字符串
+ * @param {boolean} types 输出格式 默认不管
+ */
 globalThis.printCurrentMethods = (filterName: string = "", types: boolean = false) => {
     let currentTime = Date.now()
     new Promise((resolve: Function) => {
@@ -390,7 +398,10 @@ globalThis.printCurrentMethods = (filterName: string = "", types: boolean = fals
     })
 }
 
-// 带参数解析批量断点Class中的所有方法
+/**
+ * 带参数解析批量断点Class中的所有方法
+ * @param className 指定类名
+ */
 globalThis.BM = (className: string): void => {
     if (typeof className != "string") throw new Error("\n\tclassName must be a string\n")
     let classPtr = findClass(className)
@@ -398,7 +409,12 @@ globalThis.BM = (className: string): void => {
     new Il2Cpp.Class(classPtr).methods.forEach((methodInfo: Il2Cpp.Method) => Breaker.attachMethodInfo(methodInfo, true))
 }
 
-// 查找所有包含filterStr的方法并断点 (模糊查询/准确查询)
+/**
+ * 查找所有包含filterStr的方法并断点 (模糊查询/准确查询)
+ * @param filterStr 过滤的字符串
+ * @param allImg 是否包含所有Image
+ * @param accurate 是否准确查询 （infact include or ===）
+ */
 globalThis.BF = (filterStr: string, allImg: boolean = true, accurate: boolean = false): void => {
     if (typeof filterStr != "string") throw new Error("\n\tfilterStr must be a string\n")
     DD()
@@ -411,11 +427,21 @@ globalThis.BF = (filterStr: string, allImg: boolean = true, accurate: boolean = 
     })
 }
 
-// alias BF with accurate = true
+/**
+ * alias BF with accurate = true
+ * @param filterStr {string} 过滤的字符串
+ * @param allImg {boolean} 是否包含所有Image
+ */
 globalThis.BFA = (filterStr: string, allImg: boolean = true): void => {
     BF(filterStr, allImg, true)
 }
 
+/**
+ * getPlatformCtxWithArgV, argIndex start at 0 (arm32 r0 / arm64 x0)
+ * @param {CpuContext} ctx CpuContext
+ * @param {number} argIndex 
+ * @returns 
+ */
 globalThis.getPlatformCtxWithArgV = <T extends CpuContext>(ctx: T, argIndex: number): NativePointer | undefined => {
     if ((ctx as ArmCpuContext).r0 != undefined) {
         // case arm32
@@ -496,7 +522,6 @@ declare global {
     var breakWithStack: (mPtr: NativePointer, accurate?: boolean) => void
     var getPlatform: () => string
     var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
-    // getPlatformCtxWithArgV 用于获取参数, argIndex 从 0 开始 (arm32 r0 / arm64 x0)
     var getPlatformCtxWithArgV: <T extends CpuContext>(ctx: T, argIndex: number) => NativePointer | undefined
     var maxCallTimes: number
     var attathing: boolean

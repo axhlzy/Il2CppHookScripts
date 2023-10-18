@@ -18,7 +18,7 @@ const alloc = (size: number = 1): NativePointer => allocP(size * p_size)
  * @param {Number} z 
  * @param {Number} w 
  */
-function allocVector(x: number = 0, y: number = 0, z: number = 0, w?: number): NativePointer {
+function allocVector(_x: number = 0, _y: number = 0, _z: number = 0, _w?: number): NativePointer {
     let argsLength = arguments.length
     argsLength = argsLength == 0 ? 3 : argsLength
     let temp_vector = alloc(argsLength + 1)

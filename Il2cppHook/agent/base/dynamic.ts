@@ -1,9 +1,15 @@
 import { OnEnterType, OnExitType } from "../utils/common"
 
+/**
+ * 这部分代码主要用来实现反射提前预加载指定程序集下的所有class以及方法，以便于实现类似命令行代码提示或者说是自动补全的功能
+ */
+
+// 过滤只加载指定的程序集 {全部加载会导致启动过慢，可能把项目费时代码写成一个cmodule或者是考虑是全部移植到cpp即可解决问题}
 Reflect.set(globalThis, "Assembly", {})
 
 // 是否启用动态加载
 const enable_dynamic = true
+// 是否简化类名
 // globalClassName { "Assembly.Assembly_CSharp.AndroidAgent" --简化为--> "AndroidAgent.SetPauseGame"}
 // AndroidAgent.SetPauseGame.hook() === b(AndroidAgent.SetPauseGame) { b(MethodInfo) }
 // AndroidAgent.SetPauseGame.hook((args,_ctx)=>{},(ret,_ctx)=>{}) === A(AndroidAgent.SetPauseGame.virtualAddress,(args,_ctx)=>{},(ret,_ctx)=>{})

@@ -1,3 +1,4 @@
+import { PassType } from "../utils/common"
 import { formartClass as FM } from "../utils/formart"
 
 export { }
@@ -79,6 +80,11 @@ globalThis.protect = (mPtr: NativePointer, size: number = 0x1000, protection: Pa
     Memory.protect(mPtr, size, protection)
 }
 
+/**
+ * frida API 实现的内存断点的封装
+ * @param {NativePointer} mPtr 断点地址 
+ * @param {number} length 长度
+ */
 globalThis.watch = (mPtr: NativePointer, length: number = 0x10) => {
 
     class MenRange implements MemoryAccessRange {
@@ -132,56 +138,6 @@ pagesTotal:\t\t${this.pagesTotal}`
     })
 }
 
-function Arm64WriterUsingExample() {
-    // mycode.add(0x4).writeU32(0xD10943FF)//SUB SP ,SP ,#0x250
-    // mycode.add(0x8).writeU32(0xA90077E8)//STP X8,X29,[SP]
-    // mycode.add(0xc).writeU32(0xA90107E0)//STP X0 ,X1 ,[SP,#0x10]
-
-    let writer = new Arm64Writer(ptr(123))
-    writer.putSubRegRegImm('sp', 'sp', 0x250)
-    // type Arm64IndexMode = "post-adjust" | "signed-offset" | "pre-adjust";
-    writer.putStpRegRegRegOffset('x8', 'x29', 'sp', 0, "post-adjust")
-    writer.putStpRegRegRegOffset('x0', 'x1', 'sp', 0x10, "post-adjust")
-    // mycode.add(0x10).writeU32(0xA9020FE2)//STP X2,X3,[SP,#0x20]
-    // mycode.add(0x14).writeU32(0x58000760)//LDR X0 , [mycode,#0x100]
-    // mycode.add(0x18).writeU32(0x58000781)//LDR X1 , [mycode,#0x108]
-    writer.putStpRegRegRegOffset('x2', 'x3', 'sp', 0x20, "post-adjust")
-    writer.putLdrRegRegOffset('x0', 'x0', 0x100)
-    writer.putLdrRegRegOffset('x1', 'x0', 0x108)
-    // mycode.add(0x1C).writeU32(0x580007A2)//LDR X2 , [mycode,#0x110]
-    // mycode.add(0x20).writeU32(0x580007C3)//LDR X3 , [mycode,#0x118]
-    // mycode.add(0x24).writeU32(0xD63F0060)//BLR X3
-    writer.putLdrRegRegOffset('x2', 'x0', 0x110)
-    writer.putLdrRegRegOffset('x3', 'x0', 0x118)
-    writer.putBlrReg('x3')
-    // mycode.add(0x28).writeU32(0xA9420FE2)//LDP X2, X3,[SP,#0x20]
-    // mycode.add(0x2C).writeU32(0xA94107E0)//LDP X0, X1,[SP,#0x10]
-    // mycode.add(0x30).writeU32(0xA94077E8)//LDP X8, X29,[SP]
-    writer.putLdpRegRegRegOffset('x2', 'x3', 'sp', 0x20, "post-adjust")
-    writer.putLdpRegRegRegOffset('x0', 'x1', 'sp', 0x10, "post-adjust")
-    writer.putLdpRegRegRegOffset('x8', 'x29', 'sp', 0, "post-adjust")
-    // mycode.add(0x34).writeU32(0x910943FF)//ADD SP, SP, #0x250
-    // mycode.add(0x38).writeU32(0x5800075E)//LDR X30, [mycode,#0x120]
-    // mycode.add(0x3C).writeU32(0xD65F03C0)//RET
-    writer.putAddRegRegImm('sp', 'sp', 0x250)
-    writer.putLdrRegRegOffset('x30', 'x0', 0x120)
-    writer.putRet()
-
-    writer.flush()
-
-    Memory.patchCode(ptr(123), 0x40, (code: NativePointer) => {
-        LOGD(code)
-        let writer = new Arm64Writer(code)
-        writer.putLabel('start')
-        writer.putNop()
-        writer.putCallAddressWithArguments(Module.findExportByName("libil2cpp.so", "il2cpp_string_new")!, ['x0', 0x10])
-        LOGD(writer.base + " " + writer.pc + " " + writer.offset + " " + writer.code)
-        writer.putBlrReg('lr')
-        writer.putBCondLabel("eq", 'start')
-        writer.flush()
-    })
-}
-
 globalThis.watchDisabled = () => MemoryAccessMonitor.disable()
 
 globalThis.sqliteTest = () => {
@@ -197,20 +153,6 @@ globalThis.sqliteTest = () => {
         console.log('Bio:', bio);
     }
     smt.reset()
-}
-
-globalThis.patchTest = (mPtr: NativePointer, size: number = 1) => {
-    Memory.patchCode(checkPointer(mPtr), Process.pageSize * size, (code: NativePointer) => {
-        LOGD(code)
-        let writer = new ArmWriter(code)
-        writer.putLabel('start')
-        writer.putNop()
-        writer.putCallAddressWithArguments(Module.findExportByName("libil2cpp.so", "il2cpp_string_new")!, ['r10', 0x10])
-        LOGD(writer.base + " " + writer.pc + " " + writer.offset + " " + writer.code)
-        writer.putBlxReg('lr')
-        writer.putBCondLabel("eq", 'start')
-        writer.flush()
-    })
 }
 
 globalThis.findInMemory = (pattern: "Dex" | "Dex1" | "PNG" | "global-metadata.dat" | string, scanSync: boolean = false) => {
@@ -487,6 +429,7 @@ globalThis.listModule = (moduleName: string, printItems: number = 5) => {
     }
 }
 
+// 局部函数 打印模块信息
 function printModule(md: Module, needIndex: boolean = false) {
     needIndex == true ? LOGD(`\n[${++index}]\t${md.name}`) : LOGD(`\n[*]\t${md.name}`)
     // 保留三位小数
@@ -557,6 +500,11 @@ globalThis.findExport = (exportName: string, moduleName?: string, callback?: (ex
     }
 }
 
+/**
+ * Demangles a C++ symbol name using available libraries.
+ * @param expName The mangled symbol name to demangle.
+ * @returns The demangled symbol name, or an empty string if demangling failed.
+ */
 export function demangleName(expName: string) {
     let demangleAddress: NativePointer | null = Module.findExportByName("libc++.so", '__cxa_demangle')
     if (demangleAddress == null) demangleAddress = Module.findExportByName("libunwindstack.so", '__cxa_demangle')
@@ -577,6 +525,12 @@ export function demangleName(expName: string) {
     }
 }
 
+/**
+ * 查找导入表
+ * @param {string} moduleName 
+ * @param {string} importName 
+ * @returns 
+ */
 globalThis.findImport = (moduleName: string = "libc.so", importName: string = "") => {
     let md = Process.findModuleByName(moduleName)
     if (md == null) {
@@ -593,6 +547,11 @@ globalThis.findImport = (moduleName: string = "libc.so", importName: string = ""
     newLine()
 }
 
+/**
+ * 获取文件长度
+ * @param filePath 文件路径
+ * @returns 
+ */
 const getFileLenth = (filePath: string): number => {
     let file = callFunctionWithOutError(Module.findExportByName("libc.so", "fopen")!, allocCStr(filePath), allocCStr("rwx"))
     if (file.isNull()) return 0
@@ -616,11 +575,11 @@ globalThis.StalkerTraceEvent = (mPtr: NativePointer, range: NativePointer[] | un
             range[i] = checkPointer(range[i])
         }
     }
-    A(mPtr, (args, ctx, passValue) => {
+    A(mPtr, (args: NativePointer[], _ctx: CpuContext, passValue: Map<PassType, any>) => {
         newLine()
         passValue.set("len", FM.printTitileA(`Enter ---> arg0:${args[0]}  arg1:${args[1]}  arg2:${args[2]}  arg3:${args[3]} | ${Process.getCurrentThreadId()}`, LogColor.YELLOW))
         stalkerEnter(Process.getCurrentThreadId())
-    }, (ret, ctx, passValue) => {
+    }, (ret: NativePointer, _ctx: CpuContext, passValue: Map<PassType, any>) => {
         LOGW(`${getLine(20)}\n Exit ---> ret : ${ret}\n${getLine(passValue.get("len"))}`)
         stalkerExit(Process.getCurrentThreadId())
     })
@@ -654,15 +613,20 @@ globalThis.StalkerTraceEvent = (mPtr: NativePointer, range: NativePointer[] | un
         })
     }
 
-    function stalkerExit(tid: ThreadId) {
+    function stalkerExit(_tid: ThreadId) {
         Stalker.unfollow()
         Stalker.garbageCollect()
     }
 }
 
-// exp: StalkerTracePath(0x4CA23C,[0x4CA23C,0x4CA308])
+/**
+ * exp: StalkerTracePath(0x4CA23C,[0x4CA23C,0x4CA308])
+ * @param {NativePointer} mPtr 
+ * @param {NativePointer[] | undefined} range 
+ * @returns 
+ */
 globalThis.StalkerTracePath = (mPtr: NativePointer, range: NativePointer[] | undefined) => {
-    let src_mPtr = mPtr
+    let src_mPtr: NativePointer = mPtr
     mPtr = checkPointer(mPtr)
     if (mPtr == undefined || mPtr.isNull()) return
     const moduleG: Module | null = Process.findModuleByAddress(mPtr)
@@ -675,11 +639,11 @@ globalThis.StalkerTracePath = (mPtr: NativePointer, range: NativePointer[] | und
             range[i] = checkPointer(range[i])
         }
     }
-    A(mPtr, (args, ctx, passValue) => {
+    A(mPtr, (args: NativePointer[], _ctx: CpuContext, passValue: Map<PassType, any>) => {
         newLine()
         passValue.set("len", FM.printTitileA(`Enter ---> arg0:${args[0]}  arg1:${args[1]}  arg2:${args[2]}  arg3:${args[3]} | ${Process.getCurrentThreadId()}`, LogColor.YELLOW))
         stalkerEnter(Process.getCurrentThreadId())
-    }, (ret, ctx, passValue) => {
+    }, (ret: NativePointer, _ctx: CpuContext, passValue: Map<PassType, any>) => {
         LOGW(`${getLine(20)}\n Exit ---> ret : ${ret}\n${getLine(passValue.get("len"))}`)
         stalkerExit(Process.getCurrentThreadId())
     })
@@ -717,6 +681,8 @@ globalThis.StalkerTracePath = (mPtr: NativePointer, range: NativePointer[] | und
     }
 }
 
+///////// ↓ 测试代码 不用管 ↓ /////////
+
 globalThis.cmdouleTest = () => {
     var source =
         "#include <stdio.h>" +
@@ -728,4 +694,68 @@ globalThis.cmdouleTest = () => {
     var ptrFunctionFromCModule = cModule['functionFromCModule'];
     var functionFromCModule = new NativeFunction(ptrFunctionFromCModule, 'void', []);
     functionFromCModule();
+}
+
+function Arm64WriterUsingExample() {
+    // mycode.add(0x4).writeU32(0xD10943FF)//SUB SP ,SP ,#0x250
+    // mycode.add(0x8).writeU32(0xA90077E8)//STP X8,X29,[SP]
+    // mycode.add(0xc).writeU32(0xA90107E0)//STP X0 ,X1 ,[SP,#0x10]
+
+    let writer = new Arm64Writer(ptr(123))
+    writer.putSubRegRegImm('sp', 'sp', 0x250)
+    // type Arm64IndexMode = "post-adjust" | "signed-offset" | "pre-adjust";
+    writer.putStpRegRegRegOffset('x8', 'x29', 'sp', 0, "post-adjust")
+    writer.putStpRegRegRegOffset('x0', 'x1', 'sp', 0x10, "post-adjust")
+    // mycode.add(0x10).writeU32(0xA9020FE2)//STP X2,X3,[SP,#0x20]
+    // mycode.add(0x14).writeU32(0x58000760)//LDR X0 , [mycode,#0x100]
+    // mycode.add(0x18).writeU32(0x58000781)//LDR X1 , [mycode,#0x108]
+    writer.putStpRegRegRegOffset('x2', 'x3', 'sp', 0x20, "post-adjust")
+    writer.putLdrRegRegOffset('x0', 'x0', 0x100)
+    writer.putLdrRegRegOffset('x1', 'x0', 0x108)
+    // mycode.add(0x1C).writeU32(0x580007A2)//LDR X2 , [mycode,#0x110]
+    // mycode.add(0x20).writeU32(0x580007C3)//LDR X3 , [mycode,#0x118]
+    // mycode.add(0x24).writeU32(0xD63F0060)//BLR X3
+    writer.putLdrRegRegOffset('x2', 'x0', 0x110)
+    writer.putLdrRegRegOffset('x3', 'x0', 0x118)
+    writer.putBlrReg('x3')
+    // mycode.add(0x28).writeU32(0xA9420FE2)//LDP X2, X3,[SP,#0x20]
+    // mycode.add(0x2C).writeU32(0xA94107E0)//LDP X0, X1,[SP,#0x10]
+    // mycode.add(0x30).writeU32(0xA94077E8)//LDP X8, X29,[SP]
+    writer.putLdpRegRegRegOffset('x2', 'x3', 'sp', 0x20, "post-adjust")
+    writer.putLdpRegRegRegOffset('x0', 'x1', 'sp', 0x10, "post-adjust")
+    writer.putLdpRegRegRegOffset('x8', 'x29', 'sp', 0, "post-adjust")
+    // mycode.add(0x34).writeU32(0x910943FF)//ADD SP, SP, #0x250
+    // mycode.add(0x38).writeU32(0x5800075E)//LDR X30, [mycode,#0x120]
+    // mycode.add(0x3C).writeU32(0xD65F03C0)//RET
+    writer.putAddRegRegImm('sp', 'sp', 0x250)
+    writer.putLdrRegRegOffset('x30', 'x0', 0x120)
+    writer.putRet()
+
+    writer.flush()
+
+    Memory.patchCode(ptr(123), 0x40, (code: NativePointer) => {
+        LOGD(code)
+        let writer = new Arm64Writer(code)
+        writer.putLabel('start')
+        writer.putNop()
+        writer.putCallAddressWithArguments(Module.findExportByName("libil2cpp.so", "il2cpp_string_new")!, ['x0', 0x10])
+        LOGD(writer.base + " " + writer.pc + " " + writer.offset + " " + writer.code)
+        writer.putBlrReg('lr')
+        writer.putBCondLabel("eq", 'start')
+        writer.flush()
+    })
+}
+
+globalThis.patchTest = (mPtr: NativePointer, size: number = 1) => {
+    Memory.patchCode(checkPointer(mPtr), Process.pageSize * size, (code: NativePointer) => {
+        LOGD(code)
+        let writer = new ArmWriter(code)
+        writer.putLabel('start')
+        writer.putNop()
+        writer.putCallAddressWithArguments(Module.findExportByName("libil2cpp.so", "il2cpp_string_new")!, ['r10', 0x10])
+        LOGD(writer.base + " " + writer.pc + " " + writer.offset + " " + writer.code)
+        writer.putBlxReg('lr')
+        writer.putBCondLabel("eq", 'start')
+        writer.flush()
+    })
 }

@@ -146,8 +146,8 @@ export class HookerBase {
 
     /**
      * showMethods
-     * @param mPtr class ptr
-     * @param detailed show detail info (default false)
+     * @param {NativePointer | String | number} mPtr class ptr
+     * @param {boolean} detailed show detail info (default false)
      * @returns 
      * @example
      * 
@@ -257,10 +257,16 @@ export class HookerBase {
         return klass
     }
 
-    /** 优先从fromAssebly列表中去查找，找不到再查找其他Assebly 
-     *  fromCache 是否使用cache (tips: Class -> UnityEngine.CoreModule.Object/mscorlib.Object 得取消cache，指定fromAssebly)
-    */
+    // findClass cache
     private static map_cache_class = new Map<string, Il2Cpp.Class>()
+    /**
+     * 优先从fromAssebly列表中去查找，找不到再查找其他Assebly 
+     * fromCache 是否使用cache (tips: Class -> UnityEngine.CoreModule.Object/mscorlib.Object 得取消cache，指定fromAssebly)
+     * @param searchClassName 待查找的类名
+     * @param fromAssebly 优先查找的Assebly列表
+     * @param fromCache 是否使用cache
+     * @returns 
+     */
     static findClass(searchClassName: string, fromAssebly: string[] = ["Assembly-CSharp", "MaxSdk.Scripts", "mscorlib"], fromCache: boolean = true): NativePointer {
         if (searchClassName as any instanceof NativePointer) return ptr(0)
         if (searchClassName as any instanceof Number) return ptr(0)

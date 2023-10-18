@@ -1,3 +1,7 @@
+/**
+ * 内存 dump so
+ * @param soName 指定so名称
+ */
 function dump_so(soName: string = "libil2cpp.so") {
     const module = Process.getModuleByName(soName)
     LOGE(getLine(30))
@@ -10,6 +14,13 @@ function dump_so(soName: string = "libil2cpp.so") {
     dump_mem(module.base, module.size, fileName)
 }
 
+/**
+ * 内存 dump
+ * @param from 从哪里开始
+ * @param length 长度
+ * @param fileName 保存的文件名
+ * @returns 
+ */
 function dump_mem(from: NativePointer, length: number, fileName: string | undefined) {
     from = checkCmdInput(from)
     if (length <= 0) return

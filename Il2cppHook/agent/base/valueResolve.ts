@@ -1,9 +1,9 @@
 import { enumNumToName } from "../bridge/fix/enum"
+import { formartClass as FM } from "../utils/formart"
 import { methodToString } from "../bridge/fix/il2cppM"
 import { UnityEngine_Object } from "../expand/TypeExtends/mscorlibObj/Object/class"
 import { getObjName } from "../expand/TypeExtends/mscorlibObj/Object/export"
 import { UnityEngine_Color_Impl } from "../expand/TypeExtends/mscorlibObj/ValueType/Color/class"
-import { formartClass as FM } from "../utils/formart"
 import { readInt, readInt64, readSingle, readU16, readUInt } from "../utils/reader"
 
 class ValueResolve {
@@ -160,6 +160,7 @@ class ValueResolve {
             return `Enum : ${enumNumToName(insPtr.toInt32(), type.class.name)}`
         }
 
+        // unused
         function getParentsStr(clsPtr: Il2Cpp.Class): string {
             let ret = ""
             while (true) {
@@ -176,6 +177,7 @@ class ValueResolve {
     }
 }
 
+// 类型解析
 export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
     switch (type.name) {
         case "System.Void":
