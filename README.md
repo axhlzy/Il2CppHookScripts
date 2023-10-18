@@ -28,6 +28,9 @@
 ```sh
 $ npm install il2cpp-hooker -g
 ```
+Tips: 
+The npm package may not be updated in time, so you may consider using `fat -c` to open the project and use the `github action` [Artifacts](https://github.com/axhlzy/Il2CppHookScripts/actions) to replace _Ufunc.js file.
+
 then you can use like this ↓
 
 1. frida attch current app
