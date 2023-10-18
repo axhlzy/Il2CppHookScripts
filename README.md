@@ -20,7 +20,7 @@
 - Parse mount script `showComponents alias s` `HookOnPointerClick/PrintHierarchyWithComponents` is also introduced <--- testing
 - JNI RegisterNatives Hook (impl in JNIHelper, default off [not stable]), using JNIHelper.cacheRegisterNativeItem to get info
 - Using QBDI to simulate the execution of the function, using t(methoinfo) or traceFunction(mPtr) to enable replacement hook
-- ...
+- :confused: :confused: :confused:
 
 -------
 
@@ -29,9 +29,9 @@
 $ npm install il2cpp-hooker -g
 ```
 
-> The npm package may not be updated in time, so you may consider using `fat -c` to open the project and use the `github action` [Artifacts](https://github.com/axhlzy/Il2CppHookScripts/actions) to replace _Ufunc.js file.
+> The npm package may not be updated in time, so you may consider using `fat -c` to open the project and use the `github action` [Artifacts](https://github.com/axhlzy/Il2CppHookScripts/actions) to replace _Ufunc.js file. :hushed:
 
-then you can use like this ↓
+then you can use like this :point_down:
 
 1. frida attch current app
 ```sh
