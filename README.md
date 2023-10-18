@@ -29,8 +29,6 @@
 $ npm install il2cpp-hooker -g
 ```
 
-> The npm package may not be updated in time, so you may consider using `fat -c` to open the project and use the `github action` [Artifacts](https://github.com/axhlzy/Il2CppHookScripts/actions) to replace _Ufunc.js file. :hushed:
-
 then you can use like this :point_down:
 
 1. frida attch current app
@@ -91,6 +89,11 @@ $ frida -U -f com.xxx.xxx -l ../_Ufunc.js
 OR
 $ frida -FU -l ../_Ufunc.js
 ```
+
+-------
+
+> [!NOTE]
+> The npm package may not be updated in time, so you may consider using `fat -c` to open the project and use the `github action` [Artifacts](https://github.com/axhlzy/Il2CppHookScripts/actions) to replace _Ufunc.js file. :hushed:
 
 -------
 
