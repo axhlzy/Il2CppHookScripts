@@ -27,16 +27,18 @@ const ptrMightBeMethod = (mPtr: NativePointer, withLog: boolean = true): Il2Cpp.
 }
 
 // 打印native堆栈
+var symbMethod: Map<string, string> = new Map() // 放成全局的有重复的直接使用不在重复去查找以提高速度
 const PrintStackTraceNative = (ctx: CpuContext, fuzzy: boolean = false, retText: boolean = false, slice: number = 6): string | void => {
     let stacks: NativePointer[] = Thread.backtrace(ctx, fuzzy ? Backtracer.FUZZY : Backtracer.ACCURATE)
-    let symbMethod: Map<string, string> = new Map()
     stacks.forEach((frame: NativePointer, _index: number, _thisArr: NativePointer[]) => {
+        if (symbMethod.has(frame.toString()))
+            return
         let symb: DebugSymbol = DebugSymbol.fromAddress(frame)
         if (symb.moduleName == "libil2cpp.so" && symb.name?.startsWith("0x")) {
             let il2cppMethod: Il2Cpp.Method | null = ptrMightBeMethod(frame)
             if (il2cppMethod != null) {
                 let offset = symb.address.sub(il2cppMethod.virtualAddress)
-                symbMethod.set(frame.toString(), `MI:${il2cppMethod.handle} -> ${il2cppMethod.class.name}${getMethodDesFromMethodInfo(il2cppMethod)} ${offset}↓`)
+                symbMethod.set(frame.toString(), `MI:${il2cppMethod.handle} -> ${il2cppMethod.class.name} ${getMethodDesFromMethodInfo(il2cppMethod)} ${offset}↓`)
             }
         }
     })

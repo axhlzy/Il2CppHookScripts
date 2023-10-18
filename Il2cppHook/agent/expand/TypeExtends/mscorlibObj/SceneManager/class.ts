@@ -1,7 +1,5 @@
 import { mscorlib_System_Object_impl as System_Object } from "../class"
-import { GameObjectImpl as GameObject } from "../Object/GameObject/class"
 import { UnityEngine_SceneManagement_LoadSceneMode as LoadSceneMode } from "../ValueType/LoadSceneParameters/enum"
-import { UnityEngine_SceneManagement_LocalPhysicsMode as LocalPhysicsMode } from "../ValueType/LoadSceneParameters/enum"
 import { UnityEngine_SceneManagement_LoadSceneParameters_Impl as LoadSceneParameters } from "../ValueType/LoadSceneParameters/class"
 import { UnityEngine_SceneManagement_Scene_Impl as Scene } from "../ValueType/Scene/class"
 import { UnityEngine_AsyncOperation_Impl as AsyncOperation } from "../YieldInstruction/AsyncOperation/class"
