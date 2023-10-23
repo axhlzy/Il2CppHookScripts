@@ -50,6 +50,31 @@ class il2cppObjAPI {
     static get _DestroyImmediate() {
         return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Object", "DestroyImmediate", 1, "void", ["pointer"]);
     }
+
+    // public static Object Instantiate(Object original)
+    @cache
+    static get _Instantiate_1() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Object", "Instantiate", 1, "pointer", ["pointer"]);
+    }
+
+    // public static Object Instantiate(Object original, Vector3 position, Quaternion rotation)
+    @cache
+    static get _Instantiate_3() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Object", "Instantiate", 3, "pointer", ["pointer", "pointer", "pointer"]);
+    }
+
+    // public static Object Instantiate(Object original, Transform parent, Boolean instantiateInWorldSpace)
+    @cache
+    static get _Instantiate_3_1() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Object", "Instantiate", 3, "pointer", ["pointer", "pointer", "bool"]);
+    }
+
+    // public static Object Instantiate(Object original, Vector3 position, Quaternion rotation, Transform parent)
+    @cache
+    static get _Instantiate_4() {
+        return Il2Cpp.Api.t("UnityEngine.CoreModule", "UnityEngine.Object", "Instantiate", 4, "pointer", ["pointer", "pointer", "pointer", "pointer"]);
+    }
+
 }
 
 declare global {

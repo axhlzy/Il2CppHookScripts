@@ -1,7 +1,6 @@
 import { getMethodDesFromMethodInfo } from "../bridge/fix/il2cppM"
 import { allMethodsCacheArray, cacheMethods } from "../java/info"
 
-// 打印java堆栈
 const PrintStackTrace = () => LOG(Java.use("android.util.Log").getStackTraceString(Java.use("java.lang.Throwable").$new()), LogColor.C36)
 
 // 补充用猜测的方式来补充打印il2cpp堆栈
@@ -19,26 +18,23 @@ const ptrMightBeMethod = (mPtr: NativePointer, withLog: boolean = true): Il2Cpp.
             && Math.abs(mPtr.sub(method.virtualAddress).toInt32()) < 0x10000
             && mPtr.compare(nextMethod.virtualAddress) < 0) {
             tmpMethod = method
-            // LOGE(`[ptrMightBeMethod] ${mPtr} might be ${method.toString()}`)
             break
         }
     }
     return tmpMethod
 }
 
-// 打印native堆栈
 var symbMethod: Map<string, string> = new Map() // 放成全局的有重复的直接使用不在重复去查找以提高速度
 const PrintStackTraceNative = (ctx: CpuContext, fuzzy: boolean = false, retText: boolean = false, slice: number = 6): string | void => {
     let stacks: NativePointer[] = Thread.backtrace(ctx, fuzzy ? Backtracer.FUZZY : Backtracer.ACCURATE)
     stacks.forEach((frame: NativePointer, _index: number, _thisArr: NativePointer[]) => {
-        if (symbMethod.has(frame.toString()))
-            return
+        if (symbMethod.has(frame.toString())) return
         let symb: DebugSymbol = DebugSymbol.fromAddress(frame)
         if (symb.moduleName == "libil2cpp.so" && symb.name?.startsWith("0x")) {
             let il2cppMethod: Il2Cpp.Method | null = ptrMightBeMethod(frame)
             if (il2cppMethod != null) {
                 let offset = symb.address.sub(il2cppMethod.virtualAddress)
-                symbMethod.set(frame.toString(), `MI:${il2cppMethod.handle} -> ${il2cppMethod.class.name} ${getMethodDesFromMethodInfo(il2cppMethod)} ${offset}↓`)
+                symbMethod.set(frame.toString(), `MI:${il2cppMethod.handle} -> ${il2cppMethod.class.name}::${getMethodDesFromMethodInfo(il2cppMethod)} ${offset}↓`)
             }
         }
     })
@@ -54,7 +50,7 @@ const PrintStackTraceNative = (ctx: CpuContext, fuzzy: boolean = false, retText:
             return strRet
         })
         .join("\n")
-    return !retText ? LOGD(tmpText) : tmpText
+    return !retText ? LOGZ(tmpText) : tmpText
 }
 
 var GetStackTrace = () => Java.use("android.util.Log").getStackTraceString(Java.use("java.lang.Throwable").$new())

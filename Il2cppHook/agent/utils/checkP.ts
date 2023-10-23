@@ -159,7 +159,7 @@ globalThis.getBaseAddress = (): NativePointer => baseAddress
 globalThis.checkCmdInput = checkCmdInput
 
 declare global {
-    var checkPointer: (args: NativePointer | number) => NativePointer
+    var checkPointer: (args: NativePointer | number | string) => NativePointer
     var checkCmdInput: (mPtr: NativePointer | NativePointerValue | number | string | Function) => NativePointer
     var getSubBasePtr: (mPtr: NativePointer, mdName?: string) => NativePointer
     var getSubBaseDes: (mPtr: NativePointer, mdName?: string) => string

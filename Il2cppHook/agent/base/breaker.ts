@@ -8,6 +8,7 @@ import { formartClass as FC } from "../utils/formart"
 import { closest } from "fastest-levenshtein"
 import ValueResolve from "./valueResolve"
 import { HookerBase } from "./base"
+import { JSHOOKTYPE } from "./enum"
 
 type SpecialClass = "CommonClass" | "JNI" | "AUI" | "Soon"
 const CommonClass = ["Assembly-CSharp", "MaxSdk.Scripts", "Game", "Zenject", "UniRx", "Purchasing.Common", "UnityEngine.Purchasing"]
@@ -197,7 +198,7 @@ export class Breaker {
                     LOGO(getLine(lenMax))                       // 长线 ------------------
                 }
             })
-            LOGD(methodToString(method, false, '[+]'))
+            LOGD(`[+] add BP ( ${this.HookTypeToString(JSHOOKTYPE.METHOD)} ) | ${methodToString(method, false, '')}`)
             Breaker.map_attachedMethodInfos.set(method, handleFunc)
         } catch { catchError(method) }
 
@@ -238,8 +239,44 @@ export class Breaker {
         }
     }
 
+    private static HookTypeToString = (type: JSHOOKTYPE): string => {
+        switch (type) {
+            case JSHOOKTYPE.STACK:
+                return "stack"
+            case JSHOOKTYPE.ARGS:
+                return "args"
+            case JSHOOKTYPE.METHOD:
+                return "method"
+            case JSHOOKTYPE.INLINE:
+                return "inline"
+            case JSHOOKTYPE.MEMORY:
+                return "memory"
+            default:
+                return "args"
+        }
+    }
+
+    private static fakeMethodPtr(mPtr: NativePointer | number | string, type: JSHOOKTYPE = JSHOOKTYPE.ARGS): NativePointer {
+        let localPtr: NativePointer = NULL
+        let typeDesStart: string = `[+] add BP ( ${this.HookTypeToString(type)} )`.padEnd(21, " ") + ` |`
+        try {
+            if (typeof mPtr == "number") mPtr = ptr(mPtr)
+            if (typeof mPtr == "string") mPtr = ptr(mPtr)
+            let method: Il2Cpp.Method = new Il2Cpp.Method(mPtr)
+            method.name
+            localPtr = method.virtualAddress
+            LOGD(`${typeDesStart} ${methodToString(method, false, '')}`)
+        } catch {
+            if (Process.findModuleByName("libil2cpp.so") != null) localPtr = checkPointer(mPtr)
+            let md: Module | null = Process.findModuleByAddress(localPtr)
+            let md_des: string = md == null ? '' : `@ ${md.name}`
+            LOGD(`${typeDesStart} ${mPtr} - ${localPtr} ${md_des}`)
+        }
+        return localPtr
+    }
+
     static breakWithArgs = (mPtr: NativePointer, argCount: number = 4) => {
-        if (Process.findModuleByName("libil2cpp.so") != null) mPtr = checkPointer(mPtr)
+        mPtr = this.fakeMethodPtr(mPtr, JSHOOKTYPE.ARGS)
         A(mPtr, (args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
             LOGO(`\n${getLine(85)}`)
             LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(ctx))}`)
@@ -250,7 +287,7 @@ export class Breaker {
     }
 
     static breakWithStack = (mPtr: NativePointer, accurate: boolean = true) => {
-        mPtr = checkPointer(mPtr)
+        mPtr = this.fakeMethodPtr(mPtr, JSHOOKTYPE.STACK)
         A(mPtr, (_args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
             LOGO(`\n${getLine(65)}\n`)
             LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(ctx))}\n`)
@@ -261,10 +298,11 @@ export class Breaker {
 
     // arm32 example : breakInline(0x12345678,(ctx)=>{LOGD(ctx.r0)})
     static breakInline = (mPtr: NativePointer, callback?: (value: CpuContext) => void) => {
-        mPtr = checkPointer(mPtr)
-        A(mPtr, (_args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
+        let localPtr: NativePointer = checkPointer(mPtr)
+        LOGD(`[+] add BP ( ${this.HookTypeToString(JSHOOKTYPE.INLINE)} ) | ${mPtr} - ${localPtr}`)
+        A(localPtr, (_args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
             LOGO(`\n${getLine(65)}`)
-            LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(ctx))}\n`)
+            LOGH(`Called from ${localPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(ctx))}\n`)
             callback == undefined ? LOGD(JSON.stringify(ctx)) : callback(ctx)
         })
     }
@@ -289,16 +327,16 @@ export class Breaker {
                 let logLine1 = `${details.memory.operation} -> ${details.memory.address} | PC: ${details.context.pc} | LR: ${(details.context as ArmCpuContext | Arm64CpuContext).lr}`
                 LOGD(`[!] HIT: ${crushPtr} -> { ${crushPtr} - ${crushPtr.add(length)} } \n${logLine1}\n`)
                 if (Process.arch == "arm") {
-                    Memory.protect(memPage, pageSize, "rwx")
-                    let cpuContext: ArmCpuContext = details.context as ArmCpuContext
-                    let inst: ArmInstruction = Instruction.parse(cpuContext.pc) as ArmInstruction
-                    LOGW(`instruction : ${inst.toString()}`)
-                    if (inst.mnemonic != "ldr") return false
-                    let writeReg: ArmRegister = (inst.operands.filter((item: ArmOperand) => item.type == "reg" && item.access == "w")[0]).value as ArmRegister
-                    let memoryOperation: ArmMemOperand = inst.operands.filter((item: ArmOperand) => item.type == "mem")[0] as ArmMemOperand
-                    let disMemValue: NativePointer = cpuContext.pc.add(memoryOperation.value.disp).readPointer()
-                    LOGE(`\t[-] ${writeReg} = ${disMemValue}`)
-                    cpuContext[writeReg] = disMemValue
+                    // Memory.protect(memPage, pageSize, "rwx")
+                    // let cpuContext: ArmCpuContext = details.context as ArmCpuContext
+                    // let inst: ArmInstruction = Instruction.parse(cpuContext.pc) as ArmInstruction
+                    // LOGW(`instruction : ${inst.toString()}`)
+                    // if (inst.mnemonic != "ldr") return false
+                    // let writeReg: ArmRegister = (inst.operands.filter((item: ArmOperand) => item.type == "reg" && item.access == "w")[0]).value as ArmRegister
+                    // let memoryOperation: ArmMemOperand = inst.operands.filter((item: ArmOperand) => item.type == "mem")[0] as ArmMemOperand
+                    // let disMemValue: NativePointer = cpuContext.pc.add(memoryOperation.value.disp).readPointer()
+                    // LOGE(`\t[-] ${writeReg} = ${disMemValue}`)
+                    // cpuContext[writeReg] = disMemValue
                 } else if (Process.arch == "arm64") {
                     // TODO
 

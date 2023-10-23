@@ -201,3 +201,11 @@ export enum SIGNAL {
     SIGUNUSED = 31,
     __SIGRTMIN = 32,
 }
+
+export enum JSHOOKTYPE {
+    INLINE,
+    ARGS,
+    STACK,
+    METHOD,
+    MEMORY
+}

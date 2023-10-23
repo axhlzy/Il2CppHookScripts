@@ -325,6 +325,11 @@ class UnityEngine_Transform_Impl extends UnityEngine_Component_Impl {
             }
         }
     }
+
+    toString(): string {
+        if (this.handle.isNull()) return "null"
+        return `${new Il2Cpp.Object(this).toString()}`
+    }
 }
 
 Il2Cpp.Transform = UnityEngine_Transform_Impl

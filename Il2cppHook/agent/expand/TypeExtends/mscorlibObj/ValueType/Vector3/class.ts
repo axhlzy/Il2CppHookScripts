@@ -228,6 +228,7 @@ class UnityEngine_Vector3_Impl extends System_ValueType_Impl {
     }
 
     toString(): string {
+        if (this.handle.isNull()) return "null"
         return `${this.x}, ${this.y}, ${this.z}`
     }
 
