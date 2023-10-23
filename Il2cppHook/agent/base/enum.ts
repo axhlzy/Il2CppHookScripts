@@ -125,3 +125,79 @@ Object.defineProperty(NativePointer.prototype, "callFunction", {
         return ptr(2)
     }
 })
+
+
+/**
+ * #define SIGHUP 1
+#define SIGINT 2
+#define SIGQUIT 3
+#define SIGILL 4
+#define SIGTRAP 5
+#define SIGABRT 6
+#define SIGIOT 6
+#define SIGBUS 7
+#define SIGFPE 8
+#define SIGKILL 9
+#define SIGUSR1 10
+#define SIGSEGV 11
+#define SIGUSR2 12
+#define SIGPIPE 13
+#define SIGALRM 14
+#define SIGTERM 15
+#define SIGSTKFLT 16
+#define SIGCHLD 17
+#define SIGCONT 18
+#define SIGSTOP 19
+#define SIGTSTP 20
+#define SIGTTIN 21
+#define SIGTTOU 22
+#define SIGURG 23
+#define SIGXCPU 24
+#define SIGXFSZ 25
+#define SIGVTALRM 26
+#define SIGPROF 27
+#define SIGWINCH 28
+#define SIGIO 29
+#define SIGPOLL SIGIO
+#define SIGPWR 30
+#define SIGSYS 31
+#define SIGUNUSED 31
+#define __SIGRTMIN 32
+ */
+export enum SIGNAL {
+    SIGHUP = 1,
+    SIGINT = 2,
+    SIGQUIT = 3,
+    SIGILL = 4,
+    SIGTRAP = 5,
+    SIGABRT = 6,
+    SIGIOT = 6,
+    SIGBUS = 7,
+    SIGFPE = 8,
+    SIGKILL = 9,
+    SIGUSR1 = 10,
+    SIGSEGV = 11,
+    SIGUSR2 = 12,
+    SIGPIPE = 13,
+    SIGALRM = 14,
+    SIGTERM = 15,
+    SIGSTKFLT = 16,
+    SIGCHLD = 17,
+    SIGCONT = 18,
+    SIGSTOP = 19,
+    SIGTSTP = 20,
+    SIGTTIN = 21,
+    SIGTTOU = 22,
+    SIGURG = 23,
+    SIGXCPU = 24,
+    SIGXFSZ = 25,
+    SIGVTALRM = 26,
+    SIGPROF = 27,
+    SIGWINCH = 28,
+    SIGIO = 29,
+    SIGPOLL = 29,
+    SIGPWR = 30,
+    SIGSYS = 31,
+    SIGUNUSED = 31,
+    __SIGRTMIN = 32,
+}

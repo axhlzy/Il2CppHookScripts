@@ -109,6 +109,39 @@ export class Logger {
     }
 }
 
+enum android_LogPriority {
+    ANDROID_LOG_UNKNOWN = 0,
+    ANDROID_LOG_DEFAULT = 1,
+    ANDROID_LOG_VERBOSE = 2,
+    ANDROID_LOG_DEBUG = 3,
+    ANDROID_LOG_INFO = 4,
+    ANDROID_LOG_WARN = 5,
+    ANDROID_LOG_ERROR = 6,
+    ANDROID_LOG_FATAL = 7,
+    ANDROID_LOG_SILENT = 8
+}
+
+const LOG_TAG: string = "ZZZ"
+const useCModule = false
+
+globalThis.logcat = (fmt: string, msg: string, tag: string = LOG_TAG, priority: android_LogPriority = android_LogPriority.ANDROID_LOG_INFO) => {
+    if (!useCModule) {
+        let logcat = new NativeFunction(Module.findExportByName("liblog.so", "__android_log_print")!, 'void', ['int', 'pointer', 'pointer', 'pointer'])
+        logcat(4, Memory.allocUtf8String(tag), Memory.allocUtf8String(fmt), Memory.allocUtf8String(msg))
+    } else {
+        var cmd = new CModule(`
+        #include <stdio.h>
+    
+        extern int __android_log_print(int, const char*, const char*, ...);
+        void logcat(const char* fmt, const char* msg){
+            __android_log_print(${priority}, "${tag}", fmt, msg);
+        }
+        `, { __android_log_print: Module.findExportByName("liblog.so", "__android_log_print")! })
+
+        new NativeFunction(cmd["logcat"], 'void', ['pointer'])(Memory.allocUtf8String(msg))
+    }
+}
+
 declare global {
     var LOG: (str: any, type?: LogColor) => void
     // var LOGS: (str: string, colorDescription: [number, number, LogColor][]) => void
@@ -130,6 +163,9 @@ declare global {
     var TFM: (text: string, color?: LogColor, fillStr?: string, length?: number, center?: boolean) => string
     var LogColor: any
     // var log: (...text: chalk.Chalk[] | string[]) => void
+
+    // android logcat
+    var logcat: (fmt: string, msg: string, tag?: string) => void
 }
 
 globalThis.LOG = Logger.LOG

@@ -1,5 +1,6 @@
 import { PassType } from "../utils/common"
 import { formartClass as FM } from "../utils/formart"
+import { SIGNAL } from "./enum"
 
 export { }
 
@@ -13,6 +14,11 @@ declare global {
     var listThreads: (maxCountThreads?: number) => void
 
     var currentThreadName: () => string
+
+    // 下面这三个用于frida配合lldb更方便的断点
+    var raise: (sign: SIGNAL) => number
+    var InsLoop: (insPtr: number | NativePointer) => void
+    var InsPass: (insPtr: number | NativePointer) => void
 
     var listModules: (filterName?: string) => void
     var listModule: (moduleName: string, printItems?: number) => void
@@ -41,7 +47,6 @@ declare global {
 
     var cmdouleTest: () => void
     var sqliteTest: () => void
-    var testBreak: () => void
 }
 
 /**
@@ -341,6 +346,36 @@ function getThreadName(tid: number) {
 globalThis.currentThreadName = (): string => {
     let tid = Process.getCurrentThreadId()
     return getThreadName(tid).toString()
+}
+
+globalThis.raise = (sign: SIGNAL = SIGNAL.SIGSTOP): number => {
+    let raise = new NativeFunction(Module.findExportByName("libc.so", 'raise')!, 'int', ['int'])
+    return raise(sign)
+}
+
+var cacheIns = new Map<string, ArrayBuffer>()
+globalThis.InsLoop = (insPtr: number | NativePointer) => {
+    let insLocal: NativePointer = checkPointer(insPtr)
+    cacheIns.set(insLocal.toString(), insLocal.readByteArray(4)!)
+    Memory.patchCode(insLocal, 4, (code: NativePointer) => {
+        // bl 0x0
+        let writer: ArmWriter | Arm64Writer
+        if (Process.arch == "arm") {
+            writer = new ArmWriter(code)
+        } else if (Process.arch == "arm64") {
+            writer = new Arm64Writer(code)
+        } else throw new Error("NOT SUPPORT ARCH : " + Process.arch)
+        writer.putBranchAddress(insLocal)
+        writer.flush()
+    })
+}
+
+globalThis.InsPass = (insPtr: number | NativePointer) => {
+    let insLocal: NativePointer = checkPointer(insPtr)
+    let insBytes = cacheIns.get(insLocal.toString())!
+    Memory.patchCode(insLocal, 4, (code: NativePointer) => {
+        code.writeByteArray(insBytes)
+    })
 }
 
 let index_threads: number
@@ -685,109 +720,17 @@ globalThis.StalkerTracePath = (mPtr: NativePointer, range: NativePointer[] | und
 ///////// ↓ 测试代码 不用管 ↓ /////////
 
 globalThis.cmdouleTest = () => {
-    var source =
-        "#include <stdio.h>" +
-        "void functionFromCModule(){" +
-        "   printf(\"Print from CModule\n\");" +
-        "}";
-    var cModule = new CModule(source);
-    console.log(JSON.stringify(cModule));
-    var ptrFunctionFromCModule = cModule['functionFromCModule'];
-    var functionFromCModule = new NativeFunction(ptrFunctionFromCModule, 'void', []);
-    functionFromCModule();
+
+    Interceptor.attach(ptr(0xa8280614), new CModule(`
+    #include <gum/guminterceptor.h>
+
+    void onEnter(GumInvocationContext *ctx) {
+        g_print("onEnter\n");
+    }
+
+    `) as NativeInvocationListenerCallbacks)
+
 }
-
-// globalThis.testBreak = () => {
-//     const malloc = new NativeFunction(Module.findExportByName('libc.so', 'malloc')!, 'pointer', ['size_t']);
-//     const memset = new NativeFunction(Module.findExportByName('libc.so', 'memset')!, 'pointer', ['pointer', 'size_t', 'int']);
-//     const mprotect = new NativeFunction(Module.findExportByName('libc.so', 'mprotect')!, 'int', ['pointer', 'size_t', 'int']);
-//     const free = new NativeFunction(Module.findExportByName('libc.so', 'free')!, 'void', ['pointer']);
-//     function readwritebreak(addr: NativePointer, size: number, pattern: number) {
-
-//         var point1 = addr - (addr % 0x1000)
-//         console.log("set memcpy break : ", ptr(point1))
-
-//         const mycode = malloc(0x1000)
-//         mprotect(mycode, 0x1000, 7)
-//         memset(mycode, 0x1000, 0)
-
-//         //构建code
-//         mycode.add(0x4).writeU32(0xD10943FF)//SUB SP ,SP ,#0x250
-//         mycode.add(0x8).writeU32(0xA90077E8)//STP X8,X29,[SP]
-//         mycode.add(0xc).writeU32(0xA90107E0)//STP X0 ,X1 ,[SP,#0x10]
-//         mycode.add(0x10).writeU32(0xA9020FE2)//STP X2,X3,[SP,#0x20]
-//         mycode.add(0x14).writeU32(0x58000760)//LDR X0 , [mycode,#0x100]
-//         mycode.add(0x18).writeU32(0x58000781)//LDR X1 , [mycode,#0x108]
-//         mycode.add(0x1C).writeU32(0x580007A2)//LDR X2 , [mycode,#0x110]
-//         mycode.add(0x20).writeU32(0x580007C3)//LDR X3 , [mycode,#0x118]
-//         mycode.add(0x24).writeU32(0xD63F0060)//BLR X3
-//         mycode.add(0x28).writeU32(0xA9420FE2)//LDP X2, X3,[SP,#0x20]
-//         mycode.add(0x2C).writeU32(0xA94107E0)//LDP X0, X1,[SP,#0x10]
-//         mycode.add(0x30).writeU32(0xA94077E8)//LDP X8, X29,[SP]
-//         mycode.add(0x34).writeU32(0x910943FF)//ADD SP, SP, #0x250
-//         mycode.add(0x38).writeU32(0x5800075E)//LDR X30, [mycode,#0x120]
-//         mycode.add(0x3C).writeU32(0xD65F03C0)//RET
-
-//         //将point1,0x1000,pattern放入mycode+0x100
-//         mycode.add(0x100).writePointer(ptr(point1))
-//         mycode.add(0x108).writeU64(0x1000)
-//         mycode.add(0x110).writeU64(pattern)
-//         //mprotect函数存入0x118
-//         mycode.add(0x118).writePointer(mprotect as NativePointer)
-//         //修改目标内存页属性
-//         mprotect(ptr(point1), 0x1000, pattern)
-
-//         Process.setExceptionHandler(function (details: ExceptionDetails) {
-//             if (details.type.indexOf("access-violation") >= 0) {
-//                 var mempoint = details.memory!.address
-//                 //判断是否是由自己修改内存导致的异常
-//                 if (point1 <= mempoint && mempoint < point1 + 0x1000) {
-//                     //是否命中我们关心的地址
-//                     var off = ptr(mempoint).sub(addr)
-//                     if (off >= 0 && off < size) {
-//                         console.warn("命中 :", ptr(addr), " pc pointer : ", details.address)
-//                         var module = Process.findModuleByAddress(ptr(details.context.pc));
-//                         console.warn("pc - - > ", module.name, " -> ", ptr(details.context.pc).sub(module.base))
-//                         mprotect(ptr(point1), 0x1000, 7)
-//                         free(mycode)
-//                         //console.error('RegisterNatives called from:\n' +Thread.backtrace(details.context, Backtracer.ACCURATE).map(DebugSymbol.fromAddress).join('\n') + '\n');
-//                         console.warn("readwritebreak exit")
-//                         return true
-
-//                     } else {
-//                         console.log(details.memory.operation, "exce ;mpoint :", mempoint, ";pc -> ", ptr(details.context.pc), "; opcode :", ptr(ptr(details.context.pc).readU32()), "\n")
-//                         //将内存页属性改回来
-//                         mprotect(ptr(point1), 0x1000, 7)
-
-//                         //将下一个code地址写入mycode+0x120处作为返回地址
-//                         mycode.add(0x120).writePointer(ptr(details.context.pc).add(4))
-
-//                         var thiscode = ptr(details.context.pc).readU32()
-//                         var opcode = ((thiscode >> 24) & 0x3b)
-//                         //三个pc偏移寻址共同位
-//                         if (opcode == 24) {
-//                             //将需要读取的数据存入mycode+0x128处
-//                             mycode.add(0x128).writePointer(ptr(mempoint.readPointer()))
-//                             mycode.add(0x130).writePointer(ptr(mempoint.add(8).readPointer()))
-//                             //LDR Rn #pc+0x128
-//                             var n_code = (thiscode & 0xFF00001F) | 0x940
-//                             mycode.writeU32(n_code)
-//                             details.context.pc = mycode
-//                         } else {
-//                             //将当前code写入mycode
-//                             mycode.writeU32(ptr(details.context.pc).readU32())
-//                             //直接修改pc
-//                             details.context.pc = mycode
-//                         }
-//                         return true
-//                     }
-//                 }
-//                 return false
-//             }
-//             return false
-//         })
-//     }
-// }
 
 function Arm64WriterUsingExample() {
     // mycode.add(0x4).writeU32(0xD10943FF)//SUB SP ,SP ,#0x250

@@ -269,6 +269,50 @@ export class Breaker {
         })
     }
 
+    private static recordMem: Map<string, ArrayBuffer> = new Map()
+    static breakMem = (mPtr: NativePointer, length: number, pattern?: PageProtection) => {
+        if (Process.arch != "arm64" && Process.arch != "arm") throw new Error("Only support arm/arm64")
+        let mem: ArrayBuffer | null = mPtr.readByteArray(length)
+        if (mem == null) throw new Error("mem is null")
+        this.recordMem.set(mPtr.toString(), mem)
+        let memPage = mPtr.and(~(Process.pageSize - 1))
+        const pageSize = Process.pageSize * 1
+
+        Process.setExceptionHandler((details: ExceptionDetails) => {
+            if (details.type == "access-violation" && details.memory != undefined) {
+                let crushPtr: NativePointer = details.address
+                // LOGJSON(details)
+                if (crushPtr != mPtr) {
+                    Memory.protect(crushPtr, 0x4, "rwx")
+                    return true
+                }
+                let logLine1 = `${details.memory.operation} -> ${details.memory.address} | PC: ${details.context.pc} | LR: ${(details.context as ArmCpuContext | Arm64CpuContext).lr}`
+                LOGD(`[!] HIT: ${crushPtr} -> { ${crushPtr} - ${crushPtr.add(length)} } \n${logLine1}\n`)
+                if (Process.arch == "arm") {
+                    Memory.protect(memPage, pageSize, "rwx")
+                    let cpuContext: ArmCpuContext = details.context as ArmCpuContext
+                    let inst: ArmInstruction = Instruction.parse(cpuContext.pc) as ArmInstruction
+                    LOGW(`instruction : ${inst.toString()}`)
+                    if (inst.mnemonic != "ldr") return false
+                    let writeReg: ArmRegister = (inst.operands.filter((item: ArmOperand) => item.type == "reg" && item.access == "w")[0]).value as ArmRegister
+                    let memoryOperation: ArmMemOperand = inst.operands.filter((item: ArmOperand) => item.type == "mem")[0] as ArmMemOperand
+                    let disMemValue: NativePointer = cpuContext.pc.add(memoryOperation.value.disp).readPointer()
+                    LOGE(`\t[-] ${writeReg} = ${disMemValue}`)
+                    cpuContext[writeReg] = disMemValue
+                } else if (Process.arch == "arm64") {
+                    // TODO
+
+                }
+                return true
+            }
+        })
+
+        Memory.protect(memPage, pageSize, "---")
+        LOGD(`Set -> protect ${mPtr} [ ${memPage} ] -> ${mPtr.add(length)} --- \n`)
+    }
+
+    static breakMemRW = (mPtr: NativePointer, length: number = 0x4) => this.breakMem(mPtr, length, "RW")
+
     static clearBreak = () => {
         d()
         Breaker.map_attachedMethodInfos.clear()
@@ -334,6 +378,7 @@ globalThis.hn = Breaker.printHistoryNum
 globalThis.breakWithArgs = Breaker.breakWithArgs
 globalThis.breakWithStack = Breaker.breakWithStack
 globalThis.breakInline = Breaker.breakInline
+globalThis.breakMemRW = Breaker.breakMemRW
 globalThis.printDesertedMethods = Breaker.printDesertedMethods // 展示 已经被取消hook 或者 不显示的部分函数
 globalThis.bt = (mPtr: NativePointer | number) => b(AddressToMethod(mPtr))
 globalThis.BN = (namespace: string) => Breaker.addBreakPoint("", namespace) // <- alias B(`NameSpace`)
@@ -520,6 +565,7 @@ declare global {
     var breakWithArgs: (mPtr: NativePointer, argCount?: number) => void
     var breakInline: (mPtr: NativePointer, callback?: (value: CpuContext) => void) => void
     var breakWithStack: (mPtr: NativePointer, accurate?: boolean) => void
+    var breakMemRW: (mPtr: NativePointer, length?: number) => void
     var getPlatform: () => string
     var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext
     var getPlatformCtxWithArgV: <T extends CpuContext>(ctx: T, argIndex: number) => NativePointer | undefined
