@@ -654,6 +654,8 @@ globalThis.getGCInstance = get_gc_instance
 globalThis.showGCInstance = show_gc_instance
 globalThis.fakeGCInstance = fake_gc_instance
 
+globalThis.J = (fn: () => void) => Java.perform(fn)
+
 Il2Cpp.perform(() => globalThis.soAddr = Il2Cpp.module.base)
 
 declare global {
@@ -669,6 +671,7 @@ declare global {
     var fc: (name: string, fromAssebly?: string[]) => NativePointer
     var af: (className: string) => void
     var aui: () => void
+    var J: (fn: () => void) => void // alias Java.perform
 
     var findMethod: findMethodType
     var find_method: find_MethodType

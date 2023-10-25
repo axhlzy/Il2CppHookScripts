@@ -6,7 +6,7 @@ export { }
 
 declare global {
     var protect: (mPtr: NativePointer) => void
-    var watch: (mPtr: NativePointer, length?: number) => void
+    var watchMemory: (mPtr: NativePointer, length?: number) => void
     var watchDisabled: () => void
     var patchTest: (mPtr: NativePointer, size?: number) => void
     var findInMemory: (typeStr: "Dex" | "Dex1" | "PNG" | "global-metadata.dat" | string, scanSync?: boolean) => void
@@ -91,7 +91,7 @@ globalThis.protect = (mPtr: NativePointer, size: number = 0x1000, protection: Pa
  * @param {NativePointer} mPtr 断点地址 
  * @param {number} length 长度
  */
-globalThis.watch = (mPtr: NativePointer, length: number = 0x10) => {
+globalThis.watchMemory = (mPtr: NativePointer, length: number = 0x10) => {
 
     class MenRange implements MemoryAccessRange {
         base: NativePointer

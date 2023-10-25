@@ -13,7 +13,8 @@ const enable_dynamic = true
 // globalClassName { "Assembly.Assembly_CSharp.AndroidAgent" --简化为--> "AndroidAgent.SetPauseGame"}
 // AndroidAgent.SetPauseGame.hook() === b(AndroidAgent.SetPauseGame) { b(MethodInfo) }
 // AndroidAgent.SetPauseGame.hook((args,_ctx)=>{},(ret,_ctx)=>{}) === A(AndroidAgent.SetPauseGame.virtualAddress,(args,_ctx)=>{},(ret,_ctx)=>{})
-const globalClassName = true
+// 这个可能导致Module冲突被覆盖，故使用不了 Module.findExportByName("libc++.so", '__cxa_demangle')
+const globalClassName = false
 // 过滤 Assembly
 // const filter_assembly: string[] = []
 const filter_assembly: string[] = ["Assembly"]

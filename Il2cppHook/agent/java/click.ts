@@ -46,9 +46,9 @@ const setClick = (x: number, y: number) => {
 export { HookMotionEvent, setClick }
 
 declare global {
-    var HookMotionEvent: () => void;
-    var setClick: (x: number, y: number) => void;
+    var HookMotionEvent: () => void
+    var setClick: (x: number, y: number) => void
 }
 
-globalThis.HookMotionEvent = HookMotionEvent;
-globalThis.setClick = setClick;
+globalThis.HookMotionEvent = HookMotionEvent
+globalThis.setClick = setClick

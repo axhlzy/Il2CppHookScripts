@@ -8,6 +8,22 @@ const HookMonoBehavior = (): void => {
     })
 }
 
+// instance  |  routine  |  iEnumerator
+// Array -> { Il2Cpp.Object , UnityEngine.Coroutine , System.Collections.IEnumerator }
+var cachingCoroutine: Array<[Il2Cpp.Object, Il2Cpp.Coroutine, Il2Cpp.Object]> = []
+
+// cachingCoroutine 去重
+function insertCachingCoroutine(coroutine: [Il2Cpp.Object, Il2Cpp.Coroutine, Il2Cpp.Object]) {
+    let [instance, routine, iEnumerator] = coroutine
+    let index = cachingCoroutine.findIndex((coroutine: [Il2Cpp.Object, Il2Cpp.Coroutine, Il2Cpp.Object]) => {
+        let [_instance, _routine, _iEnumerator] = coroutine
+        return _instance.toString() == instance.toString()
+            && _routine.toString() == routine.toString()
+            && _iEnumerator.toString() == iEnumerator.toString()
+    })
+    if (index == -1) cachingCoroutine.push(coroutine)
+}
+
 const HookCoroutine = (): void => {
     // StartCoroutine_Auto(IEnumerator) : Coroutine
     A(Il2Cpp.Api.MonoBehaviour._StartCoroutine_Auto, (args, _ctx: CpuContext, passValue: Map<string, any>) => {
@@ -15,11 +31,12 @@ const HookCoroutine = (): void => {
         passValue.set("IEnumerator", args[1])
     }, (routine, _ctx: CpuContext, passValue: Map<string, any>) => {
         let instance = passValue.get("instance")
-        let arg1 = passValue.get("IEnumerator")
-        let info = `[*] StartCoroutine_Auto( ins='${instance}'(${new Il2Cpp.Object(instance).toString()}) , IEnumerator='${arg1} (${new Il2Cpp.Object(arg1).toString()})' )`
+        let iEnumerator = passValue.get("IEnumerator")
+        insertCachingCoroutine([new Il2Cpp.Object(instance), new Il2Cpp.Coroutine(routine), new Il2Cpp.Object(iEnumerator)])
+        let info = `[*] StartCoroutine_Auto( ins='${instance}'(${new Il2Cpp.Object(instance).toString()}) , IEnumerator='${iEnumerator} (${new Il2Cpp.Object(iEnumerator).toString()})' )`
         LOGD(`${info}`)
         try {
-            LOGZ(`\tIEnumerator = ${arg1} | ${lfss(arg1)}`)
+            LOGZ(`\tIEnumerator = ${iEnumerator} | ${lfss(iEnumerator)}`)
             LOGZ(`\tCoroutine   = ${new Il2Cpp.Coroutine(routine).toFieldsString()}`)
         } catch { }
     })
@@ -30,11 +47,12 @@ const HookCoroutine = (): void => {
         passValue.set("IEnumerator", args[1])
     }, (routine, _ctx: CpuContext, passValue: Map<string, any>) => {
         let instance = passValue.get("instance")
-        let arg1 = passValue.get("IEnumerator")
-        let info = `[*] StartCoroutine_IEnumerator( ins='${instance}'(${new Il2Cpp.Object(instance).toString()}) , IEnumerator='${arg1} (${new Il2Cpp.Object(arg1).toString()})' )`
+        let iEnumerator = passValue.get("IEnumerator")
+        insertCachingCoroutine([new Il2Cpp.Object(instance), new Il2Cpp.Coroutine(routine), new Il2Cpp.Object(iEnumerator)])
+        let info = `[*] StartCoroutine_IEnumerator( ins='${instance}'(${new Il2Cpp.Object(instance).toString()}) , IEnumerator='${iEnumerator} (${new Il2Cpp.Object(iEnumerator).toString()})' )`
         LOGD(`${info}`)
         try {
-            LOGZ(`\tIEnumerator = ${arg1} | ${lfss(arg1)}`)
+            LOGZ(`\tIEnumerator = ${iEnumerator} | ${lfss(iEnumerator)}`)
             LOGZ(`\tCoroutine   = ${new Il2Cpp.Coroutine(routine).toFieldsString()}`)
         } catch { }
     })
@@ -93,6 +111,36 @@ const HookCoroutine = (): void => {
     })
 }
 
+const listCoroutine = (): void => {
+    if (cachingCoroutine.length == 0) throw new Error("caching Coroutine is empty")
+    LOGD(`[*] listCoroutine:`)
+    let runningCoroutines: Array<[Il2Cpp.Object, Il2Cpp.Coroutine, Il2Cpp.Object]> = []
+    let stopedCoroutines: Array<[Il2Cpp.Object, Il2Cpp.Coroutine, Il2Cpp.Object]> = []
+    cachingCoroutine.forEach((coroutine: [Il2Cpp.Object, Il2Cpp.Coroutine, Il2Cpp.Object]) => {
+        let [_instance, _routine, _iEnumerator] = coroutine
+        if (_routine.handle.readPointer().readPointer().isNull()) {
+            stopedCoroutines.push(coroutine)
+        } else {
+            runningCoroutines.push(coroutine)
+        }
+    })
+    let index_runningCoroutines: number = 0
+    runningCoroutines.forEach((coroutine: [Il2Cpp.Object, Il2Cpp.Coroutine, Il2Cpp.Object]) => {
+        let [instance, routine, iEnumerator] = coroutine
+        LOGD(`\t[${++index_runningCoroutines}]instance=${instance}(${new Il2Cpp.Object(instance).toString()})`)
+        LOGD(`\t\troutine=${routine.toString()}`)
+        LOGD(`\t\tiEnumerator=${iEnumerator.toString()}`)
+    })
+    newLine()
+    let index_stopedCoroutines: number = 0
+    stopedCoroutines.forEach((coroutine: [Il2Cpp.Object, Il2Cpp.Coroutine, Il2Cpp.Object]) => {
+        let [instance, routine, iEnumerator] = coroutine
+        LOGZ(`\t[${++index_stopedCoroutines}]instance=${instance}(${new Il2Cpp.Object(instance).toString()})`)
+        LOGZ(`\t\troutine=${routine.toString()} @ ${routine.handle}`)
+        LOGZ(`\t\tiEnumerator=${iEnumerator.toString()} @ ${iEnumerator.handle}`)
+    })
+}
+
 const findAndHook = (methodName: string, callback?: (instancePtr: NativePointer, ctx: CpuContext) => void) => {
     let methods: Array<Il2Cpp.Method> = findMethods(methodName, true, undefined, true, true) as Array<Il2Cpp.Method>
     let index: number = 0
@@ -146,11 +194,16 @@ const HookMonoAwake = (callback?: (instancePtr: NativePointer, ctx: CpuContext) 
 declare global {
     var HookMonoBehavior: () => void
     var HookCoroutine: () => void
+    var listCoroutine: () => void
+    var cancelWatchCoroutine: () => void
+    var watchCoroutine: () => void
     var HookMonoStart: (callback?: (instancePtr: NativePointer, ctx: CpuContext) => void) => void
     var HookMonoAwake: (callback?: (instancePtr: NativePointer, ctx: CpuContext) => void) => void
 }
 
 globalThis.HookMonoBehavior = HookMonoBehavior
+globalThis.listCoroutine = listCoroutine
+globalThis.watchCoroutine = w.bind(null, listCoroutine)
 globalThis.HookCoroutine = HookCoroutine
 globalThis.HookMonoStart = HookMonoStart
 globalThis.HookMonoAwake = HookMonoAwake

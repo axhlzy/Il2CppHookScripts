@@ -350,6 +350,21 @@ const filterDuplicateOBJ = (objstr: string, maxCount: number = 10) => {
     return Number(this) + Number(num)
 }
 
+globalThis.clear = () => console.log('\x1Bc')
+
+var intervalID: NodeJS.Timer | null = null
+const watchFunction = (call: Function, interval: number = 1000) => {
+    clear()
+    disWatchFuntion()
+    intervalID = setInterval(() => {
+        call()
+    }, interval)
+}
+
+const disWatchFuntion = () => {
+    if (intervalID != null) clearInterval(intervalID)
+}
+
 export {
     attachNative, detachAll, replaceFunction, nopFunction, cancelNop, cancelAllNopedFunction, checkCtx,
     filterDuplicateOBJ, PTR2NativePtr, mapValueToArray, getJclassName
@@ -370,6 +385,14 @@ declare global {
     var SendMessage: (str0: string, str1: string, str2?: string) => void
     var SendMessageImpl: (platform: "IronSource" | "MaxSdkCallbacks" | "MoPubManager" | "TPluginsGameObject") => void
     var HookForwardEvent: () => void
+
+    var clear: () => void //清屏
+    var cls: () => void // alias clear
+    var watchFunction: (call: Function, interval?: number) => void
+    var w: typeof watchFunction // alias watch
+    var disWatchFuntion: () => void
+    var dd: typeof disWatchFuntion
+    var P: <T>(block: () => T | Promise<T>) => Promise<T>
 }
 
 globalThis.d = detachAll
@@ -385,3 +408,10 @@ globalThis.runOnMain = runOnMain
 globalThis.runOnNewThread = runOnNewThread
 globalThis.SendMessage = SendMessage
 globalThis.SendMessageImpl = SendMessageImpl
+globalThis.clear = clear
+globalThis.cls = clear
+globalThis.watchFunction = watchFunction
+globalThis.w = globalThis.watchFunction
+globalThis.disWatchFuntion = disWatchFuntion
+globalThis.dd = disWatchFuntion
+globalThis.P = (call: Function) => { return new Promise((resolve, _reject) => { resolve(call()) }) }

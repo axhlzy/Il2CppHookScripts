@@ -62,7 +62,7 @@ const showSpecificClassMethods = () => {
 export { }
 
 declare global {
-    var findJavaClass: (className: string) => void;
+    var findJavaClass: (className: string) => void
 }
 
-globalThis.findJavaClass = findJavaClass;
+globalThis.findJavaClass = findJavaClass

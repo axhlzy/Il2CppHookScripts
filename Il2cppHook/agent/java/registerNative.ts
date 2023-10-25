@@ -38,7 +38,8 @@ class JNINativeMethod {
     }
 
     get thisMd(): Module | null {
-        return Process.findModuleByName(this.moduleName!)
+        if (this.moduleName) return Process.findModuleByName(this.moduleName)
+        else return null
     }
 
     get address(): NativePointer {
@@ -92,7 +93,7 @@ class RegisterNativeItem {
 
     public toString(): string {
         let retStr = `RegisterNativeItem: className:${this.className} count:${this.count}`
-        this.jniNativeMethod.forEach((item) => {
+        this.jniNativeMethod.forEach((item: JNINativeMethod) => {
             retStr += `\n\t${item.tostring(true)}`
         })
         return retStr
