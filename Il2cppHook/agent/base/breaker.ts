@@ -14,9 +14,9 @@ type SpecialClass = "CommonClass" | "JNI" | "AUI" | "Soon"
 const CommonClass = ["Assembly-CSharp", "MaxSdk.Scripts", "Game", "Zenject", "UniRx", "Purchasing.Common", "UnityEngine.Purchasing"]
 export class Breaker {
 
-    public static maxCallTimes: number = 10     // 出现 ${maxCallTimes} 次后不再显示
-    public static detachTimes: number = 500     // 出现 ${detachTimes}  次后取消 hook
-    private static callTimesInline: number = 0  // log行间暂时的编号
+    private static _maxCallTimes: number = 10     // 出现 ${maxCallTimes} 次后不再显示
+    private static _detachTimes: number = 500     // 出现 ${detachTimes}  次后取消 hook
+    private static _callTimesInline: number = 0  // log行间暂时的编号
     public static map_attachedMethodInfos: Map<Il2Cpp.Method, InvocationListener> = new Map()
     private static map_methodInfo_callTimes: Map<Il2Cpp.Method, number> = new Map()
     private static array_methodInfo_detached: Array<Il2Cpp.Method> = new Array<Il2Cpp.Method>()
@@ -137,7 +137,7 @@ export class Breaker {
                     // detailLog 详细或者粗略的LOG（是否带参数解析）
                     if (!detailLog) {
                         // 批量版 B() 针对单个classes/Images
-                        let cacheID = `[${++Breaker.callTimesInline}|${TIME_SIMPLE()}]`
+                        let cacheID = `[${++Breaker._callTimesInline}|${TIME_SIMPLE()}]`
                         this.passValue = new ValueResolve(cacheID, method).setArgs(args)
                         return LOGD((this.passValue as ValueResolve).toString())
                     } else {
@@ -228,12 +228,12 @@ export class Breaker {
             if (!Breaker.map_methodInfo_callTimes.has(method)) Breaker.map_methodInfo_callTimes.set(method, 0)
             let times = Breaker.map_methodInfo_callTimes.get(method)
             if (times === undefined || times === null) times = 0
-            if (times >= Breaker.detachTimes) {
+            if (times >= Breaker._detachTimes) {
                 Breaker.map_attachedMethodInfos.get(method)!.detach()
                 Breaker.array_methodInfo_detached.push(method)
             }
             if (enterType === "onEnter") Breaker.map_methodInfo_callTimes.set(method, times + 1)
-            return times < Breaker.maxCallTimes
+            return times < Breaker._maxCallTimes
         } else {
             throw new Error("method must be Il2Cpp.Method")
         }
@@ -371,7 +371,7 @@ export class Breaker {
         LOGM(`${title}`)
         // 筛选 Breaker.map_methodInfo_callTimes 调用次数大雨 maxCallTimes 的方法
         Breaker.map_methodInfo_callTimes.forEach((value: number, method: Il2Cpp.Method) => {
-            if (value >= Breaker.maxCallTimes) {
+            if (value >= Breaker._maxCallTimes) {
                 if (filterName == "" || method.name.indexOf(filterName) != -1) {
                     let arr = methodToArray(method)
                     let times = this.map_methodInfo_callTimes.get(method)
@@ -404,6 +404,22 @@ export class Breaker {
     static printHistoryNum = (start: number = 0, end: number = 100, detachAll: boolean = false) => {
         if (detachAll) D()
         Breaker.array_methodValue_cache.slice(start, end).forEach(LOGD)
+    }
+
+    public static get maxCallTimes(): number {
+        return Breaker._maxCallTimes
+    }
+
+    public static set maxCallTimes(value: number) {
+        Breaker._maxCallTimes = value
+    }
+
+    public static get detachTimes(): number {
+        return Breaker._detachTimes
+    }
+
+    public static set detachTimes(value: number) {
+        Breaker._detachTimes = value
     }
 }
 

@@ -17,7 +17,7 @@ class ArtMethod {
         return this;
         }
      */
-    public static prettyMethod(method: NativePointer, with_signature: boolean): string {
+    public static prettyMethod(method: NativePointer, with_signature: boolean = true): string {
         let address: NativePointer | null = Module.findExportByName("libart.so", "_ZN3art9ArtMethod12PrettyMethodEb")
         if (address == null) throw new Error("NOT Found : art::ArtMethod::PrettyMethod(ArtMethod* m, bool with_signature)")
         let localStr = new StdString()
@@ -68,9 +68,11 @@ class ArtMethod {
 }
 
 globalThis.hook_artMethodInvoke = ArtMethod.Hook_ArtMethod_Invoke
+globalThis.artMethodPtrToString = ArtMethod.prettyMethod
 
 declare global {
     var hook_artMethodInvoke: (needStack?: boolean) => void
+    var artMethodPtrToString: (artMethodPtr: NativePointer, with_signature?: boolean) => string
 }
 
 export { ArtMethod }

@@ -1,6 +1,6 @@
+import { SIGNAL } from "./enum"
 import { PassType } from "../utils/common"
 import { formartClass as FM } from "../utils/formart"
-import { SIGNAL } from "./enum"
 
 export { }
 
@@ -47,6 +47,7 @@ declare global {
 
     var cmdouleTest: () => void
     var sqliteTest: () => void
+    var registerClassTest: () => void
 }
 
 /**
@@ -256,7 +257,7 @@ globalThis.findInMemory = (pattern: "Dex" | "Dex1" | "PNG" | "global-metadata.da
             })
             break
         default:
-            var md = Process.findModuleByName("libil2cpp.so")
+            let md = Process.findModuleByName("libil2cpp.so")
             if (md == null) {
                 LOGE("NOT FOUND Module : libil2cpp.so")
                 break
@@ -264,7 +265,7 @@ globalThis.findInMemory = (pattern: "Dex" | "Dex1" | "PNG" | "global-metadata.da
                 LOGW(JSON.stringify(m) + "\n")
             }
             if (scanSync) {
-                var results = Memory.scanSync(md.base, md.size, pattern)
+                let results = Memory.scanSync(md.base, md.size, pattern)
                 LOGD("onMatch result = \n" + JSON.stringify(results))
             } else {
                 Memory.scan(md.base, md.size, pattern, {
@@ -273,7 +274,7 @@ globalThis.findInMemory = (pattern: "Dex" | "Dex1" | "PNG" | "global-metadata.da
                         return 'stop'
                     },
                     onComplete: function () {
-                        LOGE("onComplete");
+                        LOGE("onComplete")
                     }
                 })
             }
@@ -281,7 +282,7 @@ globalThis.findInMemory = (pattern: "Dex" | "Dex1" | "PNG" | "global-metadata.da
     }
 
     function toInt32Big(mPtr: NativePointer | number) {
-        var resultStr = ''
+        let resultStr: string = ""
         var aimStr = String(mPtr).split("0x")[1]
         for (let i = aimStr.length - 1; i >= 0; i--)
             resultStr += aimStr.charAt(i)
@@ -291,13 +292,19 @@ globalThis.findInMemory = (pattern: "Dex" | "Dex1" | "PNG" | "global-metadata.da
     function find(pattern: string, callback: (pattern: string, address: NativePointer, size: number) => void) {
         LOG("Start Find Pattern '" + pattern + "'\nWatting ......", LogColor.C96)
         // 代码都是位于只读段
-        let addrArray = Process.enumerateRanges("r--");
+        let addrArray: RangeDetails[] = Process.enumerateRanges("r--")
+        let length: number = addrArray.length
+        let index: number = 0
         addrArray.forEach((item) => {
             Memory.scan(item.base, item.size, pattern, {
                 onMatch: function (address, size) {
                     callback(pattern, address, size)
+                    return "stop"
                 },
-                onComplete: function () { }
+                onComplete: function () {
+                    LOGE(`onComplete ${index++}/${length}`)
+                    clear()
+                }
             })
         })
     }
@@ -329,10 +336,7 @@ function getThreadName(tid: number) {
         var file = new File("/proc/self/task/" + tid + "/comm", "r")
         threadName = file.readLine().toString().trimEnd()
         file.close()
-    } catch (e) {
-        console.error("Error getting thread name:", e)
-        throw e
-    }
+    } catch (e) { throw e }
 
     // var threadNamePtr: NativePointer = Memory.alloc(0x40)
     // var tid_p: NativePointer = Memory.alloc(p_size).writePointer(ptr(tid))
@@ -730,6 +734,30 @@ globalThis.cmdouleTest = () => {
 
     `) as NativeInvocationListenerCallbacks)
 
+    // function logcat(message) {
+    //     let logcatF = new NativeFunction(Module.findExportByName("liblog.so", "__android_log_print"), 'void', ['int', 'pointer', 'pointer', 'pointer'])
+    //     logcatF(4, Memory.allocUtf8String("ZZZ"), Memory.allocUtf8String("%s"), Memory.allocUtf8String(message))
+    //     console.log(message)
+    // }
+
+    // logcat("START HOOK -> " + Module.findBaseAddress("libil2cpp.so").add(0xc75f78))
+
+    // Interceptor.attach(Module.findBaseAddress("libil2cpp.so").add(0xc75f78), new CModule(`
+    //     #include <gum/guminterceptor.h>
+
+    //     extern void onEnterJS(GumCpuContext *ctx, void* value);
+
+    //     void onEnter(GumInvocationContext *ctx) {
+    //         onEnterJS(ctx->cpu_context, gum_invocation_context_get_nth_argument(ctx,1));
+    //     }
+
+    // `, {
+    //     onEnterJS: new NativeCallback((ctx,value) => {
+    //         let message = `OnEnter : ${ctx} ${value}`
+    //         logcat(message)
+    //     }, 'void', ['pointer'])
+    // }))
+
 }
 
 function Arm64WriterUsingExample() {
@@ -795,3 +823,42 @@ globalThis.patchTest = (mPtr: NativePointer, size: number = 1) => {
         writer.flush()
     })
 }
+
+// globalThis.registerClassTest = () => {
+//     Java.perform(function () {
+//         // 1. 获取原始的 MaxUnityAdManager 类
+//         var MaxUnityAdManager = Java.use("com.applovin.mediation.unity.MaxUnityAdManager");
+//         // "com.mp.jc.JCWrapperAction"
+//         var JCWrapperAction = Java.use("com.mp.jc.JCWrapperAction");
+
+//         // 2. 使用 Java.registerClass 创建一个新类来实现 JCWrapperAction 接口
+//         var OurJCWrapperAction = Java.registerClass({
+//             name: "com.assistant.OurJCWrapperAction",
+//             implements: [JCWrapperAction],
+//             methods: {
+//                 callback: function (isSuccess) {
+//                     // 你可以在这里执行自己的代码
+//                     console.log("Our callback: isSuccess:", isSuccess);
+
+//                     var str3 = MaxUnityAdManager.TAG.value;
+//                     console.log(str3, "callback: isSuccess:", isSuccess);
+
+//                     if (isSuccess) {
+//                         MaxUnityAdManager.onUserRewarded.call(MaxUnityAdManager, maxAd, null); // 使用 call 调用以确保正确的上下文
+//                     }
+//                     MaxUnityAdManager.onAdHidden.call(MaxUnityAdManager, maxAd);
+//                 }
+//             }
+//         });
+
+//         // 3. Hook JCWrapper.showRewardVideo 方法以使用我们的实现替代原始实现
+//         var JCWrapper = Java.use("com.mp.jc.JCWrapper");
+//         JCWrapper.showRewardVideo.implementation = function (action) {
+//             console.log("showRewardVideo intercepted");
+//             // 使用我们的新类替代原始的action
+//             var ourAction = OurJCWrapperAction.$new();
+//             this.showRewardVideo.call(this, ourAction);
+//         };
+//     });
+
+// }

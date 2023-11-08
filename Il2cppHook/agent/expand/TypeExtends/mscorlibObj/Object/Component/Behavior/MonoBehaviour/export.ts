@@ -154,7 +154,7 @@ const findAndHook = (methodName: string, callback?: (instancePtr: NativePointer,
                 try {
                     // do not check type so try catch
                     if (false && !getTypeParent(instance).map((type: mscorlib.Type) => type.toString()).includes("MonoBehaviour")) d(method.virtualAddress)
-                    else LOGD(`[${++index}] ${getMethodDesFromMethodInfo(method)} -> instance:${instance} gobj:${getGameObject(instance)} (${new Il2Cpp.Object(instance).toString()})`)
+                    else LOGD(`[${++index}] ${method.handle} ${getMethodDesFromMethodInfo(method)} -> instance:${instance} gobj:${getGameObject(instance)} (${new Il2Cpp.Object(instance).toString()})`)
                     if (callback != undefined) callback(instance, ctx)
                 } catch (e) {
                     LOGE(`[*] HookMono: ${method.handle} -> ${method.class.name}::${getMethodDesFromMethodInfo(method)} -> ${e}`)
