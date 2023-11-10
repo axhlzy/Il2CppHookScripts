@@ -138,7 +138,18 @@ export class Breaker {
                     if (!detailLog) {
                         // 批量版 B() 针对单个classes/Images
                         let cacheID = `[${++Breaker._callTimesInline}|${TIME_SIMPLE()}]`
-                        this.passValue = new ValueResolve(cacheID, method).setArgs(args)
+                        try {
+                            // InvocationArguments should be NativePointer[] but not always recognize as NativePointer[]
+                            // in windows might be error, in linux can case error
+                            this.passValue = new ValueResolve(cacheID, method).setArgs(args)
+                        } catch {
+                            if (method.isStatic) {
+                                this.passValue = new ValueResolve(cacheID, method).setArgs([NULL])
+                            } else {
+                                // deal with the error of RangeError: Invalid array length
+                                this.passValue = new ValueResolve(cacheID, method).setArgs([args[0], args[1], args[2], args[3]])
+                            }
+                        }
                         return LOGD((this.passValue as ValueResolve).toString())
                     } else {
                         // 详细版 b() 针对单个函数
