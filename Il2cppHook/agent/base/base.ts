@@ -1,6 +1,6 @@
 import { getMethodDesFromMethodInfo as GMD, getMethodModifier as GMM } from "../bridge/fix/il2cppM"
 import { formartClass as FM } from "../utils/formart"
-import { FieldAccess, LogColor } from "./enum"
+import { FieldAccess, LogColor, MethodSortType } from "./enum"
 import { cache } from "decorator-cache-getter"
 import { allocCStr } from "../utils/alloc"
 import { FakeCommonType } from "./valueResolve"
@@ -153,6 +153,8 @@ export class HookerBase {
      * 
      * m("GameObject") 这种写法少数重名类可能会出问题
      * 
+     * example1 ↓
+     * 
      * [Pixel 4::XXX ]->  m(findClass("GameObject"),1) === m("GameObject")
 
             -----------------------------------------------------
@@ -180,7 +182,9 @@ export class HookerBase {
                             ---> retval     0xe9785470  <-  Component
             ......
 
-            [Pixel 4::XXX ]->  m(findClass("GameObject"))
+            example2 ↓
+
+            [Pixel 4::XXX ]->  m(findClass("GameObject")) === m("GameObject")
 
             -----------------------------------------------------
             | Found 46 Methods  in class: GameObject @ 0xe9792c10 |
@@ -193,7 +197,7 @@ export class HookerBase {
             [*] 0xa386d274 ---> 0xa6d245fc ---> 0xf235fc    |  public Component GetComponentInChildren(Type type,Boolean includeInactive)
             ......
      */
-    static showMethods(mPtr: NativePointer | String | number, detailed: boolean = false): void {
+    static showMethods(mPtr: NativePointer | String | number, sort: MethodSortType = MethodSortType.ADDRESS, detailed: boolean = false): void {
         let klass: Il2Cpp.Class = HookerBase.inputCheck(mPtr)
         if (klass.methods.length == 0) return
         newLine()
@@ -217,13 +221,32 @@ export class HookerBase {
         } else {
             // 不带参数解析的  => example 2
             // 分开展示泛型方法和非泛型方法 避免看起来混乱
-            klass.methods.filter((method: Il2Cpp.Method) => !method.virtualAddress.isNull()).forEach((method: Il2Cpp.Method) => {
-                LOGD(`[*] ${method.handle} ---> ${method.virtualAddress} ---> ${method.relativeVirtualAddress}\t|  ${GMD(method)}`)
-            })
+
+            let localMethods: Il2Cpp.Method[] = klass.methods
+            switch (sort) {
+                case MethodSortType.ADDRESS:
+                    localMethods = localMethods.sort((first, secend) => first.relativeVirtualAddress.compare(secend.relativeVirtualAddress))
+                    break
+                case MethodSortType.ACCESS:
+                    localMethods = localMethods.sort((first, second) => second.modifier.localeCompare(first.modifier))
+                    break
+                case MethodSortType.MethodName:
+                    localMethods = localMethods.sort((first, second) => second.name.localeCompare(first.name))
+                    break
+                case MethodSortType.ARGSCOUNT:
+                    localMethods = localMethods.sort((first, second) => first.parameterCount - second.parameterCount)
+                    break
+            }
+
+            localMethods.filter((method: Il2Cpp.Method) => !method.virtualAddress.isNull())
+                .forEach((method: Il2Cpp.Method) => {
+                    LOGD(`[*] ${method.handle} ---> ${method.virtualAddress} ---> ${method.relativeVirtualAddress}\t|  ${GMD(method)}`)
+                })
             newLine()
-            klass.methods.filter((method: Il2Cpp.Method) => method.virtualAddress.isNull()).forEach((method: Il2Cpp.Method) => {
-                LOGZ(`[*] ${method.handle}\t|  ${GMD(method)}`)
-            })
+            localMethods.filter((method: Il2Cpp.Method) => method.virtualAddress.isNull())
+                .forEach((method: Il2Cpp.Method) => {
+                    LOGZ(`[*] ${method.handle}\t|  ${GMD(method)}`)
+                })
             newLine()
         }
     }
@@ -664,7 +687,7 @@ declare global {
     }
     var i: (filter?: string, sort?: boolean) => void
     var c: (imageOrName: string | NativePointer, filter: string) => void
-    var m: (klass: NativePointer, detailed?: boolean) => void
+    var m: (klass: NativePointer, sort?: MethodSortType, detailed?: boolean) => void
     var f: (klass: NativePointer) => void
     var F: (klass: NativePointer | number, instance: NativePointer | number) => void // 老版本写法已弃用
     var findClass: (name: string, fromAssebly?: string[], fromCache?: boolean) => NativePointer
