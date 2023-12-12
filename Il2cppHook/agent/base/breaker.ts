@@ -78,7 +78,7 @@ export class Breaker {
                 let classHandle = imgOrClsPtr
                 let currentCls: Il2Cpp.Class = new Il2Cpp.Class(classHandle)
                 if (currentCls.isEnum) throw new Error("can't attach enum class")
-                if (currentCls.isAbstract) throw new Error("can't attach abstract class")
+                // if (currentCls.isAbstract) throw new Error("can't attach abstract class")
                 FC.printTitile(`Found : ClassName: ${currentCls.name} @ ${classHandle}`)
                 currentCls.methods.forEach(Breaker.attachMethod)
             }

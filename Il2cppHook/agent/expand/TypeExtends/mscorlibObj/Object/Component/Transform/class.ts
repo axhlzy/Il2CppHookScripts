@@ -188,7 +188,11 @@ class UnityEngine_Transform_Impl extends UnityEngine_Component_Impl {
     }
 
     get_childCount(): number {
-        return Il2Cpp.Api.Transform._get_childCount(this.handle)
+        try {
+            return Il2Cpp.Api.Transform._get_childCount(this.handle)
+        } catch (error) {
+            return Il2Cpp.Api.Transform._GetChildCount(this.handle)
+        }
     }
 
     get childCount(): number {

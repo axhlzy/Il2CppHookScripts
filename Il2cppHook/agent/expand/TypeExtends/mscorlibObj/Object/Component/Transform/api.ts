@@ -271,6 +271,12 @@ class UnityEngine_Transform_API {
         return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Transform", "get_childCount", 0, [], "int32", ["pointer"])
     }
 
+    // public Int32 GetChildCount()
+    @cache
+    static get _GetChildCount() {
+        return Il2Cpp.Api.o("UnityEngine.CoreModule", "UnityEngine.Transform", "GetChildCount", 0, [], "int32", ["pointer"])
+    }
+
     // public Void SetAsFirstSibling()
     @cache
     static get _SetAsFirstSibling() {

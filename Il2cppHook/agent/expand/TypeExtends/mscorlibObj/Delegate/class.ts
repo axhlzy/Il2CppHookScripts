@@ -15,7 +15,7 @@ class System_Delegate_Impl extends System_Object {
     method_ptr: System_IntPtr = lfv(this.handle, "method_ptr") as unknown as System_IntPtr
     invoke_impl: System_IntPtr = lfv(this.handle, "invoke_impl") as unknown as System_IntPtr
     m_target: System_Object = new System_Object(lfv(this.handle, "m_target"))
-    method: System_IntPtr = lfv(this.handle, "method") as unknown as System_IntPtr
+    method: Il2Cpp.Method = new Il2Cpp.Method(lfv(this.handle, "method"))
     delegate_trampoline: System_IntPtr = lfv(this.handle, "delegate_trampoline") as unknown as System_IntPtr
     extra_arg: System_IntPtr = lfv(this.handle, "extra_arg") as unknown as System_IntPtr
     method_code: System_IntPtr = lfv(this.handle, "method_code") as unknown as System_IntPtr
@@ -174,7 +174,7 @@ class System_Delegate_Impl extends System_Object {
 
     toString(): string {
         try {
-            let method = new Il2Cpp.Method(this.method)
+            let method: Il2Cpp.Method = this.method
             return `${method.name} | MI:${this.method} | MP:${method.relativeVirtualAddress} | TG:${this.m_target} | virtual:${this.method_is_virtual}`
         } catch (error) {
             return "Error"
