@@ -6,7 +6,7 @@ import {
 import { PassType, TIME_SIMPLE } from "../utils/common"
 import { formartClass as FC } from "../utils/formart"
 import { closest } from "fastest-levenshtein"
-import ValueResolve from "./valueResolve"
+import { ValueResolve } from "./valueResolve"
 import { HookerBase } from "./base"
 import { JSHOOKTYPE } from "./enum"
 

@@ -1,6 +1,6 @@
 import { VM, VMAction, GPRState, FPRState, CallbackPriority, VMError, InstPosition, SyncDirection } from './frida-qbdi'
 import { methodToString } from '../../bridge/fix/il2cppM'
-import ValueResolve from '../../base/valueResolve'
+import { ValueResolve } from '../../base/valueResolve'
 
 // https://qbdi.readthedocs.io/en/stable/api.html
 // https://qbdi.readthedocs.io/en/stable/get_started-frida.html#frida-qbdi-script

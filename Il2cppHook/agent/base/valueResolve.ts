@@ -6,7 +6,7 @@ import { getObjName } from "../expand/TypeExtends/mscorlibObj/Object/export"
 import { UnityEngine_Color_Impl } from "../expand/TypeExtends/mscorlibObj/ValueType/Color/class"
 import { readInt, readInt64, readSingle, readU16, readUInt } from "../utils/reader"
 
-class ValueResolve {
+export class ValueResolve {
 
     private cacheId: string = ""
     private method: Il2Cpp.Method
@@ -141,10 +141,15 @@ class ValueResolve {
         if (typeof method == "number") method = new Il2Cpp.Method(ptr(method))
         if (type.handle.equals(1)) return new Il2Cpp.Object(insPtr).toString()
         if (type.isNull() || method.isNull()) return ""
+
+        // 这里不可以使用 insPtr 来获取class，因为有可能是一个空指针（enum，或者其他值的情况，不一定是指针）
+        // let obj : Il2Cpp.Object = new Il2Cpp.Object(insPtr)
+        // 只能通过type来获取，如下 `type.class`
+
+        if (!type.class.handle.isNull() && type.class.isEnum) return enumType()
         if (insPtr.isNull() && type.name != "System.Boolean" && !method.class.isEnum && !type.name.includes("Void")) return "NULL"
         if (!method.class.isNull() && type.name.endsWith("[]")) return arrayType()
         if (!method.class.isNull() && type.name.includes("Dictionary")) return dictionaryType()
-        if (!method.class.isNull() && method.class.isEnum) return enumType()
 
         return FakeCommonType(type, insPtr)
 
@@ -158,21 +163,6 @@ class ValueResolve {
 
         function enumType(): string {
             return `Enum : ${enumNumToName(insPtr.toInt32(), type.class.name)}`
-        }
-
-        // unused
-        function getParentsStr(clsPtr: Il2Cpp.Class): string {
-            let ret = ""
-            while (true) {
-                let parent = clsPtr.parent
-                if (parent != null) {
-                    clsPtr = parent
-                    ret += clsPtr.name + "<---"
-                } else {
-                    // LOGD(ret)
-                    return ret
-                }
-            }
         }
     }
 }
@@ -192,6 +182,8 @@ export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
             return readInt64(mPtr).toString()
         case "System.Single":
             return readSingle(mPtr).toString()
+        case "System.Double":
+            return mPtr.add(Process.pointerSize * 2).readDouble().toString()
         case "System.String":
             return readU16(mPtr)
         case "System.Object":
@@ -205,12 +197,12 @@ export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
         case "Vector2":
             return `${mPtr.readFloat()} ${mPtr.add(4).readFloat()}`
         default:
+            let obj: Il2Cpp.Object = new Il2Cpp.Object(mPtr)
             if (type.name.includes("System.Action")) return new mscorlib.Delegate(mPtr).toString()
             try {
-                return new Il2Cpp.Object(mPtr).toString()
+                return obj.toString()
             } catch {
                 return mPtr.toString()
             }
     }
 }
-export default ValueResolve
