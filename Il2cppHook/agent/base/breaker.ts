@@ -187,7 +187,7 @@ export class Breaker {
                         this.content = tmp_content
                         let clsStr = `${method.class.namespace}`
                         let classTitle = `${clsStr.length == 0 ? "" : clsStr + "."}${method.class.name}`
-                        let disptitle = `${classTitle} | ${methodToString(method, true)}\t [${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress}] | ${TIME_SIMPLE()}`
+                        let disptitle = `${classTitle} | ${methodToString(method, true)}\t [ ${method.handle} -> ${method.virtualAddress} -> ${method.relativeVirtualAddress} ] | ${TIME_SIMPLE()}`
                         this.disp_title = disptitle
                     }
                 },

@@ -28,6 +28,15 @@ const readU16 = (mPtr: ARGM): string => {
     } catch { return "" }
 }
 
+// const readStdString_ = (str) => {
+//     str = ptr(str)
+//     const isTiny = (str.readU8() & 1) === 0;
+//     if (isTiny) {
+//         return str.add(1).readUtf8String();
+//     }
+//     return str.add(2 * Process.pointerSize).readPointer().readUtf8String();
+// }
+
 // funcTransform 自定义解析函数
 const showArray = (mPtr: ARGM, funcTransform?: (itemPtr: NativePointer, objName: string) => string): void => {
 
@@ -107,6 +116,7 @@ declare global {
     var seeHexR: (addr: PTR, length?: number, color?: LogColor | undefined) => void
     var seeHexA: (addr: PTR, length?: number, header?: boolean, color?: any | undefined) => void
     var getFloat: () => NativePointer
+    // var readStdString: (str: any) => void
 }
 
 globalThis.readSingle = readSingle

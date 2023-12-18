@@ -62,6 +62,7 @@ export class HookerBase {
     }
 
     static showClasses(imageOrName: string | NativePointer | number, filterNameSpace: string = "", filterClassName: string = ""): void {
+        // todo 这里想添加一个 c(methodinfo)
         let image: Il2Cpp.Image
         try {
             if (typeof imageOrName == "string") {
@@ -146,12 +147,13 @@ export class HookerBase {
 
     /**
      * showMethods
-     * @param {NativePointer | String | number} mPtr class ptr
+     * @param {NativePointer | String | number} mPtr class ptr | class name | methodinfo ptr
      * @param {boolean} detailed show detail info (default false)
      * @returns 
      * @example
      * 
      * m("GameObject") 这种写法少数重名类可能会出问题
+     * 你应该先使用findClasses找到指定的类以后再使用m(classPtr)的形式进行调用查看
      * 
      * example1 ↓
      * 
@@ -197,8 +199,10 @@ export class HookerBase {
             [*] 0xa386d274 ---> 0xa6d245fc ---> 0xf235fc    |  public Component GetComponentInChildren(Type type,Boolean includeInactive)
             ......
      */
-    static showMethods(mPtr: NativePointer | String | number, sort: MethodSortType = MethodSortType.ADDRESS, detailed: boolean = false): void {
-        let klass: Il2Cpp.Class = HookerBase.inputCheck(mPtr)
+    static showMethods(input: NativePointer | String | number, sort: MethodSortType = MethodSortType.ADDRESS, detailed: boolean = false): void {
+        if (input instanceof NativePointer && input.isNull()) throw new Error("input can not be null")
+        if (typeof input == "string" && input.trim().length == 0) throw new Error("input can not be null")
+        let klass: Il2Cpp.Class = HookerBase.inputCheck(input)
         if (klass.methods.length == 0) return
         newLine()
         FM.printTitile(`Found ${klass.methods.length} Methods ${klass.isEnum ? "(enum) " : ""} in class: ${klass.name} @ ${klass.handle}`)
@@ -271,11 +275,11 @@ export class HookerBase {
             klass = HookerBase.checkType(input.trim())
         } else if (typeof input == "number") {
             if (Process.arch == "arm64" && (input.toString().length > 15))
-                throw new Error("\nNot support parameter typed number at arm64\n\n\tUse _FunctionName('0x...') instead\n")
+                throw new Error(`\nNot support parameter typed number at ${Process.arch}\n\n\tUse ('0x...') instead\n`)
             // arm32 使用 number
             klass = HookerBase.checkType(ptr(input))
         } else {
-            throw ("mPtr must be string('0x...') or NativePointer")
+            throw (`mPtr must be string('0x...') or NativePointer`)
         }
         return klass
     }
@@ -293,8 +297,8 @@ export class HookerBase {
     static findClass(searchClassName: string, fromAssebly: string[] = ["Assembly-CSharp", "MaxSdk.Scripts", "mscorlib"], fromCache: boolean = true): NativePointer {
         if (searchClassName as any instanceof NativePointer) return ptr(0)
         if (searchClassName as any instanceof Number) return ptr(0)
-        if (searchClassName == undefined) throw ("Search name can not be null or undefined")
-        if (typeof searchClassName != "string") throw ("findClass need a string value")
+        if (searchClassName == undefined) throw (`Search name can not be null or undefined`)
+        if (typeof searchClassName != "string") throw (`findClass need a string value`)
         if (fromCache) {
             let cache: Il2Cpp.Class | undefined = HookerBase.map_cache_class.get(searchClassName)
             if (cache != undefined) return cache.handle
@@ -365,7 +369,7 @@ export class HookerBase {
                 }
             }
         }
-        if (methodInfo == undefined) throw new Error("Method not found")
+        if (methodInfo == undefined) throw new Error(`Method not found`)
         if (cmdCall) {
             showMethodInfo(methodInfo.handle)
         } else {
@@ -614,17 +618,17 @@ export class HookerBase {
 export const get_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Class = "GameObject"): Array<Il2Cpp.Object> => {
     let localClass: Il2Cpp.Class
     if (inputClass instanceof NativePointer) {
-        if (inputClass.isNull()) throw new Error("inputClass can not be null")
+        if (inputClass.isNull()) throw new Error(`inputClass can not be null`)
         localClass = new Il2Cpp.Class(inputClass)
     } else if (inputClass instanceof Il2Cpp.Class) {
-        if (inputClass.isNull()) throw new Error("inputClass can not be null")
+        if (inputClass.isNull()) throw new Error(`inputClass can not be null`)
         localClass = inputClass
     } else if (typeof inputClass == "string") {
         let localC = findClass(inputClass)
-        if (localC.isNull()) throw new Error("If the class is not found, please pay attention to capitalization")
+        if (localC.isNull()) throw new Error(`If the class is not found, please pay attention to capitalization`)
         localClass = new Il2Cpp.Class(localC)
     } else {
-        throw new Error("inputClass type error")
+        throw new Error(`inputClass type error`)
     }
     return Il2Cpp.GC.choose(localClass)
 }

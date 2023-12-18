@@ -7,12 +7,12 @@ export const enumNumToName = (enumValue: number, classInfo: string, classPtr?: N
     return retValue
 }
 
-export const enumForEach = (className: string, callback: (field: NativePointer, fieldName: string, value: number) => void, clazzPtr?: NativePointer) => {
-    let local_clazzPtr: NativePointer = ptr(0)
-    if (clazzPtr == undefined || clazzPtr == null || (clazzPtr instanceof NativePointer && clazzPtr.isNull())) {
-        local_clazzPtr = findClass(className)
-    } else {
-        local_clazzPtr = clazzPtr
+export const enumForEach = (className: string, callback: (field: NativePointer, fieldName: string, value: number) => void, clazzPtr: NativePointer = ptr(0)) => {
+    let local_clazzPtr: NativePointer = clazzPtr
+    if (local_clazzPtr.isNull()) {
+        if (clazzPtr == undefined || clazzPtr == null || (clazzPtr instanceof NativePointer && clazzPtr.isNull())) {
+            local_clazzPtr = findClass(className)
+        }
     }
     if (local_clazzPtr.isNull()) throw new Error("Don't find class " + className)
     let local_clazz: Il2Cpp.Class = new Il2Cpp.Class(local_clazzPtr)

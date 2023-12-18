@@ -21,13 +21,17 @@ export function OnPointerClick(arg0: number = -1, self_addr: NativePointer = ptr
             if (self_addr.isNull()) {
                 doDefaultHook()
             } else {
-                funcAddr = checkCmdInput(self_addr)
+                funcAddr = ptr(self_addr as unknown as number)
                 if (funcAddr == undefined || funcAddr.isNull()) break
                 doSelfHook(funcAddr)
             }
 
             function doSelfHook(funcAddr: NativePointer) {
-                LOGE("\nEnable Hook OnPointerClick at " + funcAddr + "(" + funcAddr.sub(soAddr) + ")" + "\n")
+                let checkFuncAddr: NativePointer = checkCmdInput(funcAddr)
+                let extra_str = ""
+                if (!checkFuncAddr.equals(funcAddr))
+                    extra_str = "| (" + checkFuncAddr.sub(Module.findBaseAddress(soName)!) + ")"
+                LOGE(`\nEnable Hook OnPointerClick at ${funcAddr} ${extra_str} "\n`)
                 try {
                     A(funcAddr, (args) => {
                         LOGW("\n" + getLine(38))
@@ -63,8 +67,14 @@ export function OnPointerClick(arg0: number = -1, self_addr: NativePointer = ptr
                     })
                 }
 
-                const _UnityButton_OnPointerClick_ptr = ptr(Il2Cpp.Api.UnityButton._OnPointerClick)
-                if (_UnityButton_OnPointerClick_ptr.isNull()) return
+                let _UnityButton_OnPointerClick_ptr
+                try {
+                    _UnityButton_OnPointerClick_ptr = ptr(Il2Cpp.Api.UnityButton._OnPointerClick)
+                    if (_UnityButton_OnPointerClick_ptr.isNull()) return
+                } catch (error) {
+                    return
+                }
+
                 LOGE("Enable Hook UnityButton OnPointerClick at " + _UnityButton_OnPointerClick_ptr + "(" + _UnityButton_OnPointerClick_ptr.sub(soAddr_local) + ")" + "\n")
                 A(_UnityButton_OnPointerClick_ptr, (args) => {
                     LOGW("\n" + getLine(38))
@@ -184,9 +194,26 @@ export const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
     try {
         A(Il2Cpp.Api.UnityButton._OnPointerClick, (args) => innerFunction(args[0], args[1]))
     } catch (error) {
-        A(Il2Cpp.Api.UnityButton._OnPointerClick, (_args, ctx: CpuContext) => {
-            innerFunction(getPlatformCtxWithArgV(ctx, 0)!, getPlatformCtxWithArgV(ctx, 1)!)
-        })
+        try {
+            A(Il2Cpp.Api.UnityButton._OnPointerClick, (_args, ctx: CpuContext) => {
+                innerFunction(getPlatformCtxWithArgV(ctx, 0)!, getPlatformCtxWithArgV(ctx, 1)!)
+            })
+        } catch (error) {
+            // LOGE(`Don't find UnityButton.OnPointerClick`)
+        }
+    }
+
+    // Il2Cpp.Api.EventTrigger._OnPointerClick
+    try {
+        A(Il2Cpp.Api.EventTrigger._OnPointerClick, (args) => innerFunction(args[0], args[1]))
+    } catch (error) {
+        try {
+            A(Il2Cpp.Api.EventTrigger._OnPointerClick, (_args, ctx: CpuContext) => {
+                innerFunction(getPlatformCtxWithArgV(ctx, 0)!, getPlatformCtxWithArgV(ctx, 1)!)
+            })
+        } catch (error) {
+            // LOGE(`Don't find EventTrigger.OnPointerClick`)
+        }
     }
 
     function innerFunction(buttonInstance: NativePointer, eventData: NativePointer) {
@@ -201,15 +228,28 @@ export const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
             // example ↓
             // → showParentClass(findClass('UnityButton'))
             // ← BeveledUnityButton (0x7a80382480) -> UnityButton (0x7a94cc4700) -> MonoBehaviour (0x7a8049e800) -> Behaviour (0x7a8049e980) -> Component (0x7a8049eb00) -> Object (0x7a8047b600) -> Object (0x7a807fb800)
-            if (!checkExtends(button, "Button")) {
-                if (checkExtends(button, "UnityButton")) {
-                    logTitle()
-                    let button: Il2Cpp.UnityButton = new Il2Cpp.UnityButton(buttonInstance)
-                    let method: Il2Cpp.Method = button._onClick.method
-                    LOGW(`\t[-] ${method.handle} -> ${method.relativeVirtualAddress} | ${method.class.image.assembly.name}.${method.class.name}.${method.name}`)
-                    return
-                } else throw new Error("Instance is not a subclass of Il2cpp.Button")
+            if (!checkExtends(button, "Button") && checkExtends(button, "UnityButton")) {
+                logTitle()
+                let button: Il2Cpp.UnityButton = new Il2Cpp.UnityButton(buttonInstance)
+                let method: Il2Cpp.Method = button._onClick.method
+                LOGW(`\t[-] ${method.handle} -> ${method.relativeVirtualAddress} | ${method.class.image.assembly.name}.${method.class.name}.${method.name}`)
+                return
             }
+
+            if (checkExtends(button, "EventTrigger")) {
+                let button: Il2Cpp.EventTrigger = new Il2Cpp.EventTrigger(buttonInstance)
+                let m_Delegates: PackList = new PackList(button.m_Delegates)
+                m_Delegates.forEach((instance: Il2Cpp.Object, index: number) => {
+                    // LOGD(`${instance.toString()}`)
+                    // 0x10 public EventTriggerType (0x790dba7400)     eventID
+                    // let entryStr: string = enumNumToName(instance.field<number>('eventID').value, "Entry", instance.class.handle)
+                    // 0x18 public TriggerEvent (0x790ddbd7c0) callback
+                    // TriggerEvent (0x790ddbd7c0) -> UnityEvent`1 (0x790dbbc780) -> UnityEventBase (0x79cf97a140) -> Object (0x79cfd55000)
+                    // let callback: UnityEventBase = new UnityEventBase(instance.field<NativePointer>('callback').value)
+                    // delayPrint([callback.m_Calls.m_ExecutingCalls, callback.m_Calls.m_PersistentCalls, callback.m_Calls.m_RuntimeCalls])
+                })
+            }
+
             throw error
         }
 
@@ -220,9 +260,10 @@ export const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
         let callsArray: Array<PackList> = [exeCalls, persistentCalls, runtimeCalls]
         delayPrint(callsArray)
 
-        function logTitle() {
+        function logTitle(needCls: boolean = false) {
             let obj = new Il2Cpp.Object(buttonInstance)
-            LOGD(`\n[*] ${pointerEventData.handle} ---> ${obj} { C:${obj.class.handle} |  G:${currentGameobj.handle} | T:${currentGameobj.get_transform().handle} }`)
+            let clsDes = needCls ? ` C:${obj.class.handle} |` : ''
+            LOGD(`\n[*] ${pointerEventData.handle} ---> ${obj} {${clsDes} G:${currentGameobj.handle} | T:${currentGameobj.get_transform().handle} }`)
         }
 
         function delayPrint(callsArray: Array<PackList>) {

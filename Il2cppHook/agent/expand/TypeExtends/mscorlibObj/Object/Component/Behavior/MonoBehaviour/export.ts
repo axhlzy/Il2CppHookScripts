@@ -175,7 +175,25 @@ const findAndHook = (methodName: string, callback?: (instancePtr: NativePointer,
  * ...
  */
 const HookMonoStart = (callback?: (instancePtr: NativePointer, ctx: CpuContext) => void): void => {
-    findAndHook("Start", callback)
+
+    let onceCallFlag: boolean = true
+    Il2Cpp.perform(() => {
+        // [-]UnityEngine.UI @ 0x7b0ce26528
+        //   [-]UnityEngine.UI.dll @ 0x7b4dbcb438 | C:202
+        //   [-]Graphic @ 0x7b618ede00 | M:61 | F:23 | N:UnityEngine.UI
+        //     [-]protected virtual Void UpdateGeometry() @ MI: 0x7a14cce740 & MP: 0x7b6d83cda8 & RP: 0x213cda8
+        const class_Graphic = Il2Cpp.Domain.assembly("UnityEngine.UI").image.class("UnityEngine.UI.Graphic")
+        const method_UpdateGeometry = class_Graphic.method("UpdateGeometry", 0)
+        const src_function = new NativeFunction(method_UpdateGeometry.virtualAddress, "void", ["pointer"])
+        Interceptor.replace(method_UpdateGeometry.virtualAddress, new NativeCallback((instance: NativePointer) => {
+            if (onceCallFlag) {
+                findAndHook("Start", callback)
+                onceCallFlag = false
+            }
+            return src_function(instance)
+        }, "void", ["pointer"]))
+
+    })
     // if (allMethodsCacheArray.length == 0) cacheMethods(false)
     // allMethodsCacheArray
     //     .filter((method: Il2Cpp.Method) => !method.handle.equals(0) && !method.virtualAddress.equals(0) && method.name == 'start')

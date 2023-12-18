@@ -190,12 +190,21 @@ globalThis.HookJavaReflect = () => {
     })
 }
 
+const listJavaMethods = (className: string = "org.cocos2dx.lib.Cocos2dxHelper") => {
+    Java.perform(function () {
+        const aimClass = Java.use(className)
+        const methods = aimClass.class.getDeclaredMethods()
+        methods.forEach((method: Java.Wrapper) => LOGD(method.toString()))
+    })
+}
+
+globalThis.listJavaMethods = listJavaMethods
+
 declare global {
     var findJavaMethods: (filter: string, accurate?: boolean) => void
     var findJavaClasses: (filter: string, accurate?: boolean) => void
     var BJC: (filter: string, accurate?: boolean) => void // b java class
 
     var HookJavaReflect: () => void
+    var listJavaMethods: (className: string) => void
 }
-
-export { }

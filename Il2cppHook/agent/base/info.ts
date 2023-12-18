@@ -46,7 +46,7 @@ export function showMethodInfo(mPtr: NativePointer | Il2Cpp.Method): void {
     LOGZ(`[-]${packMethod.class.image.assembly.name} @ ${packMethod.class.image.assembly.handle}`)
     LOGZ(`${getLine(2, ' ')}[-]${packMethod.class.image.name} @ ${packMethod.class.image.handle} | C:${packMethod.class.image.classCount}`)
     LOGZ(`${getLine(4, ' ')}[-]${packMethod.class.name} @ ${packMethod.class.handle} | M:${packMethod.class.methods.length} | F:${packMethod.class.fields.length} ${packMethod.class.namespace.length > 0 ? `| N:${packMethod.class.namespace}` : ''}`)
-    LOGD(`${getLine(6, ' ')}[-]${methodDes(packMethod)} @ MI:${packMethod.handle} & MP: ${packMethod.virtualAddress} ${AppendRelativeVirtualAddress}`)
+    LOGD(`${getLine(6, ' ')}[-]${methodDes(packMethod)} @ MI: ${packMethod.handle} & MP: ${packMethod.virtualAddress} ${AppendRelativeVirtualAddress}`)
     LOGZ(`${params}`)
     newLine()
 

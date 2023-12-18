@@ -175,7 +175,7 @@ class System_Delegate_Impl extends System_Object {
     toString(): string {
         try {
             let method: Il2Cpp.Method = this.method
-            return `${method.name} | MI:${this.method} | MP:${method.relativeVirtualAddress} | TG:${this.m_target} | virtual:${this.method_is_virtual}`
+            return `${method.name} | MI:${this.method.handle} | MP:${method.relativeVirtualAddress} | TG:${this.m_target} | virtual:${this.method_is_virtual}`
         } catch (error) {
             return "Error"
         }
