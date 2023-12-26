@@ -166,6 +166,28 @@ const findAndHook = (methodName: string, callback?: (instancePtr: NativePointer,
     })
 }
 
+// [-]UnityEngine.CoreModule @ 0x7a1572b268
+//   [-]UnityEngine.CoreModule.dll @ 0x7a158801f8 | C:556
+//   [-]Sprite @ 0x79eb7a4b00 | M:32 | F:0 | N:UnityEngine
+//     [-]public Texture2D get_texture() @ MI: 0x7904122fa0 & MP: 0x7a2042accc & RP: 0xb20ccc
+//       [-]_RET_               | type: 0x7a21744c78 | @ class:0x790a972600 | UnityEngine.Texture2D
+globalThis.HookSprite = () => {
+    Il2Cpp.perform(() => {
+        let class_Sprite = Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Sprite")
+        let method_get_texture = class_Sprite.method("get_texture", 0)
+        Interceptor.attach(method_get_texture.virtualAddress, {
+            onEnter(args) {
+                let instance = args[0]
+                this.Obj = instance
+
+            }, onLeave(retval) {
+                let instance = this.Obj
+                LOGD(`[*] ${method_get_texture.toString()} -> instance:${instance}\n\t texture:${new Il2Cpp.Object(retval)}`)
+            }
+        })
+    })
+}
+
 /**
  * Hook MonoBehaviour.Start() -> parse GameObject
  * 
@@ -215,6 +237,7 @@ declare global {
     var listCoroutine: () => void
     var cancelWatchCoroutine: () => void
     var watchCoroutine: () => void
+    var HookSprite: () => void
     var HookMonoStart: (callback?: (instancePtr: NativePointer, ctx: CpuContext) => void) => void
     var HookMonoAwake: (callback?: (instancePtr: NativePointer, ctx: CpuContext) => void) => void
 }
@@ -225,3 +248,4 @@ globalThis.watchCoroutine = w.bind(null, listCoroutine)
 globalThis.HookCoroutine = HookCoroutine
 globalThis.HookMonoStart = HookMonoStart
 globalThis.HookMonoAwake = HookMonoAwake
+globalThis.HookSprite = HookSprite

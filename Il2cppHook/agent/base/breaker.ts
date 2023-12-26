@@ -310,10 +310,10 @@ export class Breaker {
     // arm32 example : breakInline(0x12345678,(ctx)=>{LOGD(ctx.r0)})
     static breakInline = (mPtr: NativePointer, callback?: (value: CpuContext) => void) => {
         let localPtr: NativePointer = checkPointer(mPtr)
-        LOGD(`[+] add BP ( ${this.HookTypeToString(JSHOOKTYPE.INLINE)} ) | ${mPtr} - ${localPtr}`)
+        LOGD(`[+] add BP ( ${this.HookTypeToString(JSHOOKTYPE.INLINE)} ) | ${ptr(mPtr as unknown as string)} - ${localPtr}`)
         A(localPtr, (_args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
             LOGO(`\n${getLine(65)}`)
-            LOGH(`Called from ${localPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(ctx))}\n`)
+            LOGH(`Called from ${localPtr} ---> ${localPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(ctx))}\n`)
             callback == undefined ? LOGD(JSON.stringify(ctx)) : callback(ctx)
         })
     }

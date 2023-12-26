@@ -19,19 +19,6 @@ function LOGCAT(msg: string) {
 
 const TODO_OTHERS = () => {
 
-    function TODO() {
-
-        return
-
-        Il2Cpp.perform(() => {
-
-            let soAddress = Process.findModuleByName("libil2cpp.so")?.base
-            LOGCAT(`soAddress -> ${soAddress}`)
-
-
-        })
-
-    }
 }
 
 class PauseHelper {

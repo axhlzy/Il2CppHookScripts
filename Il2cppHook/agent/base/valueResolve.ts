@@ -183,7 +183,11 @@ export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
         case "System.Single":
             return readSingle(mPtr).toString()
         case "System.Double":
-            return mPtr.add(Process.pointerSize * 2).readDouble().toString()
+            try {
+                return mPtr.add(Process.pointerSize * 2).readDouble().toString()
+            } catch (error) {
+                return `Parse Error ${error}`
+            }
         case "System.String":
             return readU16(mPtr)
         case "System.Object":
@@ -198,7 +202,11 @@ export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
             return `${mPtr.readFloat()} ${mPtr.add(4).readFloat()}`
         default:
             let obj: Il2Cpp.Object = new Il2Cpp.Object(mPtr)
-            if (type.name.includes("System.Action")) return new mscorlib.Delegate(mPtr).toString()
+            try {
+                if (type.name.includes("System.Action")) return new mscorlib.Delegate(mPtr).toString()
+            } catch (error) {
+                return obj.toString()
+            }
             try {
                 return obj.toString()
             } catch {

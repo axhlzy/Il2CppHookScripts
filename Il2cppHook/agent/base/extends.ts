@@ -28,6 +28,11 @@ declare global {
     /**
      * findExport 侧重点在定位一些我们只知道函数名不知道他在那个模块里面（用于定位导出函数）
      * 故exportName作为第一个参数，第二个参数用作筛选
+     * 
+     * example:
+     * findExport("art::ArtMethod::","libart.so",(exp,dm)=>{LOGD("\n"+exp.address +" -> "+ dm);LOGZ("\t"+exp.name)},true)
+     * findExport("Java_")
+     * 
      */
     var findExport: (exportName: string, moduleName?: string, callback?: (exp: ModuleExportDetails) => void) => void
     /**
@@ -47,7 +52,7 @@ declare global {
 
     var cmdouleTest: () => void
     var sqliteTest: () => void
-    var registerClassTest: () => void
+    // var registerClassTest: () => void
 }
 
 /**

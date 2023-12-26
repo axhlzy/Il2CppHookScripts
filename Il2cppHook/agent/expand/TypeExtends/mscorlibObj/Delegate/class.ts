@@ -25,7 +25,9 @@ class System_Delegate_Impl extends System_Object {
     method_is_virtual: boolean = !lfv(this.handle, "method_is_virtual").isNull()
 
     constructor(handleOrWrapper: NativePointer) {
-        super(handleOrWrapper)
+        if (handleOrWrapper instanceof NativePointer && !handleOrWrapper.isNull()) {
+            super(handleOrWrapper)
+        }
     }
 
     get_Method(): System_Reflection_MethodInfo {
