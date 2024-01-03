@@ -28,10 +28,10 @@ export function OnPointerClick(arg0: number = -1, self_addr: NativePointer = ptr
 
             function doSelfHook(funcAddr: NativePointer) {
                 let checkFuncAddr: NativePointer = checkCmdInput(funcAddr)
-                let extra_str = ""
+                let extra_str = ''
                 if (!checkFuncAddr.equals(funcAddr))
                     extra_str = "| (" + checkFuncAddr.sub(Module.findBaseAddress(soName)!) + ")"
-                LOGE(`\nEnable Hook OnPointerClick at ${funcAddr} ${extra_str} "\n`)
+                LOGE(`\nEnable Hook OnPointerClick at ${funcAddr} ${extra_str}\n`)
                 try {
                     A(funcAddr, (args) => {
                         LOGW("\n" + getLine(38))

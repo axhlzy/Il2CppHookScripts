@@ -5,7 +5,13 @@ import { setActiveT, setActiveTChange } from "../Component/export"
 import { checkExtends } from "../../ValueType/exports"
 import { allocP } from "../../../../../utils/alloc"
 
-globalThis.HookSetActive = (defaltActive: boolean = true, PrintStackTrace: boolean = false, filterString: Array<string> | string = "") => {
+enum activeStatus {
+    active = 1,
+    inactive = 0,
+    all = -1
+}
+
+globalThis.HookSetActive = (defaltActive: activeStatus | boolean = activeStatus.active, PrintStackTrace: boolean = false, filterString: Array<string> | string = "") => {
 
     let setActiveAddress = find_method("UnityEngine.CoreModule", "GameObject", "SetActive", 1)
     try {
@@ -22,6 +28,7 @@ globalThis.HookSetActive = (defaltActive: boolean = true, PrintStackTrace: boole
     function innerSetActive(mPtr: NativePointer, ctx: CpuContext) {
         if (mPtr.isNull()) return
         let gameObject = new Il2Cpp.GameObject(ptr(mPtr as unknown as number))
+        const activeSelf: boolean = gameObject.get_activeSelf()
         if (filterString != "") {
             if (filterString instanceof Array) {
                 let isPass = false
@@ -35,14 +42,36 @@ globalThis.HookSetActive = (defaltActive: boolean = true, PrintStackTrace: boole
             } else if (filterString != "" && gameObject.get_name().indexOf(filterString) == -1) return
         }
         if (filterDuplicateOBJ(gameObject.toString()) == -1) return
-        if (defaltActive && !mPtr.isNull()) {
-            let strTmp = "public extern void SetActive( " + (mPtr.toInt32() == 0 ? "false" : "true") + " );  LR:" + checkCtx(ctx)
-            LOGW("\n" + getLine(strTmp.length))
-            LOGD(strTmp)
-            LOGO(getLine(strTmp.length / 2))
-            showGameObject(mPtr)
+        switch (defaltActive) {
+            case activeStatus.active:
+                if (activeSelf) printMsg()
+                break
+            case activeStatus.inactive:
+                if (!activeSelf) printMsg()
+                break
+            case activeStatus.all:
+                printMsg()
+                break
+            default:
+                if (typeof defaltActive == "boolean") {
+                    if (defaltActive == activeSelf) printMsg()
+                    break
+                } else {
+                    LOGD("defaltActive is not a valid instance of the specified type")
+                    break
+                }
         }
-        if (PrintStackTrace) PrintStackTraceNative(ctx)
+
+        function printMsg() {
+            if (!mPtr.isNull()) {
+                let strTmp = "public extern void SetActive( " + (activeSelf ? 'true' : 'false') + " );  LR:" + checkCtx(ctx)
+                LOGW("\n" + getLine(strTmp.length))
+                LOGD(strTmp)
+                LOGO(getLine(strTmp.length / 2))
+                showGameObject(mPtr)
+            }
+            if (PrintStackTrace) PrintStackTraceNative(ctx)
+        }
     }
 }
 
