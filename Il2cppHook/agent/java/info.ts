@@ -170,11 +170,11 @@ const printExp = (filter: string = "", findAll: boolean = true, formartMaxLine: 
 
     try {
         // libil2cpp.so common export function
-        findExport("il2cpp_", "libil2cpp.so", (item: ModuleExportDetails) => {
+        findExport("il2cpp_", "libil2cpp.so", (item: ModuleExportDetails | ModuleSymbolDetails) => {
             if (item.type == "function" && item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveModuleDetails(item)
         })
 
-        findExport("", "libunity.so", (item: ModuleExportDetails) => {
+        findExport("", "libunity.so", (item: ModuleExportDetails | ModuleSymbolDetails) => {
             if (item.type == "function" && item.name.toLocaleLowerCase().includes(filter.toLowerCase())) formartAndSaveModuleDetails(item)
         })
     } catch (error) { LOGE(error) }
@@ -235,7 +235,7 @@ const printExp = (filter: string = "", findAll: boolean = true, formartMaxLine: 
     if (formartMaxLine != -1 && formartMaxLine < 100) LOGZ(`\n${formartMaxLine} lines of results are shown recommended to be greater than 100`)
     newLine()
 
-    function formartAndSaveModuleDetails(item: ModuleExportDetails) {
+    function formartAndSaveModuleDetails(item: ModuleExportDetails | ModuleSymbolDetails) {
         if (retArr) return
         let index = FM.alignStr(`[${++countIndex}]`, 6)
         let result = `${index} ${FM.alignStr(item.address, p_size * 4)}  --->   ${item.address.sub(soAddr)}\t${item.name}`

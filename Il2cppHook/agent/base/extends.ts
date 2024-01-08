@@ -30,11 +30,12 @@ declare global {
      * 故exportName作为第一个参数，第二个参数用作筛选
      * 
      * example:
-     * findExport("art::ArtMethod::","libart.so",(exp,dm)=>{LOGD("\n"+exp.address +" -> "+ dm);LOGZ("\t"+exp.name)},true)
      * findExport("Java_")
+     * findExport("art::StackVisitor::","libart.so",null,true)
+     * findExport("art::ArtMethod::","libart.so",(exp,dm)=>{LOGD("\n"+exp.address +" -> "+ dm);LOGZ("\t"+exp.name)},true)
      * 
      */
-    var findExport: (exportName: string, moduleName?: string, callback?: (exp: ModuleExportDetails) => void) => void
+    var findExport: (exportName: string, moduleName?: string, callback?: (exp: ModuleExportDetails | ModuleSymbolDetails) => void) => void
     /**
      * findImport 侧重点在像IDA一样方便的查看指定Module的导入函数
      * 故ModuleName作为第一个参数，第二个参数用作筛选
@@ -53,6 +54,8 @@ declare global {
     var cmdouleTest: () => void
     var sqliteTest: () => void
     // var registerClassTest: () => void
+
+    var demangleName: (expName: string) => string
 }
 
 /**
@@ -60,13 +63,13 @@ declare global {
  */
 let cacheMethods = new Map<string, number>()
 globalThis.b_export = (moduleName: string, exportName?: string, passAddress?: number[]) => {
-    findExport(moduleName, exportName, (exp: ModuleExportDetails) => {
+    findExport(moduleName, exportName, (exp: ModuleExportDetails | ModuleSymbolDetails) => {
         if (exp.type != "function") return
         if (passAddress == undefined) {
-            innerAttach(exp)
+            innerAttach(exp as ModuleExportDetails)
         } else {
             if (!passAddress!.includes(exp.address.toInt32())) {
-                innerAttach(exp)
+                innerAttach(exp as ModuleExportDetails)
             }
         }
     })
@@ -486,23 +489,33 @@ function printModule(md: Module, needIndex: boolean = false) {
     LOGZ(`\t${md.path}\n`)
 }
 
-globalThis.findExport = (exportName: string, moduleName?: string, callback?: (exp: ModuleExportDetails, demangleName?: string) => void, checkDemangleName: boolean = false) => {
+globalThis.findExport = (exportName: string, moduleName?: string, callback?: (exp: ModuleExportDetails | ModuleSymbolDetails, demangleName?: string) => void, checkDemangleName: boolean = false, findSym: boolean = false) => {
     if (callback == undefined) callback = showDetails
     var count = 0
     if (moduleName == undefined) {
-        Process.enumerateModules().forEach((md: Module) => {
-            md.enumerateExports().forEach((exp: ModuleExportDetails) => checkAndShow(exp, callback))
-        })
+        if (findSym) {
+            Process.enumerateModules().forEach((md: Module) => {
+                md.enumerateSymbols().filter((sym: ModuleSymbolDetails) => sym.name.includes(exportName)).forEach((sym: ModuleSymbolDetails) => checkAndShow(sym, callback))
+            })
+        } else {
+            Process.enumerateModules().forEach((md: Module) => {
+                md.enumerateExports().forEach((exp: ModuleExportDetails) => checkAndShow(exp, callback))
+            })
+        }
     } else {
         let md: Module | null = Process.findModuleByName(moduleName)
         if (md == null) throw new Error("NOT FOUND Module : " + moduleName)
-        md.enumerateExports().forEach((exp: ModuleExportDetails) => checkAndShow(exp, callback))
+        if (findSym) {
+            md.enumerateSymbols().filter((sym: ModuleSymbolDetails) => sym.name.includes(exportName)).forEach((sym: ModuleSymbolDetails) => checkAndShow(sym, callback))
+        } else {
+            md.enumerateExports().forEach((exp: ModuleExportDetails) => checkAndShow(exp, callback))
+        }
     }
 
     if (callback == showDetails) LOGN(`\n[=] ${count} result(s)\n`)
     else return
 
-    function checkAndShow(exp: ModuleExportDetails, callback?: (exp: ModuleExportDetails, demangleName?: string) => void) {
+    function checkAndShow(exp: ModuleExportDetails | ModuleSymbolDetails, callback?: (exp: ModuleExportDetails | ModuleSymbolDetails, demangleName?: string) => void) {
         let name = exp.name
         if (checkDemangleName) {
             // 这会遍历太多的函数名 并且调用 demangle 会消耗大量时间，不建议使用
@@ -518,11 +531,11 @@ globalThis.findExport = (exportName: string, moduleName?: string, callback?: (ex
         }
     }
 
-    function showDetails(exp: ModuleExportDetails, demangleName?: string) {
+    function showDetails(exp: ModuleExportDetails | ModuleSymbolDetails, demangleName?: string) {
         try {
             let md: Module = Process.findModuleByAddress(exp.address)!
             if (md == null) {
-                let mdt = Process.findModuleByName("linker")!
+                let mdt: Module = Process.findModuleByName(Process.arch == 'arm' ? 'linker' : 'linker64')!
                 mdt.enumerateExports().forEach((linkerExp: ModuleExportDetails) => {
                     if (linkerExp.address.equals(exp.address) && linkerExp.name == exp.name) md = mdt
                 })
@@ -538,8 +551,10 @@ globalThis.findExport = (exportName: string, moduleName?: string, callback?: (ex
             LOGZ(`\t[-] RG_Base: ${rg.base} | size: ${ptr(rg.size).toString().padEnd(p_size * 2, " ")} <-  range:   ${rg.protection}`)
             ++count
         } catch (error) {
-            if (Process.findModuleByAddress(exp.address) == null) LOGE("Module not found")
-            if (Process.findRangeByAddress(exp.address) == null) LOGE("Range not found")
+            if (!findSym) {
+                if (Process.findModuleByAddress(exp.address) == null) LOGE("Module not found")
+                if (Process.findRangeByAddress(exp.address) == null) LOGE("Range not found")
+            }
             LOGD(JSON.stringify(exp))
         }
     }
@@ -555,20 +570,20 @@ export function demangleName(expName: string) {
     if (demangleAddress == null) demangleAddress = Module.findExportByName("libunwindstack.so", '__cxa_demangle')
     if (demangleAddress == null) demangleAddress = Module.findExportByName("libbacktrace.so", '__cxa_demangle')
     if (demangleAddress == null) demangleAddress = Module.findExportByName(null, '__cxa_demangle')
-    if (demangleAddress == null) return ""
-    let demangle = new NativeFunction(demangleAddress, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
+    if (demangleAddress == null) throw Error("can not find export function -> __cxa_demangle")
+    let demangle: Function = new NativeFunction(demangleAddress, 'pointer', ['pointer', 'pointer', 'pointer', 'pointer'])
     let mangledName: NativePointer = Memory.allocUtf8String(expName)
-    let outputBuffer = NULL
-    let length = NULL
-    let status: NativePointer = Memory.alloc(p_size)
-    let result: NativePointer = demangle(mangledName, outputBuffer, length, status)
+    let outputBuffer: NativePointer = NULL
+    let length: NativePointer = NULL
+    let status: NativePointer = Memory.alloc(Process.pageSize)
+    let result: NativePointer = demangle(mangledName, outputBuffer, length, status) as NativePointer
     if (status.readInt() === 0) {
         let resultStr: string | null = result.readUtf8String()
         return (resultStr == null || resultStr == expName) ? "" : resultStr
-    } else {
-        return ""
-    }
+    } else return ""
 }
+
+globalThis.demangleName = demangleName
 
 /**
  * 查找导入表
