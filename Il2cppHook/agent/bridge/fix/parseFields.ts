@@ -27,7 +27,7 @@ export class FieldsParser {
                 this.mClass = new Il2Cpp.Object(this.mPtr).class
                 this.mClass.name // use to check if instance is valid
             } catch {
-                if (this.mPtr.isNull()) this.mClass = Il2Cpp.Domain.assembly("mscorlib").image.class("System.Object")
+                if (this.mPtr.isNull()) this.mClass = Il2Cpp.domain.assembly("mscorlib").image.class("System.Object")
                 else this.mClass = new Il2Cpp.Class(this.mPtr)
                 this.mPtr = ptr(0) // not instance need set it to null
             }
@@ -130,7 +130,7 @@ const dealWithSpecialType = (field: Il2Cpp.Field, thisValueP: NativePointer): st
 function fakeStaticField(field: Il2Cpp.Field): NativePointer {
     try {
         let tmpOut: NativePointer = alloc()
-        Il2Cpp.Api._fieldGetStaticValue(field.handle, tmpOut)
+        Il2Cpp.Api.fieldGetStaticValue(field.handle, tmpOut)
         return tmpOut
     } catch (error) {
         return ptr(0)
@@ -167,7 +167,7 @@ globalThis.lfp = (mPtr: NativePointer) => {
     let classType: Array<mscorlib.Type> = (getTypeParent(mPtr) as Array<mscorlib.Type>).reverse().map((localType: mscorlib.Type) => {
         let localT = new Il2Cpp.Class(localType.handle)
         if (localT.isAbstract) {
-            let objT = Il2Cpp.Image.corlib.class("System.Object")
+            let objT = Il2Cpp.corlib.class("System.Object")
             return new mscorlib.Type(localT.inflate(objT).type.handle)
         }
         return localType

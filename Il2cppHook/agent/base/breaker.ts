@@ -52,7 +52,7 @@ export class Breaker {
                 let clsPtr: NativePointer = findClass(imgOrClsPtr)
                 if (clsPtr.isNull()) {
                     let imageName = closest(imgOrClsPtr, HookerBase._list_images_names)
-                    LOGE(`You mean this ? ${imageName} @ ${Il2Cpp.Domain.assemblies.filter(item => item.name.includes)[0].handle}`)
+                    LOGE(`You mean this ? ${imageName} @ ${Il2Cpp.domain.assemblies.filter(item => item.name.includes)[0].handle}`)
                     throw new Error(`\n\tCan't find class ${classNameStr}\n`)
                 }
                 if (classArray.length == 1 && clsPtr.equals(classArray[0].handle)) innerImage(clsPtr)
@@ -94,13 +94,13 @@ export class Breaker {
                     }
                 })
             } else if (type == "JNI") {
-                let clsTmp = Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNI")
+                let clsTmp = Il2Cpp.domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNI")
                 if (clsTmp.isNull()) throw new Error("can't find class UnityEngine.AndroidJNI")
                 FC.printTitile(`Found : ClassName: ${clsTmp.name} @ ${clsTmp.handle}`)
                 innerImage(clsTmp.handle)
-                // innerImage(Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNIHelper").handle)
+                // innerImage(Il2Cpp.domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNIHelper").handle)
             } else if ("AUI") {
-                innerImage(Il2Cpp.Domain.assembly("Assembly-CSharp").image.handle)
+                innerImage(Il2Cpp.domain.assembly("Assembly-CSharp").image.handle)
                 setTimeout(() => h("Update"), 3000)
             } else if (type == "Soon") {
                 //TODO others

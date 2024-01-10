@@ -1,6 +1,6 @@
 {
   "name": "@axhlzy/il2cpp-hooker",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "frida-based libil2cpp.so runtime parsing script",
   "homepage": "https://github.com/axhlzy/Il2CppHookScripts#readme",
   "author": "axhlzy <axhlzy@live.cn> (https://github.com/axhlzy/Il2CppHookScripts/)",
@@ -33,7 +33,7 @@
     "decorator-cache-getter": "^1.0.0",
     "fastest-levenshtein": "^1.0.12",
     "frida-compile": "^10.2.5",
-    "frida-il2cpp-bridge": "0.7.13",
+    "frida-il2cpp-bridge": "^0.8.0",
     "minimist": "^1.2.8",
     "numbro": "^2.3.6",
     "prettier": "^2.6.2",

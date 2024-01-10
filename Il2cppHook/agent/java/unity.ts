@@ -1,6 +1,6 @@
 export const HookCallstatic = () => {
     Il2Cpp.perform(() => {
-        let _CallStatic = Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJavaObject").method("_CallStatic").virtualAddress
+        let _CallStatic = Il2Cpp.domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJavaObject").method("_CallStatic").virtualAddress
         if (_CallStatic.isNull()) throw new Error("CallStatic is null")
         /**
          * protected void _CallStatic(string methodName, params object[] args)

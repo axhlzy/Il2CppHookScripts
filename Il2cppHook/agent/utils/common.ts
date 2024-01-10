@@ -315,7 +315,7 @@ const SendMessageImpl = (platform: string | "IronSource" | "MaxSdkCallbacks" | "
 globalThis.HookForwardEvent = () => {
     Il2Cpp.perform(() => {
         // MaxSdk.Scripts + MaxSdkCallbacks + ForwardEvent
-        let ass = Il2Cpp.Domain.tryAssembly("MaxSdk.Scripts")
+        let ass = Il2Cpp.domain.tryAssembly("MaxSdk.Scripts")
         if (ass) {
             ass.image.class("MaxSdkCallbacks").method("ForwardEvent").implementation = function (instance: NativePointer, eventPropsStr: NativePointer) {
                 LOGD(`ForwardEvent: ${instance}  ${readU16(eventPropsStr)}`)
