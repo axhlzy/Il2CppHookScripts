@@ -142,7 +142,7 @@ class JNIHelper {
     }
 
     private HookRegisterNatives() {
-        if (this.addrRegisterNatives != null) {
+        if (!this.addrRegisterNatives.isNull()) {
             Interceptor.attach(this.addrRegisterNatives, {
                 onEnter: (args: InvocationArguments) => {
                     // static jint RegisterNatives(JNIEnv env, jclass clazz, const JNINativeMethod* methods, jint nMethods)
