@@ -178,7 +178,8 @@ class JNIHelper {
 
 export { JNIHelper }
 
-globalThis.JNIHelper = JNIHelper.instance
+// enable if needed
+// globalThis.JNIHelper = JNIHelper.instance
 
 declare global {
     var JNIHelper: JNIHelper
