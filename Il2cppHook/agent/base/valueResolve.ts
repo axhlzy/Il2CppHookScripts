@@ -1,10 +1,10 @@
-import { enumNumToName } from "../bridge/fix/enum"
-import { formartClass as FM } from "../utils/formart"
-import { methodToString } from "../bridge/fix/il2cppM"
-import { UnityEngine_Object } from "../expand/TypeExtends/mscorlibObj/Object/class"
-import { getObjName } from "../expand/TypeExtends/mscorlibObj/Object/export"
 import { UnityEngine_Color_Impl } from "../expand/TypeExtends/mscorlibObj/ValueType/Color/class"
+import { UnityEngine_Object } from "../expand/TypeExtends/mscorlibObj/Object/class"
 import { readInt, readInt64, readSingle, readU16, readUInt } from "../utils/reader"
+import { getObjName } from "../expand/TypeExtends/mscorlibObj/Object/export"
+import { getMethodDesFromMethodInfo, methodToString } from "../bridge/fix/il2cppM"
+import { formartClass as FM } from "../utils/formart"
+import { enumNumToName } from "../bridge/fix/enum"
 
 export class ValueResolve {
 
@@ -169,6 +169,7 @@ export class ValueResolve {
 
 // 类型解析
 export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
+    // LOGW(`FakeCommonType ${type.name} ${mPtr}`)
     switch (type.name) {
         case "System.Void":
             return ""
@@ -176,6 +177,15 @@ export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
             return !mPtr.isNull() ? "True" : "False"
         case "System.Int32":
             return readInt(mPtr).toString()
+        case "System.IntPtr":
+            if (mPtr.isNull()) return "null"
+            let disp: string = ''
+            try {
+                disp = `${new Il2Cpp.Method(mPtr).virtualAddress} -> ${getMethodDesFromMethodInfo(mPtr)}`
+            } catch (error) {
+                disp = DebugSymbol.fromAddress(mPtr).toString()
+            }
+            return disp
         case "System.UInt32":
             return readUInt(mPtr).toString()
         case "System.Int64":
@@ -191,7 +201,8 @@ export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
         case "System.String":
             return readU16(mPtr)
         case "System.Object":
-            return getObjName(mPtr)
+            if (mPtr.isNull()) return "null"
+            return new Il2Cpp.Object(mPtr).toString()
         case "System.UnityEngine":
             return new UnityEngine_Object(mPtr).get_name()
         case "UnityEngine.Color":
@@ -203,7 +214,34 @@ export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
         default:
             let obj: Il2Cpp.Object = new Il2Cpp.Object(mPtr)
             try {
-                if (type.name.includes("System.Action")) return new mscorlib.Delegate(mPtr).toString()
+                if (type.name.includes("System.Collections.Generic.List")) {
+                    const items = obj.tryField('_items')!
+                    let disp: string = `${items.value} | `
+                    disp += ` | size -> ${obj.tryField('_size')?.value}`
+                    disp += ` | items -> ${items.handle}`
+                    return disp
+                }
+            } catch (error) {
+                return obj.toString()
+            }
+            try {
+                if (type.name.includes("System.Collections.Generic.Dictionary")) {
+                    const entries = obj.tryField('_entries')!
+                    const count: number = obj.tryField<number>('_count')!.value
+                    let disp: string = `${entries.handle} | `
+                    disp += ` | count -> ${obj.tryField('_count')?.value}`
+                    for (let i = 0; i < count; i++) {
+                        let key = entries.handle.add(Process.pointerSize * 2).readPointer()
+                        let value = entries.handle.add(Process.pointerSize * 3).readPointer()
+                        disp += ` | ${new Il2Cpp.Object(key).toString()} -> ${new Il2Cpp.Object(value).toString()}`
+                    }
+                    return disp
+                }
+            } catch (error) {
+                return obj.toString()
+            }
+            try {
+                if (type.name.includes("System.Action")) return new mscorlib.Delegate(mPtr).toString(true)
             } catch (error) {
                 return obj.toString()
             }
