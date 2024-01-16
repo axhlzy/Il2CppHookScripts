@@ -19,12 +19,12 @@ export const enumForEach = (className: string, callback: (field: NativePointer, 
     if (!local_clazz.isEnum) throw new Error("Not enum class")
     let iter_ptr = alloc()
     let field_ptr: NativePointer = ptr(0)
-    while (field_ptr = Il2Cpp.Api.classGetFields(local_clazzPtr, iter_ptr)) {
+    while (field_ptr = Il2Cpp.api.classGetFields(local_clazzPtr, iter_ptr)) {
         if (field_ptr.isNull()) break
         let fieldName: string = field_ptr.readPointer().readCString()!
         let value: NativePointer = alloc()
         try {
-            Il2Cpp.Api.fieldGetStaticValue(field_ptr, value)
+            Il2Cpp.api.fieldGetStaticValue(field_ptr, value)
         } catch { }
         callback(field_ptr, fieldName, value.readPointer().toInt32())
     }

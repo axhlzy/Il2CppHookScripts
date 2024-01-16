@@ -1,6 +1,6 @@
 import { TYPE_STR } from "../base/enum"
 
-const allocStrInner = (str: string, type: TYPE_STR = TYPE_STR.C_STR): NativePointer => type == TYPE_STR.C_STR ? Memory.allocUtf8String(str) : Il2Cpp.Api.stringNew(Memory.allocUtf8String(str))
+const allocStrInner = (str: string, type: TYPE_STR = TYPE_STR.C_STR): NativePointer => type == TYPE_STR.C_STR ? Memory.allocUtf8String(str) : Il2Cpp.api.stringNew(Memory.allocUtf8String(str))
 
 const allocCStr = (str: string): NativePointer => allocStrInner(str, TYPE_STR.C_STR)
 

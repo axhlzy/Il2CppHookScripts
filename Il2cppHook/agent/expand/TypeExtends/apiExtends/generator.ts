@@ -229,7 +229,7 @@ const generateFieldEnum = (className: string, classPtr: NativePointer = ptr(0)) 
 
     LOGE(`export enum ${clsInstance.namespace.replace('.', '_')}_${clsInstance.name} {`)
     clsInstance.fields.forEach((field: Il2Cpp.Field) => {
-        Il2Cpp.Api.typeGetTypeEnum
+        Il2Cpp.api.typeGetTypeEnum
         LOGD(`\t${field.name} = ${field}`)
     })
     LOGO(`}\n`)

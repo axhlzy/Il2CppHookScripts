@@ -130,7 +130,7 @@ const dealWithSpecialType = (field: Il2Cpp.Field, thisValueP: NativePointer): st
 function fakeStaticField(field: Il2Cpp.Field): NativePointer {
     try {
         let tmpOut: NativePointer = alloc()
-        Il2Cpp.Api.fieldGetStaticValue(field.handle, tmpOut)
+        Il2Cpp.api.fieldGetStaticValue(field.handle, tmpOut)
         return tmpOut
     } catch (error) {
         return ptr(0)

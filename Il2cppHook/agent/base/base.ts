@@ -232,7 +232,7 @@ export class HookerBase {
                     localMethods = localMethods.sort((first, secend) => first.relativeVirtualAddress.compare(secend.relativeVirtualAddress))
                     break
                 case MethodSortType.ACCESS:
-                    localMethods = localMethods.sort((first, second) => second.modifier.localeCompare(first.modifier))
+                    localMethods = localMethods.sort((first, second) => (second.modifier ?? '').localeCompare(first.modifier ?? ''))
                     break
                 case MethodSortType.MethodName:
                     localMethods = localMethods.sort((first, second) => second.name.localeCompare(first.name))
@@ -400,10 +400,10 @@ export class HookerBase {
         }
         let currentlibPack = Il2Cpp.domain.assembly(imageName).image
         let currentlib: NativePointer = currentlibPack.handle
-        let klass = Il2Cpp.Api.classFromName(currentlib, allocCStr(imageName), allocCStr(className))
+        let klass = Il2Cpp.api.classFromName(currentlib, allocCStr(imageName), allocCStr(className))
         if (klass.isNull()) {
-            for (let j = 0; j < Il2Cpp.Api.imageGetClassCount(currentlib); j++) {
-                let il2CppClass = new Il2Cpp.Class(Il2Cpp.Api.imageGetClass(currentlib, j))
+            for (let j = 0; j < Il2Cpp.api.imageGetClassCount(currentlib); j++) {
+                let il2CppClass = new Il2Cpp.Class(Il2Cpp.api.imageGetClass(currentlib, j))
                 if (il2CppClass.name == className) {
                     klass = il2CppClass.handle
                     break
@@ -412,7 +412,7 @@ export class HookerBase {
         }
 
         if (klass.isNull()) return ptr(0)
-        let method = Il2Cpp.Api.classGetMethodFromName(klass, allocCStr(functionName), argsCount)
+        let method = Il2Cpp.api.classGetMethodFromName(klass, allocCStr(functionName), argsCount)
         if (method.isNull()) return ptr(0)
         if (arguments[5] != undefined && arguments[5] != 2) {
             return method
@@ -443,8 +443,8 @@ export class HookerBase {
         LOGO(getLine(30))
         let ShowMore = false
         LOG("Il2CppImage\t---->\t" + currentlib + (ShowMore ? " (" + currentlib.add(p_size).readPointer().readCString() + ")" : ""))
-        LOG("Il2CppClass\t---->\t" + klass + (ShowMore ? " (" + Il2Cpp.Api.classGetName(klass) + ")" : ""))
-        LOG("MethodInfo\t---->\t" + method + (ShowMore ? " (" + Il2Cpp.Api.classGetName(method) + ")" : ""))
+        LOG("Il2CppClass\t---->\t" + klass + (ShowMore ? " (" + Il2Cpp.api.classGetName(klass) + ")" : ""))
+        LOG("MethodInfo\t---->\t" + method + (ShowMore ? " (" + Il2Cpp.api.classGetName(method) + ")" : ""))
         LOGD("MethodPointer\t---->\t" + method.readPointer() + "\t===>\t" + method.readPointer().sub(soAddr))
         LOGO(getLine(85))
     }
@@ -496,12 +496,12 @@ export class HookerBase {
         let maxlength = 0
         let arrStr = new Array()
         let enumIndex = 0
-        while (field = Il2Cpp.Api.classGetFields(klass, iter)) {
+        while (field = Il2Cpp.api.classGetFields(klass, iter)) {
             if (field.isNull()) break
             let fieldName = field.readPointer().readCString()
             let filedType = field.add(p_size).readPointer()
             let filedOffset = "0x" + field.add(3 * p_size).readInt().toString(16)
-            let field_class = Il2Cpp.Api.classFromType(filedType)
+            let field_class = Il2Cpp.api.typeGetClass(filedType)
             let fieldClassName = new Il2Cpp.Class(field_class).name
             let accessStr = fackAccess(filedType)
             accessStr = accessStr.substring(0, accessStr.length - 1)
@@ -555,10 +555,10 @@ export class HookerBase {
                 LOG("\t" + fRet + "\n", LogColor.C90)
             } else if (str.indexOf("static") != -1) {
                 // console.warn(+ptr(mStr[3])+allocStr(mStr[4])+"\t"+mStr[4])
-                let field = Il2Cpp.Api.classGetFieldFromName(ptr(mStr[3]), allocCStr(mStr[4]))
+                let field = Il2Cpp.api.classGetFieldFromName(ptr(mStr[3]), allocCStr(mStr[4]))
                 if (!field.isNull()) {
                     let addrOut = alloc()
-                    Il2Cpp.Api.fieldGetStaticValue(field, addrOut)
+                    Il2Cpp.api.fieldGetStaticValue(field, addrOut)
                     let realP = addrOut.readPointer()
                     LOG("\t" + addrOut + " ---> " + realP + " ---> " + FackKnownType(mName, realP, mStr[3]), LogColor.C90)
                 }

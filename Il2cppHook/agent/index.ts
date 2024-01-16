@@ -218,7 +218,7 @@ function fixMoreVerison() {
     const UnityVersion = "2020.3.0f1c1"
 
     Il2Cpp.perform(() => {
-        if (Il2Cpp.Api.resolveInternalCall(allocCStr('UnityEngine.Application::get_unityVersion')).isNull()) {
+        if (Il2Cpp.api.resolveInternalCall(allocCStr('UnityEngine.Application::get_unityVersion')).isNull()) {
             LOGW(`Couldn't determine the Unity version, Schedule set to ${UnityVersion}`)
             setTimeout(() => {
                 if (Reflect.has(Il2Cpp, "unityVersion")) {
@@ -236,8 +236,8 @@ function fixMoreVerison() {
     // {
     //     Il2Cpp.perform(() => {
     //         setTimeout(() => {
-    //             if (Il2Cpp.Api.resolveInternalCall(allocCStr('UnityEngine.Application::get_unityVersion')).isNull()) {
-    //                 A(Il2Cpp.Api.resolveInternalCall, (args: InvocationArguments, _ctx: CpuContext, passValue: Map<PassType, any>) => {
+    //             if (Il2Cpp.api.resolveInternalCall(allocCStr('UnityEngine.Application::get_unityVersion')).isNull()) {
+    //                 A(Il2Cpp.api.resolveInternalCall, (args: InvocationArguments, _ctx: CpuContext, passValue: Map<PassType, any>) => {
     //                     if (args[0].readCString() == 'UnityEngine.Application::get_unityVersion') {
     //                         passValue.set("RET", allocCStr(UnityVersion))
     //                         LOGE(`Can't get UnityVersion, set to ${UnityVersion}`)
