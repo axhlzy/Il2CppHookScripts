@@ -317,9 +317,13 @@ globalThis.HookForwardEvent = () => {
         // MaxSdk.Scripts + MaxSdkCallbacks + ForwardEvent
         let ass = Il2Cpp.domain.tryAssembly("MaxSdk.Scripts")
         if (ass) {
-            ass.image.class("MaxSdkCallbacks").method("ForwardEvent").implementation = function (instance: NativePointer, eventPropsStr: NativePointer) {
-                LOGD(`ForwardEvent: ${instance}  ${readU16(eventPropsStr)}`)
-                return this.method("ForwardEvent").invoke(...arguments)
+            let method : Il2Cpp.Method = ass.image.class("MaxSdkCallbacks").method("ForwardEvent")
+            method.implementation = function (...parameters: Il2Cpp.Parameter.Type[]) {
+                const instance: NativePointer = parameters[0] as NativePointer;
+                const eventPropsStr: NativePointer = parameters[1] as NativePointer;
+
+                LOGD(`ForwardEvent: ${instance} ${readU16(eventPropsStr)}`);
+                return this.method("ForwardEvent").invoke(...parameters);
             }
         } else {
             throw new Error("MaxSdk.Scripts not found")
