@@ -10,5 +10,6 @@
     "esModuleInterop": true,
     "strict": true,
     "removeComments": true
-  }
+  },
+  "exclude": ["_Ufunc.js"]
 }
