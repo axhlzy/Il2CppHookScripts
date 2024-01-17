@@ -97,6 +97,7 @@ class ExceptionTraceClass {
             // });
 
             let CodeLength = 0x100
+            CodeLength ??= 0x100
             let retPC = details.context.pc
             let ins: NativePointer = ptr(ExceptionTraceClass.savedCode.get(retPC.toString())!)
             let trampoline = Memory.alloc(CodeLength)

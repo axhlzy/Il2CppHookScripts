@@ -1,4 +1,4 @@
-globalThis.B_Texture2D = () => {
+const B_Texture2D = () => {
     setTimeout(() => {
         Il2Cpp.perform(() => {
             let libil2cpp = Module.findBaseAddress("libil2cpp.so")!
@@ -84,6 +84,7 @@ globalThis.B_Texture2D = () => {
         })
     }, 200)
 }
+globalThis.B_Texture2D = B_Texture2D
 
 declare global {
     var B_Texture2D: () => void

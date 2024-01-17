@@ -8,7 +8,7 @@ import { formartClass as FC } from "../utils/formart"
 import { closest } from "fastest-levenshtein"
 import { ValueResolve } from "./valueResolve"
 import { HookerBase } from "./base"
-import { JSHOOKTYPE } from "./enum"
+import { JSHOOKTYPE, LogColor } from "./enum"
 
 type SpecialClass = "CommonClass" | "JNI" | "AUI" | "Soon"
 const CommonClass = ["Assembly-CSharp", "MaxSdk.Scripts", "Game", "Zenject", "UniRx", "Purchasing.Common", "UnityEngine.Purchasing"]
@@ -48,7 +48,7 @@ export class Breaker {
             } else {
                 // ---> className case to Pointer
                 let classNameStr: string = imgOrClsPtr
-                let classArray: Il2Cpp.Class[] = findClasses(classNameStr, true, true)!
+                let classArray: Il2Cpp.Class[] = (findClasses(classNameStr, true, true) as Il2Cpp.Class[])!
                 let clsPtr: NativePointer = findClass(imgOrClsPtr)
                 if (clsPtr.isNull()) {
                     let imageName = closest(imgOrClsPtr, HookerBase._list_images_names)
@@ -447,7 +447,7 @@ globalThis.breakMemRW = Breaker.breakMemRW
 globalThis.printDesertedMethods = Breaker.printDesertedMethods // 展示 已经被取消hook 或者 不显示的部分函数
 globalThis.bt = (mPtr: NativePointer | number) => b(AddressToMethod(mPtr))
 globalThis.BN = (namespace: string) => Breaker.addBreakPoint("", namespace) // <- alias B(`NameSpace`)
-globalThis.getPlatform = (): string => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
+globalThis.getPlatform = (): "arm" | "arm64" => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
 globalThis.getPlatformCtx = (ctx: CpuContext): ArmCpuContext | Arm64CpuContext => getPlatform() == "arm" ? ctx as ArmCpuContext : ctx as Arm64CpuContext
 
 /**

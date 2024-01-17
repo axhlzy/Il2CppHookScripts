@@ -1,9 +1,7 @@
 import { mscorlib_System_Object_impl } from "../class"
 import { UnityEngine_Object } from "./class"
 
-export { getObjName, getObjClass }
-
-globalThis.getObjName = (mPtr: NativePointer): string => {
+const getObjName = (mPtr: NativePointer): string => {
     if (mPtr instanceof NativePointer && !mPtr.isNull()) {
         return new mscorlib_System_Object_impl(mPtr).toString()
     } else if (typeof mPtr == "number" && mPtr != 0) {
@@ -11,12 +9,14 @@ globalThis.getObjName = (mPtr: NativePointer): string => {
     }
     return ""
 }
+globalThis.getObjName = getObjName
 
-globalThis.getObjClass = (mPtr: NativePointer): NativePointer => {
+const getObjClass = (mPtr: NativePointer): NativePointer => {
     if (typeof mPtr == "number") mPtr = ptr(mPtr)
     let obj = new UnityEngine_Object(mPtr)
     return obj.class.handle
 }
+globalThis.getObjClass = getObjClass
 
 globalThis.HookInstantiate = () => {
 
@@ -81,3 +81,5 @@ declare global {
     var getObjClass: (mPtr: NativePointer) => NativePointer
     var HookInstantiate: () => void
 }
+
+export { getObjName, getObjClass }

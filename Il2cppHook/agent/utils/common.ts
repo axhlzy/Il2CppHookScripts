@@ -362,7 +362,7 @@ const watchFunction = (call: Function, interval: number = 1000) => {
 }
 
 const disWatchFuntion = () => {
-    if (intervalID != null) clearInterval(intervalID)
+    if (intervalID != null) clearInterval(intervalID as NodeJS.Timeout)
 }
 
 export {
