@@ -1,3 +1,4 @@
+import { MessagePort } from "worker_threads"
 import { PackArray } from "./packArray"
 
 interface list_impl {

@@ -11,7 +11,7 @@ enum activeStatus {
     all = -1
 }
 
-const HookSetActive = (defaltActive: activeStatus | boolean = activeStatus.active, PrintStackTrace: boolean = false, filterString: Array<string> | string = "") => {
+globalThis.HookSetActive = (defaltActive: activeStatus | boolean = activeStatus.active, PrintStackTrace: boolean = false, filterString: Array<string> | string = "") => {
 
     let setActiveAddress = find_method("UnityEngine.CoreModule", "GameObject", "SetActive", 1)
     try {
@@ -74,9 +74,8 @@ const HookSetActive = (defaltActive: activeStatus | boolean = activeStatus.activ
         }
     }
 }
-globalThis.HookSetActive = HookSetActive
 
-const HookSendMessage = () => {
+globalThis.HookSendMessage = () => {
     // try {
     //     var UnityPlayer = Java.use("com.unity3d.player.UnityPlayer")
     //     UnityPlayer.UnitySendMessage.implementation = function (str0:string, str1:string, str2:string) {
@@ -91,7 +90,6 @@ const HookSendMessage = () => {
         LOGD("UnitySendMessage => " + args[0].readCString() + " " + args[1].readCString() + " " + args[2].readCString())
     })
 }
-globalThis.HookSendMessage = HookSendMessage
 
 export function GetGameObjectFromPtr(mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Component | Il2Cpp.Transform): Il2Cpp.GameObject | undefined {
     if (mPtr == undefined) throw new Error("mPtr is undefined")
@@ -110,7 +108,7 @@ export function GetGameObjectFromPtr(mPtr: NativePointer | Il2Cpp.GameObject | I
     } else throw new Error("mPtr is not a valid instance of the specified type")
 }
 
-const showGameObject = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform) => {
+globalThis.showGameObject = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transform) => {
     if (mPtr == undefined || (mPtr instanceof NativePointer && mPtr.isNull())) return
     let gameObject: Il2Cpp.GameObject = GetGameObjectFromPtr(mPtr)!
     LOGO("--------- GameObject ---------")
@@ -130,12 +128,10 @@ const showGameObject = (mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Transfo
     }
     LOGD("hierarchy\t--->\t" + layerNames)
 }
-globalThis.showGameObject = showGameObject
 
-const getTransform = (mPtr: NativePointer) => {
+globalThis.getTransform = (mPtr: NativePointer) => {
     return GetGameObjectFromPtr(mPtr)!.transform.handle
 }
-globalThis.getTransform = getTransform
 
 globalThis.setActive = (mPtr: Il2Cpp.GameObject | Il2Cpp.Transform | string | number | NativePointer, active: boolean = false) => {
     mPtr = checkGT(mPtr)

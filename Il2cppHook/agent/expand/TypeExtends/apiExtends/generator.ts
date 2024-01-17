@@ -112,7 +112,7 @@ const repStr = (str: string): string => {
 
 const incorLib = (name: string) => {
     let corLib: boolean = false
-    Il2Cpp.domain.assembly('mscorlib').image.classes.forEach((cls: Il2Cpp.Class) => {
+    Il2Cpp.Domain.assembly('mscorlib').image.classes.forEach((cls: Il2Cpp.Class) => {
         if (cls.name == name) corLib = true
     })
     return corLib
@@ -229,7 +229,7 @@ const generateFieldEnum = (className: string, classPtr: NativePointer = ptr(0)) 
 
     LOGE(`export enum ${clsInstance.namespace.replace('.', '_')}_${clsInstance.name} {`)
     clsInstance.fields.forEach((field: Il2Cpp.Field) => {
-        Il2Cpp.api.typeGetTypeEnum
+        Il2Cpp.Api._typeGetTypeEnum
         LOGD(`\t${field.name} = ${field}`)
     })
     LOGO(`}\n`)

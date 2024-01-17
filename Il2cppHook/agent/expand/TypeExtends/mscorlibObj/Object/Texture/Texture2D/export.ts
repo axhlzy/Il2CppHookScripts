@@ -1,4 +1,4 @@
-const B_Texture2D = () => {
+globalThis.B_Texture2D = () => {
     setTimeout(() => {
         Il2Cpp.perform(() => {
             let libil2cpp = Module.findBaseAddress("libil2cpp.so")!
@@ -21,7 +21,7 @@ const B_Texture2D = () => {
 
             // printExp("get_mainTexture",true)
 
-            let addr = Il2Cpp.domain.assembly("UnityEngine.UI").image.class("UnityEngine.UI.Image").method("get_mainTexture").virtualAddress
+            let addr = Il2Cpp.Domain.assembly("UnityEngine.UI").image.class("UnityEngine.UI.Image").method("get_mainTexture").virtualAddress
             LOGD("get_mainTexture => " + addr)
             let list_text2d = []
 
@@ -84,7 +84,6 @@ const B_Texture2D = () => {
         })
     }, 200)
 }
-globalThis.B_Texture2D = B_Texture2D
 
 declare global {
     var B_Texture2D: () => void

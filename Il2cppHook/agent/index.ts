@@ -47,12 +47,12 @@ class PauseHelper {
     }
 
     public static getPauseAddress = () => {
-        let EventSystem = Il2Cpp.domain.assembly("UnityEngine.UI").image.tryClass("UnityEngine.EventSystems.EventSystem")
+        let EventSystem = Il2Cpp.Domain.assembly("UnityEngine.UI").image.tryClass("UnityEngine.EventSystems.EventSystem")
         if (EventSystem != null) {
             let method = EventSystem.tryMethod("Update")
             if (method != null) return method.virtualAddress
         }
-        let Image = Il2Cpp.domain.assembly("UnityEngine.UI").image.tryClass("UnityEngine.UI.Image")
+        let Image = Il2Cpp.Domain.assembly("UnityEngine.UI").image.tryClass("UnityEngine.UI.Image")
         if (Image != null) {
             let method = Image.tryMethod("UpdateMaterial")
             if (method != null) return method.virtualAddress
@@ -97,7 +97,6 @@ class ExceptionTraceClass {
             // });
 
             let CodeLength = 0x100
-            CodeLength ??= 0x100
             let retPC = details.context.pc
             let ins: NativePointer = ptr(ExceptionTraceClass.savedCode.get(retPC.toString())!)
             let trampoline = Memory.alloc(CodeLength)
@@ -196,13 +195,13 @@ const HookExit = () => {
 
     Il2Cpp.perform(() => {
         // UnityEngine.CoreModule UnityEngine.Application Quit(Int32) : Void
-        R(Il2Cpp.domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Application").method("Quit", 1).virtualAddress, (_srcCall: Function, arg0: NativePointer) => {
+        R(Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Application").method("Quit", 1).virtualAddress, (_srcCall: Function, arg0: NativePointer) => {
             // srcCall(arg0, arg1, arg2, arg3)
             LOGE("called UnityEngine.Application.Quit(" + arg0.toInt32() + ")")
             return ptr(0)
         })
         // UnityEngine.CoreModule UnityEngine.Application Quit() : Void
-        R(Il2Cpp.domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Application").method("Quit").virtualAddress, (_srcCall: Function) => {
+        R(Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Application").method("Quit").virtualAddress, (_srcCall: Function) => {
             // srcCall(arg0, arg1, arg2, arg3)
             LOGE("called UnityEngine.Application.Quit()")
             return ptr(0)
@@ -219,7 +218,7 @@ function fixMoreVerison() {
     const UnityVersion = "2020.3.0f1c1"
 
     Il2Cpp.perform(() => {
-        if (Il2Cpp.api.resolveInternalCall(allocCStr('UnityEngine.Application::get_unityVersion')).isNull()) {
+        if (Il2Cpp.Api._resolveInternalCall(allocCStr('UnityEngine.Application::get_unityVersion')).isNull()) {
             LOGW(`Couldn't determine the Unity version, Schedule set to ${UnityVersion}`)
             setTimeout(() => {
                 if (Reflect.has(Il2Cpp, "unityVersion")) {
@@ -237,8 +236,8 @@ function fixMoreVerison() {
     // {
     //     Il2Cpp.perform(() => {
     //         setTimeout(() => {
-    //             if (Il2Cpp.api.resolveInternalCall(allocCStr('UnityEngine.Application::get_unityVersion')).isNull()) {
-    //                 A(Il2Cpp.api.resolveInternalCall, (args: InvocationArguments, _ctx: CpuContext, passValue: Map<PassType, any>) => {
+    //             if (Il2Cpp.Api._resolveInternalCall(allocCStr('UnityEngine.Application::get_unityVersion')).isNull()) {
+    //                 A(Il2Cpp.Api._resolveInternalCall, (args: InvocationArguments, _ctx: CpuContext, passValue: Map<PassType, any>) => {
     //                     if (args[0].readCString() == 'UnityEngine.Application::get_unityVersion') {
     //                         passValue.set("RET", allocCStr(UnityVersion))
     //                         LOGE(`Can't get UnityVersion, set to ${UnityVersion}`)
@@ -274,7 +273,7 @@ function fixMoreVerison() {
 //             return local_offset
 //         }
 //     })
-//     A(Il2Cpp.Api.fieldGetOffset, undefined, (ret) => {
+//     A(Il2Cpp.Api._fieldGetOffset, undefined, (ret) => {
 //         let local_offset: number = ret.toInt32()
 //         if (local_offset < 0) return -1
 //         if (Process.arch == "arm") local_offset = local_offset - 8

@@ -9,7 +9,7 @@ const get_PrettyMethod = () => {
     return PrettyMethod_func
 }
 
-const readStdString = (pointers: NativePointer[]) => {
+globalThis.readStdString = (pointers: NativePointer[]) => {
     let str = Memory.alloc(Process.pointerSize * 3)
     str.writePointer(pointers[0])
     str.add(Process.pointerSize * 1).writePointer(pointers[1])
@@ -18,7 +18,6 @@ const readStdString = (pointers: NativePointer[]) => {
     if (isTiny) return str.add(1).readUtf8String()
     return str.add(2 * Process.pointerSize).readPointer().readUtf8String()
 }
-globalThis.readStdString = readStdString
 
 export { readStdString, get_PrettyMethod }
 

@@ -8,7 +8,7 @@ import { formartClass as FC } from "../utils/formart"
 import { closest } from "fastest-levenshtein"
 import { ValueResolve } from "./valueResolve"
 import { HookerBase } from "./base"
-import { JSHOOKTYPE, LogColor } from "./enum"
+import { JSHOOKTYPE } from "./enum"
 
 type SpecialClass = "CommonClass" | "JNI" | "AUI" | "Soon"
 const CommonClass = ["Assembly-CSharp", "MaxSdk.Scripts", "Game", "Zenject", "UniRx", "Purchasing.Common", "UnityEngine.Purchasing"]
@@ -48,11 +48,11 @@ export class Breaker {
             } else {
                 // ---> className case to Pointer
                 let classNameStr: string = imgOrClsPtr
-                let classArray: Il2Cpp.Class[] = (findClasses(classNameStr, true, true) as Il2Cpp.Class[])!
+                let classArray: Il2Cpp.Class[] = findClasses(classNameStr, true, true)!
                 let clsPtr: NativePointer = findClass(imgOrClsPtr)
                 if (clsPtr.isNull()) {
                     let imageName = closest(imgOrClsPtr, HookerBase._list_images_names)
-                    LOGE(`You mean this ? ${imageName} @ ${Il2Cpp.domain.assemblies.filter(item => item.name.includes)[0].handle}`)
+                    LOGE(`You mean this ? ${imageName} @ ${Il2Cpp.Domain.assemblies.filter(item => item.name.includes)[0].handle}`)
                     throw new Error(`\n\tCan't find class ${classNameStr}\n`)
                 }
                 if (classArray.length == 1 && clsPtr.equals(classArray[0].handle)) innerImage(clsPtr)
@@ -94,13 +94,13 @@ export class Breaker {
                     }
                 })
             } else if (type == "JNI") {
-                let clsTmp = Il2Cpp.domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNI")
+                let clsTmp = Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNI")
                 if (clsTmp.isNull()) throw new Error("can't find class UnityEngine.AndroidJNI")
                 FC.printTitile(`Found : ClassName: ${clsTmp.name} @ ${clsTmp.handle}`)
                 innerImage(clsTmp.handle)
-                // innerImage(Il2Cpp.domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNIHelper").handle)
+                // innerImage(Il2Cpp.Domain.assembly("UnityEngine.AndroidJNIModule").image.class("UnityEngine.AndroidJNIHelper").handle)
             } else if ("AUI") {
-                innerImage(Il2Cpp.domain.assembly("Assembly-CSharp").image.handle)
+                innerImage(Il2Cpp.Domain.assembly("Assembly-CSharp").image.handle)
                 setTimeout(() => h("Update"), 3000)
             } else if (type == "Soon") {
                 //TODO others
@@ -447,7 +447,7 @@ globalThis.breakMemRW = Breaker.breakMemRW
 globalThis.printDesertedMethods = Breaker.printDesertedMethods // 展示 已经被取消hook 或者 不显示的部分函数
 globalThis.bt = (mPtr: NativePointer | number) => b(AddressToMethod(mPtr))
 globalThis.BN = (namespace: string) => Breaker.addBreakPoint("", namespace) // <- alias B(`NameSpace`)
-globalThis.getPlatform = (): "arm" | "arm64" => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
+globalThis.getPlatform = (): string => (Process.platform == "linux" && Process.pageSize == 0x4) ? "arm" : "arm64"
 globalThis.getPlatformCtx = (ctx: CpuContext): ArmCpuContext | Arm64CpuContext => getPlatform() == "arm" ? ctx as ArmCpuContext : ctx as Arm64CpuContext
 
 /**

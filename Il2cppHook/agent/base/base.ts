@@ -10,7 +10,7 @@ export class HookerBase {
 
     @cache
     static get _list_assemblies(): Il2Cpp.Assembly[] {
-        return Il2Cpp.domain.assemblies
+        return Il2Cpp.Domain.assemblies
     }
 
     @cache
@@ -42,7 +42,7 @@ export class HookerBase {
 
     @cache
     static get _list_classes(): Il2Cpp.Class[] {
-        return Il2Cpp.domain.assemblies.map((assembly: Il2Cpp.Assembly) => assembly.image).flatMap((image: Il2Cpp.Image) => image.classes)
+        return Il2Cpp.Domain.assemblies.map((assembly: Il2Cpp.Assembly) => assembly.image).flatMap((image: Il2Cpp.Image) => image.classes)
     }
 
     static showImages(filter: string = "", sort: boolean = true): void {
@@ -72,7 +72,7 @@ export class HookerBase {
                     image = new Il2Cpp.Image(ptr(imageOrName.trim()))
                 } else {
                     //传递ImageName的情况
-                    image = Il2Cpp.domain.assembly(imageOrName).image
+                    image = Il2Cpp.Domain.assembly(imageOrName).image
                 }
             } else if (typeof imageOrName == "number") {
                 if (Process.arch == "arm64" && (imageOrName.toString().length > 15))
@@ -232,7 +232,7 @@ export class HookerBase {
                     localMethods = localMethods.sort((first, secend) => first.relativeVirtualAddress.compare(secend.relativeVirtualAddress))
                     break
                 case MethodSortType.ACCESS:
-                    localMethods = localMethods.sort((first, second) => (second.modifier ?? '').localeCompare(first.modifier ?? ''))
+                    localMethods = localMethods.sort((first, second) => second.modifier.localeCompare(first.modifier))
                     break
                 case MethodSortType.MethodName:
                     localMethods = localMethods.sort((first, second) => second.name.localeCompare(first.name))
@@ -303,7 +303,7 @@ export class HookerBase {
             let cache: Il2Cpp.Class | undefined = HookerBase.map_cache_class.get(searchClassName)
             if (cache != undefined) return cache.handle
         }
-        let assemblies = Il2Cpp.domain.assemblies
+        let assemblies = Il2Cpp.Domain.assemblies
         for (let index = 0; index < assemblies.length; index++) {
             if (fromAssebly.includes(assemblies[index].name)) {
                 let ret = innerCall(assemblies[index].image.classes)
@@ -335,7 +335,7 @@ export class HookerBase {
      * findMethod("LerpUnclamped") // 最慢
      * 
      * 以下三种写法等价:
-     * Il2Cpp.domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Texture").method("get_width",1).virtualAddress
+     * Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Texture").method("get_width",1).virtualAddress
      * ===
      * find_method("UnityEngine.CoreModule","Texture","get_width",0)
      * ===
@@ -352,7 +352,7 @@ export class HookerBase {
         let methodInfo: Il2Cpp.Method | undefined
         if (arguments[3] != undefined && typeof arguments[3] == "number") {
             try {
-                methodInfo = Il2Cpp.domain.assembly(assemblyName).image.class(className).method(methodName, argsCount)
+                methodInfo = Il2Cpp.Domain.assembly(assemblyName).image.class(className).method(methodName, argsCount)
                 if (overload.length != 0) methodInfo = methodInfo?.overload(...overload)
             } catch {
                 throw new Error(`findMethod failed: Not Found ${methodName}(argCount:${argsCount}) in ${className}`)
@@ -398,12 +398,12 @@ export class HookerBase {
             let cachedPointer = HookerBase.findMethodsyncCacheMap.get(cacheKey)
             if (cachedPointer != undefined) return cachedPointer as NativePointer
         }
-        let currentlibPack = Il2Cpp.domain.assembly(imageName).image
+        let currentlibPack = Il2Cpp.Domain.assembly(imageName).image
         let currentlib: NativePointer = currentlibPack.handle
-        let klass = Il2Cpp.api.classFromName(currentlib, allocCStr(imageName), allocCStr(className))
+        let klass = Il2Cpp.Api._classFromName(currentlib, allocCStr(imageName), allocCStr(className))
         if (klass.isNull()) {
-            for (let j = 0; j < Il2Cpp.api.imageGetClassCount(currentlib); j++) {
-                let il2CppClass = new Il2Cpp.Class(Il2Cpp.api.imageGetClass(currentlib, j))
+            for (let j = 0; j < Il2Cpp.Api._imageGetClassCount(currentlib); j++) {
+                let il2CppClass = new Il2Cpp.Class(Il2Cpp.Api._imageGetClass(currentlib, j))
                 if (il2CppClass.name == className) {
                     klass = il2CppClass.handle
                     break
@@ -412,7 +412,7 @@ export class HookerBase {
         }
 
         if (klass.isNull()) return ptr(0)
-        let method = Il2Cpp.api.classGetMethodFromName(klass, allocCStr(functionName), argsCount)
+        let method = Il2Cpp.Api._classGetMethodFromName(klass, allocCStr(functionName), argsCount)
         if (method.isNull()) return ptr(0)
         if (arguments[5] != undefined && arguments[5] != 2) {
             return method
@@ -443,8 +443,8 @@ export class HookerBase {
         LOGO(getLine(30))
         let ShowMore = false
         LOG("Il2CppImage\t---->\t" + currentlib + (ShowMore ? " (" + currentlib.add(p_size).readPointer().readCString() + ")" : ""))
-        LOG("Il2CppClass\t---->\t" + klass + (ShowMore ? " (" + Il2Cpp.api.classGetName(klass) + ")" : ""))
-        LOG("MethodInfo\t---->\t" + method + (ShowMore ? " (" + Il2Cpp.api.classGetName(method) + ")" : ""))
+        LOG("Il2CppClass\t---->\t" + klass + (ShowMore ? " (" + Il2Cpp.Api._classGetName(klass) + ")" : ""))
+        LOG("MethodInfo\t---->\t" + method + (ShowMore ? " (" + Il2Cpp.Api._classGetName(method) + ")" : ""))
         LOGD("MethodPointer\t---->\t" + method.readPointer() + "\t===>\t" + method.readPointer().sub(soAddr))
         LOGO(getLine(85))
     }
@@ -496,12 +496,12 @@ export class HookerBase {
         let maxlength = 0
         let arrStr = new Array()
         let enumIndex = 0
-        while (field = Il2Cpp.api.classGetFields(klass, iter)) {
+        while (field = Il2Cpp.Api._classGetFields(klass, iter)) {
             if (field.isNull()) break
             let fieldName = field.readPointer().readCString()
             let filedType = field.add(p_size).readPointer()
             let filedOffset = "0x" + field.add(3 * p_size).readInt().toString(16)
-            let field_class = Il2Cpp.api.typeGetClass(filedType)
+            let field_class = Il2Cpp.Api._classFromType(filedType)
             let fieldClassName = new Il2Cpp.Class(field_class).name
             let accessStr = fackAccess(filedType)
             accessStr = accessStr.substring(0, accessStr.length - 1)
@@ -555,10 +555,10 @@ export class HookerBase {
                 LOG("\t" + fRet + "\n", LogColor.C90)
             } else if (str.indexOf("static") != -1) {
                 // console.warn(+ptr(mStr[3])+allocStr(mStr[4])+"\t"+mStr[4])
-                let field = Il2Cpp.api.classGetFieldFromName(ptr(mStr[3]), allocCStr(mStr[4]))
+                let field = Il2Cpp.Api._classGetFieldFromName(ptr(mStr[3]), allocCStr(mStr[4]))
                 if (!field.isNull()) {
                     let addrOut = alloc()
-                    Il2Cpp.api.fieldGetStaticValue(field, addrOut)
+                    Il2Cpp.Api._fieldGetStaticValue(field, addrOut)
                     let realP = addrOut.readPointer()
                     LOG("\t" + addrOut + " ---> " + realP + " ---> " + FackKnownType(mName, realP, mStr[3]), LogColor.C90)
                 }
@@ -630,7 +630,7 @@ export const get_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Clas
     } else {
         throw new Error(`inputClass type error`)
     }
-    return Il2Cpp.gc.choose(localClass)
+    return Il2Cpp.GC.choose(localClass)
 }
 
 export const show_gc_instance = (inputClass: string | NativePointer | Il2Cpp.Class): void => get_gc_instance(inputClass).forEach((item: Il2Cpp.Object) => {

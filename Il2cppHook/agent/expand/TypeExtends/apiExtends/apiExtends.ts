@@ -28,7 +28,6 @@ function overloadTransfromStrToFunction<R extends NativeFunctionReturnType, A ex
     return new NativeFunction<R, A>(exportPointer, retType, argTypes);
 }
 
-Il2Cpp.Api = Il2Cpp.Api || {}
 Il2Cpp.Api.e = transfromStrToFunction
 Il2Cpp.Api.t = transfromStrToWithTryCatchFunction
 Il2Cpp.Api.o = overloadTransfromStrToFunction
