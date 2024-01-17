@@ -315,11 +315,15 @@ const SendMessageImpl = (platform: string | "IronSource" | "MaxSdkCallbacks" | "
 globalThis.HookForwardEvent = () => {
     Il2Cpp.perform(() => {
         // MaxSdk.Scripts + MaxSdkCallbacks + ForwardEvent
-        let ass = Il2Cpp.Domain.tryAssembly("MaxSdk.Scripts")
+        let ass = Il2Cpp.domain.tryAssembly("MaxSdk.Scripts")
         if (ass) {
-            ass.image.class("MaxSdkCallbacks").method("ForwardEvent").implementation = function (instance: NativePointer, eventPropsStr: NativePointer) {
-                LOGD(`ForwardEvent: ${instance}  ${readU16(eventPropsStr)}`)
-                return this.method("ForwardEvent").invoke(...arguments)
+            let method : Il2Cpp.Method = ass.image.class("MaxSdkCallbacks").method("ForwardEvent")
+            method.implementation = function (...parameters: Il2Cpp.Parameter.Type[]) {
+                const instance: NativePointer = parameters[0] as NativePointer;
+                const eventPropsStr: NativePointer = parameters[1] as NativePointer;
+
+                LOGD(`ForwardEvent: ${instance} ${readU16(eventPropsStr)}`);
+                return this.method("ForwardEvent").invoke(...parameters);
             }
         } else {
             throw new Error("MaxSdk.Scripts not found")
@@ -362,7 +366,7 @@ const watchFunction = (call: Function, interval: number = 1000) => {
 }
 
 const disWatchFuntion = () => {
-    if (intervalID != null) clearInterval(intervalID)
+    if (intervalID != null) clearInterval(intervalID as NodeJS.Timeout)
 }
 
 export {

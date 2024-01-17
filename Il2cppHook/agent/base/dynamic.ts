@@ -21,7 +21,7 @@ const filter_assembly: string[] = ["Assembly"]
 
 Il2Cpp.perform(() => {
     if (!enable_dynamic) return
-    Il2Cpp.Domain.assemblies.forEach(async (assembly: Il2Cpp.Assembly) => {
+    Il2Cpp.domain.assemblies.forEach(async (assembly: Il2Cpp.Assembly) => {
         let key = repName(assembly.name)
         Reflect.set(Assembly, key, needPack(assembly) ? packAssembly(assembly) : assembly)
     })

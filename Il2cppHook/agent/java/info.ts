@@ -118,7 +118,7 @@ const cacheMethods = (withLog: boolean = true) => {
     if (allMethodsCacheArray.length > 0) return
     if (withLog) LOGZ("Caching methods ...")
     let timeCurrent = Date.now()
-    Il2Cpp.Domain.assemblies.forEach((assembly: Il2Cpp.Assembly) => {
+    Il2Cpp.domain.assemblies.forEach((assembly: Il2Cpp.Assembly) => {
         assembly.image.classes.forEach((klass: Il2Cpp.Class) => allMethodsCacheArray = allMethodsCacheArray.concat(klass.methods))
     })
     allMethodsCacheArray = allMethodsCacheArray.sort((a: Il2Cpp.Method, b: Il2Cpp.Method) => a.virtualAddress.compare(b.virtualAddress))

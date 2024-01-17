@@ -1,5 +1,5 @@
 export const getEventUpdate = <T>(needMethod: boolean = false): T => {
-    let local_method: Il2Cpp.Method = Il2Cpp.Domain.assembly("UnityEngine.UI").image.class("UnityEngine.EventSystems.EventSystem").method("Update");
+    let local_method: Il2Cpp.Method = Il2Cpp.domain.assembly("UnityEngine.UI").image.class("UnityEngine.EventSystems.EventSystem").method("Update");
     if (needMethod == undefined || needMethod == false) {
         return local_method.virtualAddress as unknown as T
     } else {
