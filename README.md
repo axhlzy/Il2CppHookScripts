@@ -92,6 +92,11 @@ $ frida -FU -l ../_Ufunc.js
 
 -------
 
+#### 👇 Here's a simpler way to use it (Recommended)
+`frida --codeshare axhlzy/il2cpphookscripts  -U -f ${PackageName}`
+
+-------
+
 > [!NOTE]
 > The npm package may not be updated in time, so you may consider using `fat -c` to open the project and use the `github action` [Artifacts](https://github.com/axhlzy/Il2CppHookScripts/actions) to replace _Ufunc.js file. :hushed:
 
