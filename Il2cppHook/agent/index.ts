@@ -21,6 +21,31 @@ const TODO_OTHERS = () => {
 
 }
 
+var semlock = Memory.alloc(0x10)
+
+const sem_wait = () => {
+    const func_sem_init = new NativeFunction(Module.findExportByName("libc.so", "sem_init")!, "int", ["pointer", "int", "uint"])
+    func_sem_init(semlock, 0, 0)
+    const func_sem_wait = new NativeFunction(Module.findExportByName("libc.so", "sem_wait")!, "int", ["pointer"])
+    func_sem_wait(semlock)
+}
+
+const sem_post = () => {
+    new NativeFunction(Module.findExportByName("libc.so", "sem_post")!, "int", ["pointer"])(semlock)
+    const func_sem_destroy = new NativeFunction(Module.findExportByName("libc.so", "sem_destroy")!, "int", ["pointer"])
+    func_sem_destroy(semlock)
+}
+
+declare global {
+    var g_sem_lock: NativePointer
+    var sem_wait: () => void
+    var sem_post: () => void
+}
+
+globalThis.g_sem_lock = semlock
+globalThis.sem_wait = sem_wait
+globalThis.sem_post = sem_post
+
 class PauseHelper {
 
     private static savedPauseCode: NativePointer = ptr(0)
