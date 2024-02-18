@@ -19,13 +19,16 @@
     "prepare": "npm run build",
     "build": "frida-compile agent/index.ts -c -o _Ufunc.js",
     "watch": "frida-compile agent/index.ts -w -o _Ufunc.js",
-    "compress": "uglifyjs _Ufunc.js -m -c -o _Ufunc.js"
+    "compress": "uglifyjs _Ufunc.js -m -c -o _Ufunc.js",
+    "terser": "uglifyjs _Ufunc.js -o _Ufunc_min.js"
   },
   "devDependencies": {
     "@frida/http": "^4.0.2",
     "@frida/https": "^1.0.0",
     "@types/frida-gum": "^18.4.3",
-    "@types/node": "^17.0.45"
+    "@types/node": "^17.0.45",
+    "uglify-js": "^3.17.4",
+    "terser": "^5.27.0"
   },
   "dependencies": {
     "babelify": "^10.0.0",
@@ -37,7 +40,6 @@
     "minimist": "^1.2.8",
     "numbro": "^2.3.6",
     "prettier": "^2.6.2",
-    "uglify-js": "^3.17.4",
     "versioning": "^1.1.2"
   },
   "keywords": [
