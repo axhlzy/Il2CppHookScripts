@@ -68,10 +68,19 @@ export class formartClass {
         let paddingNum: number = (size - str.length) / 2
         return `${getLine(paddingNum, " ")}${str}${getLine(paddingNum, " ")}`
     }
+
+    static padding = (str: string | NativePointer, len: number = 18, pad: string = ' ', end: boolean = true) => {
+        if (str instanceof NativePointer) str = str.toString()
+        if (str.length >= len) return str
+        if (end) return str.padEnd(len, pad)
+        else return str.padStart(len, pad)
+    }
 }
 
 globalThis.insertStr = formartClass.insertStr
+globalThis.PD = formartClass.padding
 
 declare global {
     var insertStr: (str1: string, n: number, str2: string) => string
+    var PD: (str: string | NativePointer, len?: number, pad?: string, end?: boolean) => string
 }

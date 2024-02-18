@@ -56,6 +56,8 @@ declare global {
     // var registerClassTest: () => void
 
     var demangleName: (expName: string) => string
+
+    var packApiResove: (patter?: string) => void
 }
 
 /**
@@ -584,6 +586,14 @@ export function demangleName(expName: string) {
 }
 
 globalThis.demangleName = demangleName
+
+globalThis.packApiResove = (patter: string = "exports:*!*Unwind*"): void => {
+    let index: number = 0
+    new ApiResolver("module").enumerateMatches(patter).forEach((exp) => {
+        LOGD(`${PD(`[${++index}]`, 5)}${exp.name} ${exp.address}`)
+        LOGZ(`\t${demangleName(exp.name.split("!")[1])}`)
+    })
+}
 
 /**
  * 查找导入表

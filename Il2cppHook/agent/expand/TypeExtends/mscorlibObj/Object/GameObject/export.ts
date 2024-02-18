@@ -11,6 +11,7 @@ enum activeStatus {
     all = -1
 }
 
+type GobjPtr = NativePointer
 globalThis.HookSetActive = (defaltActive: activeStatus | boolean = activeStatus.active, PrintStackTrace: boolean = false, filterString: Array<string> | string = "") => {
 
     let setActiveAddress = find_method("UnityEngine.CoreModule", "GameObject", "SetActive", 1)
@@ -25,9 +26,10 @@ globalThis.HookSetActive = (defaltActive: activeStatus | boolean = activeStatus.
         })
     }
 
-    function innerSetActive(mPtr: NativePointer, ctx: CpuContext) {
+    function innerSetActive(mPtr: GobjPtr, ctx: CpuContext) {
         if (mPtr.isNull()) return
         let gameObject = new Il2Cpp.GameObject(ptr(mPtr as unknown as number))
+        const currentActive: boolean = getPlatformCtxWithArgV(ctx, 1)!.isNull() ? false : true
         const activeSelf: boolean = gameObject.get_activeSelf()
         if (filterString != "") {
             if (filterString instanceof Array) {
@@ -44,17 +46,17 @@ globalThis.HookSetActive = (defaltActive: activeStatus | boolean = activeStatus.
         if (filterDuplicateOBJ(gameObject.toString()) == -1) return
         switch (defaltActive) {
             case activeStatus.active:
-                if (activeSelf) printMsg()
+                if (currentActive) printMsg()
                 break
             case activeStatus.inactive:
-                if (!activeSelf) printMsg()
+                if (!currentActive) printMsg()
                 break
             case activeStatus.all:
                 printMsg()
                 break
             default:
                 if (typeof defaltActive == "boolean") {
-                    if (defaltActive == activeSelf) printMsg()
+                    if (defaltActive == currentActive) printMsg()
                     break
                 } else {
                     LOGD("defaltActive is not a valid instance of the specified type")
@@ -64,7 +66,7 @@ globalThis.HookSetActive = (defaltActive: activeStatus | boolean = activeStatus.
 
         function printMsg() {
             if (!mPtr.isNull()) {
-                let strTmp = "public extern void SetActive( " + (activeSelf ? 'true' : 'false') + " );  LR:" + checkCtx(ctx)
+                let strTmp = "public extern void SetActive( " + (currentActive ? 'true' : 'false') + " );  LR:" + checkCtx(ctx)
                 LOGW("\n" + getLine(strTmp.length))
                 LOGD(strTmp)
                 LOGO(getLine(strTmp.length / 2))

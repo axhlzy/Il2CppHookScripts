@@ -13,6 +13,7 @@ const args = minimist(process.argv.slice(2), {
       t: 'timeout',
       f: 'function',
       l: 'log',
+      d: 'debug',
   },
   default: {
       runtime: 'v8',
@@ -30,6 +31,7 @@ if (args.help) {
   console.log('  -t, --timeout [ms]          Specify the time in milliseconds before calling the function.');
   console.log('  -f, --functions [name]      Specify the function to call on startup. example: -f i();getApkInfo();');
   console.log('  -l, --log [path]            Specify the path to save the log.');
+  console.log('  -d, --debug                 Start the debugger port.');
   console.log('  -c, --vscode                Open project with vscode.');
   console.log('  -v, --version               Print version information.');
   console.log('');
@@ -61,7 +63,15 @@ const ufuncPath = path.join(path.dirname(__dirname), '_Ufunc.js');
 
 let command;
 if (packageName) {
-  command = `frida -U -f ${packageName} -l ${ufuncPath} --runtime=${runtime}`;
+  if (args.debug) {
+    if (runtime === 'qjs') {
+      console.warn(`qjs engine does not support debugging`);
+      console.warn(`Falling back to v8 engine`);
+    }
+    command = `frida -U -f ${packageName} -l ${ufuncPath} --runtime=v8 --debug`;
+  } else {
+    command = `frida -U -f ${packageName} -l ${ufuncPath} --runtime=${runtime}`;
+  }
 } else {
   command = `frida -FU -l ${ufuncPath} --runtime=${runtime}`;
 }

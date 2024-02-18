@@ -141,6 +141,11 @@ const callFunctionRF = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): number => all
 // 返回值为 Unity String
 const callFunctionRUS = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): string => readU16(callFunction(mPtr, ...args))
 
+// 返回stdstring
+const callFunctionRSTDString = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): string | null => {
+    return readStdString(new NativeFunction(checkPointer(mPtr, true), ['pointer', 'pointer', 'pointer'], ['pointer', 'pointer', 'pointer', 'pointer'])(args[0], args[1], args[2], args[3] ?? ptr(0)))
+}
+
 // 返回值为 C String
 const callFunctionRCS = (mPtr: TYPE_CHECK_POINTER, ...args: any[]): string => {
     let tmpRet = callFunction(mPtr, ...args).readCString()
@@ -163,6 +168,7 @@ declare global {
     var callFunctionRUS: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => string
     var callFunctionRCS: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => string
     var callFunctionRA: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => void
+    var callFunctionRSTDString: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => string | null
     var callFunctionWithOutError: (mPtr: TYPE_CHECK_POINTER, ...args: any[]) => NativePointer
 }
 
@@ -176,4 +182,5 @@ globalThis.callFunctionRF = callFunctionRF
 globalThis.callFunctionRUS = callFunctionRUS
 globalThis.callFunctionRCS = callFunctionRCS
 globalThis.callFunctionRA = callFunctionRA
+globalThis.callFunctionRSTDString = callFunctionRSTDString
 globalThis.callFunctionWithOutError = callFunctionWithOutError
