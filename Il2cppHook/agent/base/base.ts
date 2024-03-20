@@ -263,7 +263,23 @@ export class HookerBase {
             return
         }
         FM.printTitile(`Found ${klass.fields.length} Fields ${klass.isEnum ? "(enum) " : ""}in class: ${klass.name} (${klass.handle})`)
-        klass.fields.forEach((field: Il2Cpp.Field) => LOGD(`[*] ${field.handle} ${field.type.name} ${field.toString()} [type:${field.type.class.handle}]`))
+        let maxNameLen: number = 0
+        let maxTypeLen: number = 0
+        let paddingIndexCount: number = klass.fields.length.toString().length + 4
+        klass.fields.forEach((field: Il2Cpp.Field) => {
+            maxNameLen = Math.max(maxNameLen, field.name.length)
+            maxTypeLen = Math.max(maxTypeLen, field.type.name.length)
+        })
+        let index :number = -1
+        klass.fields.forEach((field: Il2Cpp.Field) => {
+            let disp : string = `[${++index}]`.padEnd(paddingIndexCount, ' ')
+            disp += ptr(field.offset) + '  '
+            disp += `${field.handle}` + '  '
+            disp += `${field.name}`.padEnd(maxNameLen, ' ') + '   :   '
+            disp += `${field.type.name}`.padEnd(maxTypeLen, ' ') + '   '
+            disp += `[ class: ${field.type.class.handle} ]`
+            LOGD(disp)
+        })
         newLine()
     }
 
