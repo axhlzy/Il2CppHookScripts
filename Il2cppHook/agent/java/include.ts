@@ -9,5 +9,7 @@ import "./artMethod"
 import "./registerNative"
 import "./dialog"
 import "./methods"
+import "./javaClass"
+import "./hooks"
 
 import "./ADS/include"

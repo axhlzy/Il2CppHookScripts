@@ -177,19 +177,6 @@ const findJavaMethods = (filter: string, accurate: boolean = false) => {
     })
 }
 
-globalThis.HookJavaReflect = () => {
-    Java.perform(() => {
-        let Method = Java.use('java.lang.reflect.Method')
-        Method.invoke.overload('java.lang.Object', '[Ljava.lang.Object;').implementation = function (obj: any, args: any) {
-            let params: string = args.length == 0 ? '' : JSON.stringify(args)
-            LOGW(`CALLED -> ${this.toString()}`)
-            LOGZ(`\tPARAMS[${args.length}] -> ${params}`)
-            PrintStackTraceJava()
-            return this.invoke(obj, args)
-        }
-    })
-}
-
 const listJavaMethods = (className: string = "org.cocos2dx.lib.Cocos2dxHelper") => {
     Java.perform(function () {
         const aimClass = Java.use(className)
@@ -204,7 +191,5 @@ declare global {
     var findJavaMethods: (filter: string, accurate?: boolean) => void
     var findJavaClasses: (filter: string, accurate?: boolean) => void
     var BJC: (filter: string, accurate?: boolean) => void // b java class
-
-    var HookJavaReflect: () => void
     var listJavaMethods: (className: string) => void
 }

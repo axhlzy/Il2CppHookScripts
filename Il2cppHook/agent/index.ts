@@ -205,19 +205,7 @@ class ExceptionTraceClass {
     }
 }
 
-const HookExit = () => {
-
-    Java.perform(function () {
-        Java.use("android.app.Activity").finish.overload().implementation = function () {
-            console.log("called android.app.Activity.Finish")
-            PrintStackTraceJava()
-        }
-        Java.use("java.lang.System").exit.implementation = function (code: number) {
-            console.log("called java.lang.System.exit(" + code + ")")
-            PrintStackTraceJava()
-        }
-    })
-
+function hookUnityExit(){
     Il2Cpp.perform(() => {
         // UnityEngine.CoreModule UnityEngine.Application Quit(Int32) : Void
         R(Il2Cpp.Domain.assembly("UnityEngine.CoreModule").image.class("UnityEngine.Application").method("Quit", 1).virtualAddress, (_srcCall: Function, arg0: NativePointer) => {
@@ -232,6 +220,13 @@ const HookExit = () => {
             return ptr(0)
         })
     })
+}
+
+const HookExit = () => {
+
+    HookJavaExit()
+
+    hookUnityExit()
 }
 
 /**
