@@ -11,7 +11,6 @@ interface MethodCallback {
 
 export function hookJavaClass(className: string | Java.Wrapper, callback: MethodCallback, passMethods: Array<string> = []) {
 
-
     Java.perform(() => {
         var javaClass: any
         try {

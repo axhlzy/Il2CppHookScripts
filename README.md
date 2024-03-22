@@ -95,6 +95,8 @@ $ frida -FU -l ../_Ufunc.js
 #### 👇 Here's a simpler way to use it (Recommended)
 `frida --codeshare axhlzy/il2cpphookscripts  -U -f ${PackageName}`
 
+> Requires Scientific Internet Access
+
 -------
 
 > [!NOTE]

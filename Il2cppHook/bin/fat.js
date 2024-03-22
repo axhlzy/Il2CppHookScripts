@@ -12,6 +12,7 @@ const args = minimist(process.argv.slice(2), {
       r: 'runtime',
       t: 'timeout',
       f: 'function',
+      j: 'Java',
       l: 'log',
       d: 'debug',
   },
@@ -24,12 +25,13 @@ if (args.help) {
 
   showLOGO()
 
-  console.log('\nUsage: fat [options] <package-name?>\n');
+  console.log('\nUsage: fat <package-name?> [options]\n');
   console.log('Options:');
   console.log('  -h, --help                  Print usage information.');
   console.log('  -r, --runtime [engine]      Specify the JS engine (qjs, v8). Default: v8');
   console.log('  -t, --timeout [ms]          Specify the time in milliseconds before calling the function.');
-  console.log('  -f, --functions [name]      Specify the function to call on startup. example: -f i();getApkInfo();');
+  console.log('  -f, --Il2cpp.perform        Specify the function to call on unity startup. example: -f i();getApkInfo();');
+  console.log('  -j, --Java.perform          Specify the function to call on java startup. example: -j HookSharedPreferences(true)');
   console.log('  -l, --log [path]            Specify the path to save the log.');
   console.log('  -d, --debug                 Start the debugger port.');
   console.log('  -c, --vscode                Open project with vscode.');
@@ -40,7 +42,7 @@ if (args.help) {
 }
 
 const packageName = args._[0];
-const functionName = args.function || args._[1];
+const functions = args.function || args._[1];
 const runtime = args.runtime === 'qjs' ? 'qjs' : 'v8';
 const timeout = args.timeout ? Number(args.timeout) : 0;
 const logPath = args.log;
@@ -76,17 +78,40 @@ if (packageName) {
   command = `frida -FU -l ${ufuncPath} --runtime=${runtime}`;
 }
 
-if (functionName) {
+if (functions) {
   if (timeout == 0) {
-      command += ` -e "Il2Cpp.perform(()=>{${functionName}})"`
+      command += ` -e "Il2Cpp.perform(()=>{${functions}})"`
   } else {
       const timeoutSnippet = timeout ? `setTimeout(() => {` : '';
       const timeoutSnippetEnd = timeout ? `}, ${timeout});` : '';
-      command += ` -e "${timeoutSnippet}${functionName}${timeoutSnippetEnd}"`;
+      command += ` -e "${timeoutSnippet}${functions}${timeoutSnippetEnd}"`;
   }
 }
 
+// if (functions) {
+//   let preparedFunctionText = "";
+
+//   if (args.hasOwnProperty("java")) {
+//     preparedFunctionText = `Java.perform(() => { ${functions} })`;
+//   } 
+//   if (args.hasOwnProperty("f")) {
+//     preparedFunctionText = `Il2Cpp.perform(() => { ${functions} })`;
+//   } 
+//   else {
+//     preparedFunctionText = functions;
+//   }
+
+//   if(timeout != 0) {
+//     preparedFunctionText = `setTimeout(() => { ${preparedFunctionText} }, ${timeout})`;
+//   }
+
+//   command += ` -e ${preparedFunctionText}`;
+// }
+
+
 if (logPath) command += ` -o ${logPath}`;
+
+// console.warn(`Running: ${command}`);
 
 const fridaProcess = spawn(command, {
   shell: true,
