@@ -297,12 +297,18 @@ export class Breaker {
         }, (retval: InvocationReturnValue) => LOGD(`Retval\t---> ${retval}`))
     }
 
-    static breakWithStack = (mPtr: NativePointer, accurate: boolean = true) => {
+    /**
+     * print stack trace
+     * @param mPtr function address
+     * @param accurate is accurate (default true)
+     * @param parseIl2cppMethodName enable parse il2cpp method name in stack (default true)
+     */
+    static breakWithStack = (mPtr: NativePointer, accurate: boolean = true, parseIl2cppMethodName:boolean = true) => {
         mPtr = this.fakeMethodPtr(mPtr, JSHOOKTYPE.STACK)
         A(mPtr, (_args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
             LOGO(`\n${getLine(65)}\n`)
             LOGH(`Called from ${mPtr} ---> ${mPtr.sub(soAddr)}\t|  LR : ${checkCtx(getPlatformCtx(ctx))}\n`)
-            PrintStackTraceNative(ctx, accurate)
+            PrintStackTraceNative(ctx, accurate, false, 6, parseIl2cppMethodName)
             LOGO(`\n${getLine(65)}`)
         })
     }
@@ -629,7 +635,7 @@ declare global {
     var BM: (className: string) => void
     var breakWithArgs: (mPtr: NativePointer, argCount?: number) => void
     var breakInline: (mPtr: NativePointer, callback?: (value: CpuContext) => void) => void
-    var breakWithStack: (mPtr: NativePointer, accurate?: boolean) => void
+    var breakWithStack: (mPtr: NativePointer, accurate?: boolean, parseIl2cppMethodName?:boolean) => void
     var breakMemRW: (mPtr: NativePointer, length?: number) => void
     var getPlatform: () => string
     var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext

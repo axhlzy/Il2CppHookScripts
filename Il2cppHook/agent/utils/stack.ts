@@ -12,8 +12,8 @@ const ptrMightBeMethod = (mPtr: NativePointer, withLog: boolean = true): Il2Cpp.
         localSortedMethods = allMethodsCacheArray.sort((a: Il2Cpp.Method, b: Il2Cpp.Method) => a.virtualAddress.compare(b.virtualAddress))
     let tmpMethod: Il2Cpp.Method | null = null
     for (let i = 0; i < allMethodsCacheArray.length - 1; i++) {
-        let method: Il2Cpp.Method = allMethodsCacheArray[i]
-        let nextMethod: Il2Cpp.Method = allMethodsCacheArray[i + 1]
+        const method: Il2Cpp.Method = allMethodsCacheArray[i]
+        const nextMethod: Il2Cpp.Method = allMethodsCacheArray[i + 1]
         if (mPtr.compare(method.virtualAddress) >= 0
             && Math.abs(mPtr.sub(method.virtualAddress).toInt32()) < 0x10000
             && mPtr.compare(nextMethod.virtualAddress) < 0) {
@@ -25,26 +25,28 @@ const ptrMightBeMethod = (mPtr: NativePointer, withLog: boolean = true): Il2Cpp.
 }
 
 var symbMethod: Map<string, string> = new Map() // 放成全局的有重复的直接使用不在重复去查找以提高速度
-const PrintStackTraceNative = (ctx: CpuContext, fuzzy: boolean = false, retText: boolean = false, slice: number = 6): string | void => {
+const PrintStackTraceNative = (ctx: CpuContext, fuzzy: boolean = false, retText: boolean = false, slice: number = 6, parseIl2cppMethodName:boolean = true): string | void => {
     let stacks: NativePointer[] = Thread.backtrace(ctx, fuzzy ? Backtracer.FUZZY : Backtracer.ACCURATE)
-    stacks.forEach((frame: NativePointer, _index: number, _thisArr: NativePointer[]) => {
-        if (symbMethod.has(frame.toString())) return
-        let symb: DebugSymbol = DebugSymbol.fromAddress(frame)
-        if (symb.moduleName == "libil2cpp.so" && symb.name?.startsWith("0x")) {
-            let il2cppMethod: Il2Cpp.Method | null = ptrMightBeMethod(frame)
-            if (il2cppMethod != null) {
-                let offset = symb.address.sub(il2cppMethod.virtualAddress)
-                symbMethod.set(frame.toString(), `MI:${il2cppMethod.handle} -> ${il2cppMethod.class.name}::${getMethodDesFromMethodInfo(il2cppMethod)} ${offset}↓`)
+    if (parseIl2cppMethodName) {
+        stacks.forEach((frame: NativePointer, _index: number, _thisArr: NativePointer[]) => {
+            if (symbMethod.has(frame.toString())) return
+            const symb: DebugSymbol = DebugSymbol.fromAddress(frame)
+            if (symb.moduleName == "libil2cpp.so" && symb.name?.startsWith("0x")) {
+                const il2cppMethod: Il2Cpp.Method | null = ptrMightBeMethod(frame)
+                if (il2cppMethod != null) {
+                    const offset = symb.address.sub(il2cppMethod.virtualAddress)
+                    symbMethod.set(frame.toString(), `MI:${il2cppMethod.handle} -> ${il2cppMethod.class.name}::${getMethodDesFromMethodInfo(il2cppMethod)} ${offset}↓`)
+                }
             }
-        }
-    })
-    let tmpText: string = stacks
+        })
+    }
+    const tmpText: string = stacks
         .slice(0, slice)
         .map(DebugSymbol.fromAddress)
         .map((sym: DebugSymbol) => {
             let strRet: string = `${sym}`
-            let md: Module | null = Process.findModuleByAddress(sym.address)
-            let methodstr: string | undefined = symbMethod.get(sym.address.toString())
+            const md: Module | null = Process.findModuleByAddress(sym.address)
+            const methodstr: string | undefined = symbMethod.get(sym.address.toString())
             if (md != null && md.name == "libil2cpp.so" && strRet.startsWith('0x'))
                 strRet = `${strRet}\t| ${methodstr == undefined ? "null" : methodstr}`
             return strRet
@@ -68,7 +70,7 @@ export { PrintStackTrace, PrintStackTraceNative, GetStackTrace, GetStackTraceNat
 declare global {
     var PrintStackTraceJava: () => void
     var GetStackTraceJava: () => void
-    var PrintStackTraceNative: (ctx: CpuContext, fuzzy?: boolean, retText?: boolean, slice?: number, reverse?: boolean) => string | void
+    var PrintStackTraceNative: (ctx: CpuContext, fuzzy?: boolean, retText?: boolean, slice?: number, reverse?: boolean, parseIl2cppMethodName?:boolean) => string | void
     var GetStackTraceNative: (ctx: CpuContext, level?: number) => string
 }
 
