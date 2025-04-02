@@ -4,7 +4,6 @@ setImmediate(() => main())
 
 const main = () => {
     // pause()
-    // raise(SIGNAL.SIGSTOP)
     // setException()
     // HookExit()
     // JNIHelper.Init() // Hook JNI RegisterNatives

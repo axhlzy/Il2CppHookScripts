@@ -19,9 +19,9 @@
 //         }
 //     };
 
-const startJdwp = ()=>{
+const startJdwp = () => {
     const addr = Module.findExportByName("libart.so", "_ZN3art3Dbg9StartJdwpEv")
-    if(addr){
+    if (addr) {
         const StartJdwp = new NativeFunction(addr, 'void', [])
         StartJdwp()
     } else {
@@ -41,9 +41,9 @@ const startJdwp = ()=>{
 //             throw std::runtime_error("StopJdwp is nullptr");
 //         }
 //     };
-const stopJdwp = ()=>{
+const stopJdwp = () => {
     const addr = Module.findExportByName("libart.so", "_ZN3art3Dbg8StopJdwpEv")
-    if(addr){
+    if (addr) {
         const StopJdwp = new NativeFunction(addr, 'void', [])
         StopJdwp()
     } else {
@@ -63,9 +63,9 @@ const stopJdwp = ()=>{
 //             throw std::runtime_error("SetJdwpAllowed is nullptr");
 //         }
 //     };
-const setJdwpAllowed = (allowed:boolean)=>{
+const setJdwpAllowed = (allowed: boolean) => {
     const addr = Module.findExportByName("libart.so", "_ZN3art3Dbg14SetJdwpAllowedEb")
-    if(addr){
+    if (addr) {
         const SetJdwpAllowed = new NativeFunction(addr, 'void', ['int'])
         SetJdwpAllowed(allowed ? 1 : 0)
     } else {
@@ -85,13 +85,27 @@ const setJdwpAllowed = (allowed:boolean)=>{
 //             throw std::runtime_error("IsJdwpAllowed is nullptr");
 //         }
 //     };
-const isJdwpAllowed = ()=>{
-    const addr = Module.findExportByName("libart.so", "_ZN3art3Dbg13IsJdwpAllowedEv")
-    if(addr){
-        const IsJdwpAllowed = new NativeFunction(addr, 'bool', [])
-        return IsJdwpAllowed()
-    } else {
-        throw new Error("IsJdwpAllowed is nullptr")
+const isJdwpAllowed = () => {
+    try {
+        let addr = Module.findExportByName("libart.so", "_ZN3art3Dbg13IsJdwpAllowedEv")
+        if (addr == null) {
+            try {
+                addr = Process.findModuleByName("libart.so")!
+                    .enumerateSymbols()
+                    .filter(e => e.name == "_ZN3artL12gJdwpAllowedE")[0]
+                    .address
+            } catch (error) {
+                // ... 
+            }
+        }
+        if (addr) {
+            const IsJdwpAllowed = new NativeFunction(addr, 'bool', [])
+            return IsJdwpAllowed()
+        } else {
+            throw new Error("IsJdwpAllowed is nullptr")
+        }
+    } catch (error) {
+        return false
     }
 }
 
@@ -107,9 +121,9 @@ const isJdwpAllowed = ()=>{
 //             throw std::runtime_error("GetJdwpState is nullptr");
 //         }
 //     };
-const getJdwpState = ()=>{
+const getJdwpState = () => {
     const addr = Module.findExportByName("libart.so", "_ZN3art3Dbg12GetJdwpStateEv")
-    if(addr){
+    if (addr) {
         const GetJdwpState = new NativeFunction(addr, 'pointer', [])
         return GetJdwpState()
     } else {
@@ -129,9 +143,9 @@ const getJdwpState = ()=>{
 //             throw std::runtime_error("IsJdwpConfigured is nullptr");
 //         }
 //     };
-const isJdwpConfigured = ()=>{
+const isJdwpConfigured = () => {
     const addr = Module.findExportByName("libart.so", "_ZN3art3Dbg16IsJdwpConfiguredEv")
-    if(addr){
+    if (addr) {
         const IsJdwpConfigured = new NativeFunction(addr, 'bool', [])
         return IsJdwpConfigured()
     } else {
@@ -168,7 +182,7 @@ class JdwpOptions {
 
     static tempMem = NULL
 
-    constructor(transport:JdwpTransportType, server:boolean, suspend:boolean, host:string, port:number){
+    constructor(transport: JdwpTransportType, server: boolean, suspend: boolean, host: string, port: number) {
         this.transport = transport
         this.server = server
         this.suspend = suspend
@@ -176,13 +190,13 @@ class JdwpOptions {
         this.port = port
     }
 
-    public get_pointer(){
-        JdwpOptions.tempMem = Memory.alloc(0x4 + 0x2 + 0x2 + Process.pointerSize*3 + 0x2)
+    public get_pointer() {
+        JdwpOptions.tempMem = Memory.alloc(0x4 + 0x2 + 0x2 + Process.pointerSize * 3 + 0x2)
         if (Process.arch == "arm64") {
             JdwpOptions.tempMem.add(0x0).writeInt(this.transport)
             JdwpOptions.tempMem.add(0x4).writeU16(this.server ? 1 : 0)
             JdwpOptions.tempMem.add(0x6).writeU16(this.suspend ? 1 : 0)
-            JdwpOptions.tempMem.add(0x8).writeU8(this.host.length*2)
+            JdwpOptions.tempMem.add(0x8).writeU8(this.host.length * 2)
             JdwpOptions.tempMem.add(0x9).writeUtf8String(this.host)
             JdwpOptions.tempMem.add(0x20).writeU16(this.port)
         } else if (Process.arch == "arm") {
@@ -190,7 +204,7 @@ class JdwpOptions {
             JdwpOptions.tempMem.add(0x0).writeInt(this.transport)
             JdwpOptions.tempMem.add(0x4).writeU16(this.server ? 1 : 0)
             JdwpOptions.tempMem.add(0x6).writeU16(this.suspend ? 1 : 0)
-            JdwpOptions.tempMem.add(0x8).writeU8(this.host.length*2)
+            JdwpOptions.tempMem.add(0x8).writeU8(this.host.length * 2)
             JdwpOptions.tempMem.add(0x9).writeUtf8String(this.host)
             JdwpOptions.tempMem.add(0x14).writeU16(this.port)
         } else {
@@ -212,9 +226,9 @@ class JdwpOptions {
 //             throw std::runtime_error("ConfigureJdwp is nullptr");
 //         }
 //     };
-const configureJdwp = (jdwp_options:JdwpOptions)=>{
+const configureJdwp = (jdwp_options: JdwpOptions) => {
     const addr = Module.findExportByName("libart.so", "_ZN3art3Dbg13ConfigureJdwpERKNS_4JDWP11JdwpOptionsE")
-    if(addr){
+    if (addr) {
         const ConfigureJdwp = new NativeFunction(addr, 'void', ['pointer'])
         ConfigureJdwp(jdwp_options.get_pointer())
     } else {
@@ -240,7 +254,7 @@ const configureJdwp = (jdwp_options:JdwpOptions)=>{
 
 //     lam_startJdwp();
 
-export function startJdwpThread(){
+export function startJdwpThread() {
     stopJdwp()
 
     if (!isJdwpAllowed()) {
@@ -257,7 +271,13 @@ export function startJdwpThread(){
         )
         configureJdwp(jdwpOptions)
     }
+
     startJdwp()
+
+    LOGW(`\nUseage: 
+        adb forward tcp:${Process.id} jdwp:${Process.id}
+        adb reverse tcp:${Process.id} tcp:${Process.id}
+        jdb -attach ${Process.id}\n`)
 }
 
 // } catch (const std::exception &e) {
@@ -266,7 +286,7 @@ export function startJdwpThread(){
 
 
 declare global {
-    var startJdwpThread: ()=>void
+    var startJdwpThread: () => void
 }
 
 globalThis.startJdwpThread = startJdwpThread
