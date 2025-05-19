@@ -80,9 +80,15 @@ const B_Text = (): void => {
     strReplaceMap.set("Setting", "SETTINGS")
     strReplaceMap.set("選擇角色", "选择角色")
     strReplaceMap.set("ADDED", "已添加")
-    strReplaceMap.set("ON", "开")
+    strReplaceMap.set("Play", "开始")
+    strReplaceMap.set("Options", "选项")
+    strReplaceMap.set("Back", "返回")
+    strReplaceMap.set("Settings", "设置")
     strReplaceMap.set("Loading...", "加载中...")
     strReplaceMap.set("More games", "更多游戏")
+    strReplaceMap.set("Watch ad?", "看广告？")
+    strReplaceMap.set("Not Enough Money", "金钱不够")
+    strReplaceMap.set("No translation found for 'Watch ad?' in Texts", "看广告？")
 
     try {
         LOGD("Enable TMP_Text Hook".padEnd(30, " ") + "| class : " + findClass("TMP_Text"))
@@ -329,11 +335,36 @@ const B_Text = (): void => {
     }
 }
 
+// LoadFromFileAsync
+function hook_crc() { 
+    // [-]UnityEngine.AssetBundleModule @ 0x72b0299e18
+    //   [-]UnityEngine.AssetBundleModule.dll @ 0x72b02975f8 | C:6
+    //     [-]AssetBundle @ 0x72b0762470 | M:15 | F:0 | N:UnityEngine
+    //       [-]public static AssetBundleCreateRequest LoadFromFileAsync(String path, UInt32 crc) @ MI: 0x72b0813938 & MP: 0x72ecf58470 & RP: 0x3ad4470
+    //         [-]path                | type: 0x72ed555f18 | @ class:0x72b025abc0 | System.String
+    //         [-]crc                 | type: 0x72ed556ef8 | @ class:0x72b0259760 | System.UInt32
+    //         [-]_RET_               | type: 0x72ed55c668 | @ class:0x72b1e75940 | UnityEngine.AssetBundleCreateRequest
+    var cls_AssetBundle = Il2Cpp.Domain.assembly('UnityEngine.AssetBundleModule').image.class('UnityEngine.AssetBundle')
+    const method_CreateFromMemory = cls_AssetBundle.tryMethod('LoadFromFileAsync', 2)!
+    Interceptor.attach(method_CreateFromMemory.virtualAddress, {
+        onEnter: function (args: NativePointer[]) {
+            this.path = new Il2Cpp.String(args[0])
+            this.crc = args[1]
+            console.log(`[+]AssetBundle.LoadFromFileAsync: ${this.path.toString()} crc:${args[1]}`)
+            args[1] = ptr(0)
+        }
+    })
+}
+
+globalThis.hook_crc = hook_crc
+
 declare global {
     var B_Text: () => void
 
     var listFonts: () => void
     var setFont: (index: number) => void
+
+    var hook_crc: () => void
 
     var savedFonts: Il2Cpp.Object[]
     var choosed_TMP_FontAsset: NativePointer

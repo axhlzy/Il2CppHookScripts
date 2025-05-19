@@ -113,7 +113,10 @@ globalThis.watchMemory = (mPtr: NativePointer, length: number = 0x10) => {
         }
     }
 
-    class MemoryDetails implements MemoryAccessDetails {
+    class MemoryDetails_ implements MemoryAccessDetails {
+        threadId: number = 0
+        context: CpuContext = new Object() as CpuContext
+        
         operation: MemoryOperation      // operation: 触发这次访问的操作类型, 仅限于 read, write, execute
         from: NativePointer             // from: NativePointer 类型的触发这次访问的指令的地址
         address: NativePointer          // address: NativePointer 类型的被访问的地址
@@ -136,6 +139,7 @@ globalThis.watchMemory = (mPtr: NativePointer, length: number = 0x10) => {
             this.mdFrom = Process.findModuleByAddress(this.from)!
         }
 
+
         public tostring(): string {
             return `
 operation:\t\t${this.operation}
@@ -151,7 +155,7 @@ pagesTotal:\t\t${this.pagesTotal}`
     // 监控一个或多个内存范围的访问情况, 并且在每个内存页第一次访问时触发回调函数 (onAccess)
     MemoryAccessMonitor.enable(new MenRange(mPtr, length), {
         // tips：如果同时对一个地址attach和watch则运行到该点时会崩溃 使用watch时注意先detach掉这个点的hook
-        onAccess: (access: MemoryAccessDetails) => LOGD(new MemoryDetails(access).tostring())
+        onAccess: (access: MemoryAccessDetails) => LOGD(new MemoryDetails_(access).tostring())
     })
 }
 
