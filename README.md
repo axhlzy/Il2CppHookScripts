@@ -121,7 +121,7 @@ open with vscode and search `globalthis.` to find more useage
 
 Support the author | Buy the author a cup of coffee (^_^)
 
-![知识星球](https://github.com/user-attachments/assets/7d326564-ffd6-4041-a89e-e616365dc2a3)
+[![知识星球](https://github.com/user-attachments/assets/22201f5e-5a35-4791-a737-2d01c94c6b54)](https://t.zsxq.com/19xtgLaJE)
 
 <!-- qq:597290673 -->
 <!-- wx:axhlzy0922 -->
