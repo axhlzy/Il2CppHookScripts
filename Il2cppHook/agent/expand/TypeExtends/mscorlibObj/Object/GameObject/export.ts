@@ -29,8 +29,14 @@ globalThis.HookSetActive = (defaltActive: activeStatus | boolean = activeStatus.
     function innerSetActive(mPtr: GobjPtr, ctx: CpuContext) {
         if (mPtr.isNull()) return
         const gameObject = new Il2Cpp.GameObject(ptr(mPtr as unknown as number))
-        const currentActive: boolean = getPlatformCtxWithArgV(ctx, 1)!.isNull() ? false : true
-        const _activeSelf: boolean = gameObject.get_activeSelf()
+        // const currentActive: boolean = getPlatformCtxWithArgV(ctx, 1)!.isNull() ? false : true
+        let currentActive: boolean = false
+        try {
+            currentActive = (ctx as Arm64CpuContext).x1.isNull() ? false : true
+        } catch (error) {
+            currentActive = (ctx as ArmCpuContext).r1.isNull() ? false : true
+        }        
+        // const _activeSelf: boolean = gameObject.get_activeSelf()
         if (filterString != "") {
             if (filterString instanceof Array) {
                 let isPass = false

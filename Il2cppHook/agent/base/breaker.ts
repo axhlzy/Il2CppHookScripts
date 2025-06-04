@@ -303,7 +303,7 @@ export class Breaker {
      * @param accurate is accurate (default true)
      * @param parseIl2cppMethodName enable parse il2cpp method name in stack (default true)
      */
-    static breakWithStack = (mPtr: NativePointer, accurate: boolean = true, parseIl2cppMethodName:boolean = true) => {
+    static breakWithStack = (mPtr: NativePointer, accurate: boolean = true, parseIl2cppMethodName: boolean = true) => {
         mPtr = this.fakeMethodPtr(mPtr, JSHOOKTYPE.STACK)
         A(mPtr, (_args: InvocationArguments, ctx: CpuContext, _passValue: Map<PassType, any>) => {
             LOGO(`\n${getLine(65)}\n`)
@@ -559,13 +559,16 @@ globalThis.BFA = (filterStr: string, allImg: boolean = true): void => {
  * @param {number} argIndex 
  * @returns 
  */
+var debug_getPlatformCtxWithArgV = true
 globalThis.getPlatformCtxWithArgV = <T extends CpuContext>(ctx: T, argIndex: number): NativePointer | undefined => {
-    if ((ctx as ArmCpuContext).r0 != undefined) {
+    if (getPlatform() == "arm") {
         if (argIndex > 15 || argIndex < 0) throw new Error(`ARM32 -> argIndex ${argIndex} is out of range`)
-        return eval(`(ctx as ArmCpuContext).r${argIndex}`) as NativePointer
+        if (debug_getPlatformCtxWithArgV) LOGW(`(ctx as Arm64CpuContext).r${argIndex}`)
+        return eval(`(${ctx} as ArmCpuContext).r${argIndex}`) as NativePointer
     } else {
         if (argIndex > 32 || argIndex < 0) throw new Error(`ARM64 -> argIndex ${argIndex} is out of range`)
-        return eval(`(ctx as Arm64CpuContext).x${argIndex}`) as NativePointer
+        if (debug_getPlatformCtxWithArgV) LOGW(`(ctx as Arm64CpuContext).x${argIndex}`)
+        return eval(`(${ctx} as Arm64CpuContext).x${argIndex}`) as NativePointer
     }
 }
 
@@ -583,7 +586,7 @@ declare global {
     var BM: (className: string) => void
     var breakWithArgs: (mPtr: NativePointer, argCount?: number) => void
     var breakInline: (mPtr: NativePointer, callback?: (value: CpuContext) => void) => void
-    var breakWithStack: (mPtr: NativePointer, accurate?: boolean, parseIl2cppMethodName?:boolean) => void
+    var breakWithStack: (mPtr: NativePointer, accurate?: boolean, parseIl2cppMethodName?: boolean) => void
     var breakMemRW: (mPtr: NativePointer, length?: number) => void
     var getPlatform: () => string
     var getPlatformCtx: (ctx: CpuContext) => ArmCpuContext | Arm64CpuContext

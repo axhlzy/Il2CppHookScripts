@@ -119,9 +119,9 @@ open with vscode and search `globalthis.` to find more useage
 
 -------
 
-Buy the author a cup of coffee (^_^)
+Support the author | Buy the author a cup of coffee (^_^)
 
-<img src=https://github.com/axhlzy/Il2CppHookScripts/assets/20512058/618a0674-e5ad-4c0f-9435-f7e133d4b293 width="300" height="400">
+[![知识星球](https://github.com/user-attachments/assets/22201f5e-5a35-4791-a737-2d01c94c6b54)](https://t.zsxq.com/19xtgLaJE)
 
 <!-- qq:597290673 -->
 <!-- wx:axhlzy0922 -->
