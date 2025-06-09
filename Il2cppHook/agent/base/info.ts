@@ -72,10 +72,12 @@ export const getClassFromMethodInfo = (methodInfoPtr: NativePointer): Il2Cpp.Cla
 
 declare global {
     var showMethodInfo: (methodInfo: NativePointer | Il2Cpp.Method) => void
+    var mi: (methodInfo: NativePointer | Il2Cpp.Method) => void // alias  showMethodInfo
     var methodToClass: (methodInfo: NativePointer) => NativePointer
     var methodToClassShow: (methodInfo: NativePointer) => void
 }
 
 globalThis.showMethodInfo = showMethodInfo
+globalThis.mi = showMethodInfo
 globalThis.methodToClass = (methodInfo: NativePointer) => getClassFromMethodInfo(methodInfo).handle
 globalThis.methodToClassShow = (methodInfo: NativePointer) => m(methodToClass(methodInfo))

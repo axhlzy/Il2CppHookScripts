@@ -4,6 +4,7 @@ var logIndex : number = 0
 
 const needStack : boolean = true
 
+// 这个东西 我之前考虑过添加进来 但是并不稳定 容易崩, 也没太多时间去研究它为什么崩 ...
 const B_UnityJNI = () => {
 
     const class_AndroidJNISafe = Il2Cpp.Domain.tryAssembly("UnityEngine.AndroidJNIModule")?.image.tryClass("UnityEngine.AndroidJNISafe")

@@ -153,7 +153,7 @@ export class HookerBase {
      * @example
      * 
      * m("GameObject") 这种写法少数重名类可能会出问题
-     * 你应该先使用findClasses找到指定的类以后再使用m(classPtr)的形式进行调用查看
+     * 你应该先使用findClasses("classNameStr")找到指定的类以后再使用m(classPtr)的形式进行调用查看
      * 
      * example1 ↓
      * 
@@ -199,7 +199,8 @@ export class HookerBase {
             [*] 0xa386d274 ---> 0xa6d245fc ---> 0xf235fc    |  public Component GetComponentInChildren(Type type,Boolean includeInactive)
             ......
      */
-    static showMethods(input: NativePointer | String | number, sort: MethodSortType = MethodSortType.ADDRESS, detailed: boolean = false): void {
+    // `sort: MethodSortType = MethodSortType.ACCESS` 默认用access来排序观感上会整洁一点
+    static showMethods(input: NativePointer | String | number, sort: MethodSortType = MethodSortType.ACCESS, detailed: boolean = false): void {
         if (input instanceof NativePointer && input.isNull()) throw new Error("input can not be null")
         if (typeof input == "string" && input.trim().length == 0) throw new Error("input can not be null")
         let klass: Il2Cpp.Class = HookerBase.inputCheck(input)

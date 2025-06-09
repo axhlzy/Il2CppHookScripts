@@ -559,16 +559,86 @@ globalThis.BFA = (filterStr: string, allImg: boolean = true): void => {
  * @param {number} argIndex 
  * @returns 
  */
-var debug_getPlatformCtxWithArgV = true
+// var debug_getPlatformCtxWithArgV = true
+// globalThis.getPlatformCtxWithArgV = <T extends CpuContext>(ctx: T, argIndex: number): NativePointer | undefined => {
+//     if (getPlatform() == "arm") {
+//         if (argIndex > 15 || argIndex < 0) throw new Error(`ARM32 -> argIndex ${argIndex} is out of range`)
+//         if (debug_getPlatformCtxWithArgV) LOGW(`(ctx as Arm64CpuContext).r${argIndex}`)
+//         return eval(`(${ctx} as ArmCpuContext).r${argIndex}`) as NativePointer
+//     } else {
+//         if (argIndex > 32 || argIndex < 0) throw new Error(`ARM64 -> argIndex ${argIndex} is out of range`)
+//         if (debug_getPlatformCtxWithArgV) LOGW(`(ctx as Arm64CpuContext).x${argIndex}`)
+//         return eval(`(${ctx} as Arm64CpuContext).x${argIndex}`) as NativePointer
+//     }
+// }
+// 
+// SyntaxError: expecting ']'
+//    at <input>:1
+//    at <anonymous> (agent/base/breaker.ts:571)
+//    at <anonymous> (agent/expand/TypeExtends/mscorlibObj/Object/Component/Behavior/MonoBehaviour/UIBehaviour/Graphic/MaskableGraphic/Text/export.ts:189)
+//    at onLeave (agent/utils/common.ts:39)
+//
+// 我之前试过上述这种写法 时不时的会出问题 (在B_text和HookSetActive里用到 ) ,所以还是恢复到下面这种写法,虽然丑了点,但是好歹能正常跑
 globalThis.getPlatformCtxWithArgV = <T extends CpuContext>(ctx: T, argIndex: number): NativePointer | undefined => {
-    if (getPlatform() == "arm") {
-        if (argIndex > 15 || argIndex < 0) throw new Error(`ARM32 -> argIndex ${argIndex} is out of range`)
-        if (debug_getPlatformCtxWithArgV) LOGW(`(ctx as Arm64CpuContext).r${argIndex}`)
-        return eval(`(${ctx} as ArmCpuContext).r${argIndex}`) as NativePointer
+    if ((ctx as ArmCpuContext).r0 != undefined) {
+        // case arm32
+        switch (argIndex) {
+            case 0: return (ctx as ArmCpuContext).r0
+            case 1: return (ctx as ArmCpuContext).r1
+            case 2: return (ctx as ArmCpuContext).r2
+            case 3: return (ctx as ArmCpuContext).r3
+            case 4: return (ctx as ArmCpuContext).r4
+            case 5: return (ctx as ArmCpuContext).r5
+            case 6: return (ctx as ArmCpuContext).r6
+            case 7: return (ctx as ArmCpuContext).r7
+            case 8: return (ctx as ArmCpuContext).r8
+            case 9: return (ctx as ArmCpuContext).r9
+            case 10: return (ctx as ArmCpuContext).r10
+            case 11: return (ctx as ArmCpuContext).r11
+            case 12: return (ctx as ArmCpuContext).r12
+            case 13: return (ctx as ArmCpuContext).sp
+            case 14: return (ctx as ArmCpuContext).lr
+            case 15: return (ctx as ArmCpuContext).pc
+            default: throw new Error(`ARM32 -> argIndex ${argIndex} is out of range`)
+        }
     } else {
-        if (argIndex > 32 || argIndex < 0) throw new Error(`ARM64 -> argIndex ${argIndex} is out of range`)
-        if (debug_getPlatformCtxWithArgV) LOGW(`(ctx as Arm64CpuContext).x${argIndex}`)
-        return eval(`(${ctx} as Arm64CpuContext).x${argIndex}`) as NativePointer
+        // case arm64
+        switch (argIndex) {
+            case 0: return (ctx as Arm64CpuContext).x0
+            case 1: return (ctx as Arm64CpuContext).x1
+            case 2: return (ctx as Arm64CpuContext).x2
+            case 3: return (ctx as Arm64CpuContext).x3
+            case 4: return (ctx as Arm64CpuContext).x4
+            case 5: return (ctx as Arm64CpuContext).x5
+            case 6: return (ctx as Arm64CpuContext).x6
+            case 7: return (ctx as Arm64CpuContext).x7
+            case 8: return (ctx as Arm64CpuContext).x8
+            case 9: return (ctx as Arm64CpuContext).x9
+            case 10: return (ctx as Arm64CpuContext).x10
+            case 11: return (ctx as Arm64CpuContext).x11
+            case 12: return (ctx as Arm64CpuContext).x12
+            case 13: return (ctx as Arm64CpuContext).x13
+            case 14: return (ctx as Arm64CpuContext).x14
+            case 15: return (ctx as Arm64CpuContext).x15
+            case 16: return (ctx as Arm64CpuContext).x16
+            case 17: return (ctx as Arm64CpuContext).x17
+            case 18: return (ctx as Arm64CpuContext).x18
+            case 19: return (ctx as Arm64CpuContext).x19
+            case 20: return (ctx as Arm64CpuContext).x20
+            case 21: return (ctx as Arm64CpuContext).x21
+            case 22: return (ctx as Arm64CpuContext).x22
+            case 23: return (ctx as Arm64CpuContext).x23
+            case 24: return (ctx as Arm64CpuContext).x24
+            case 25: return (ctx as Arm64CpuContext).x25
+            case 26: return (ctx as Arm64CpuContext).x26
+            case 27: return (ctx as Arm64CpuContext).x27
+            case 28: return (ctx as Arm64CpuContext).x28
+            case 29: return (ctx as Arm64CpuContext).fp
+            case 30: return (ctx as Arm64CpuContext).lr
+            case 31: return (ctx as Arm64CpuContext).sp
+            case 32: return (ctx as Arm64CpuContext).pc
+            default: throw new Error(`ARM64 -> argIndex ${argIndex} is out of range`)
+        }
     }
 }
 
