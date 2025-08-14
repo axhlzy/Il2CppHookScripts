@@ -2,9 +2,12 @@ name: Auto-build
 
 on:
   push:
-    branches: [ ts ]
+    branches:
+      - ts
     paths:
       - 'Il2cppHook/**'
+  schedule:
+    - cron: '0 0 * * * 6'
 
 jobs:
   auto_build:
