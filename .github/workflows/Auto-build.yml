@@ -7,7 +7,7 @@ on:
     paths:
       - 'Il2cppHook/**'
   schedule:
-    - cron: '0 0 * * * 6'
+    - cron: '0 0 * * 6'
 
 jobs:
   auto_build:
