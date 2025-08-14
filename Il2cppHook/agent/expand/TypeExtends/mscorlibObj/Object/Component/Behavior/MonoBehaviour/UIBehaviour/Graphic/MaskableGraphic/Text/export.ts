@@ -83,11 +83,13 @@ const B_Text = (): void => {
     strReplaceMap.set("Play", "开始")
     strReplaceMap.set("Options", "选项")
     strReplaceMap.set("Back", "返回")
+    strReplaceMap.set("English", "中文")
     strReplaceMap.set("Settings", "设置")
     strReplaceMap.set("Loading...", "加载中...")
     strReplaceMap.set("More games", "更多游戏")
     strReplaceMap.set("Watch ad?", "看广告？")
     strReplaceMap.set("Not Enough Money", "金钱不够")
+    strReplaceMap.set("Video & Audio", "视频和音频")
     strReplaceMap.set("No translation found for 'Watch ad?' in Texts", "看广告？")
 
     try {
@@ -123,6 +125,13 @@ const B_Text = (): void => {
         HookPrint()
     } catch {
         LOGE("NGUIText.Print NOT FOUND !")
+    }
+
+    try {
+        LOGD("Enable TextMesh Hook".padEnd(30, " ") + "| class : " + findClass("TextMesh"))
+        HookTextMesh()
+    } catch {
+        LOGE("UnityEngine.TextMesh NOT FOUND !")
     }
 
     function TMP_Text(showGobj: boolean) {
@@ -242,6 +251,27 @@ const B_Text = (): void => {
                 let repStr = strReplaceMap.get(aimStr.substring(1, aimStr.length - 1))
                 if (repStr != undefined) {
                     args[0] = allocUStr(repStr)
+                    LOGH(` \n\t {REP} ${aimStr} ---> ${repStr}`)
+                }
+            }
+        })
+    }
+
+    function HookTextMesh() {
+        // [-]UnityEngine.TextRenderingModule @ 0x72201eebd8
+        // [-]UnityEngine.TextRenderingModule.dll @ 0x72201ed4f8 | C:14
+        //   [-]TextMesh @ 0x72213c7550 | M:8 | F:0 | N:UnityEngine
+        //     [-]public Void set_text(String value) @ MI: 0x7221775778 & MP: 0x72579ad614 & RP: 0x1fdc614
+        //       [-]value               | type: 0x7257d0cbe0 | @ class:0x72203cc2f0 | System.String
+        A(find_method('UnityEngine.TextRenderingModule', 'TextMesh', 'set_text', 1), (args) => {
+            const aimStr = "|" + readU16(args[1]) + "|"
+            if (filterDuplicateOBJ(aimStr) == -1) return
+            worksWithText(args[0], "TextMesh")
+            LOGD(`\n[TextMesh] ${args[0]} \t ${aimStr}`)
+            if (strReplaceMap.size != 0) {
+                let repStr = strReplaceMap.get(aimStr.substring(1, aimStr.length - 1))
+                if (repStr != undefined) {
+                    args[1] = allocUStr(repStr)
                     LOGH(` \n\t {REP} ${aimStr} ---> ${repStr}`)
                 }
             }
