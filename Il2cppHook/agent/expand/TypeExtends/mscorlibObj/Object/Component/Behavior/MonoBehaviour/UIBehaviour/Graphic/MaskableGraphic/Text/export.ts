@@ -87,6 +87,9 @@ const B_Text = (): void => {
     strReplaceMap.set("Settings", "设置")
     strReplaceMap.set("Loading...", "加载中...")
     strReplaceMap.set("More games", "更多游戏")
+    // Please try again later
+    strReplaceMap.set("Please try again later", "请稍后再试")
+    strReplaceMap.set("Controls: Swiping", "操作：Swiping")
     strReplaceMap.set("Watch ad?", "看广告？")
     strReplaceMap.set("Not Enough Money", "金钱不够")
     strReplaceMap.set("Video & Audio", "视频和音频")

@@ -1,3 +1,4 @@
+import { Module } from "module"
 import "./include"
 
 setImmediate(() => main())
@@ -12,4 +13,8 @@ const main = () => {
     // hookLogcat()
     // HookDialog()
     // hook_artMethodInvoke()
+
+    Il2Cpp.perform(()=>{
+        // BF("Show")
+    })
 }

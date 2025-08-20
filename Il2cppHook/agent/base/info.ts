@@ -34,6 +34,21 @@ export function showMethodInfo(mPtr: NativePointer | Il2Cpp.Method): void {
     }).join("\n")
     if (packMethod.returnType.name != "System.Void")
         params += `${packMethod.parameterCount == 0 ? '' : '\n'}${getLine(8, ' ')}[-]${FM.alignStr(`_RET_`)} | type: ${packMethod.returnType.handle} | @ class:${packMethod.returnType.class.handle} | ${packMethod.returnType.name}`
+
+    let appendInsShort = ""
+    try {
+        let ins = Instruction.parse(packMethod.virtualAddress)
+        for (let i = 1; i <= 3; i++) {
+            if (ins.toString().includes("ret")) {
+                appendInsShort = `| S${i}`
+                break
+            }
+            ins = Instruction.parse(ins.next)
+        }
+    } catch (e) { 
+        // ignore
+    }
+
     /** like this ↓
         [-]Assembly-CSharp @ 0x7c00f74bf0
         [-]Assembly-CSharp.dll @ 0x7b6bb29850 | C:1001
@@ -46,7 +61,7 @@ export function showMethodInfo(mPtr: NativePointer | Il2Cpp.Method): void {
     LOGZ(`[-]${packMethod.class.image.assembly.name} @ ${packMethod.class.image.assembly.handle}`)
     LOGZ(`${getLine(2, ' ')}[-]${packMethod.class.image.name} @ ${packMethod.class.image.handle} | C:${packMethod.class.image.classCount}`)
     LOGZ(`${getLine(4, ' ')}[-]${packMethod.class.name} @ ${packMethod.class.handle} | M:${packMethod.class.methods.length} | F:${packMethod.class.fields.length} ${packMethod.class.namespace.length > 0 ? `| N:${packMethod.class.namespace}` : ''}`)
-    LOGD(`${getLine(6, ' ')}[-]${methodDes(packMethod)} @ MI: ${packMethod.handle} & MP: ${packMethod.virtualAddress} ${AppendRelativeVirtualAddress}`)
+    LOGD(`${getLine(6, ' ')}[-]${methodDes(packMethod)} @ MI: ${packMethod.handle} & MP: ${packMethod.virtualAddress} ${AppendRelativeVirtualAddress} ${appendInsShort}`)
     LOGZ(`${params}`)
     newLine()
 
