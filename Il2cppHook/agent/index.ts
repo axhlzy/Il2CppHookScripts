@@ -1,4 +1,3 @@
-import { Module } from "module"
 import "./include"
 
 setImmediate(() => main())

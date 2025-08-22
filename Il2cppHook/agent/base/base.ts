@@ -708,7 +708,15 @@ globalThis.fakeGCInstance = fake_gc_instance
 
 globalThis.J = (fn: () => void) => Java.perform(fn)
 
-Il2Cpp.perform(() => globalThis.soAddr = Il2Cpp.module.base)
+var taskID = setInterval(() => {
+    Il2Cpp.perform(() => {
+        globalThis.soAddr = Il2Cpp.module.base
+    })
+    if (globalThis.soAddr != undefined && globalThis.soAddr as NativePointerValue != ptr(0)) {
+        clearInterval(taskID)
+        return
+    }
+}, 1000)
 
 declare global {
     namespace Il2Cpp {

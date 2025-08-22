@@ -19,7 +19,7 @@ setImmediate(() => {
             },
             onLeave: function () {
                 if (filterDuplicateOBJ(this.path, 1) != -1) {
-                    globalThis.soAddr = Module.findBaseAddress(soName)!
+                    globalThis.soAddr = Process.findModuleByName(soName)!.base
                     // Il2Cpp.perform(() => onLoad(this.path))
                     onSoLoad(this.path)
                 }
