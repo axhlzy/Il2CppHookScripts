@@ -173,12 +173,12 @@ export function FakeCommonTypeObj(il2cppObject: Il2Cpp.Object):string {
 
 // 类型解析
 export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
-    // LOGW(`FakeCommonType ${type.name} ${mPtr}`)
+    LOGW(`FakeCommonType ${type.name} ${mPtr}`)
     switch (type.name) {
         case "System.Void":
             return ""
         case "System.Boolean":
-            return !mPtr.isNull() ? "True" : "False"
+            return !(mPtr.readU8() == 0) ? "True" : "False"
         case "System.Int32":
             return readInt(mPtr).toString()
         case "System.IntPtr":
@@ -203,7 +203,13 @@ export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
                 return `Parse Error ${error}`
             }
         case "System.String":
-            return readU16(mPtr)
+            return `"${readU16(mPtr)}"`
+        case "TMPro.TMP_Text":
+            // public virtual String get_text()
+            return `"${readU16(new Il2Cpp.Object(mPtr).tryMethod("get_text")!.invoke())}"`
+        case "TMPro.TextMeshProUGUI":
+            // public virtual String get_text()
+            return `"${readU16(new Il2Cpp.Object(mPtr).tryMethod("get_text")!.invoke())}"`
         case "System.Object":
             if (mPtr.isNull()) return "null"
             return new Il2Cpp.Object(mPtr).toString()

@@ -95,11 +95,18 @@ const B_Text = (): void => {
     strReplaceMap.set("Video & Audio", "视频和音频")
     strReplaceMap.set("No translation found for 'Watch ad?' in Texts", "看广告？")
 
+    // try {
+    //     LOGD("Enable TMP_Text Hook".padEnd(30, " ") + "| class : " + findClass("TMP_Text"))
+    //     TMP_Text(false)
+    // } catch {
+    //     LOGE("Unity.TextMeshPro.TMP_Text.get_transform NOT FOUND !")
+    // }
+
     try {
-        LOGD("Enable TMP_Text Hook".padEnd(30, " ") + "| class : " + findClass("TMP_Text"))
-        TMP_Text(false)
+        LOGD("Enable ParseInputText Hook".padEnd(30, " ") + "| class : " + findClass("TMP_Text"))
+        ParseInputText()
     } catch {
-        LOGE("Unity.TextMeshPro.TMP_Text.get_transform NOT FOUND !")
+        LOGE("Unity.TextMeshPro.TMPro.TMP_Text.ParseInputText NOT FOUND !")
     }
 
     try {
@@ -135,6 +142,33 @@ const B_Text = (): void => {
         HookTextMesh()
     } catch {
         LOGE("UnityEngine.TextMesh NOT FOUND !")
+    }
+
+    function ParseInputText(showGobj: boolean = false) {
+        A(find_method("Unity.TextMeshPro", "TMP_Text", "ParseInputText", 0), (args, ctx) => {
+            const aimStr = "|" + readU16(callFunction(["Unity.TextMeshPro", "TMP_Text", "get_text", 0], args[0])) + "|"
+            if (filterDuplicateOBJ(aimStr, 30) == -1) return
+            worksWithText(args[0], "TMP_Text")
+            LOGD("\n[TMP_Text]\t" + args[0] + "\t" + aimStr + "\t" + getPlatformCtx(ctx).lr)
+            if (strReplaceMap.size != 0) {
+                const repStr = strReplaceMap.get(aimStr.substring(1, aimStr.length - 1))
+                if (repStr != undefined) {
+                    callFunction(find_method("Unity.TextMeshPro", "TMP_Text", "set_text", 1), args[0], allocUStr(repStr))
+                    LOGH(" \n\t {REP} " + aimStr + " ---> " + repStr)
+                }
+                if (showGobj != undefined && showGobj == true) {
+                    showGameObject(args[0])
+                }
+            }
+            if (enableHookFont && !choosed_TMP_FontAsset.isNull()) {
+                LOGZ("\n\t { FONT } " + new Il2Cpp.Object(Il2Cpp.Api.TMP_Text._get_font(args[0])))
+                const tmpObj = new Il2Cpp.Object(args[0])
+                // public Void set_font(TMP_FontAsset value)
+                tmpObj.tryMethod<void>("set_font", 1)!.invoke(choosed_TMP_FontAsset)
+                // TextMeshPro public Void UpdateFontAsset()
+                Il2Cpp.Api.TextMeshPro._UpdateFontAsset(args[0])
+            }
+        })
     }
 
     function TMP_Text(showGobj: boolean) {

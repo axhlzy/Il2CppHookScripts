@@ -84,19 +84,23 @@ globalThis.HookSetActive = (defaltActive: activeStatus | boolean = activeStatus.
 }
 
 globalThis.HookSendMessage = () => {
-    // try {
-    //     var UnityPlayer = Java.use("com.unity3d.player.UnityPlayer")
-    //     UnityPlayer.UnitySendMessage.implementation = function (str0:string, str1:string, str2:string) {
-    //         console.warn("\n--------------\tCalled UnitySendMessage\t--------------")
-    //         console.log("UnityPlayer.UnitySendMessage(\x1b[96m'" + str0 + "','" + str1 + "','" + str2 + "'\x1b[0m)")
-    //         this.UnitySendMessage(str0, str1, str2)
-    //         PrintStackTrace()
-    //     }
-    // } catch (e) {}  
-    A(Module.findExportByName("libunity.so", "UnitySendMessage")!, (args) => {
-        LOGW("\n--------------\tCalled UnitySendMessage\t--------------")
-        LOGD("UnitySendMessage => " + args[0].readCString() + " " + args[1].readCString() + " " + args[2].readCString())
-    })
+    try {
+        Java.perform(()=>{
+            const UnityPlayer = Java.use("com.unity3d.player.UnityPlayer")
+            UnityPlayer.UnitySendMessage.implementation = function (str0:string, str1:string, str2:string) {
+                LOGW("\n--------------\tCalled UnitySendMessage\t--------------")
+                LOGD("UnityPlayer.UnitySendMessage(\x1b[96m'" + str0 + "','" + str1 + "','" + str2 + "'\x1b[0m)")
+                this.UnitySendMessage(str0, str1, str2)
+            }
+        })
+    } catch (e) {
+        let sendMsgAddr:NativePointer|null = Module.findExportByName("libunity.so", "UnitySendMessage")
+        if (sendMsgAddr == null) sendMsgAddr = DebugSymbol.fromName("UnitySendMessage").address
+        A(sendMsgAddr, (args) => {
+            LOGW("\n--------------\tCalled UnitySendMessage\t--------------")
+            LOGD("UnitySendMessage => " + args[0].readCString() + " " + args[1].readCString() + " " + args[2].readCString())
+        })
+    }  
 }
 
 export function GetGameObjectFromPtr(mPtr: NativePointer | Il2Cpp.GameObject | Il2Cpp.Component | Il2Cpp.Transform): Il2Cpp.GameObject | undefined {

@@ -15,5 +15,6 @@ const main = () => {
 
     Il2Cpp.perform(()=>{
         // BF("Show")
+        // HookSendMessage()
     })
 }
