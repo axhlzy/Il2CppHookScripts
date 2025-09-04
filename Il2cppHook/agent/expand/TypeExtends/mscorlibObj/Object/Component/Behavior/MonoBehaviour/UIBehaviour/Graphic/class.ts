@@ -35,9 +35,9 @@ class UnityEngine_UI_Graphic_Impl extends UnityEngine_EventSystems_UIBehaviour_I
     m_Canvas: Canvas = new Canvas(lfv(this.handle, "m_Canvas"))
     m_VertsDirty: boolean = readBoolean(lfv(this.handle, "m_VertsDirty"))
     m_MaterialDirty: boolean = readBoolean(lfv(this.handle, "m_MaterialDirty"))
-    m_OnDirtyLayoutCallback: UnityEngine_Events_UnityAction = new UnityAction(lfv(this.handle, "m_OnDirtyLayoutCallback"))
-    m_OnDirtyVertsCallback: UnityEngine_Events_UnityAction = new UnityAction(lfv(this.handle, "m_OnDirtyVertsCallback"))
-    m_OnDirtyMaterialCallback: UnityEngine_Events_UnityAction = new UnityAction(lfv(this.handle, "m_OnDirtyMaterialCallback"))
+    m_OnDirtyLayoutCallback: UnityEngine_Events_UnityAction | null = !this.handle ? null : new UnityAction(lfv(this.handle, "m_OnDirtyLayoutCallback"))
+    m_OnDirtyVertsCallback: UnityEngine_Events_UnityAction | null = !this.handle ? null : new UnityAction(lfv(this.handle, "m_OnDirtyVertsCallback"))
+    m_OnDirtyMaterialCallback: UnityEngine_Events_UnityAction | null = !this.handle ? null : new UnityAction(lfv(this.handle, "m_OnDirtyMaterialCallback"))
     s_Mesh: UnityEngine_Mesh = lfv(this.handle, "s_Mesh") as unknown as UnityEngine_Mesh
     s_VertexHelper: UnityEngine_UI_VertexHelper = lfv(this.handle, "s_VertexHelper") as unknown as UnityEngine_UI_VertexHelper
     m_CachedMesh: UnityEngine_Mesh = lfv(this.handle, "m_CachedMesh") as unknown as UnityEngine_Mesh

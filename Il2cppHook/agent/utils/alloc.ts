@@ -1,7 +1,7 @@
 import { TYPE_STR } from "../base/enum"
 
 const allocStrInner = (str: string, type: TYPE_STR = TYPE_STR.C_STR): NativePointer => {
-    if (type == TYPE_STR.U_STR && Module.findBaseAddress("libil2cpp.so") == null){
+    if (type == TYPE_STR.U_STR && Process.findModuleByName("libil2cpp.so") == null){
         throw new Error("[!] allocUStr: libil2cpp.so not found")
     }
     if (type == TYPE_STR.OC_STR && (Process.platform != "darwin" || typeof str != "string")) {
