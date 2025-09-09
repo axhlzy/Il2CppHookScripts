@@ -173,12 +173,18 @@ export function FakeCommonTypeObj(il2cppObject: Il2Cpp.Object):string {
 
 // 类型解析
 export function FakeCommonType(type: Il2Cpp.Type, mPtr: NativePointer): string {
-    LOGW(`FakeCommonType ${type.name} ${mPtr}`)
+    // LOGW(`FakeCommonType ${type.name} ${mPtr}`)
     switch (type.name) {
         case "System.Void":
             return ""
         case "System.Boolean":
-            return !(mPtr.readU8() == 0) ? "True" : "False"
+            if (mPtr.isNull()) return "False"
+            if (mPtr == ptr(1)) return "True"
+            try {
+                return !(mPtr.readU8() == 0) ? "True" : "False"
+            } catch (error) {
+                return mPtr.toString()
+            }
         case "System.Int32":
             return readInt(mPtr).toString()
         case "System.IntPtr":
