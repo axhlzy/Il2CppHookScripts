@@ -7,10 +7,15 @@ type UnityEngine_Events_BaseInvokableCall = NativePointer
 
 class UnityEngine_Events_UnityEvent_Impl extends UnityEventBase {
 
-    m_InvokeArray: System_Object[] = lfv(this.handle, "m_InvokeArray") as unknown as System_Object[]
+    m_InvokeArray!: System_Object[]
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
+        try {
+            this.m_InvokeArray = lfv(this.handle, "m_InvokeArray") as unknown as System_Object[]
+        } catch (error) {
+            
+        }
     }
 
     _ctor_UnityEvent(): void {

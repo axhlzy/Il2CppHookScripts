@@ -10,7 +10,7 @@ const main = () => {
     // hookSSL()
     // HookToast()
     // hookLogcat()
-    // HookDialog()
+    HookDialog()
     // hook_artMethodInvoke()
 
     Il2Cpp.perform(()=>{

@@ -8,14 +8,29 @@ type mscorlib_System_Reflection_MethodInfo = NativePointer
 export class UnityEngine_Events_UnityEventBase_Impl extends mscorlib_System_Object_impl {
 
     // m_Calls : InvokableCallList
-    m_Calls: InvokableCallList = new InvokableCallList(lfv(this.handle, "m_Calls", findClass("UnityEventBase", ['UnityEngine.CoreModule'])))
+    m_Calls!: InvokableCallList
     // m_CallsDirty : Boolean
-    m_CallsDirty: boolean = lfv(this.handle, "m_CallsDirty", findClass("UnityEventBase", ['UnityEngine.CoreModule'])) as unknown as boolean
+    m_CallsDirty!: boolean
     // m_PersistentCalls : PersistentCallGroup
-    m_PersistentCalls: PersistentCallGroup = lfv(this.handle, "m_PersistentCalls", findClass("UnityEventBase", ['UnityEngine.CoreModule']))
+    m_PersistentCalls!: PersistentCallGroup
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
+        try {
+            this.m_Calls = new InvokableCallList(lfv(this.handle, "m_Calls", findClass("UnityEventBase", ['UnityEngine.CoreModule'])))
+        } catch (error) {
+            
+        }
+        try {
+            this.m_CallsDirty = lfv(this.handle, "m_CallsDirty", findClass("UnityEventBase", ['UnityEngine.CoreModule'])) as unknown as boolean
+        } catch (error) {
+            
+        }
+        try {
+            this.m_PersistentCalls = lfv(this.handle, "m_PersistentCalls", findClass("UnityEventBase", ['UnityEngine.CoreModule']))
+        } catch (error) {
+            
+        }
     }
 
     ctor_UnityEventBase(): mscorlib.UnityEventBase {

@@ -1,10 +1,7 @@
-import { MessagePort } from "worker_threads"
-import { PackArray } from "./packArray"
-
 interface list_impl {
     _defaultCapacity: number
     _emptyArray: NativePointer
-    _items: NativePointer
+    _items: Il2Cpp.Object
     _size: number
     _version: number
     _syncRoot: NativePointer
@@ -16,15 +13,16 @@ export class PackList implements list_impl {
     private object: Il2Cpp.Object
     private class: Il2Cpp.Class
 
-    public _defaultCapacity: number
+    public _defaultCapacity!: number
     public _emptyArray: NativePointer
     public _size: number
-    public _items: NativePointer
+    public _items: Il2Cpp.Object
     public _version: number
     public _syncRoot: NativePointer
 
     constructor(mPtr: NativePointer, doNotCheck: boolean = false) {
         this.handle = mPtr
+        // LOGD("PackList handle " + this.handle)
         try {
             if (doNotCheck) {
                 mPtr.writePointer(findClass("Object"))
@@ -36,16 +34,20 @@ export class PackList implements list_impl {
             }
             // _defaultCapacity 和 _emptyArray 不同 unity版本可能不太一样
             try {
-                this._defaultCapacity = this.object.field<number>('_defaultCapacity').value
-            } catch {
-                this._defaultCapacity = this.object.tryField<number>('DefaultCapacity')!.value
+                try {
+                    this._defaultCapacity = this.object.field<number>('_defaultCapacity').value
+                } catch {
+                    this._defaultCapacity = this.object.tryField<number>('DefaultCapacity')!.value
+                }
+            } catch (error) {
+                // 这两个可能都不存在
             }
             try {
                 this._emptyArray = this.object.field<NativePointer>('_emptyArray').value
             } catch {
                 this._emptyArray = this.object.tryField<NativePointer>('s_emptyArray')!.value
             }
-            this._items = this.object.tryField<NativePointer>('_items')!.value
+            this._items = this.object.tryField<Il2Cpp.Object>('_items')!.value
             this._size = this.object.tryField<number>('_size')!.value
             this._version = this.object.tryField<number>('_version')!.value
             this._syncRoot = this.object.tryField<NativePointer>('_syncRoot')!.value
@@ -53,7 +55,7 @@ export class PackList implements list_impl {
     }
 
     toString(): string {
-        let itemName = this.get_Count() == 0 ? '' : ` < '${this.get_Item().class.name}' > `
+        const itemName = this.get_Count() == 0 ? '' : ` < '${this.get_Item().class.name}' > `
         return `${this.handle} ---> ${this.class.name} (${this.object.class.handle}${itemName} | ${this.get_Count()}/${this.get_Capacity()} )`
     }
 
@@ -115,7 +117,16 @@ export class PackList implements list_impl {
 
     get_Item(index: number = 0): Il2Cpp.Object {
         if (index > this.get_Count() - 1) throw new Error(`Index out of range: ${index}`)
-        const ret = new Il2Cpp.Object(this.object.method<NativePointer>('get_Item').invoke(index))
+        let ret = null 
+        try {
+            ret = new Il2Cpp.Object(this.object.method<NativePointer>('get_Item').invoke(index))
+            // get_Item 可能不存在 ⬆️
+        } catch (error) {
+            const itemSize = Process.pointerSize
+            const itemsArrayPtr = this._items.handle
+            const itemPtr = itemsArrayPtr.add(itemSize * (index + 4)).readPointer()
+            ret = new Il2Cpp.Object(itemPtr)
+        }
         // LOGE(`${this.handle} | ${this.object.handle} | ${this.object.method<NativePointer>('get_Item')} | get_Item(${index}) -> ${ret} | ${ret.handle}`)
         return ret
     }
@@ -133,7 +144,11 @@ export class PackList implements list_impl {
     }
 
     get_Count(): number {
-        return this.object.method<number>('get_Count').invoke()
+        try {
+            return this.object.tryMethod<number>('get_Count')!.invoke()
+        } catch (error) {
+            return this._size
+        }
     }
 
     RemoveAt(index: number = 0): void {

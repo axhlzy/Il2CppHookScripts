@@ -7,13 +7,41 @@ type mscorlib_System_Reflection_MethodInfo = NativePointer
 export class InvokableCallList_impl extends mscorlib_System_Object_impl {
 
     // m_ExecutingCalls : List<BaseInvokableCall>
-    m_ExecutingCalls: PackList = new PackList(lfv(this.handle, "m_ExecutingCalls", findClass("InvokableCallList")))
+    get m_ExecutingCalls(): PackList | undefined {
+        try {
+            const m_ExecutingCallsField = new Il2Cpp.Object(this.handle).tryField<Il2Cpp.Object>("m_ExecutingCalls")!.value.handle
+            // LOGD("m_ExecutingCallsField " + m_ExecutingCallsField)
+            return new PackList(m_ExecutingCallsField)
+        } catch (error) {
+            return undefined
+        }
+    }
     // m_NeedsUpdate : Boolean
-    m_NeedsUpdate: boolean = lfv(this.handle, "m_NeedsUpdate", findClass("InvokableCallList")) as unknown as boolean
+    get m_NeedsUpdate(): boolean {
+        try {
+            return new Il2Cpp.Object(this.handle).tryField<NativePointer>("m_NeedsUpdate")!.value.isNull() === false
+        } catch (error) {
+            return false
+        }
+    }
     // m_PersistentCalls : List<BaseInvokableCall>
-    m_PersistentCalls: PackList = new PackList(lfv(this.handle, "m_PersistentCalls", findClass("InvokableCallList")))
+    get m_PersistentCalls(): PackList | undefined {
+        try {
+            const m_PersistentCallsField = new Il2Cpp.Object(this.handle).tryField<Il2Cpp.Object>("m_PersistentCalls")!.value.handle
+            return new PackList(m_PersistentCallsField)
+        } catch (error) {
+            return undefined
+        }
+    }
     // m_RuntimeCalls : List<BaseInvokableCall>
-    m_RuntimeCalls: PackList = new PackList(lfv(this.handle, "m_RuntimeCalls", findClass("InvokableCallList")))
+    get m_RuntimeCalls(): PackList | undefined {
+        try {
+            const m_RuntimeCallsField = new Il2Cpp.Object(this.handle).tryField<Il2Cpp.Object>("m_RuntimeCalls")!.value.handle
+            return new PackList(m_RuntimeCallsField)
+        } catch (error) {
+            return undefined
+        }
+    }
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)

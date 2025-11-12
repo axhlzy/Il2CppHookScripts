@@ -51,7 +51,7 @@ export function OnPointerClick(arg0: number = -1, self_addr: NativePointer = ptr
 
             function doDefaultHook() {
 
-                const soAddr_local: NativePointer = Module.findBaseAddress(soName)!
+                const soAddr_local: NativePointer = Process.findModuleByName(soName)?.base!
 
                 const _OnPointerClick_ptr = ptr(Il2Cpp.Api.Button._OnPointerClick)
                 LOGE("\nEnable Hook Button OnPointerClick at " + _OnPointerClick_ptr + "(" + _OnPointerClick_ptr.sub(soAddr_local) + ")" + "\n")
@@ -215,17 +215,25 @@ export const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
     }
 
     // Il2Cpp.Api.EventTrigger._OnPointerClick
-    try {
-        A(Il2Cpp.Api.EventTrigger._OnPointerClick, (args) => innerFunction(args[0], args[1]))
-    } catch (error) {
-        try {
-            A(Il2Cpp.Api.EventTrigger._OnPointerClick, (_args, ctx: CpuContext) => {
-                innerFunction(getPlatformCtxWithArgV(ctx, 0)!, getPlatformCtxWithArgV(ctx, 1)!)
-            })
-        } catch (error) {
-            // LOGE(`Don't find EventTrigger.OnPointerClick`)
-        }
-    }
+    // try {
+    //     A(Il2Cpp.Api.EventTrigger._OnPointerClick, (args) => innerFunction(args[0], args[1]))
+    // } catch (error) {
+    //     try {
+    //         A(Il2Cpp.Api.EventTrigger._OnPointerClick, (_args, ctx: CpuContext) => {
+    //             innerFunction(getPlatformCtxWithArgV(ctx, 0)!, getPlatformCtxWithArgV(ctx, 1)!)
+    //         })
+    //     } catch (error) {
+    //         // LOGE(`Don't find EventTrigger.OnPointerClick`)
+    //     }
+    // }
+
+    // [-]Assembly-CSharp @ 0x77902419e8
+    //   [-]Assembly-CSharp.dll @ 0x7790240178 | C:1580
+    //     [-]UIButton @ 0x77913e6b80 | M:15 | F:14
+    //       [-]public override Boolean get_isEnabled() @ MI: 0x7791416d90 & MP: 0x77d54a6ac8 & RP: 0xc18ac8
+    //         [-]_RET_               | type: 0x77d63bd0e8 | @ class:0x7790244d20 | System.Boolean
+    // TODO ...
+
 
     // Assembly-CSharp UIButton protected virtual Void OnClick()
     // UIButton -> UIButtonColor -> UIWidgetContainer -> MonoBehaviour -> Behaviour -> Component -> Object -> Object
@@ -259,12 +267,14 @@ export const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
     }
 
     function innerFunction(buttonInstance: NativePointer, eventData: NativePointer) {
-        let button: Button = new Button(buttonInstance)
-        let pointerEventData: PointerEventData = new PointerEventData(eventData)
-        let currentGameobj: GameObject = button.gameobject
+        const button: Button = new Button(buttonInstance)
+        // LOGD("Button -> " + button + " " + button.handle)
+        const pointerEventData: PointerEventData = new PointerEventData(eventData)
+        const currentGameobj: GameObject = button.gameobject
         let buttonOnclickEvent: ButtonClickedEvent
         try {
             buttonOnclickEvent = button.get_onClick()
+            // LOGD("buttonOnclickEvent -> " + buttonOnclickEvent.handle)
         } catch (error) {
             // Custom 函数可能导致实例并不是 Button (ps：Selectable 基本等价于Button)
             // example ↓
@@ -272,64 +282,76 @@ export const OnButtonClick = (mPtr: NativePointer = ptr(0)) => {
             // ← BeveledUnityButton (0x7a80382480) -> UnityButton (0x7a94cc4700) -> MonoBehaviour (0x7a8049e800) -> Behaviour (0x7a8049e980) -> Component (0x7a8049eb00) -> Object (0x7a8047b600) -> Object (0x7a807fb800)
             if (!checkExtends(button, "Button") && checkExtends(button, "UnityButton")) {
                 logTitle()
-                let button: Il2Cpp.UnityButton = new Il2Cpp.UnityButton(buttonInstance)
-                let method: Il2Cpp.Method = button._onClick.method
+                const button: Il2Cpp.UnityButton = new Il2Cpp.UnityButton(buttonInstance)
+                const method: Il2Cpp.Method = button._onClick.method
                 LOGW(`\t[-] ${method.handle} -> ${method.relativeVirtualAddress} | ${method.class.image.assembly.name}.${method.class.name}.${method.name}`)
                 return
             }
-
-            if (checkExtends(button, "EventTrigger")) {
-                let button: Il2Cpp.EventTrigger = new Il2Cpp.EventTrigger(buttonInstance)
-                let m_Delegates: PackList = new PackList(button.m_Delegates)
-                m_Delegates.forEach((instance: Il2Cpp.Object, index: number) => {
-                    // LOGD(`${instance.toString()}`)
-                    // 0x10 public EventTriggerType (0x790dba7400)     eventID
-                    // let entryStr: string = enumNumToName(instance.field<number>('eventID').value, "Entry", instance.class.handle)
-                    // 0x18 public TriggerEvent (0x790ddbd7c0) callback
-                    // TriggerEvent (0x790ddbd7c0) -> UnityEvent`1 (0x790dbbc780) -> UnityEventBase (0x79cf97a140) -> Object (0x79cfd55000)
-                    // let callback: UnityEventBase = new UnityEventBase(instance.field<NativePointer>('callback').value)
-                    // delayPrint([callback.m_Calls.m_ExecutingCalls, callback.m_Calls.m_PersistentCalls, callback.m_Calls.m_RuntimeCalls])
-                })
+            try {
+                if (checkExtends(button, "EventTrigger")) {
+                    const button: Il2Cpp.EventTrigger = new Il2Cpp.EventTrigger(buttonInstance)
+                    const m_Delegates: PackList = new PackList(button.m_Delegates)
+                    m_Delegates.forEach((instance: Il2Cpp.Object, index: number) => {
+                        // LOGD(`${instance.toString()}`)
+                        // 0x10 public EventTriggerType (0x790dba7400)     eventID
+                        // let entryStr: string = enumNumToName(instance.field<number>('eventID').value, "Entry", instance.class.handle)
+                        // 0x18 public TriggerEvent (0x790ddbd7c0) callback
+                        // TriggerEvent (0x790ddbd7c0) -> UnityEvent`1 (0x790dbbc780) -> UnityEventBase (0x79cf97a140) -> Object (0x79cfd55000)
+                        // let callback: UnityEventBase = new UnityEventBase(instance.field<NativePointer>('callback').value)
+                        // delayPrint([callback.m_Calls.m_ExecutingCalls, callback.m_Calls.m_PersistentCalls, callback.m_Calls.m_RuntimeCalls])
+                    })
+                }
+            } catch (error) {
+                
             }
-
             throw error
         }
+ 
+        // LOGD("buttonOnclickEvent.m_Calls " + buttonOnclickEvent.m_Calls +" "+ buttonOnclickEvent.m_Calls.handle)
 
         // m_ExecutingCalls : List<BaseInvokableCall>
-        let exeCalls: PackList = buttonOnclickEvent.m_Calls.m_ExecutingCalls
-        let persistentCalls: PackList = buttonOnclickEvent.m_Calls.m_PersistentCalls
-        let runtimeCalls: PackList = buttonOnclickEvent.m_Calls.m_RuntimeCalls
-        let callsArray: Array<PackList> = [exeCalls, persistentCalls, runtimeCalls]
+        const exeCalls: PackList | undefined = buttonOnclickEvent.m_Calls.m_ExecutingCalls
+        const persistentCalls: PackList | undefined = buttonOnclickEvent.m_Calls.m_PersistentCalls
+        const runtimeCalls: PackList | undefined = buttonOnclickEvent.m_Calls.m_RuntimeCalls
+
+        const callsArray: Array<PackList> = [exeCalls!, persistentCalls!, runtimeCalls!]
         delayPrint(callsArray)
 
         function logTitle(needCls: boolean = false) {
-            let obj = new Il2Cpp.Object(buttonInstance)
-            let clsDes = needCls ? ` C:${obj.class.handle} |` : ''
+            const obj = new Il2Cpp.Object(buttonInstance)
+            const clsDes = needCls ? ` C:${obj.class.handle} |` : ''
             LOGD(`\n[*] ${pointerEventData.handle} ---> ${obj} {${clsDes} G:${currentGameobj.handle} | T:${currentGameobj.get_transform().handle} }`)
         }
 
         function delayPrint(callsArray: Array<PackList>) {
             logTitle()
             setTimeout(() => {
-                callsArray.forEach((callList: PackList) => {
-                    if (callList.get_Count() != 0) LOGZ(`\t[+] ${callList}`)
-                    callList.forEach((instance: Il2Cpp.Object, index: number) => {
-                        // UnityEngine.Events.InvokableCall
-                        // LOGD(index + " : " + instance + " " + instance.handle)
-                        let action: Il2Cpp.Object = <Il2Cpp.Object>instance.field('Delegate').value
-                        // lfp(action.handle)
-                        let unityAction: UnityAction = new UnityAction(action.handle)
-                        let method: Il2Cpp.Method
-                        if (!unityAction.method.isNull()) {
-                            // action 中本身就包含了 MethodInfo
-                            method = unityAction.method
-                        } else if (!unityAction.method_ptr.isNull()) {
-                            // 备用的相对较慢的解析手段 （address to method 需要遍历）
-                            method = AddressToMethod(unityAction.method_ptr, false)
-                        } else throw new Error("unityAction.method is null")
-                        LOGW(`\t\t[${index}] ${method.handle} -> ${method.relativeVirtualAddress} | ${method.class.image.assembly.name}.${method.class.name}.${method.name}`)
+                callsArray
+                    .forEach((callList: PackList) => {
+                        if (callList != undefined) {
+                            try {
+                                if (callList.get_Count() != 0) LOGZ(`\t[+] ${callList}`)
+                                callList.forEach((instance: Il2Cpp.Object, index: number) => {
+                                    // UnityEngine.Events.InvokableCall
+                                    // LOGD(index + " : " + instance + " " + instance.handle)
+                                    let action: Il2Cpp.Object = <Il2Cpp.Object>instance.field('Delegate').value
+                                    // lfp(action.handle)
+                                    let unityAction: UnityAction = new UnityAction(action.handle)
+                                    let method: Il2Cpp.Method
+                                    if (!unityAction.method.isNull()) {
+                                        // action 中本身就包含了 MethodInfo
+                                        method = unityAction.method
+                                    } else if (!unityAction.method_ptr.isNull()) {
+                                        // 备用的相对较慢的解析手段 （address to method 需要遍历）
+                                        method = AddressToMethod(unityAction.method_ptr, false)
+                                    } else throw new Error("unityAction.method is null")
+                                    LOGW(`\t\t[${index}] ${method.handle} -> ${method.relativeVirtualAddress} | ${method.class.image.assembly.name}.${method.class.name}.${method.name}`)
+                                })
+                            } catch (error) {
+                                
+                            }
+                        }
                     })
-                })
             }, 20)
         }
     }
@@ -352,7 +374,7 @@ const OnClickScript = (mPtr: NativePointer = ptr(0)) => {
         let index: number = 0
         listScripts(arg0)?.forEach((item: Il2Cpp.Object) => {
             if (index == 0) newLine()
-            let itemStr: string = item.toString()
+            const itemStr: string = item.toString()
             LOGW(`${FM.alignStr(`[${++index}]`, 6)} ${item.handle} ${itemStr}`)
         })
     }

@@ -112,7 +112,7 @@ globalThis.PrintHierarchy = (mPtr: NativePointer, level: number = 2, inCall: boo
                         retStr += ` @ ${local_TMPU.m_fontAsset}`
                     }
                     if (local_name.includes("UnityEngine.UI.Button"))
-                        retStr += new Button(item.handle).get_onClick().m_Calls.m_PersistentCalls.itemsToString()
+                        retStr += new Button(item.handle).get_onClick().m_Calls.m_PersistentCalls!.itemsToString()
                     if (local_name.includes("UnityEngine.UI.Image")) {
                         // const local_image: UI_Image = new UI_Image(item.handle)
                         // retStr += `${local_image.m_Canvas.toString()}`

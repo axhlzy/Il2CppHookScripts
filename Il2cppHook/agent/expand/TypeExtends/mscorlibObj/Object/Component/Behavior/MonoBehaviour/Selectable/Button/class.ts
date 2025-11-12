@@ -8,10 +8,15 @@ type System_Void = void
 
 class UnityEngine_UI_Button_Impl extends Selectable {
 
-    m_OnClick: PointerEventData = new PointerEventData(lfv(this.handle, "m_OnClick"))
+    m_OnClick!: PointerEventData
 
     constructor(handleOrWrapper: NativePointer) {
         super(handleOrWrapper)
+        try {
+            this.m_OnClick = new PointerEventData(lfv(this.handle, "m_OnClick"))
+        } catch (error) {
+            
+        }
     }
 
     _ctor_Button(): System_Void {
