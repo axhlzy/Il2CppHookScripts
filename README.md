@@ -1,6 +1,7 @@
 ## Il2cppHook
 
 ### frida-based libil2cpp.so runtime parsing script
+[ Not sure how to use this? There's also an MCP version available [_il2cpp-frida-mcp_](https://github.com/axhlzy/il2cpp-frida-mcp) ]
 
 [**简体中文**](README.zh-CN.md)
 
